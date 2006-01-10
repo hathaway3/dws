@@ -7,3 +7,6 @@ drivewire: drivewire.o
 
 clean:
 	rm drivewire drivewire.o
+
+install:
+	cp drivewire ~/bin
