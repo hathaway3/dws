@@ -72,8 +72,8 @@ void DoOP_TERM(struct dwTransferData *dp);
 void DoOP_RESET(struct dwTransferData *dp);
 void DoOP_READ(struct dwTransferData *dp, char *logStr);
 void DoOP_REREAD(struct dwTransferData *dp, char *logStr);
-void DoOP_WRITE(struct dwTransferData *dp);
-void DoOP_REWRITE(struct dwTransferData *dp);
+void DoOP_WRITE(struct dwTransferData *dp, char *logStr);
+void DoOP_REWRITE(struct dwTransferData *dp, char *logStr);
 void DoOP_GETSTAT(struct dwTransferData *dp);
 void DoOP_SETSTAT(struct dwTransferData *dp);
 void DoOP_TERM(struct dwTransferData *dp);
@@ -102,6 +102,7 @@ void closeDSK(struct dwTransferData *dp, int which);
 void *CoCoProcessor(void *dp);
 void logOpen(void);
 void logClose(void);
+void logHeader(void);
 
 char device[256];
 char dskfile[4][256];
@@ -374,11 +375,11 @@ void *CoCoProcessor(void *data)
 					break;
 
 				case OP_WRITE:
-					DoOP_WRITE(dp);
+					DoOP_WRITE(dp, "OP_WRITE");
 					break;
 
 				case OP_REWRITE:
-					DoOP_REWRITE(dp);
+					DoOP_REWRITE(dp, "OP_REWRITE");
 					break;
 
 				case OP_GETSTAT:
@@ -407,6 +408,8 @@ void *CoCoProcessor(void *data)
 
 void DoOP_INIT(struct dwTransferData *dp)
 {
+
+	logHeader();
 	fprintf(logfp, "OP_INIT\n");
 
 	return;
@@ -415,25 +418,26 @@ void DoOP_INIT(struct dwTransferData *dp)
 
 void DoOP_TERM(struct dwTransferData *dp)
 {
+	logHeader();
 	fprintf(logfp, "OP_TERM\n");
 
 	return;
 }
 
 
-void DoOP_REWRITE(struct dwTransferData *dp)
+void DoOP_REWRITE(struct dwTransferData *dp, char *logStr)
 {
 	/* 1. Increment retry counter */
 	dp->writeRetries++;
 
 	/* 2. Call on WRITE handler */
-	DoOP_WRITE(dp);
+	DoOP_WRITE(dp, logStr);
 
 	return;
 }
 
 
-void DoOP_WRITE(struct dwTransferData *dp)
+void DoOP_WRITE(struct dwTransferData *dp, char *logStr)
 {
 	u_char cocoChecksum[2];
 	u_char response = 0;
@@ -469,15 +473,14 @@ void DoOP_WRITE(struct dwTransferData *dp)
 
 		if (logfp != NULL)
 		{
-			fprintf(logfp, "OP_REWRITE[%d] - LSN:%d CoCoSum=%d, ServerSum = %d\n", dp->lastDrive, int3(dp->lastLSN), int2(cocoChecksum), dp->lastChecksum);
+			logHeader();
+			fprintf(logfp, "%s[%d] LSN[%d] CoCoSum[%d], ServerSum[%d]\n", logStr, dp->lastDrive, int3(dp->lastLSN), int2(cocoChecksum), dp->lastChecksum);
 		}
 //		printf("WARNING! myChecksum = %X, cocoChecksum = %X\n", dp->lastChecksum, int2(cocoChecksum));
 
 		
 		return;
 	}
-
-	fprintf(logfp, "OP_WRITE[%d] - LSN:%d CoCoSum=%d, ServerSum = %d\n", dp->lastDrive, int3(dp->lastLSN), int2(cocoChecksum), dp->lastChecksum);
 
 	/* 5. Good Checksum, send positive ACK */
 	comWrite(dp, &response, 1);
@@ -526,6 +529,7 @@ void DoOP_RESET(struct dwTransferData *dp)
 	dp->lastChecksum = 0;
 	dp->lastError = 0;
 
+	logHeader();
 	fprintf(logfp, "OP_RESET\n");
 
 	/* Finally, sync disks. */
@@ -599,7 +603,8 @@ void DoOP_READ(struct dwTransferData *dp, char *logStr)
 			/* 5.1.3. Increment sectorsRead count */
 			dp->sectorsRead++;
 
-			fprintf(logfp, "%s[%d] - LSN:%d CoCoSum=%d\n", logStr, dp->lastDrive, int3(dp->lastLSN), int2(cocosum));
+			logHeader();
+			fprintf(logfp, "%s[%d] LSN[%d] CoCoSum[%d]\n", logStr, dp->lastDrive, int3(dp->lastLSN), int2(cocosum));
 		}
 	}
 
@@ -613,7 +618,8 @@ void DoOP_GETSTAT(struct dwTransferData *dp)
 	comRead(dp, &(dp->lastDrive), 1);
 	comRead(dp, &(dp->lastGetStat), 1);
 
-	fprintf(logfp, "OP_GETSTAT[%0d] - Code=%s\n", dp->lastDrive, getStatCode(dp->lastGetStat));
+	logHeader();
+	fprintf(logfp, "OP_GETSTAT[%0d] Code[%s]\n", dp->lastDrive, getStatCode(dp->lastGetStat));
 
 	return;
 }
@@ -625,7 +631,8 @@ void DoOP_SETSTAT(struct dwTransferData *dp)
 	comRead(dp, &(dp->lastDrive), 1);
 	comRead(dp, &(dp->lastSetStat), 1);
 
-	fprintf(logfp, "OP_SETSTAT[%0d] - Code=%s\n", dp->lastDrive, getStatCode(dp->lastSetStat));
+	logHeader();
+	fprintf(logfp, "OP_SETSTAT[%0d] Code[%s]\n", dp->lastDrive, getStatCode(dp->lastSetStat));
 
 	return;
 }
@@ -657,6 +664,7 @@ void DoOP_TIME(struct dwTransferData *dp)
 	p[0] = timepak->tm_wday;
 	comWrite(dp, (void *)p, 1);
 
+	logHeader();
 	fprintf(logfp, "OP_TIME\n");
 
 	return;
@@ -836,7 +844,7 @@ void WinInit(void)
 	}
 
 	wattron(window0, A_STANDOUT);
-	wprintw(window0, "DriveWire Server v%d.%d (C) 2004 Cloud-9", REV_MAJOR, REV_MINOR);
+	wprintw(window0, "DriveWire Server v%d.%d (C) 2006 Boisy G. Pitre", REV_MAJOR, REV_MINOR);
 	wattroff(window0, A_STANDOUT);
 
 
@@ -975,22 +983,24 @@ void WinUpdate(WINDOW *window, struct dwTransferData *dp)
 	wmove(window, y++, x); wclrtoeol(window);
 	wprintw(window, "%d", dp->writeRetries);
 	wmove(window, y++, x); wclrtoeol(window);
-	if (dp->sectorsRead == 0 || dp->readRetries == 0)
+	if (dp->sectorsRead + dp->readRetries == 0)
 	{
-		wprintw(window, "100%%");
+		wprintw(window, "0%%");
 	}
 	else
 	{
-		wprintw(window, "%f%%", 100 - (((float)dp->readRetries / (float)dp->sectorsRead) * 100));
+		float percent = ((float)dp->sectorsRead / ((float)dp->sectorsRead + (float)dp->readRetries)) * 100;
+		wprintw(window, "%3.3f%%", percent);
 	}
 	wmove(window, y++, x); wclrtoeol(window);
-	if (dp->sectorsWritten == 0 || dp->writeRetries == 0)
+	if (dp->sectorsWritten + dp->writeRetries == 0)
 	{
-		wprintw(window, "100%%");
+		wprintw(window, "0%%");
 	}
 	else
 	{
-		wprintw(window, "%f%%", 100 - (((float)dp->writeRetries / (float)dp->sectorsWritten) * 100));
+		float percent = ((float)dp->sectorsWritten / ((float)dp->sectorsWritten + (float)dp->writeRetries)) * 100;
+		wprintw(window, "%3.3f%%", percent);
 	}
 	wmove(window, y++, x); wclrtoeol(window);
 	wprintw(window, "$%02X (%s)", dp->lastGetStat, getStatCode(dp->lastGetStat));
@@ -1233,5 +1243,26 @@ void logClose(void)
 	fclose(logfp);
 
 	logfp = NULL;
+}
+
+
+void logHeader(void)
+{
+	time_t	currentTime;
+	struct tm *timepak;
+
+	currentTime = time(NULL);
+	timepak = localtime(&currentTime);
+
+	fprintf(logfp, "%04d-%02d-%02d %02d:%02d:%02d ", 
+		1900 + timepak->tm_year,
+		timepak->tm_mon + 1,
+		timepak->tm_mday,
+		timepak->tm_hour,
+		timepak->tm_min,
+		timepak->tm_sec,
+		timepak->tm_wday);
+
+	return;
 }
 
