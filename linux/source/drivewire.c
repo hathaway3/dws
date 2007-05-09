@@ -169,8 +169,10 @@ int main(void)
 
 	if (LoadPreferences(&datapack) != 0)
 	{
-#ifdef __APPLE__
+#if defined(__APPLE__)
 		strcpy(device, "tty.usbserial-USAKMYZM");
+#elif defined(__sun)
+		strcpy(device, "ttya");
 #else
 		strcpy(device, "ttyS0");
 #endif
@@ -857,7 +859,7 @@ void WinInit(void)
 	}
 
 	wattron(window0, A_STANDOUT);
-	wprintw(window0, "DriveWire Server v%d.%d (C) 2006 Boisy G. Pitre", REV_MAJOR, REV_MINOR);
+	wprintw(window0, "DriveWire Server v%d.%d (C) 2007 Boisy G. Pitre", REV_MAJOR, REV_MINOR);
 	wattroff(window0, A_STANDOUT);
 
 
