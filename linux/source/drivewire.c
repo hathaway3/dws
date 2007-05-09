@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#if !defined(__sun)
 #include <stdint.h>
+#endif
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -21,7 +23,7 @@
 #define	REV_MAJOR	2
 #define	REV_MINOR	0
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__sun)
 #define	FD		_file
 #else
 #define __LIL_ENDIAN__
@@ -765,8 +767,19 @@ void comRaw(struct dwTransferData *dp)
 	int pathid = dp->devpath->FD;
 
 	tcgetattr(pathid, &io_mod);
+#if defined(__sun)
+	io_mod.c_iflag &= 
+		~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+	io_mod.c_oflag &= ~OPOST;
+	io_mod.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+	io_mod.c_cflag &= ~(CSIZE|PARENB);
+	io_mod.c_cflag |= CS8;
+
+	cfsetospeed(&io_mod, dp->baudRate);   // Set 9600 baud
+#else
 	cfmakeraw(&io_mod);
 	cfsetspeed(&io_mod, dp->baudRate);
+#endif
 
 	if (tcsetattr(pathid, TCSANOW, &io_mod) < 0)
 	{
