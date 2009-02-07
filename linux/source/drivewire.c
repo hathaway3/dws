@@ -1064,12 +1064,20 @@ void WinUpdate(WINDOW *window, struct dwTransferData *dp)
 			wprintw(window, "OP_READ");
 			break;
 
+		case OP_READEX:
+			wprintw(window, "OP_READEX");
+			break;
+
 		case OP_WRITE:
 			wprintw(window, "OP_WRITE");
 			break;
 
 		case OP_REREAD:
 			wprintw(window, "OP_REREAD");
+			break;
+
+		case OP_REREADEX:
+			wprintw(window, "OP_REREADEX");
 			break;
 
 		case OP_REWRITE:
@@ -1349,9 +1357,9 @@ int loadPreferences(struct dwTransferData *datapack)
 	if (p != NULL) { *p = '\0'; }
 	fgets(buffer, 128, pf);
 	datapack->cocoType = atoi(buffer);
-	setCoCo(datapack, datapack->cocoType);
 	fgets(buffer, 128, pf);
 	datapack->dw_protocol_vrsn = atoi(buffer);
+	setCoCo(datapack, datapack->cocoType);
 
 	return 0;
 }
