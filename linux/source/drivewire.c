@@ -20,7 +20,7 @@
 
 
  	
-#define	REV_MAJOR	2
+#define	REV_MAJOR	3
 #define	REV_MINOR	0
 
 #if defined(__APPLE__) || defined(__sun)
@@ -35,8 +35,10 @@
 #define		OP_GETSTAT	'G'
 #define		OP_SETSTAT	'S'
 #define		OP_READ		'R'
+#define		OP_READEX	'R'+128
 #define		OP_WRITE	'W'
 #define		OP_REREAD	'r'
+#define		OP_REREADEX	'r'+128
 #define		OP_REWRITE	'w'
 #define		OP_INIT		'I'
 #define		OP_TERM		'T'
@@ -50,6 +52,7 @@ struct dwTransferData
 	int		dw_protocol_vrsn;
 	FILE		*devpath;
 	FILE		*dskpath[4];
+	int		cocoType;
 	int		baudRate;
 	unsigned char	lastDrive;
 	uint32_t	readRetries;
@@ -74,6 +77,8 @@ void DoOP_TERM(struct dwTransferData *dp);
 void DoOP_RESET(struct dwTransferData *dp);
 void DoOP_READ(struct dwTransferData *dp, char *logStr);
 void DoOP_REREAD(struct dwTransferData *dp, char *logStr);
+void DoOP_READEX(struct dwTransferData *dp, char *logStr);
+void DoOP_REREADEX(struct dwTransferData *dp, char *logStr);
 void DoOP_WRITE(struct dwTransferData *dp, char *logStr);
 void DoOP_REWRITE(struct dwTransferData *dp, char *logStr);
 void DoOP_GETSTAT(struct dwTransferData *dp);
@@ -97,14 +102,15 @@ unsigned int int3(u_char *a);
 unsigned int int2(u_char *a);
 unsigned int int1(u_char *a);
 void _int2(uint16_t a, u_char *b);
-int LoadPreferences(struct dwTransferData *datapack);
-int SavePreferences(struct dwTransferData *datapack);
+int loadPreferences(struct dwTransferData *datapack);
+int savePreferences(struct dwTransferData *datapack);
 void openDSK(struct dwTransferData *dp, int which);
 void closeDSK(struct dwTransferData *dp, int which);
 void *CoCoProcessor(void *dp);
 void logOpen(void);
 void logClose(void);
 void logHeader(void);
+void setCoCo(struct dwTransferData* datapack, int cocoType);
 
 char device[256];
 char dskfile[4][256];
@@ -155,6 +161,39 @@ int comClose(struct dwTransferData *dp)
 	return 0;
 }
 
+void setCoCo(struct dwTransferData *dp, int cocoType)
+{
+	dp->cocoType = cocoType;
+	switch (cocoType)
+	{
+		case 3:
+			switch (dp->dw_protocol_vrsn)
+			{
+				case 3:
+					dp->baudRate = B115200;
+					break;
+				default:
+					dp->baudRate = B57600;
+					break;
+			}
+			break;
+
+		default:
+			switch (dp->dw_protocol_vrsn)
+			{
+				case 3:
+					dp->baudRate = B57600;
+					break;
+				case 2:
+					dp->baudRate = B38400;
+					break;
+			}
+			break;
+
+	}
+
+}
+
 int main(void)
 {
         struct dwTransferData datapack;
@@ -167,7 +206,7 @@ int main(void)
 
 	datapack.dw_protocol_vrsn = 2;
 
-	if (LoadPreferences(&datapack) != 0)
+	if (loadPreferences(&datapack) != 0)
 	{
 #if defined(__APPLE__)
 		strcpy(device, "tty.usbserial-USAKMYZM");
@@ -180,8 +219,9 @@ int main(void)
 		strcpy(dskfile[1], "disk1");
 		strcpy(dskfile[2], "disk2");
 		strcpy(dskfile[3], "disk3");
-		datapack.baudRate = B57600;
+		setCoCo(&datapack, 3); // assume CoCo 3
 	}
+
 	
 	if (comOpen(&datapack, device) < 0)
 	{
@@ -202,7 +242,7 @@ int main(void)
 
 	WinInit();
 
-	LoadPreferences(&datapack);
+	loadPreferences(&datapack);
 
 	pthread_create(&thread_id, NULL, CoCoProcessor, (void *)&datapack);
 
@@ -232,6 +272,10 @@ int main(void)
 				{
 					datapack.dw_protocol_vrsn = 2;
 				}
+				else if (datapack.dw_protocol_vrsn == 2)
+				{
+					datapack.dw_protocol_vrsn = 3;
+				}
 				else
 				{
 					datapack.dw_protocol_vrsn = 1;
@@ -240,13 +284,13 @@ int main(void)
 				break;
 
 			case 'c':
-				if (datapack.baudRate == B57600)
+				if (datapack.cocoType == 3)
 				{
-					datapack.baudRate = B38400;
+					setCoCo(&datapack, 2);
 				}
 				else
 				{
-					datapack.baudRate = B57600;
+					setCoCo(&datapack, 3);
 				}
 				comRaw(&datapack);
 				WinUpdate(window0, &datapack);
@@ -312,7 +356,7 @@ int main(void)
 	closeDSK(&datapack, 3);
 	logClose();
 
-	SavePreferences(&datapack);
+	savePreferences(&datapack);
 
 	comClose(&datapack);
 
@@ -376,6 +420,14 @@ void *CoCoProcessor(void *data)
 
 				case OP_READ:
 					DoOP_READ(dp, "OP_READ");
+					break;
+
+				case OP_REREADEX:
+					DoOP_REREADEX(dp, "OP_REREADEX");
+					break;
+
+				case OP_READEX:
+					DoOP_READEX(dp, "OP_READEX");
 					break;
 
 				case OP_WRITE:
@@ -616,6 +668,69 @@ void DoOP_READ(struct dwTransferData *dp, char *logStr)
 }
 
 
+void DoOP_REREADEX(struct dwTransferData *dp, char *logStr)
+{
+	/* 1. Increment retry counter */
+	dp->readRetries++;
+
+	/* 2. Call on READ handler */
+	DoOP_READEX(dp, logStr);
+
+	return;
+}
+
+
+void DoOP_READEX(struct dwTransferData *dp, char *logStr)
+{
+	/* 1. Read in drive # and 3 byte LSN */
+	comRead(dp, &(dp->lastDrive), 1);
+	comRead(dp, dp->lastLSN, 3);
+
+	/* 2. Seek to position in disk image based on LSN received */
+	if (seekSector(dp, int3(dp->lastLSN)) == 0)
+	{
+		/* 3. Read the lastSector at LSN */
+		readSector(dp);
+
+		/* 4. Get error value, if any */
+		dp->lastError = errno;
+
+		/* 5. Send the sector data to the CoCo */
+		comWrite(dp, dp->lastSector, 256);
+
+		/* 6. Read the checksum from the coco */
+		u_char cocosum[2];
+
+		comRead(dp, cocosum, 2);
+
+		if (dp->lastError == 0)
+		{
+			u_char mysum[2];
+
+			dp->lastChecksum = computeChecksum(dp->lastSector, 256);
+
+			mysum[0] = (dp->lastChecksum >> 8) & 0xFF;
+			mysum[1] = (dp->lastChecksum << 0) & 0xFF;
+
+			if (cocosum[0] == mysum[0] && cocosum[1] == mysum[1])
+			{
+				/* Increment sectorsRead count */
+				dp->sectorsRead++;
+
+				logHeader();
+				fprintf(logfp, "%s[%d] LSN[%d] CoCoSum[%d]\n", logStr, dp->lastDrive, int3(dp->lastLSN), int2(cocosum));
+			}
+
+			comWrite(dp, &(dp->lastError), 1);
+
+		}
+	}
+
+	return;
+}
+
+
+
 void DoOP_GETSTAT(struct dwTransferData *dp)
 {
 	/* 1. Read in drive # and stat code */
@@ -777,7 +892,7 @@ void comRaw(struct dwTransferData *dp)
 	io_mod.c_cflag &= ~(CSIZE|PARENB);
 	io_mod.c_cflag |= CS8;
 
-	cfsetospeed(&io_mod, dp->baudRate);   // Set 9600 baud
+	cfsetospeed(&io_mod, dp->baudRate);
 #else
 	cfmakeraw(&io_mod);
 	cfsetspeed(&io_mod, dp->baudRate);
@@ -859,7 +974,7 @@ void WinInit(void)
 	}
 
 	wattron(window0, A_STANDOUT);
-	wprintw(window0, "DriveWire Server v%d.%d (C) 2007 Boisy G. Pitre", REV_MAJOR, REV_MINOR);
+	wprintw(window0, "DriveWire Server v%d.%d (C) 2009 Boisy G. Pitre", REV_MAJOR, REV_MINOR);
 	wattroff(window0, A_STANDOUT);
 
 
@@ -1023,25 +1138,46 @@ void WinUpdate(WINDOW *window, struct dwTransferData *dp)
 	wprintw(window, "$%02X (%s)", dp->lastSetStat, getStatCode(dp->lastSetStat));
 	wmove(window, y++, x); wclrtoeol(window);
 	wmove(window, y++, x); wclrtoeol(window);
-	if (dp->baudRate == B57600)
+	switch (dp->cocoType)
 	{
-		wprintw(window, "%s", "CoCo 3");
-	}
-	else
-	{
-		wprintw(window, "%s", "CoCo 1/2");
+		case 3:
+			if (dp->dw_protocol_vrsn == 3)
+			{
+				wprintw(window, "%s", "CoCo 3 (115200 baud)");
+			}
+			else
+			{
+				wprintw(window, "%s", "CoCo 3 (57600 baud)");
+			}
+			break;
+
+		case 2:
+			if (dp->dw_protocol_vrsn == 3)
+			{
+				wprintw(window, "%s", "CoCo 2 (57600 baud)");
+			}
+			else
+			{
+				wprintw(window, "%s", "CoCo 1/2 (38400 baud)");
+			}
+			break;
 	}
 	wmove(window, y++, x); wclrtoeol(window);
 	wprintw(window, "%s", device);
 	wmove(window, y++, x); wclrtoeol(window);
-	if (dp->dw_protocol_vrsn == 2)
+	switch (dp->dw_protocol_vrsn)
 	{
-		wprintw(window, "2.0");
+		case 3:
+			wprintw(window, "3.0");
+			break;
+		case 2:
+			wprintw(window, "2.0");
+			break;
+		case 1:
+			wprintw(window, "1.0");
+			break;
 	}
-	else
-	{
-		wprintw(window, "1.0");
-	}
+
 	wclrtoeol(window);
 
 	wmove(window, y++, x); wclrtoeol(window);
@@ -1186,7 +1322,7 @@ char *getStatCode(int statcode)
 }
 
 
-int LoadPreferences(struct dwTransferData *datapack)
+int loadPreferences(struct dwTransferData *datapack)
 {
 	FILE	*pf;
 	char	buffer[81];
@@ -1212,7 +1348,8 @@ int LoadPreferences(struct dwTransferData *datapack)
 	p = strchr(device, '\n');
 	if (p != NULL) { *p = '\0'; }
 	fgets(buffer, 128, pf);
-	datapack->baudRate = atoi(buffer);
+	datapack->cocoType = atoi(buffer);
+	setCoCo(datapack, datapack->cocoType);
 	fgets(buffer, 128, pf);
 	datapack->dw_protocol_vrsn = atoi(buffer);
 
@@ -1220,7 +1357,7 @@ int LoadPreferences(struct dwTransferData *datapack)
 }
 
 
-int SavePreferences(struct dwTransferData *datapack)
+int savePreferences(struct dwTransferData *datapack)
 {
 	FILE	*pf;
 	char	buffer[81];
@@ -1240,7 +1377,7 @@ int SavePreferences(struct dwTransferData *datapack)
 	}
 
 	fprintf(pf, "%s\n", device);
-	fprintf(pf, "%d\n", datapack->baudRate);
+	fprintf(pf, "%d\n", datapack->cocoType);
 	fprintf(pf, "%d\n", datapack->dw_protocol_vrsn);
 
 	return 0;
