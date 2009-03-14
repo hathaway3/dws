@@ -10,27 +10,25 @@
 
 @implementation MyDocument
 
-
 // Initializion routine
-- (id)init
+- (id)init;
 {
-    self = [super init];
+   self = [super init];
 
-    if (self)
+   if (self)
 	{
 		// All of our initialization is done in windowControllerDidLoadNib
 	}
 
-    return self;
+   return self;
 }
 
 
-- (void)dealloc
+- (void)dealloc;
 {
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	NSMutableArray *driveArray = [dwModel driveArray];
 	int i;
-	
 	
 	// Remove observer of printer messages
 	[nc removeObserver:printerWindowController name:@"DWPrint" object:dwModel];
@@ -56,7 +54,7 @@
 }
 
 
-- (NSString *)windowNibName
+- (NSString *)windowNibName;
 {
     // Override returning the nib file name of the document
     // If you need to use a subclass of NSWindowController or if your document supports multiple NSWindowControllers, you should remove this method and override -makeWindowControllers instead.
@@ -64,7 +62,7 @@
 }
 
 
-- (void)windowControllerDidLoadNib:(NSWindowController *)aController
+- (void)windowControllerDidLoadNib:(NSWindowController *)aController;
 {
 	int i;
 	NSString *currentPort, *portTitle = nil;
@@ -219,21 +217,19 @@
    }
 }
 
-- (NSData *)dataRepresentationOfType:(NSString *)aType
+- (NSData *)dataRepresentationOfType:(NSString *)aType;
 {
 	return [NSArchiver archivedDataWithRootObject:dwModel];
 }
 
-
-- (BOOL)loadDataRepresentation:(NSData *)data ofType:(NSString *)aType
+- (BOOL)loadDataRepresentation:(NSData *)data ofType:(NSString *)aType;
 {
 	dwModel = [[NSUnarchiver unarchiveObjectWithData:data] retain];
 	
 	return YES;
 }
 
-
-- (IBAction)setSerialPort:(id)sender
+- (IBAction)setSerialPort:(id)sender;
 {
 	NSString *thePort = [serialPortButton titleOfSelectedItem];
 	
@@ -258,8 +254,7 @@
 	[self updateChangeCount:NSChangeDone];
 }
 
-
-- (void)driveNotification:(NSNotification *)note
+- (void)driveNotification:(NSNotification *)note;
 {
 	[self updateChangeCount:NSChangeDone];
 }

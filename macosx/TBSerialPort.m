@@ -229,7 +229,7 @@
             }
            
             // 2. Pass the data to the delegate
-           [_delegate availableData:serialData];
+           [_delegate performSelectorOnMainThread:@selector(availableData:) withObject:serialData waitUntilDone:YES];
         }
     }
 	
