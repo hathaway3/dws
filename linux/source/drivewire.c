@@ -45,6 +45,8 @@
 #define		OP_TIME		'#'
 #define		OP_RESET2	0xFE
 #define		OP_RESET1	0xFF
+#define		OP_PRINT	'P'
+#define		OP_PRINTFLUSH	'F'
 
 
 struct dwTransferData
