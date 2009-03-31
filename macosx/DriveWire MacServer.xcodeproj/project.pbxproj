@@ -39,7 +39,7 @@
 		68ABF6F309806CD600838EB9 /* DriveWire MacServer Help in Resources */ = {isa = PBXBuildFile; fileRef = 68ABF6CE09806CD600838EB9 /* DriveWire MacServer Help */; };
 		68ADDF87096B7347002324CE /* DWAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 68DBD1DE0964F1A900B011C5 /* DWAppDelegate.m */; };
 		68ADDF8B096B7347002324CE /* LogView.m in Sources */ = {isa = PBXBuildFile; fileRef = 6812B39008AD13CE002B533A /* LogView.m */; };
-		68ADDF8D096B7347002324CE /* MyDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4ACFDCFA73011CA2CEA /* MyDocument.m */; };
+		68ADDF8D096B7347002324CE /* DriveWireDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4ACFDCFA73011CA2CEA /* DriveWireDocument.m */; };
 		68ADDF8F096B7347002324CE /* PreferenceController.m in Sources */ = {isa = PBXBuildFile; fileRef = 682F9F2A077BDB200003FDA4 /* PreferenceController.m */; };
 		68ADDF91096B7347002324CE /* StatsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 682AA47308A7E08500278E01 /* StatsView.m */; };
 		68ADDF93096B7347002324CE /* VirtualDriveJukeBoxView.m in Sources */ = {isa = PBXBuildFile; fileRef = 685105F80966DA1C00AAEA3F /* VirtualDriveJukeBoxView.m */; };
@@ -48,7 +48,7 @@
 		68ADE057096B7686002324CE /* DriveWire Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 6872687908A97EDD00ADD1F0 /* DriveWire Icon.icns */; };
 		68ADE05D096B7686002324CE /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 2A37F4B9FDCFA73011CA2CEA /* Credits.rtf */; };
 		68ADE05F096B7686002324CE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165FFE840EACC02AAC07 /* InfoPlist.strings */; };
-		68C535D50F68971B00F39926 /* MyDocument.xib in Resources */ = {isa = PBXBuildFile; fileRef = 68C535D30F68971B00F39926 /* MyDocument.xib */; };
+		68C535D50F68971B00F39926 /* DriveWireDocument.xib in Resources */ = {isa = PBXBuildFile; fileRef = 68C535D30F68971B00F39926 /* DriveWireDocument.xib */; };
 		68C5367B0F6B4E2400F39926 /* DebuggerWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 68C5367A0F6B4E2400F39926 /* DebuggerWindowController.m */; };
 		68C536B90F6B502200F39926 /* DisassemblerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 68C536B80F6B502200F39926 /* DisassemblerView.m */; };
 		68CCE686096B802100DD90D9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; };
@@ -56,8 +56,8 @@
 
 /* Begin PBXFileReference section */
 		089C1660FE840EACC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		2A37F4ACFDCFA73011CA2CEA /* MyDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MyDocument.m; sourceTree = "<group>"; };
-		2A37F4AEFDCFA73011CA2CEA /* MyDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyDocument.h; sourceTree = "<group>"; };
+		2A37F4ACFDCFA73011CA2CEA /* DriveWireDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DriveWireDocument.m; sourceTree = "<group>"; };
+		2A37F4AEFDCFA73011CA2CEA /* DriveWireDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DriveWireDocument.h; sourceTree = "<group>"; };
 		2A37F4B0FDCFA73011CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		2A37F4BAFDCFA73011CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		32DBCF750370BD2300C91783 /* DriveWire_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DriveWire_Prefix.pch; sourceTree = "<group>"; };
@@ -114,7 +114,7 @@
 		68C494E00965F00500F9E265 /* DriveWire Disk Image.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "DriveWire Disk Image.icns"; sourceTree = "<group>"; };
 		68C494E20965F01800F9E265 /* DriveWire Document.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "DriveWire Document.icns"; sourceTree = "<group>"; };
 		68C535C80F6895A500F39926 /* DriveWireServerModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DriveWireServerModel.h; sourceTree = "<group>"; };
-		68C535D40F68971B00F39926 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MyDocument.xib; sourceTree = "<group>"; };
+		68C535D40F68971B00F39926 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DriveWireDocument.xib; sourceTree = "<group>"; };
 		68C536790F6B4E2400F39926 /* DebuggerWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DebuggerWindowController.h; sourceTree = "<group>"; };
 		68C5367A0F6B4E2400F39926 /* DebuggerWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DebuggerWindowController.m; sourceTree = "<group>"; };
 		68C536B70F6B502200F39926 /* DisassemblerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DisassemblerView.h; sourceTree = "<group>"; };
@@ -186,6 +186,7 @@
 		6809AD790F6C086D000BB954 /* VirtualDrive */ = {
 			isa = PBXGroup;
 			children = (
+				6809AE010F6C0C30000BB954 /* TBVirtualDriveView.xib */,
 				6809AD7E0F6C08A6000BB954 /* TBVirtualDriveController.h */,
 				6809AD7F0F6C08A6000BB954 /* TBVirtualDriveController.m */,
 				6809AD800F6C08A6000BB954 /* TBVirtualDriveModel.h */,
@@ -238,6 +239,7 @@
 		6882CEA5096B5BAF0065973D /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				6809AE050F6C0C4C000BB954 /* MainMenu.xib */,
 				6809AEEA0F6C0DB6000BB954 /* CoCo1.psd */,
 				6809AEEB0F6C0DB6000BB954 /* CoCo2.psd */,
 				6809AEEC0F6C0DB6000BB954 /* CoCo3.psd */,
@@ -257,9 +259,6 @@
 				68C494E20965F01800F9E265 /* DriveWire Document.icns */,
 				68C494E00965F00500F9E265 /* DriveWire Disk Image.icns */,
 				6872687908A97EDD00ADD1F0 /* DriveWire Icon.icns */,
-				6809AE010F6C0C30000BB954 /* TBVirtualDriveView.xib */,
-				6809AE050F6C0C4C000BB954 /* MainMenu.xib */,
-				68C535D30F68971B00F39926 /* MyDocument.xib */,
 				2A37F4B9FDCFA73011CA2CEA /* Credits.rtf */,
 				8D15AC360486D014006FF6A4 /* DriveWire MacServer-Info.plist */,
 				089C165FFE840EACC02AAC07 /* InfoPlist.strings */,
@@ -279,8 +278,9 @@
 		68CED8C4095B302F0055679A /* Document Management */ = {
 			isa = PBXGroup;
 			children = (
-				2A37F4AEFDCFA73011CA2CEA /* MyDocument.h */,
-				2A37F4ACFDCFA73011CA2CEA /* MyDocument.m */,
+				68C535D30F68971B00F39926 /* DriveWireDocument.xib */,
+				2A37F4AEFDCFA73011CA2CEA /* DriveWireDocument.h */,
+				2A37F4ACFDCFA73011CA2CEA /* DriveWireDocument.m */,
 			);
 			name = "Document Management";
 			sourceTree = "<group>";
@@ -380,7 +380,7 @@
 				68ADE05D096B7686002324CE /* Credits.rtf in Resources */,
 				68ADE05F096B7686002324CE /* InfoPlist.strings in Resources */,
 				68ABF6F309806CD600838EB9 /* DriveWire MacServer Help in Resources */,
-				68C535D50F68971B00F39926 /* MyDocument.xib in Resources */,
+				68C535D50F68971B00F39926 /* DriveWireDocument.xib in Resources */,
 				6809AE020F6C0C30000BB954 /* TBVirtualDriveView.xib in Resources */,
 				6809AE070F6C0C4C000BB954 /* MainMenu.xib in Resources */,
 				6809AEF80F6C0DB6000BB954 /* CoCo1.psd in Resources */,
@@ -411,7 +411,7 @@
 				68CCE686096B802100DD90D9 /* main.m in Sources */,
 				68ADDF87096B7347002324CE /* DWAppDelegate.m in Sources */,
 				68ADDF8B096B7347002324CE /* LogView.m in Sources */,
-				68ADDF8D096B7347002324CE /* MyDocument.m in Sources */,
+				68ADDF8D096B7347002324CE /* DriveWireDocument.m in Sources */,
 				68ADDF8F096B7347002324CE /* PreferenceController.m in Sources */,
 				68ADDF91096B7347002324CE /* StatsView.m in Sources */,
 				68ADDF93096B7347002324CE /* VirtualDriveJukeBoxView.m in Sources */,
@@ -464,12 +464,12 @@
 			name = "DriveWire MacServer Help";
 			sourceTree = "<group>";
 		};
-		68C535D30F68971B00F39926 /* MyDocument.xib */ = {
+		68C535D30F68971B00F39926 /* DriveWireDocument.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				68C535D40F68971B00F39926 /* English */,
 			);
-			name = MyDocument.xib;
+			name = DriveWireDocument.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
