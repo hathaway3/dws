@@ -49,6 +49,7 @@
 #define		OP_PRINTFLUSH	'F'
 
 
+
 struct dwTransferData
 {
 	int		dw_protocol_vrsn;
@@ -68,6 +69,9 @@ struct dwTransferData
 	unsigned char	lastSetStat;
 	uint16_t	lastChecksum;
 	unsigned char	lastError;
+	FILE	*prtfp;
+	unsigned char	lastChar;
+	char	prtcmd[80];
 };
 
 
@@ -87,6 +91,8 @@ void DoOP_GETSTAT(struct dwTransferData *dp);
 void DoOP_SETSTAT(struct dwTransferData *dp);
 void DoOP_TERM(struct dwTransferData *dp);
 void DoOP_TIME(struct dwTransferData *dp);
+void DoOP_PRINT(struct dwTransferData *dp);
+void DoOP_PRINTFLUSH(struct dwTransferData *dp);
 char *getStatCode(int statcode);
 void WinInit(void);
 void WinSetup(WINDOW *window);
@@ -109,6 +115,8 @@ int savePreferences(struct dwTransferData *datapack);
 void openDSK(struct dwTransferData *dp, int which);
 void closeDSK(struct dwTransferData *dp, int which);
 void *CoCoProcessor(void *dp);
+void prtOpen(struct dwTransferData *dp);
+void prtClose(struct dwTransferData *dp);
 void logOpen(void);
 void logClose(void);
 void logHeader(void);
@@ -222,6 +230,10 @@ int main(void)
 		strcpy(dskfile[2], "disk2");
 		strcpy(dskfile[3], "disk3");
 		setCoCo(&datapack, 3); // assume CoCo 3
+		// change EOLs and send to printer
+		strcpy(datapack.prtcmd, "| tr \"\\r\" \"\\n\" | lpr");
+		// change EOLs and move to file
+		// strcpy(datapack.prtcmd, "| tr \"\\r\" \"\\n\" > printeroutput.txt");
 	}
 
 	
@@ -236,6 +248,7 @@ int main(void)
 	openDSK(&datapack, 1);
 	openDSK(&datapack, 2);
 	openDSK(&datapack, 3);
+	prtOpen(&datapack);
 	logOpen();
 	
 	DoOP_RESET(&datapack);
@@ -307,7 +320,7 @@ int main(void)
 					char tmpfile[128];
 
 					updating = 1;
-					wmove(window0, 17+which, 20);
+					wmove(window0, 18+which, 20);
 					wclrtoeol(window0);
 					wgetstr(window0, tmpfile);
 
@@ -344,6 +357,22 @@ int main(void)
 					WinUpdate(window0, &datapack);
 					break;
 				}
+
+			case 'l':
+				{
+					char newCmd[80];
+					updating = 1;
+
+					wmove(window0, 16, 20);
+					wclrtoeol(window0);
+					wgetstr(window0, newCmd);
+					if (newCmd[0] != '\0')
+						strcpy(datapack.prtcmd, newCmd);
+
+					updating = 0;
+					WinUpdate(window0, &datapack);
+					break;
+				}
 		}
 	}
 
@@ -356,6 +385,7 @@ int main(void)
 	closeDSK(&datapack, 1);
 	closeDSK(&datapack, 2);
 	closeDSK(&datapack, 3);
+	prtClose(&datapack);
 	logClose();
 
 	savePreferences(&datapack);
@@ -450,6 +480,14 @@ void *CoCoProcessor(void *data)
 
 				case OP_TIME:
 					DoOP_TIME(dp);
+					break;
+
+				case OP_PRINT:
+					DoOP_PRINT(dp);
+					break;
+
+				case OP_PRINTFLUSH:
+					DoOP_PRINTFLUSH(dp);
 					break;
 
 				default:
@@ -792,6 +830,34 @@ void DoOP_TIME(struct dwTransferData *dp)
 }
 
 
+void DoOP_PRINT(struct dwTransferData *dp)
+{
+	comRead(dp, &dp->lastChar, 1);
+	fwrite(&dp->lastChar, 1, 1, dp->prtfp);
+
+	logHeader();
+	fprintf(logfp, "OP_PRINT\n");
+
+	return;
+}
+
+
+void DoOP_PRINTFLUSH(struct dwTransferData *dp)
+{
+	char buff[128];
+
+	fclose(dp->prtfp);
+	sprintf(buff, "cat drivewire.prt %s\n", dp->prtcmd);
+	system(buff);
+	dp->prtfp = fopen("drivewire.prt", "w+"); // empty it
+
+	logHeader();
+	fprintf(logfp, "OP_PRINTFLUSH\n");
+
+	return;
+}
+
+
 uint16_t computeChecksum(u_char *data, int numbytes)
 {
 	uint16_t lastChecksum = 0x0000;
@@ -1015,6 +1081,8 @@ void WinSetup(WINDOW *window)
 	wprintw(window, "Serial Port     :");
 	wmove(window, y++, 1);
 	wprintw(window, "DriveWire Mode  :");
+	wmove(window, y++, 1);
+	wprintw(window, "Print Command   :");
         y++;
 	wmove(window, y++, 1);
 	wprintw(window, "Disk 0          :");
@@ -1029,7 +1097,7 @@ void WinSetup(WINDOW *window)
 	wmove(window, y++, 1);
 
 	wattron(window, A_STANDOUT);
-	wprintw(window, "[0-3] Disk   [C]oCo   [P]ort   [R]eset   [M]ode   [Q]uit");
+	wprintw(window, "[0-3] Disk   [C]oCo   [P]ort   [R]eset   [M]ode   [L]Print   [Q]uit");
 	wattroff(window, A_STANDOUT);
 
 	/* 2. Refresh */
@@ -1105,6 +1173,14 @@ void WinUpdate(WINDOW *window, struct dwTransferData *dp)
 
 		case OP_TIME:
 			wprintw(window, "OP_TIME");
+			break;
+
+		case OP_PRINT:
+			wprintw(window, "OP_PRINT");
+			break;
+
+		case OP_PRINTFLUSH:
+			wprintw(window, "OP_PRINTFLUSH");
 			break;
 
 		default:
@@ -1189,6 +1265,9 @@ void WinUpdate(WINDOW *window, struct dwTransferData *dp)
 	}
 
 	wclrtoeol(window);
+
+	wmove(window, y++, x); wclrtoeol(window);
+	wprintw(window, dp->prtcmd);
 
 	wmove(window, y++, x); wclrtoeol(window);
 
@@ -1362,6 +1441,7 @@ int loadPreferences(struct dwTransferData *datapack)
 	fgets(buffer, 128, pf);
 	datapack->dw_protocol_vrsn = atoi(buffer);
 	setCoCo(datapack, datapack->cocoType);
+	fgets(datapack->prtcmd, 128, pf);
 
 	return 0;
 }
@@ -1389,8 +1469,23 @@ int savePreferences(struct dwTransferData *datapack)
 	fprintf(pf, "%s\n", device);
 	fprintf(pf, "%d\n", datapack->cocoType);
 	fprintf(pf, "%d\n", datapack->dw_protocol_vrsn);
+	fprintf(pf, "%s\n", datapack->prtcmd);
 
 	return 0;
+}
+
+
+void prtOpen(struct dwTransferData *datapack)
+{
+	datapack->prtfp = fopen("drivewire.prt", "a+");
+}
+
+
+void prtClose(struct dwTransferData *datapack)
+{
+	fclose(datapack->prtfp);
+
+	datapack->prtfp = NULL;
 }
 
 
