@@ -271,7 +271,6 @@ static int instanceCount = 0;
 		[ledTimer invalidate];
 	}
 	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-   NSRunLoop *l = [NSRunLoop currentRunLoop];
 	[[NSRunLoop currentRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
 	
     // Seek to offset based on LSN passed.

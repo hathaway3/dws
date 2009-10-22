@@ -48,7 +48,7 @@
 */
 @interface TBSerialPort : NSObject
 {
-    int				fd;					// file descriptor to path of serial device
+	int				fd;					// file descriptor to path of serial device
 	id				fOwner;				// owner of the port
     NSString		*fDeviceName;		// the OS-friendly name of the device
     NSString		*fServiceName;		// the view-friendly name of the device
@@ -56,15 +56,10 @@
     struct termios 	sTTYAttrs;			// maeleable TTY attributes
 	NSLock			*serialLock;
 	Boolean			allowedToRun;
-   Boolean        logIncomingBytes;
-   Boolean        logOutgoingBytes;
-   id             _delegate;
+	Boolean			logIncomingBytes;
+	Boolean			logOutgoingBytes;
+	id				delegate;
 }
-
-
-- (id)delegate;
-
-- (void)setDelegate:(id)delegate;
 
 /*!
 	@enum serialParity
@@ -83,7 +78,7 @@ typedef enum
 // Port access methods
 
 /*!
-	@method init
+	@method initWithDeviceName:serviceName:
 	@abstract Acquires a path to the specified serial port.
 	@param deviceName A pointer to the string containing the port name.
 	@param serviceName A pointer to the string containing the service name.
@@ -92,11 +87,10 @@ typedef enum
 	and 1 stop bit.
 	@result YES if the acquisition was successful; otherwise NO.
  */
-- (id)init:(NSString *)deviceName :(NSString *)serviceName;
-	
-	
+- (id)initWithDeviceName:(NSString *)deviceName serviceName:(NSString *)serviceName;
+
 /*!
-	@method openPort
+	@method openPort:
 	@abstract Acquires a path to the specified serial port.
 	@param owner A pointer to the desired owner object of the port.
 	@discussion This method opens a port and conditions it for immediate
@@ -106,7 +100,6 @@ typedef enum
  */
 - (BOOL)openPort:(id)owner;
 
-
 /*!
 	@method closePort
 	@abstract Releases a previously acquired port.
@@ -114,36 +107,48 @@ typedef enum
  */
 - (BOOL)closePort;
 
+/*!
+ @method delegate
+ @abstract Returns a pointer to the delegate.
+ @result The pointer to the delegate that was previously set.
+ */
+- (id)delegate;
 
 /*!
-	@method readData
+ @method setDelegate:
+ @param data A pointer to an object to be the delegate.
+ @abstract Sets the delegate for the class.
+ */
+- (void)setDelegate:(id)_value;
+
+#if 0
+/*!
+	@method readData:length:
 	@param data A pointer to an NSData object where data will be read.
 	@abstract Obtains available data from the serial port.
 	@result YES if the read was successful, NO if the read was not.
  */
-- (BOOL)readData:(char *)data :(int)length;
-
+- (BOOL)readData:(char *)data length:(int)length;
+#endif
 
 /*!
-	@method readData
+	@method readAvailableData
 	@param data A pointer to an NSData object where data will be read.
 	@abstract Obtains available data from the serial port.
 	@result YES if the read was successful, NO if the read was not.
  */
 - (NSData *)readAvailableData;
 
-
 /*!
-	@method writeData
+	@method writeData:
 	@param data A pointer to an NSData object of the data to be written.
 	@abstract Obtains available data from the serial port.
 	@result YES if data was written; otherwise NO.
  */
 - (BOOL)writeData:(NSData *)data;
 
-
 /*!
-	@method writeData
+	@method writeString:
 	@param data A pointer to an NSString object of the data to be written.
 	@abstract Obtains available data from the serial port.
 	@result YES if data was written; otherwise NO.
@@ -192,29 +197,27 @@ typedef enum
  */
 - (id)owner;
 
-
 /*!
- @method setInputLogging
+ @method setInputLogging:
  @abstract Turns on input logging and shows all bytes coming into the serial port
  @param value TRUE to turn on logging; FALSE to turn off logging
  */
 - (void)setInputLogging:(Boolean)value;
 
 /*!
- @method setOutputLogging
+ @method setOutputLogging:
  @abstract Turns on output logging and shows all bytes going out of serial port
  @param value TRUE to turn on logging; FALSE to turn off logging
  */
 - (void)setOutputLogging:(Boolean)value;
 
 /*!
-	@method setBaudRate
+	@method setBaudRate:
 	@abstract Sets the baud rate of the serial port.
 	@param baudRate The baud rate to set the serial port to.
 	@result YES if the port was successfully set; otherwise, NO.
  */
 - (BOOL)setBaudRate:(int)baudRate;
-
 
 /*!
 	@method setWordSize
@@ -224,24 +227,21 @@ typedef enum
  */
 - (BOOL)setWordSize:(int)wordSize;
 
-
 /*!
-	@method setParity
+	@method setParity:
 	@abstract Sets the parity of the serial port.
 	@param parity The desired parity.
 	@result YES if the port was successfully set; otherwise, NO.
  */
 - (BOOL)setParity:(serialParity)parity;
 
-
 /*!
-	@method setStopBits
+	@method setStopBits:
 	@abstract Sets the number of stop bits of the serial port.
 	@param stopBits The number of stop bits to set.
 	@result YES if the port was successfully set; otherwise, NO.
  */
 - (BOOL)setStopBits:(int)stopBits;
-
 
 /*!
 	@method setMinimumReadBytes
@@ -251,9 +251,8 @@ typedef enum
  */
 - (BOOL)setMinimumReadBytes:(int)number;
 
-
 /*!
-	@method setReadTimeout
+	@method setReadTimeout:
 	@param timeout The number of milliseconds to timeout if no data is present.
 	@abstract Sets read timeout in milliseconds.
 	@result YES if the port was successfully set; otherwise, NO.
@@ -270,14 +269,12 @@ typedef enum
  */
 - (NSString *)deviceName;
 
-
 /*!
 	@method serviceName
 	@abstract Returns the user-friendly name of the serial port.
 	@result The name of the serial port.
  */
 - (NSString *)serviceName;
-
 
 /*!
 	@method baudRate
@@ -286,14 +283,12 @@ typedef enum
  */
 - (int)baudRate;
 
-
 /*!
 	@method wordSize
 	@abstract Returns the word size of the serial port.
 	@result The word size of the serial port.
  */
 - (int)wordSize;
-
 
 /*!
 	@method parity
@@ -302,7 +297,6 @@ typedef enum
  */
 - (serialParity)parity;
 
-
 /*!
 	@method stopBits
 	@abstract Returns the serial port's stop bits setting.
@@ -310,14 +304,12 @@ typedef enum
  */
 - (int)stopBits;
 
-
 /*!
 	@method minimumReadBytes
 	@abstract Returns the serial port's minimum read byte count.
 	@result The minimum number of ready bytes is returned.
  */
 - (int)minimumReadBytes;
-
 
 /*!
 	@method readTimeout

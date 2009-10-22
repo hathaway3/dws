@@ -24,12 +24,14 @@
 
 #import "TBSerialPort.h"
 
+//#define DEBUG
 
 @implementation TBSerialPort
 
+#pragma mark -
 #pragma mark Init Methods
 
-- (id)init:(NSString *)deviceName :(NSString *)serviceName
+- (id)initWithDeviceName:(NSString *)deviceName serviceName:(NSString *)serviceName;
 {
     // Initialize our super.
     if ((self = [super init]))
@@ -44,14 +46,12 @@
     return(self);
 }
 
-
-
-- (void)dealloc
+- (void)dealloc;
 {
-    allowedToRun = FALSE;
-    
-    // Wait for the lock.    
-    [serialLock lock];
+//    allowedToRun = FALSE;
+    delegate = nil;
+	
+	[self closePort];
 	
 	// Release retained varaibles
 	[fDeviceName release];
@@ -63,50 +63,44 @@
     return;
 }
 
-
+#pragma mark -
+#pragma mark Getter/Setter Methods
 
 - (id)delegate;
 {
-   return _delegate;
+	return delegate;
 }
 
-- (void)setDelegate:(id)delegate;
+- (void)setDelegate:(id)_value;
 {
-   _delegate = delegate;
+	delegate = _value;
 }
 
+#pragma mark -
 #pragma mark Port Acquisition Methods
-
 
 - (BOOL)openPort:(id)owner
 {
     int status = -1;
 
-
-	// If the port is already opened, return NO
+	// if the port is already opened, return NO
 	
 	if (fd != -1)
 	{
 		return NO;
 	}
 	
-	
-    // Acquire the path to the device.  If error, return an error.
-    
-    status = open([fDeviceName cString], O_RDWR | O_NOCTTY | O_NDELAY);
-
+    // acquire the path to the device.  If error, return an error.
+    status = open([fDeviceName cStringUsingEncoding:NSASCIIStringEncoding], O_RDWR | O_NOCTTY | O_NDELAY);
     if (status != -1) 
     {
 		fd = status;
-
 		fOwner = owner;
 		
-        // Set blocking I/O, no signal on data ready...
-
+        // set blocking I/O, no signal on data ready...
         if ((status = fcntl(fd, F_SETFL, 0)) != -1) 
         {
             // Get the current options and save them for later reset.
-
             if ((status = tcgetattr(fd, &sOriginalTTYAttrs)) != -1) 
             {
                 // Set raw input, one second timeout.
@@ -120,9 +114,7 @@
                 sTTYAttrs.c_cc[VTIME] = 0;
 				[self setBaudRate:9600];
 
-        
-                // Set the options.
-                
+                // set the options.                
                 status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
 
 				[self setWordSize:8];
@@ -132,19 +124,13 @@
 				[self setMinimumReadBytes:0];
 				[self setReadTimeout:1];
 				
-				
-				// Spin off listener thread.
-				
-				allowedToRun = TRUE;
-				
-				serialLock = [[NSLock alloc] init];
-				
+				// spin off listener thread.				
+				allowedToRun = TRUE;				
+				serialLock = [[NSLock alloc] init];				
 				[NSThread detachNewThreadSelector:@selector(listener:) toTarget:self withObject:nil];
-				
             }
         }
     }
-
 
 	if (status == -1)
 	{
@@ -155,8 +141,6 @@
 		return YES;
 	}
 }
-
-
 
 - (BOOL)closePort
 {
@@ -170,26 +154,25 @@
 
 		if (fd != -1)
 		{
-			close(fd);
-        
+			close(fd);        
 			fd = -1;
-
 			fOwner = nil;
 		}
-
+		[serialLock unlock];
+		[serialLock release];
+		
 		return YES;
 	}
-    
     
     return NO;
 }
 
-
+#pragma mark -
 #pragma mark Data Acquisition Methods
 
 // This method should run on its own thread.  It listens to any data coming in from the port,
 // then packages that data and sends it to our delegate.
-- (void)listener:(id)anObject
+- (void)listener:(id)anObject;
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     const int readBufferSize = 300;
@@ -201,51 +184,43 @@
 #endif
 	
     // 1. Lock access to this thread.
-    
     [serialLock lock];
 	
-
 	// 2. Do processing so long as we are allowed to run.
-	
     while (allowedToRun == TRUE)
     {
         int maxsize = 0;
 		
-        
-        // 1. Read up to 'maxsize' bytes from the port.
-		
+        // 1. Read up to 'maxsize' bytes from the port.		
 		maxsize = read(fd, readBuffer, readBufferSize);
-
         if (maxsize > 0)
         {
-            // 1. Package serial data into an NSData object
-			
+            // 1. Package serial data into an NSData object			
             serialData = [NSData dataWithBytesNoCopy:readBuffer length:maxsize freeWhenDone:NO];
 			
             // 2. If logging is turned on, log all bytes
             if (logIncomingBytes == true)
             {
-               NSLog(@"Incoming bytes: %@", [serialData description]);
+#ifdef DEBUG
+				NSLog(@"Incoming bytes: %@", [serialData description]);
+#endif
             }
            
-            // 2. Pass the data to the delegate
-           [_delegate performSelectorOnMainThread:@selector(availableData:) withObject:serialData waitUntilDone:YES];
+            // 3. Pass the data to the delegate
+//           [_delegate performSelectorOnMainThread:@selector(availableData:) withObject:serialData waitUntilDone:YES];
+            [delegate availableData:serialData];
         }
     }
 	
     [pool release];
     
-	
-    // 3. Unlock the lock.
-    
+    // 3. Unlock the lock.    
 #ifdef DEBUG
 	NSLog(@"Exiting Thread...\n");
 #endif
 	
     [serialLock unlock];
 }
-
-
 
 #if 0
 - (void)serialPortReadData:(NSDictionary *)dataDictionary
@@ -260,17 +235,14 @@
 }
 #endif
 
-
 - (BOOL)readData :(char *)data :(int)length;
 {
     int status = -1;
-	
-    
+	    
     if (fd != -1)
     {
 		status = read(fd, data, length);
     }
-    
     
 	if (status == -1)
 	{		
@@ -282,20 +254,16 @@
 	}
 }
 
-
-
 - (NSData *)readAvailableData
 {
     int status = -1, length = [self bytesReady];
 	NSData *incoming;
 	void *buffer = (void *)malloc(length);
-	
-    
+	    
     if (fd != -1)
     {
 		status = read(fd, buffer, length);
-    }
-    
+    }    
     
 	if (status == -1)
 	{
@@ -311,22 +279,19 @@
 	}
 }
 
-
-
 - (BOOL)writeData :(NSData *)data
 {
     int status = -1;
-    
     
     if (fd != -1)
     {
         status = write(fd, [data bytes], [data length]);
     }
     
-   if (logOutgoingBytes == true)
-   {
-      NSLog(@"Outgoing bytes: %@", [data description]);
-   }
+	if (logOutgoingBytes == true)
+	{
+		NSLog(@"Outgoing bytes: %@", [data description]);
+	}
     
 	if (status == -1)
 	{
@@ -337,19 +302,15 @@
 		return YES;
 	}
 }
-
-
 
 - (BOOL)writeString :(NSString *)data
 {
     int status = -1;
     
-    
     if (fd != -1)
     {
-        status = write(fd, [data cString], [data length]);
+        status = write(fd, [data cStringUsingEncoding:NSASCIIStringEncoding], [data length]);
     }
-    
     
 	if (status == -1)
 	{
@@ -362,6 +323,7 @@
 }
 
 
+#pragma mark -
 #pragma mark Data Query Methods
 
 - (Boolean)inputLogging;
@@ -378,17 +340,13 @@
 {
     int	ready = -1;
     
-    
     if (fd != -1)
     {
         ioctl(fd, FIONREAD, &ready);
     }
     
-    
     return ready;
 }
-
-
 
 - (BOOL)isAcquired
 {
@@ -397,25 +355,18 @@
         return NO;
     }
     
-    
     return YES;
 }
-
-
 
 - (NSString *)deviceName
 {
     return fDeviceName;
 }
 
-
-
 - (NSString *)serviceName
 {
     return fServiceName;
 }
-
-
 
 - (id)owner
 {
@@ -423,13 +374,12 @@
 }
 
 
-
+#pragma mark -
 #pragma mark Port Control Methods
 
 - (BOOL)setBaudRate:(int)baudRate
 {
-    int status = -1;
-    
+    int status = -1;    
     
     if (fd != -1)
     {
@@ -439,7 +389,6 @@
 		}
     }
     
-
 	if (status == -1)
 	{
 		return NO;
@@ -450,28 +399,21 @@
 	}
 }
 
-
-
 - (int)baudRate
 {
     int	status = -1;
-    
-    
+        
     if (fd != -1)
     {
         status = cfgetispeed(&sTTYAttrs);
     }
     
-
     return status;
 }
-
-
 
 - (BOOL)setWordSize:(int)wordSize;
 {
     int		status = -1;
-
 	
     if (fd != -1)
     {
@@ -513,13 +455,10 @@
 	}
 }
 
-
-
 - (int)wordSize;
 {
     int	status = -1;
-    
-    
+
     if (fd != -1)
     {
         switch (sTTYAttrs.c_cflag & CSIZE)
@@ -542,7 +481,6 @@
         }
     }
     
-
     return status;
 }
 
@@ -556,11 +494,9 @@
    logOutgoingBytes = value;
 }
 
-
 - (BOOL)setParity:(serialParity)parity
 {
     int	status = -1;
-
 
     if (fd != -1)
     {
@@ -583,7 +519,6 @@
                 break;
         }
     }
-
     
 	if (status == -1)
 	{
@@ -595,13 +530,10 @@
 	}
 }
 
-
-
 - (serialParity)parity
 {
     serialParity	parity = parityNone;
-    
-    
+
     if (fd != -1)
     {
         if ((sTTYAttrs.c_cflag & PARENB) != 0)
@@ -616,18 +548,14 @@
             }
         }
     }
-        
 
     return parity;
 }
 
-
-
 - (BOOL)setStopBits:(int)stopBits;
 {
     int	status = -1;
-    
-    
+        
     if (fd != -1)
     {
         switch (stopBits)
@@ -644,7 +572,6 @@
         }
     }
     
-
 	if (status == -1)
 	{
 		return NO;
@@ -655,12 +582,9 @@
 	}
 }
 
-
-
 - (int)stopBits;
 {
-    int	status = -1;
-    
+    int	status = -1;    
     
     if (fd != -1)
     {
@@ -671,20 +595,15 @@
             status = 2;
         }
     }
-    
 
     return status;
 }
 
-
-
 // Sets the read timeout in milliseconds.
 // Returns 0 (success) OR -1 (failure).
-
 - (BOOL)setReadTimeout:(int)timeout
 {
     int	status = -1;
-
 
     if (fd != -1)
     {
@@ -703,28 +622,21 @@
 	}
 }
 
-
-
 - (int)readTimeout
 {
-    int	status = -1;
-    
+    int	status = -1;    
     
     if (fd != -1)
     {
         status = sTTYAttrs.c_cc[VTIME];
-    }
-    
+    }    
 
     return status;
 }
 
-
-
 - (BOOL)setMinimumReadBytes:(int)number
 {
     int	status = -1;
-
 
     if (fd != -1)
     {
@@ -743,21 +655,16 @@
 	}
 }
 
-
-
 - (int)minimumReadBytes
 {
     int	status = -1;
-    
     
     if (fd != -1)
     {
         status = sTTYAttrs.c_cc[VMIN];
     }
     
-
     return status;
 }
-
 
 @end

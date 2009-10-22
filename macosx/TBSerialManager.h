@@ -123,7 +123,6 @@
 	@result A dictionary containing the port name as key and device name as
 	value.
 */
-- (NSMutableDictionary *)availablePorts;
-
++ (NSMutableDictionary *)availablePorts;
 
 @end

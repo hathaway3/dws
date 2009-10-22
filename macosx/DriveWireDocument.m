@@ -80,7 +80,7 @@
    [super windowControllerDidLoadNib:aController];
 	
     // Request the array of ports from the Document Model	
-	NSMutableDictionary *portNames = [dwModel availablePorts];
+	NSMutableDictionary *portNames = [[TBSerialManager availablePorts] retain];
 
 	// Remove all items from the port button
 	[serialPortButton removeAllItems];

@@ -75,6 +75,14 @@
       // Don't bother logging a PQ_ADD unless the printer has been flushed.  We don't want to flood the log window with these messages because it slows down the CoCo.
       return;
    }
+	else if ([logString isEqualToString:@"OP_VPORT_READ"] == YES)
+	{
+		logString = [NSString stringWithFormat:@"%@ %@[%@] ReadCount[%@]\n", rightNow, [info objectForKey:@"OpCode"], [info objectForKey:@"VPort"], [info objectForKey:@"ReadCount"]];
+	}
+	else if ([logString isEqualToString:@"OP_VPORT_WRITE"] == YES)
+	{
+		logString = [NSString stringWithFormat:@"%@ %@[%@] DataByte[%@]\n", rightNow, [info objectForKey:@"OpCode"], [info objectForKey:@"VPort"], [info objectForKey:@"DataByte"]];
+	}
 	else
 	{
 		logString = [NSString stringWithFormat:@"%@ %@\n", rightNow, logString];

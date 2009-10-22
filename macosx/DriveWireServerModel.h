@@ -46,6 +46,10 @@
 #define	_OP_PRINTFLUSH          'F'
 #define	_OP_PRINT               'P'
 
+// Virtual Port extension definitions
+#define	_OP_VPORT_READ          'V'
+#define	_OP_VPORT_WRITE         'v'
+
 // WireBug definitions
 #define	_OP_WIREBUG_READREGS    'R'
 #define	_OP_WIREBUG_WRITEREGS	'r'
@@ -135,9 +139,6 @@
  */
 - (id)initWithVersion:(int)versionNumber;
 
-
-
-- (NSMutableDictionary *)availablePorts;
 
 /*!
 	@method driveArray

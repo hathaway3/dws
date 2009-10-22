@@ -185,7 +185,7 @@ static TBSerialManager *fSerialManager = nil;
 	}
 		
     // Set up the devices
-	fSerialPortNames = [fSerialManager availablePorts];
+	fSerialPortNames = [[TBSerialManager availablePorts] retain];
    
    // Set up state variables
 	currentState = @"OP_OPCODE";
@@ -220,9 +220,7 @@ static TBSerialManager *fSerialManager = nil;
 	
 	[driveArray release];	
 	[fSerialManager releasePort:fCurrentPort];
-#if 0
    [fSerialPortNames release];
-#endif
    [super dealloc];
 	
     return;
@@ -294,11 +292,6 @@ static TBSerialManager *fSerialManager = nil;
 #ifdef DEBUG
 	NSLog(@"Now listening for data from device %@\n", [handler serviceName]);
 #endif
-}
-
-- (NSMutableDictionary *)availablePorts
-{
-	return fSerialPortNames;
 }
 
 - (NSMutableArray *)driveArray
@@ -466,11 +459,15 @@ static TBSerialManager *fSerialManager = nil;
           [self OP_PRINTFLUSH];
           break;
           
-       case _OP_PRINT:
-          currentState = @"OP_PRINT";
+       case _OP_VPORT_READ:
+          currentState = @"OP_VPORT_READ";
           break;
           
-       case _OP_INIT:
+		case _OP_VPORT_WRITE:
+			currentState = @"OP_VPORT_WRITE";
+			break;
+			
+		case _OP_INIT:
           [self OP_INIT];
           break;
             
@@ -690,58 +687,181 @@ static TBSerialManager *fSerialManager = nil;
    watchDog = nil;
 }
 
+- (void)OP_VPORT_READ
+{
+	// We read 2 bytes (1 byte port number, 1 byte request count)
+	// Check for special case where entire packet is ready. */
+	if (currentLocation == 0 && dataLength == 2)
+	{
+		currentLocation = dataLength;
+		dataLength = 0;
+		startOfData = &dataBytes[0];
+	}
+	else
+	{
+		int32_t remaining;
+		
+		// Compute remaining free space in our local buffer.
+		remaining = 2 - currentLocation;
+		
+		if (remaining > dataLength)
+		{
+			remaining = dataLength;
+		}
+		
+		// Copy the maximum available amount to our local buffer
+		// and adjust data pointer and length accordingly.		
+		memcpy(inputBuffer + currentLocation, dataBytes, remaining);
+		dataLength -= remaining;		
+		dataBytes += remaining;		
+		currentLocation += remaining;
+	}    
+    
+	// Check if we have reached our terminal count.
+	if (currentLocation == 2)
+	{
+		uint32_t portNumber, readCount;
+		char b[256];
+		
+		// Invalidate watchdog timer
+		[self invalidateWatchdog];
+		
+		// Reset the current location now that we've achieved it.
+		currentLocation = 0;
+		
+		// Extract virtual port number and read count from data packet.
+		portNumber = startOfData[0];
+		readCount = startOfData[1];
+		
+		// Send response to the CoCo.
+		int i;
+		for (i = 0; i < 256; i++)
+			b[i] = 'A';
+		[portDelegate writeData:[NSData dataWithBytes:b length:readCount]];
+
+		[statistics setObject:@"OP_VPORT_READ" forKey:@"OpCode"];
+		[statistics setObject:[NSNumber numberWithInt:portNumber] forKey:@"VPort"];
+		[statistics setObject:[NSNumber numberWithInt:readCount] forKey:@"ReadCount"];
+		[_delegate updateInfoView:statistics];
+		
+		// Reset state
+		currentState = @"OP_OPCODE";
+		startOfData = inputBuffer;
+	}
+	
+	return;
+}
+
+- (void)OP_VPORT_WRITE
+{
+	// We read 2 bytes (1 byte port number, 1 data byte)
+	// Check for special case where entire packet is ready. */
+	if (currentLocation == 0 && dataLength == 2)
+	{
+		currentLocation = dataLength;
+		dataLength = 0;
+		startOfData = &dataBytes[0];
+	}
+	else
+	{
+		int32_t remaining;
+		
+		// Compute remaining free space in our local buffer.
+		remaining = 2 - currentLocation;
+		
+		if (remaining > dataLength)
+		{
+			remaining = dataLength;
+		}
+		
+		// Copy the maximum available amount to our local buffer
+		// and adjust data pointer and length accordingly.		
+		memcpy(inputBuffer + currentLocation, dataBytes, remaining);
+		dataLength -= remaining;		
+		dataBytes += remaining;		
+		currentLocation += remaining;
+	}    
+    
+	// Check if we have reached our terminal count.
+	if (currentLocation == 2)
+	{
+		uint32_t portNumber, dataByte;
+		
+		// Invalidate watchdog timer
+		[self invalidateWatchdog];
+		
+		// Reset the current location now that we've achieved it.
+		currentLocation = 0;
+		
+		// Extract virtual port number and read count from data packet.
+		portNumber = startOfData[0];
+		dataByte = startOfData[1];
+		
+		[statistics setObject:@"OP_VPORT_WRITE" forKey:@"OpCode"];
+		[statistics setObject:[NSNumber numberWithInt:portNumber] forKey:@"VPort"];
+		[statistics setObject:[NSNumber numberWithInt:dataByte] forKey:@"DataByte"];
+		[_delegate updateInfoView:statistics];
+		
+		// Reset state
+		currentState = @"OP_OPCODE";
+		startOfData = inputBuffer;
+	}
+	
+	return;
+}
+
 - (void)OP_READ
 {
-   // We read 4 bytes (1 byte drive number, 3 byte LSN)
-   // Check for special case where entire packet is ready. */
-   if (currentLocation == 0 && dataLength == 4)
-   {
-      currentLocation = dataLength;
-      dataLength = 0;
-      startOfData = &dataBytes[0];
-   }
-   else
-   {
-      int32_t remaining;
-
-      // Compute remaining free space in our local buffer.
-      remaining = 4 - currentLocation;
+	// We read 4 bytes (1 byte drive number, 3 byte LSN)
+	// Check for special case where entire packet is ready. */
+	if (currentLocation == 0 && dataLength == 4)
+	{
+		currentLocation = dataLength;
+		dataLength = 0;
+		startOfData = &dataBytes[0];
+	}
+	else
+	{
+		int32_t remaining;
 		
-      if (remaining > dataLength)
-      {
-         remaining = dataLength;
-      }
+		// Compute remaining free space in our local buffer.
+		remaining = 4 - currentLocation;
 		
-      // Copy the maximum available amount to our local buffer
-      // and adjust data pointer and length accordingly.		
-      memcpy(inputBuffer + currentLocation, dataBytes, remaining);
-      dataLength -= remaining;		
-      dataBytes += remaining;		
-      currentLocation += remaining;
-   }    
+		if (remaining > dataLength)
+		{
+			remaining = dataLength;
+		}
+		
+		// Copy the maximum available amount to our local buffer
+		// and adjust data pointer and length accordingly.		
+		memcpy(inputBuffer + currentLocation, dataBytes, remaining);
+		dataLength -= remaining;		
+		dataBytes += remaining;		
+		currentLocation += remaining;
+	}    
     
-   // Check if we have reached our terminal count.
-   if (currentLocation == 4)
-   {
-      uint32_t driveNumber;
-      NSData *sectorBuffer = nil;
-      unsigned int vLSN;
-      uint16_t myChecksum;
-      unsigned char b[2], response;
-
-      // Invalidate watchdog timer
-      [self invalidateWatchdog];
-
-      // Reset the current location now that we've achieved it.
-      currentLocation = 0;
-
-      // Assume no error to CoCo for now.
-      response = 0;
-
-      // Extract drive number and LSN from data packet.
-      driveNumber = startOfData[0];
-      vLSN = (startOfData[1] << 16) | (startOfData[2] << 8) | startOfData[3];
-
+	// Check if we have reached our terminal count.
+	if (currentLocation == 4)
+	{
+		uint32_t driveNumber;
+		NSData *sectorBuffer = nil;
+		unsigned int vLSN;
+		uint16_t myChecksum;
+		unsigned char b[2], response;
+		
+		// Invalidate watchdog timer
+		[self invalidateWatchdog];
+		
+		// Reset the current location now that we've achieved it.
+		currentLocation = 0;
+		
+		// Assume no error to CoCo for now.
+		response = 0;
+		
+		// Extract drive number and LSN from data packet.
+		driveNumber = startOfData[0];
+		vLSN = (startOfData[1] << 16) | (startOfData[2] << 8) | startOfData[3];
+		
 		// Check drive number for veracity
 		if (driveNumber >= DRIVE_COUNT)
 		{
@@ -757,60 +877,60 @@ static TBSerialManager *fSerialManager = nil;
 			}
 		}
 		
-     // Send the response code to the CoCo.
-     [portDelegate writeData:[NSData dataWithBytes:&response length:1]];
-   
-     // If we have an OK response, we send the sector and Checksum.
-     if (response == 0)
-     {
-         // Write sector to CoCo.
-         if ([sectorBuffer bytes] != NULL)
-         {
-             // Send sector.
-             [portDelegate writeData:sectorBuffer];
-         
-             // Compute Checksum from sector.
-            if (validateWithCRC == NO)
-            {
-               myChecksum = [self compute16BitChecksum:[sectorBuffer bytes] :256];
-            }
-            else
-            {
-               myChecksum = [self computeCRC:[sectorBuffer bytes] :256];
-            }
-         }
-         else
-         {
-             // If [sectorBuffer bytes] == NULL, then the DSK manager
-             // read past the end of the file.  This is ok because
-             // OS-9's view of the disk may be larger than the physical
-             // file that holds the image.  We'll just send a fake
-             // sector with zero bytes.
-             
-            u_char nullSector[256] =
-
-            {
-               0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-               0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-               0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-               0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-               0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-               0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-               0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-               0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-            };
+		// Send the response code to the CoCo.
+		[portDelegate writeData:[NSData dataWithBytes:&response length:1]];
+		
+		// If we have an OK response, we send the sector and Checksum.
+		if (response == 0)
+		{
+			// Write sector to CoCo.
+			if ([sectorBuffer bytes] != NULL)
+			{
+				// Send sector.
+				[portDelegate writeData:sectorBuffer];
+				
+				// Compute Checksum from sector.
+				if (validateWithCRC == NO)
+				{
+					myChecksum = [self compute16BitChecksum:[sectorBuffer bytes] :256];
+				}
+				else
+				{
+					myChecksum = [self computeCRC:[sectorBuffer bytes] :256];
+				}
+			}
+			else
+			{
+				// If [sectorBuffer bytes] == NULL, then the DSK manager
+				// read past the end of the file.  This is ok because
+				// OS-9's view of the disk may be larger than the physical
+				// file that holds the image.  We'll just send a fake
+				// sector with zero bytes.
+				
+				u_char nullSector[256] =
+				
+				{
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+					0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+				};
                 
-            [portDelegate writeData:[NSData dataWithBytes:nullSector length:256]];
-             
-             // The Checksum will be zero.
-            myChecksum = [self compute16BitChecksum:nullSector :256];
-         }
+				[portDelegate writeData:[NSData dataWithBytes:nullSector length:256]];
+				
+				// The Checksum will be zero.
+				myChecksum = [self compute16BitChecksum:nullSector :256];
+			}
             
 			// Send statistical data via notification
 			[statistics setObject:currentState forKey:@"OpCode"];
 			[statistics setObject:[NSString stringWithFormat:@"%d", vLSN] forKey:@"LSN"];
-         [statistics setObject:[NSString stringWithFormat:@"%d", driveNumber] forKey:@"DriveNumber"];
-
+			[statistics setObject:[NSString stringWithFormat:@"%d", driveNumber] forKey:@"DriveNumber"];
+			
 			// Kinda hackish -- we should get the "all" stats from the jukebox
 			if ([currentState isEqual:@"OP_REREAD"] == YES)
 			{
@@ -824,23 +944,23 @@ static TBSerialManager *fSerialManager = nil;
 				
 				[statistics setObject:[NSString stringWithFormat:@"%d", sectorsRead] forKey:@"ReadCount"];
 			}
-
+			
 			[statistics setObject:[NSString stringWithFormat:@"%d", response] forKey:@"Error"];
 			[statistics setObject:[NSString stringWithFormat:@"%d", myChecksum] forKey:@"Checksum"];
-         [_delegate updateInfoView:statistics];
+			[_delegate updateInfoView:statistics];
 			
-         // Send Checksum on to CoCo
-         b[0] = myChecksum >> 8;
-         b[1] = myChecksum & 0xFF;
-         [portDelegate writeData:[NSData dataWithBytes:b length:2]];
-      }
-
-      // Reset state
-      currentState = @"OP_OPCODE";
-      startOfData = inputBuffer;
-   }
+			// Send Checksum on to CoCo
+			b[0] = myChecksum >> 8;
+			b[1] = myChecksum & 0xFF;
+			[portDelegate writeData:[NSData dataWithBytes:b length:2]];
+		}
+		
+		// Reset state
+		currentState = @"OP_OPCODE";
+		startOfData = inputBuffer;
+	}
 	
-   return;
+	return;
 }
 
 - (void)OP_READEX
