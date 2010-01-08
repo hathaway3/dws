@@ -5,6 +5,7 @@ package com.mynumnum.drivewire.client.ports;
 
 import java.util.ArrayList;
 
+import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
@@ -32,6 +33,11 @@ public class Ports extends Composite {
 		defineTimer();
 		// Start the timer with the default refresh rate
 		startTimer(DriveWireGWT.REFRESH_RATE_IN_MS);
+		StyleInjector.inject(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().getText());
+		portsTable.setStyleName(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().sample());
+		System.out.println("the style is" + portsTable.getStyleName());
+
+
 		
 	}
 
@@ -40,13 +46,14 @@ public class Ports extends Composite {
 		refreshTimer = new Timer() {
 			
 			public void run() {
-				// TODO Auto-generated method stub
 				// Make RPC call
 				DriveWireGWT.driveWireService.getPortData(new AsyncCallback<ArrayList<SerialPortData>>() {
 					
 					public void onSuccess(ArrayList<SerialPortData> result) {
 						// Refresh all the client labels with the data
 						refreshClientData(result);
+						//RootPanel.get().add(new Label("Got results from server"));
+						startTimer(DriveWireGWT.REFRESH_RATE_IN_MS);
 						
 					}
 					
@@ -89,12 +96,13 @@ public class Ports extends Composite {
 		portsTable.setHTML(0, column++, "PD_INT");
 		portsTable.setHTML(0, column++, "PD_QUT");
 		int row;
+		portsTable.getRowFormatter().setStyleName(0, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().h1());
 		for (SerialPortData spd : result) {
 			column = 0;
 			// For each serial port we will set the text of the label
 			// Use the port number as the offset to the row in the flextable
 			row = spd.getPort() + 1;
-			portsTable.setHTML(row, column++, String.valueOf(spd.getPort()));
+			portsTable.setHTML(row, column++, String.valueOf(spd.getPrettyPort()));
 			portsTable.setHTML(row, column++, spd.getMode());
 			portsTable.setHTML(row, column++, String.valueOf(spd.isConnected()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.isCocoInit()));
@@ -102,6 +110,11 @@ public class Ports extends Composite {
 			portsTable.setHTML(row, column++, String.valueOf(spd.isActionFileDefined()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.getPD_INT()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.getPD_QUT()));
+			if (row % 2 == 0)
+				portsTable.getRowFormatter().setStyleName(row, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().d0());
+			else
+				portsTable.getRowFormatter().setStyleName(row, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().d1());
+				
 			
 		}
 				

@@ -18,38 +18,13 @@ public class SerialPortData implements IsSerializable {
 	private boolean isActionFileDefined;
 	private byte PD_INT;
 	private byte PD_QUT;
+	private String prettyPort;
 	private int port;
 	
 	public SerialPortData() {
 		// Nothing to do here, but this is required if you expect GWT to serialize this
 		// data, so please don't remove this!
 	}
-	
-
-	/**
-	 * @param mode
-	 * @param isPasswordSet
-	 * @param isConnected
-	 * @param isCocoInit
-	 * @param isActionFileDefined
-	 * @param pDINT
-	 * @param pDQUT
-	 * @param port
-	 */
-	public SerialPortData(String mode, boolean isPasswordSet,
-			boolean isConnected, boolean isCocoInit,
-			boolean isActionFileDefined, byte pDINT, byte pDQUT, int port) {
-		super();
-		this.mode = mode;
-		this.isPasswordSet = isPasswordSet;
-		this.isConnected = isConnected;
-		this.isCocoInit = isCocoInit;
-		this.isActionFileDefined = isActionFileDefined;
-		PD_INT = pDINT;
-		PD_QUT = pDQUT;
-		this.port = port;
-	}
-
 
 	public String getMode() {
 		return mode;
@@ -57,14 +32,6 @@ public class SerialPortData implements IsSerializable {
 
 	public void setMode(String mode) {
 		this.mode = mode;
-	}
-
-	public int getPort() {
-		return port;
-	}
-
-	public void setPort(int port) {
-		this.port = port;
 	}
 
 	/**
@@ -150,6 +117,35 @@ public class SerialPortData implements IsSerializable {
 	public byte getPD_QUT() {
 		return PD_QUT;
 	}
+
+	/**
+	 * @return the prettyPort
+	 */
+	public String getPrettyPort() {
+		return prettyPort;
+	}
+
+	/**
+	 * @param prettyPort the prettyPort to set
+	 */
+	public void setPrettyPort(String prettyPort) {
+		this.prettyPort = prettyPort;
+	}
+
+	/**
+	 * @return the port
+	 */
+	public int getPort() {
+		return port;
+	}
+
+	/**
+	 * @param port the port to set
+	 */
+	public void setPort(int port) {
+		this.port = port;
+	}
+
 
 
 }

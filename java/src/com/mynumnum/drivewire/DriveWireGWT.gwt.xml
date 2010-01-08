@@ -11,7 +11,9 @@
   <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
 
   <!-- Other module inherits                                      -->
-  
+  <inherits name="com.google.gwt.resources.Resources" />
+  <inherits name="com.google.gwt.uibinder.UiBinder"/>
+    
   <!-- Specify the app entry point class.                         -->
   <entry-point class='com.mynumnum.drivewire.client.DriveWireGWT'/>
 

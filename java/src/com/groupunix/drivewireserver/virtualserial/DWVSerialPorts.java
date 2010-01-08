@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.log4j.Logger;
+import org.python.antlr.ast.IfDerived;
+import org.python.antlr.op.IsDerived;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 
@@ -709,6 +711,21 @@ public class DWVSerialPorts {
 			}
 		}
 	}
-	
-	
+	// For use with the web UI
+	public static boolean getActionFileDefined(int port) {
+		boolean isDefined = false;
+		if (vserialPorts[port] == null)
+			isDefined = false;
+		else
+			isDefined = true;
+		return isDefined;
+	}
+	// For use with the web UI
+	public static boolean isPasswordRequired(int port) {
+		if (vserialPorts[port] != null) {
+			return vserialPorts[port].isPasswordRequired();	
+		}
+		return false;
+		
+	}
 }

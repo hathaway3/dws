@@ -204,8 +204,17 @@ public class DWVSerialPort {
 		}
 		return(false);
 	}
-
-
+	
+	// For use with the web UI
+	public boolean isPasswordRequired() {
+		boolean isPasswordRequired  = false;
+		if (password == null) {
+			isPasswordRequired = false;
+		} else {
+			isPasswordRequired = true;
+		}
+		return isPasswordRequired;
+	}
 
 	public void setPortOutput(OutputStream output) 
 	{
