@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <project name="test" default="build" basedir=".">
   <!-- Configure path to GWT SDK -->
-  <property name="gwt.sdk" location="C:/Program Files/eclipse-Galileo/plugins/com.google.gwt.eclipse.sdkbundle.2.0.0_2.0.0.v200912062003/gwt-2.0.0" />
+  <property name="gwt.sdk" location="C:/Program Files (x86)/eclipse/plugins/com.google.gwt.eclipse.sdkbundle.2.0.0_2.0.0.v200912062003/gwt-2.0.0" />
 
   <path id="project.class.path">
     <pathelement location="war/WEB-INF/classes"/>

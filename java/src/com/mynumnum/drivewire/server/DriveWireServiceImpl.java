@@ -64,11 +64,11 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		for (int port = 0; port < DWVSerialPorts.MAX_PORTS; port++) {
 			SerialPortData spd = new SerialPortData();
 			
-			spd.setActionFileDefined(isActionFileDefined);
+			//spd.setActionFileDefined(isActionFileDefined);
 			
-			portData.add(new SerialPortData(
-					DWVSerialPorts.getPrettyMode(port),
-					DWVSerialPorts.get));
+			//portData.add(new SerialPortData(
+			//		DWVSerialPorts.getPrettyMode(port),
+			//		DWVSerialPorts.get));
 			
 			 	
 		}
