@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <project name="test" default="build" basedir=".">
-  <!-- Configure path to GWT SDK -->
-  <property name="gwt.sdk" location="C:/Program Files (x86)/eclipse/plugins/com.google.gwt.eclipse.sdkbundle.2.0.0_2.0.0.v200912062003/gwt-2.0.0" />
+  <!-- We need access to env. so we can find the env.GWT_HOME -->
+	<property environment="env"/>
 
   <path id="project.class.path">
     <pathelement location="war/WEB-INF/classes"/>
-    <pathelement location="${gwt.sdk}/gwt-user.jar"/>
-    <fileset dir="${gwt.sdk}" includes="gwt-dev*.jar"/>
+    <pathelement location="${env.GWT_HOME}/gwt-user.jar"/>
+    <fileset dir="${env.GWT_HOME}" includes="gwt-dev*.jar"/>
     <fileset dir="lib" includes="*.jar"/>
     <!-- Add any additional non-server libs (such as JUnit) -->
     <fileset dir="war/WEB-INF/lib" includes="**/*.jar"/>
@@ -14,7 +14,7 @@
 
   <target name="libs" description="Copy libs to WEB-INF/lib">
     <mkdir dir="war/WEB-INF/lib" />
-    <copy todir="war/WEB-INF/lib" file="${gwt.sdk}/gwt-servlet.jar" />
+    <copy todir="war/WEB-INF/lib" file="${env.GWT_HOME}/gwt-servlet.jar" />
     <!-- Add any additional server libs that need to be copied -->
   </target>
 
