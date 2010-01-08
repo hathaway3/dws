@@ -54,7 +54,8 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		sd.setSectorsRead(DWProtocolHandler.getSectorsRead());
 		sd.setSectorsWritten(DWProtocolHandler.getSectorsWritten());
 		sd.setWriteRetries(DWProtocolHandler.getWriteRetries());
-		sd.setModel(DWProtocolHandler.getCocoModel());
+		// TODO need to put this method back into the code!!
+		//sd.setModel(DWProtocolHandler.getCocoModel());
 		// Need to add the rest of the getters and setters.
 		return sd;
 	}
@@ -62,6 +63,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	public ArrayList<SerialPortData> getPortData() {
 		ArrayList<SerialPortData> portData = new ArrayList<SerialPortData>();
 		for (int port = 0; port < DWVSerialPorts.MAX_PORTS; port++) {
+			@SuppressWarnings("unused")
 			SerialPortData spd = new SerialPortData();
 			
 			//spd.setActionFileDefined(isActionFileDefined);
