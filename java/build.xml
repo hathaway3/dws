@@ -2,6 +2,7 @@
 <project name="test" default="build" basedir=".">
   <!-- We need access to env. so we can find the env.GWT_HOME -->
 	<property environment="env"/>
+	
 
   <path id="project.class.path">
     <pathelement location="war/WEB-INF/classes"/>
@@ -69,6 +70,7 @@
   <target name="clean" description="Cleans this project">
     <delete dir="war/WEB-INF/classes" failonerror="false" />
     <delete dir="war/test" failonerror="false" />
+  	<delete file="DriveWire.jar"></delete>
   </target>
 	
 	
