@@ -54,8 +54,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		sd.setSectorsRead(DWProtocolHandler.getSectorsRead());
 		sd.setSectorsWritten(DWProtocolHandler.getSectorsWritten());
 		sd.setWriteRetries(DWProtocolHandler.getWriteRetries());
-		// TODO need to put this method back into the code!!
-		//sd.setModel(DWProtocolHandler.getCocoModel());
+		sd.setModel(DWProtocolHandler.getCocoModel());
 		// Need to add the rest of the getters and setters.
 		return sd;
 	}
