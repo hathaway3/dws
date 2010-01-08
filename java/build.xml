@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="test" default="build" basedir=".">
+  <!-- Configure path to GWT SDK -->
+  <property name="gwt.sdk" location="C:/Program Files/eclipse-Galileo/plugins/com.google.gwt.eclipse.sdkbundle.2.0.0_2.0.0.v200912062003/gwt-2.0.0" />
+
+  <path id="project.class.path">
+    <pathelement location="war/WEB-INF/classes"/>
+    <pathelement location="${gwt.sdk}/gwt-user.jar"/>
+    <fileset dir="${gwt.sdk}" includes="gwt-dev*.jar"/>
+    <!-- Add any additional non-server libs (such as JUnit) -->
+    <fileset dir="war/WEB-INF/lib" includes="**/*.jar"/>
+  </path>
+
+  <target name="libs" description="Copy libs to WEB-INF/lib">
+    <mkdir dir="war/WEB-INF/lib" />
+    <copy todir="war/WEB-INF/lib" file="${gwt.sdk}/gwt-servlet.jar" />
+    <!-- Add any additional server libs that need to be copied -->
+  </target>
+
+  <target name="javac" depends="libs" description="Compile java source">
+    <mkdir dir="war/WEB-INF/classes"/>
+    <javac srcdir="src" includes="**" encoding="utf-8"
+        destdir="war/WEB-INF/classes"
+        source="1.5" target="1.5" nowarn="true"
+        debug="true" debuglevel="lines,vars,source">
+      <classpath refid="project.class.path"/>
+    </javac>
+    <copy todir="war/WEB-INF/classes">
+      <fileset dir="src" excludes="**/*.java"/>
+    </copy>
+  </target>
+
+  <target name="gwtc" depends="javac" description="GWT compile to JavaScript">
+    <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
+      <classpath>
+        <pathelement location="src"/>
+        <path refid="project.class.path"/>
+      </classpath>
+      <!-- add jvmarg -Xss16M or similar if you see a StackOverflowError -->
+      <jvmarg value="-Xmx256M"/>
+      <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+      <arg value="com.mynumnum.drivewire.DriveWireGWT"/>
+    </java>
+  </target>
+
+  <target name="devmode" depends="javac" description="Run development mode">
+    <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
+      <classpath>
+        <pathelement location="src"/>
+        <path refid="project.class.path"/>
+      </classpath>
+      <jvmarg value="-Xmx256M"/>
+      <arg value="-startupUrl"/>
+      <arg value="test.html"/>
+      <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+      <arg value="com.mynumnum.drivewire"/>
+    </java>
+  </target>
+
+  <target name="hosted" depends="devmode" description="Run development mode (NOTE: the 'hosted' target is deprecated)" />
+
+  <target name="build" depends="gwtc" description="Build this project" />
+
+  <target name="war" depends="build" description="Create a war file">
+    <zip destfile="test.war" basedir="war"/>
+  </target>
+
+  <target name="clean" description="Cleans this project">
+    <delete dir="war/WEB-INF/classes" failonerror="false" />
+    <delete dir="war/test" failonerror="false" />
+  </target>
+	
+	
+    <target name="create_run_jar" depends="gwtc">
+        <jar destfile="DriveWire.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="com.groupunix.drivewireserver.DriveWireServer"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${basedir}/war/WEB-INF/classes"/>
+            <fileset dir="${basedir}/war/" includes="*.html" />
+            <fileset dir="${basedir}/war/" includes="*.css" />
+            <fileset dir="${basedir}/war/" includes="drivewiregwt/**" />
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-collections-3.2.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-configuration-1.6.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-lang-2.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-logging-1.1.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-net-2.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-net-ftp-2.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/log4j-1.2.15.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jetty-6.1H.22.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jetty-util-6.1H.22.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/servlet-api-2.5-20081211.jar"/>
+        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/gwt-servlet.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/ostermillerutils_1_07_00.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/RXTXcomm.jar"/>
+        </jar>
+    </target>
+
+
+</project>
