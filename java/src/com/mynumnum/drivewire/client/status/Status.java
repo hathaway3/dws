@@ -97,7 +97,6 @@ public class Status extends Composite {
 	private void defineTimer() {
 		refreshTimer = new Timer() {
 			
-			@Override
 			public void run() {
 				// Make RPC call
 				DriveWireGWT.driveWireService.getStatusData(new AsyncCallback<StatusData>() {
@@ -110,7 +109,6 @@ public class Status extends Composite {
 						
 					}
 					
-					@Override
 					public void onFailure(Throwable caught) {
 						// schedule refresh in the future to try again
 						startTimer(DriveWireGWT.ERROR_REFRESH_RATE_IN_MS);
@@ -131,13 +129,11 @@ public class Status extends Composite {
 		// Issue a log file reset request to the server using GWT RPC.
 		DriveWireGWT.driveWireService.resetLogFile(new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				new Common().showErrorMessage();
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				// Nothing to do here
 				
@@ -153,12 +149,10 @@ public class Status extends Composite {
 		int numberOfLines = 50;
 		DriveWireGWT.driveWireService.getLogFileData(numberOfLines, new AsyncCallback<ArrayList<String>>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				new Common().showErrorMessage();
 			}
 
-			@Override
 			public void onSuccess(ArrayList<String> result) {
 				final PopupPanel p = new PopupPanel();
 				VerticalPanel v = new VerticalPanel();
@@ -169,7 +163,6 @@ public class Status extends Composite {
 				v.add(close);
 				close.addClickHandler(new ClickHandler() {
 					
-					@Override
 					public void onClick(ClickEvent event) {
 						p.hide();
 						

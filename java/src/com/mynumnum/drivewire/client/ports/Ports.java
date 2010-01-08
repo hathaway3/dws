@@ -39,20 +39,17 @@ public class Ports extends Composite {
 	private void defineTimer() {
 		refreshTimer = new Timer() {
 			
-			@Override
 			public void run() {
 				// TODO Auto-generated method stub
 				// Make RPC call
 				DriveWireGWT.driveWireService.getPortData(new AsyncCallback<ArrayList<SerialPortData>>() {
 					
-					@Override
 					public void onSuccess(ArrayList<SerialPortData> result) {
 						// Refresh all the client labels with the data
 						refreshClientData(result);
 						
 					}
 					
-					@Override
 					public void onFailure(Throwable caught) {
 						// schedule refresh in the future to try again
 						startTimer(DriveWireGWT.ERROR_REFRESH_RATE_IN_MS);

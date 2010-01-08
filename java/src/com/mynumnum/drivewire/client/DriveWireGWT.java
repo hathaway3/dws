@@ -60,7 +60,6 @@ public class DriveWireGWT implements EntryPoint, ValueChangeHandler<String> {
         History.fireCurrentHistoryState();
 	}
 
-	@Override
 	public void onValueChange(ValueChangeEvent<String> event) {
 		String historyToken = event.getValue();
 		GWT.log(historyToken, null);
