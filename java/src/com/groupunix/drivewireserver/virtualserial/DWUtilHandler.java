@@ -13,26 +13,14 @@ public class DWUtilHandler
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWUtilHandler");
 	
-	// utility commands
-	private static final String CMD_WGET = "wget";
-	private static final String CMD_DW = "dw";
-	private static final String	CMD_FTP	= "ftp";
-	private static final String CMD_CHAT = "chat";
-	private static final String CMD_WEATHER = "weather";
-	private static final String CMD_HTTPD = "httpd";
-	
 	private int port;
 	
 	private	String	command = new String();
-	private String	argument = new String();
-	private boolean	readingCommand = true;
-	private Thread ftpThread = null;
-	private DWUtilFTPThread ftpHandler = null;
-	public static String ftpInput = null;
-	public static String ftpSync = "whatever";
 	
 	private int utilmode = 0;
 	private DWVSerialCircularBuffer utilstream;
+	
+	private Thread utilthread;
 	
 	public DWUtilHandler(int port, OutputStream output) 
 	{
@@ -75,125 +63,143 @@ public class DWUtilHandler
 		}
 		else
 		{
-			if (readingCommand)
-			{
-			// command read mode
 			
-				if (databyte == 13)
-				{
-				// we have our command, switch to argument mode
-					readingCommand = false;
-					logger.debug("port" + DWVSerialPorts.prettyPort(this.port) + " got command '" + this.command + "'");
-				}
-				else
-				{
-					// add this byte to command
-					this.command += Character.toString((char) databyte);
-				}
+			if (databyte == 13)
+			{
+				// we have our command
+				logger.debug("port" + DWVSerialPorts.prettyPort(this.port) + " got command '" + this.command + "'");
+				doUtility(command);
+				command = new String();
 			}
 			else
 			{
-				// argument reading mode
-				if (databyte == 13)
-				{
-					// we have our argument, reset mode and do the operation
-					readingCommand = true;
-					logger.debug("port" + DWVSerialPorts.prettyPort(this.port) + "got argument '" + this.argument + "'");
-					doUtility(command,argument);
-					command = new String();
-					argument = new String();
-				
-				}
-				else
-				{
-					// add this byte to command
-					this.argument += Character.toString((char) databyte);
-				}
+				// add this byte to command
+				this.command += Character.toString((char) databyte);
 			}
 		}
 	}
 	
 		
-	private void doUtility(String cmd, String arg) 
+	private void doUtility(String cmd) 
 	{
-		// switch command to handler, could do some fancy reflection thing but
-		// this is easy
+		// new API based implementation 1/2/10
 		
-		// spawn threads for anything that isn't quick and short
-		// to keep the main handler flowing (and avoid filling the output
-		// buffer which deadlocks us
+		String[] cmdparts = cmd.split("\\s+");
 		
-		if (cmd.equalsIgnoreCase(CMD_WGET))
+		if (cmdparts.length > 0)
 		{
-			
-			Thread wgetthread = new Thread(new DWUtilWgetThread(this.port, arg));
-			wgetthread.start();
-			
-		}
-		else if (cmd.equalsIgnoreCase(CMD_WEATHER))
-		{
-			
-			Thread weatherthread = new Thread(new DWUtilWeatherThread(this.port, arg));
-			weatherthread.start();
-			
-		}
-		else if (cmd.equalsIgnoreCase(CMD_HTTPD))
-		{
-			this.utilmode = 1;
-			
-			this.utilstream = new DWVSerialCircularBuffer();
-			Thread httpdthread = new Thread(new DWUtilHTTPDThread(this.port, arg, this.utilstream ));
-			httpdthread.start();
-			
-		}
-		else if (cmd.equalsIgnoreCase(CMD_DW))
-		{
-			
-			Thread dwthread = new Thread(new DWUtilDWThread(this.port, arg));
-			dwthread.start();
-			
-		}
-		else if (cmd.equalsIgnoreCase(CMD_CHAT) || cmd.startsWith(CMD_CHAT) )
-		{
-			this.utilmode = 1;
-			
-			this.utilstream = new DWVSerialCircularBuffer();
-						
-			Thread ircthread = new Thread(new DWUtilIRCThread(this.port, this.utilstream));
-			ircthread.start();
-		}
-		
-		else if (cmd.equalsIgnoreCase(CMD_FTP))
-		{
-			if (ftpThread != null)
+			if (cmdparts[0].equalsIgnoreCase("tcp"))
 			{
-				if (ftpThread.isAlive())
+				if ((cmdparts.length == 4) && (cmdparts[1].equalsIgnoreCase("connect"))) 
 				{
-					synchronized (ftpSync) 
-					{
-						this.ftpInput = arg;
-						ftpSync.notifyAll();
-					}
+					doTCPConnect(cmdparts[2],cmdparts[3]);
+				}
+				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("listen"))) 
+				{
+					doTCPListen(cmdparts[2]);
 				}
 				else
 				{
-					// start up a new ftp thread
-					ftpHandler = new DWUtilFTPThread(this.port,arg);
-		
-					ftpThread = new Thread(ftpHandler);
-					ftpThread.start();
+					respondFail(2,"Syntax error in TCP command");
 				}
 			}
-			else
+			if (cmdparts[0].equalsIgnoreCase("url"))
 			{
-				// start up a new ftp thread
-				ftpHandler = new DWUtilFTPThread(this.port,arg);
-	
-				ftpThread = new Thread(ftpHandler);
-				ftpThread.start();
+				if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("get"))) 
+				{
+					doURL("get",cmdparts[2]);
+				}
+				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("post"))) 
+				{
+					doURL("post",cmdparts[2]);
+				}
+				else
+				{
+					respondFail(2,"Syntax error in URL command");
+				}
+			}
+			else if (cmdparts[0].equalsIgnoreCase("dw"))
+			{
+				// start DWcmd thread
+				this.utilstream = new DWVSerialCircularBuffer(-1, true);
+				this.utilthread = new Thread(new DWUtilDWThread(this.port, this.utilstream, cmd));
+				this.utilthread.start();
 			}
 		}
+		else
+		{
+			logger.debug("got empty command?");
+			respondFail(2,"Syntax error: no command?");
+		}
 		
+	}
+
+	
+
+
+	private void doURL(String action,String url) 
+	{
+		this.utilthread = new Thread(new DWUtilURLThread(this.port, action, url));
+		this.utilthread.start();
+	}
+
+	private void doTCPConnect(String tcphost, String tcpportstr) 
+	{
+		int tcpport;
+		
+		// get port #
+		try
+		{
+			tcpport = Integer.parseInt(tcpportstr);
+		}
+		catch (NumberFormatException e)
+		{
+			respondFail(2,"non-numeric port number in tcp connect command");
+			return;
+		}
+		
+		// start TCP thread
+		this.utilstream = new DWVSerialCircularBuffer(-1, true);
+		this.utilthread = new Thread(new DWUtilTCPConnectionThread(this.port, this.utilstream, tcphost, tcpport));
+		this.utilthread.start();
+		
+	}
+	
+	private void doTCPListen(String tcpportstr) 
+	{
+		int tcpport;
+		
+		// get port #
+		try
+		{
+			tcpport = Integer.parseInt(tcpportstr);
+		}
+		catch (NumberFormatException e)
+		{
+			respondFail(2,"non-numeric port number in tcp listen command");
+			return;
+		}
+		
+		// start TCP thread
+		this.utilstream = new DWVSerialCircularBuffer(-1, true);
+		this.utilthread = new Thread(new DWUtilTCPListenerThread(this.port, this.utilstream, tcpport));
+		this.utilthread.start();
+		
+	}
+	
+
+	public void respondOk(String txt) 
+	{
+		logger.debug("command ok: " + txt);
+		DWVSerialPorts.write(this.port, "OK " + txt + (char) 13);
+	}
+	
+	
+	public void respondFail(int errno, String txt) 
+	{
+		String perrno = String.format("%03d", errno);
+		logger.debug("command failed: " + perrno + " " + txt);
+		DWVSerialPorts.write(this.port, "FAIL " + perrno + " " + txt + (char) 13);
 	}
 
 	

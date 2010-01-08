@@ -10,6 +10,8 @@ import java.io.OutputStream;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
+
 public class DWVSerialPorts {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialPorts");
@@ -33,6 +35,8 @@ public class DWVSerialPorts {
 		if (vserialPorts[port] != null)
 		{
 			// need to do clean shutdown
+			logger.debug("init req for port " + prettyPort(port) + " which is already open here" );
+			Cocoterm(port);
 			
 		}
 		
@@ -60,7 +64,12 @@ public class DWVSerialPorts {
 	public static void closePort(int port)
 	{
 		logger.info("closing virtual serial port " + prettyPort(port));
-		vserialPorts[port] = null;
+		
+		
+		// send term
+		vserialPorts[port].term();
+		
+		
 	}
 	
 
@@ -70,7 +79,28 @@ public class DWVSerialPorts {
 		
 		// redesigned to avoid bandwidth hogging
 		
-		// first pass, increment data waiters
+		// first look for termed ports
+		for (int i = 0;i<MAX_PORTS;i++)
+		{
+			if (vserialPorts[i] != null)
+			{
+				if (vserialPorts[i].isTerm())
+				{
+					response[0] = (byte) 16;  // port status
+					response[1] = (byte) i;   // 000 portnumber
+					
+					logger.info("sending terminated status to coco for port " + i);
+					
+					vserialPorts[i] = null;  // null our port?
+					
+					return(response);
+				}
+			}
+		}
+		
+		
+		
+		// first data pass, increment data waiters
 		
 		for (int i = 0;i<MAX_PORTS;i++)
 		{
@@ -127,11 +157,10 @@ public class DWVSerialPorts {
 			// send serream for oldest bulk
 			
 			dataWait[oldestMport] = 0;
-			response[0] = (byte) (oldestMport + 129);     // add one and 128 for serreadm
-			
-			
-			
+			response[0] = (byte) (oldestMport + 16 + 1);     // add one and 16 for serreadm
 			response[1] = (byte) vserialPorts[oldestMport].bytesWaiting(); //send data size
+			// logger.debug("SERREADM RESPONSE: " + Integer.toBinaryString(response[0]) + " " + Integer.toBinaryString(response[1]));
+
 		}
 		else
 		{
@@ -141,6 +170,7 @@ public class DWVSerialPorts {
 			response[1] = (byte) 0;
 		}
 		
+		// logger.debug("SERREAD RESPONSE: " + Integer.toBinaryString(response[0]) + " " + Integer.toBinaryString(response[1]));
 		
 		return(response);
 	}
@@ -280,13 +310,24 @@ public class DWVSerialPorts {
 	public static void Cocoinit(int vport) 
 	{
 		// start up handlers if needed
+		logger.debug("cocoinit " + prettyPort(vport));
+		if (DriveWireServer.config.containsKey("TelnetDefaultActionFile"))
+		{
+			vserialPorts[vport].setActionFile(DriveWireServer.config.getString("TelnetDefaultActionFile"));
+		}
 		vserialPorts[vport].setCocoinit(true);
 	}
 
 
 	public static void Cocoterm(int vport) 
 	{
+		logger.debug("cocoterm " + prettyPort(vport));
 		vserialPorts[vport].setCocoinit(false);
+		
+		if (vserialPorts[vport].getMode() == MODE_UTIL)
+		{
+			clearUtilityInputBuffer(vport);
+		}
 	}
 
 	
@@ -489,7 +530,7 @@ public class DWVSerialPorts {
 		}
 	}
 	
-	public static String getPrettyMode(int mode)
+	public static String prettyMode(int mode)
 	{
 		switch(mode)
 		{
@@ -613,6 +654,60 @@ public class DWVSerialPorts {
 			return(vserialPorts[port].getPD_QUT());
 		}
 		return(0);
+	}
+
+
+	public static void clearUtilityInputBuffer(int port) 
+	{
+		if (vserialPorts[port] != null)
+		{
+			vserialPorts[port].clearUtilityInputBuffer();
+		}
+	}
+
+
+
+
+	public static void sendUtilityFailResponse(int vport, int code, String txt) 
+	{
+		if (vserialPorts[vport] != null)
+		{
+			vserialPorts[vport].sendUtilityFailResponse(code, txt);
+		}
+	}
+
+
+	public static void sendUtilityOKResponse(int vport, String txt) 
+	{
+		if (vserialPorts[vport] != null)
+		{
+			vserialPorts[vport].sendUtilityOKResponse(txt);
+		}
+		
+	}
+
+
+	public static int bytesWaiting(int vport) 
+	{
+		if (vserialPorts[vport] != null)
+		{
+			return(vserialPorts[vport].bytesWaiting());
+		}
+		return(0);
+	}
+
+
+	public static void resetAllPorts() 
+	{
+		// shut em down
+		for (int i = 0;i<MAX_PORTS;i++)
+		{
+			if (vserialPorts[i] != null)
+			{
+				Cocoterm(i);
+				vserialPorts[i] = null;
+			}
+		}
 	}
 	
 	

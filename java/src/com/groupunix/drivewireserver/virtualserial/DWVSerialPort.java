@@ -10,7 +10,7 @@ public class DWVSerialPort {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialPort");
 	
-	private static final int BUFFER_SIZE = 1024;
+	private static final int BUFFER_SIZE = -1;  //infinite
 	private int mode = 0;
 	private int port = -1;
 	private boolean connected = false;
@@ -28,6 +28,8 @@ public class DWVSerialPort {
 	
 	private String hostIP = null;
 	private int hostPort = -1;
+	
+	private boolean wanttodie = false;
 	
 	public DWVSerialPort(int port)
 	{
@@ -61,13 +63,15 @@ public class DWVSerialPort {
 	{
 		if (this.connected)
 		{
-			try {
+			try 
+			{
 				
 				output.write((byte) databyte);
 				// logger.debug("wrote byte to output buffer, size now " + output.getAvailable());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} 
+			catch (IOException e) 
+			{
+				logger.error("in write: " + e.getMessage());
 			}
 		}
 		else
@@ -110,8 +114,7 @@ public class DWVSerialPort {
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("in read1: " + e.getMessage());
 		}
 		
 		return(-1);
@@ -137,7 +140,8 @@ public class DWVSerialPort {
 	}
 
 
-	public void setMode(int mode) {
+	public void setMode(int mode) 
+	{
 		this.mode = mode;
 		if (mode == DWVSerialPorts.MODE_VMODEM)
 		{
@@ -151,37 +155,43 @@ public class DWVSerialPort {
 
 
 
-	public int getMode() {
+	public int getMode() 
+	{
 		return mode;
 	}
 
 
 
-	public void setConnected(boolean connected) {
+	public void setConnected(boolean connected) 
+	{
 		this.connected = connected;
 	}
 
 
 
-	public boolean isConnected() {
+	public boolean isConnected() 
+	{
 		return connected;
 	}
 
 
 
-	public void setCocoinit(boolean cocoinit) {
+	public void setCocoinit(boolean cocoinit) 
+	{
 		this.cocoinit = cocoinit;
 	}
 
 
 
-	public boolean isCocoinit() {
+	public boolean isCocoinit() 
+	{
 		return cocoinit;
 	}
 
 
 
-	public void setPassword(String string) {
+	public void setPassword(String string) 
+	{
 		this.password = string;
 		
 	}
@@ -268,8 +278,42 @@ public class DWVSerialPort {
 
 
 
-	public byte getPD_QUT() {
+	public byte getPD_QUT() 
+	{
 		return PD_QUT;
+	}
+
+
+
+	public void clearUtilityInputBuffer() 
+	{
+		this.inputBuffer.clear();
+	}
+
+
+
+	public void sendUtilityFailResponse(int code, String txt) 
+	{
+		this.utilhandler.respondFail(code, txt);
+	}
+	
+	public void sendUtilityOKResponse(String txt) 
+	{
+		this.utilhandler.respondOk(txt);
+	}
+
+
+
+	public void term() 
+	{
+		// give ourselves the axe
+		this.wanttodie = true;
+		
+	}
+	
+	public boolean isTerm()
+	{
+		return(this.wanttodie);
 	}
 	
 }

@@ -153,6 +153,14 @@ public class DWDiskDrives
 	}
 	
 	
+	public static void LoadDiskFromFile(int driveno, String path) throws FileNotFoundException, DWDriveNotValidException, DWDriveAlreadyLoadedException
+	{
+		DWDisk tmpdisk = new DWDisk();
+    	
+    	tmpdisk.setFilePath(path);
+    	
+    	LoadDisk(driveno, tmpdisk);
+	}
 	
 	
 	public static void LoadDisk(int driveno, DWDisk disk) throws DWDriveNotValidException, DWDriveAlreadyLoadedException
@@ -295,6 +303,16 @@ public class DWDiskDrives
 	public static void setWriteProtect(int driveno, boolean onoff) 
 	{
 		diskDrives[driveno].setWriteProtect(onoff);
+	}
+	
+	public static String getDiskName(int driveno)
+	{
+		return(diskDrives[driveno].getDiskName());
+	}
+	
+	public static long getDiskSectors(int driveno)
+	{
+		return(diskDrives[driveno].getDiskSectors());
 	}
 	
 }

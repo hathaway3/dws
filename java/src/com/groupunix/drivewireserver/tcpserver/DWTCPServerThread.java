@@ -43,82 +43,27 @@ public class DWTCPServerThread implements Runnable {
 		{
 			skt.getOutputStream().write(("DriveWire TCP Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
 
-			// look for available port
-			vport = DWVSerialPorts.nextFreePort(DWVSerialPorts.MODE_TELNET);
-			
-			if (vport > -1)
+			// check banned
+			if (DriveWireServer.config.containsKey("TelnetBanned"))
 			{
-				logger.info("connected new client from " + this.clientIP + ":" + this.clientPort + " to virtual port T" + vport);
-				// annouce
-				skt.getOutputStream().write(("Connected to port T" + vport + "\r\n\n").getBytes());
+				String[] thebanned = DriveWireServer.config.getStringArray("TelnetBanned");
 				
-				if (DriveWireServer.config.containsKey("TelnetBannerFile"))
+				for (int i = 0;i<thebanned.length ;i++)
 				{
-					displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannerFile"));
-				}
-			
-				// connect socket to port
-				// chanconnector.connect(skt.getInputStream(), skt.getOutputStream(), DWChannelConnector.CHANMODE_TCPIN,  DWVSerialPorts.getPortOutput(vport), DWVSerialPorts.getPortInput(vport), DWChannelConnector.CHANMODE_TCPOUT);
-				
-				DWVSerialPorts.markConnected(vport);
-				DWVSerialPorts.setPortOutput(vport, skt.getOutputStream());
-				
-				DWVSerialPorts.setHostIP(vport, this.clientIP);
-				DWVSerialPorts.setHostPort(vport, this.clientPort);
-				
-				// session automation stuff
-				
-				if (DWVSerialPorts.getActionFile(vport) != null)
-				{
-					logger.debug("processing action file for port " + vport + ", '" + DWVSerialPorts.getActionFile(vport) +"'" );
-					processActionFile(DWVSerialPorts.getActionFile(vport), skt, vport);
-				}
-				
-				// ask telnet to turn off echo, should probably be a setting or left to the client, or done in automation script
-				byte[] buf = new byte[9];
-				
-				buf[0] = (byte) 255;
-				buf[1] = (byte) 251;
-				buf[2] = (byte) 1;
-				buf[3] = (byte) 255;
-				buf[4] = (byte) 251;
-				buf[5] = (byte) 3;
-				buf[6] = (byte) 255;
-				buf[7] = (byte) 253;
-				buf[8] = (byte) 243;
-				
-				skt.getOutputStream().write(buf, 0, 9);
-				
-				// read back the echoed controls
-				
-				for (int i = 0; i<9; i++)
-				{
-					skt.getInputStream().read();
-				}
-				
-				
-				int lastbyte = 0;
-				
-				while (skt.isConnected())
-				{
-					// process input from the tcp socket right here, better than adding yet another thread
-					int data = skt.getInputStream().read();
-					if (data >= 0)
+					if (this.skt.getInetAddress().getHostAddress().equals(thebanned[i]))
 					{
-						// filter CR/LF.. should really do this in the client or at least make it a setting
-						if (!((lastbyte == 13) && ((data == 10) || (data == 0))))
+						logger.info("Connection from banned IP " + thebanned[i]);
+						
+						// IP is banned
+						if (DriveWireServer.config.containsKey("TelnetBannedFile"))
 						{
-							// write it to the serial port
-							DWVSerialPorts.getPortInput(vport).write((byte) data);
-							lastbyte = data;
+							displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannedFile"));
+						}
+						else
+						{
+							skt.getOutputStream().write("No ports available.\r\n".getBytes());
 						}
 						
-						
-						
-					}
-					else
-					{
-						logger.info("end of stream from TCP client at " + this.clientIP + ":" + this.clientPort);
 						if (skt.isConnected())
 						{
 							logger.debug("closing socket");
@@ -126,23 +71,119 @@ public class DWTCPServerThread implements Runnable {
 						}
 						
 					}
-					
 				}
 				
-			}
-			else
-			{
-				// no ports..
-				skt.getOutputStream().write("No ports available.\r\n".getBytes());
-				logger.debug("no ports available for new client at " + this.clientIP + ":" + this.clientPort);
-				
-				if (skt.isConnected())
-				{
-					logger.debug("closing socket");
-					skt.close();
-				}
 			}
 			
+			if (skt.isClosed() == false)
+			{
+				// look for available port
+				vport = DWVSerialPorts.nextFreePort(DWVSerialPorts.MODE_TELNET);
+			
+				if (vport > -1)
+				{
+					logger.info("connected new client from " + this.clientIP + ":" + this.clientPort + " to virtual port T" + vport);
+					// annouce
+					skt.getOutputStream().write(("Connected to port T" + vport + "\r\n\n").getBytes());
+				
+					if (DriveWireServer.config.containsKey("TelnetBannerFile"))
+					{
+						displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannerFile"));
+					}
+			
+					// connect socket to port
+					// chanconnector.connect(skt.getInputStream(), skt.getOutputStream(), DWChannelConnector.CHANMODE_TCPIN,  DWVSerialPorts.getPortOutput(vport), DWVSerialPorts.getPortInput(vport), DWChannelConnector.CHANMODE_TCPOUT);
+				
+					DWVSerialPorts.markConnected(vport);
+					DWVSerialPorts.setPortOutput(vport, skt.getOutputStream());
+				
+					DWVSerialPorts.setHostIP(vport, this.clientIP);
+					DWVSerialPorts.setHostPort(vport, this.clientPort);
+				
+					// session automation stuff
+				
+					if (DWVSerialPorts.getActionFile(vport) != null)
+					{
+						logger.debug("processing action file for port " + vport + ", '" + DWVSerialPorts.getActionFile(vport) +"'" );
+						processActionFile(DWVSerialPorts.getActionFile(vport), skt, vport);
+					}
+				
+					// ask telnet to turn off echo, should probably be a setting or left to the client, or done in automation script
+					byte[] buf = new byte[9];
+				
+					buf[0] = (byte) 255;
+					buf[1] = (byte) 251;
+					buf[2] = (byte) 1;
+					buf[3] = (byte) 255;
+					buf[4] = (byte) 251;
+					buf[5] = (byte) 3;
+					buf[6] = (byte) 255;
+					buf[7] = (byte) 253;
+					buf[8] = (byte) 243;
+				
+					skt.getOutputStream().write(buf, 0, 9);
+				
+					// read back the echoed controls.. sometimes doesn't work out so well. really need a better telnet implementation!
+				
+					for (int i = 0; i<9; i++)
+					{
+						skt.getInputStream().read();
+					}
+				
+				
+					int lastbyte = 0;
+				
+					while (skt.isConnected())
+					{
+						// process input from the tcp socket right here, better than adding yet another thread
+						int data = skt.getInputStream().read();
+						if (data >= 0)
+						{
+							// filter CR/LF.. should really do this in the client or at least make it a setting
+							if (!((lastbyte == 13) && ((data == 10) || (data == 0))))
+							{
+								// write it to the serial port
+								DWVSerialPorts.getPortInput(vport).write((byte) data);
+								lastbyte = data;
+							}
+						
+						}
+						else
+						{
+							logger.info("end of stream from TCP client at " + this.clientIP + ":" + this.clientPort);
+							if (skt.isConnected())
+							{
+								logger.debug("closing socket");
+								skt.close();
+							}
+						
+						}
+					
+					}
+				
+				}
+				else
+				{
+					// no ports..
+					if (DriveWireServer.config.containsKey("TelnetNoPortsBannerFile"))
+					{
+						displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetNoPortsBannerFile"));
+					}
+					else
+					{
+						skt.getOutputStream().write("No ports available.\r\n".getBytes());
+					}
+				
+					logger.debug("no ports available for new client at " + this.clientIP + ":" + this.clientPort);
+				
+					if (skt.isConnected())
+					{
+						logger.debug("closing socket");
+						skt.close();
+					}
+				}
+	
+			}
 		} 
 		catch (IOException e) 
 		{
@@ -151,7 +192,7 @@ public class DWTCPServerThread implements Runnable {
 		finally
 		{
 			if (this.vport > -1)
-				DWVSerialPorts.markDisconnected(this.vport);
+			DWVSerialPorts.markDisconnected(this.vport);
 			logger.debug("thread exiting");
 		}
 	}
@@ -238,6 +279,8 @@ public class DWTCPServerThread implements Runnable {
 				
 			String strLine;
 			   
+			logger.debug("sending file '" + fname + "' to telnet client");
+			
 			while ((strLine = br.readLine()) != null)
 			{
 				  outputStream.write(strLine.getBytes());

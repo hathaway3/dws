@@ -45,6 +45,7 @@ public class DWProtocolHandler implements Runnable
 	public static final byte OP_RESET3 = (byte) 248;  // my coco gives 248 on reset..?
 	public static final byte OP_RESET2 = (byte) 254;
 	public static final byte OP_RESET1 = (byte) 255;
+	public static final byte OP_DWINIT = (byte) 'Z';
 	public static final byte OP_PRINT = 'P';
 	public static final byte OP_PRINTFLUSH = 'F';
 	public static final byte OP_SERREAD = 'C';
@@ -67,6 +68,8 @@ public class DWProtocolHandler implements Runnable
 	// input buffer
 	public static final int INPUT_WAIT = 250;
 	
+	
+	
 	// record keeping portion of dwTransferData
 	private static byte lastDrive = 0;
 	private static int readRetries = 0;
@@ -80,8 +83,9 @@ public class DWProtocolHandler implements Runnable
 	private static int lastError = 0;
 	private static byte[] lastLSN = new byte[3];
 	private static String lastMessage = "DriveWire Server " + DriveWireServer.DWServerVersion;
+
 	public static byte[] lastSector = new byte[256];
-	private static int cocoModel;
+	private static GregorianCalendar dwinitTime = new GregorianCalendar();
 	
 	// serial port instance
 	private static SerialPort serialPort;
@@ -215,8 +219,6 @@ public class DWProtocolHandler implements Runnable
 				break;
 			
 		}
-		// Set the coco model information so the Web client will know the coco model
-		setCocoModel(DriveWireServer.config.getInt("CocoModel", 3));
 	}
 
 	
@@ -228,9 +230,10 @@ public class DWProtocolHandler implements Runnable
 			
 			// extreme cases only
 			
-			/*for (int i = 0;i< data.length;i++)
+			/*
+			for (int i = 0;i< data.length;i++)
 			{
-				logger.debug("WRITE: " + (data[i]));
+				logger.debug("WRITE: " + (int)(data[i] & 0xFF));
 			}
 			*/
 			
@@ -356,6 +359,10 @@ public class DWProtocolHandler implements Runnable
 						DoOP_RESET();
 						break;
 
+					case OP_DWINIT:
+						DoOP_DWINIT();
+						break;
+						
 					case OP_INIT:
 						DoOP_INIT();
 						break;
@@ -452,12 +459,20 @@ public class DWProtocolHandler implements Runnable
 	}
 
 	
+	
+	
 	// DW OP methods
 
 	
-	private void DoOP_INIT() 
+	private void DoOP_DWINIT() 
 	{
-		logger.info("DoOP_INIT");
+		logger.info("DoOP_DWINIT");
+		
+		// coco has just booted nos9
+		this.dwinitTime = new GregorianCalendar();
+		
+		// reset all ports
+		DWVSerialPorts.resetAllPorts();
 	}
 	
 	private void DoOP_NOP() 
@@ -472,10 +487,17 @@ public class DWProtocolHandler implements Runnable
 		logger.info("DoOP_TERM");
 	}
 	
-	
+	private void DoOP_INIT() 
+	{
+		logger.info("DoOP_INIT");
+	}
 	
 	private static void DoOP_RESET() 
 	{
+		// coco has been reset/turned on
+		
+		// reset stats
+		
 		lastDrive = 0;
 		readRetries = 0;
 		writeRetries = 0;
@@ -492,6 +514,8 @@ public class DWProtocolHandler implements Runnable
 		
 		// Sync disks??
 		
+		// reset all ports
+		DWVSerialPorts.resetAllPorts();
 		
 		logger.info("DoOP_RESET");
 		
@@ -779,7 +803,7 @@ public class DWProtocolHandler implements Runnable
 		comWrite1(c.get(Calendar.HOUR_OF_DAY));
 		comWrite1(c.get(Calendar.MINUTE));
 		comWrite1(c.get(Calendar.SECOND));
-		comWrite1(c.get(Calendar.DAY_OF_WEEK));
+		// comWrite1(c.get(Calendar.DAY_OF_WEEK));
 		
 		logger.info("DoOP_TIME");
 			
@@ -800,7 +824,10 @@ public class DWProtocolHandler implements Runnable
 			// get packet args
 			// port # and stat
 			responsebuf = comRead(2);
-			logger.info("DoOP_SER G ETSTAT for port " + DWVSerialPorts.prettyPort(responsebuf[0]) + " stat: " + responsebuf[1]);
+			if (responsebuf[1] != 1)
+			{
+				logger.info("DoOP_SER G ETSTAT for port " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ") stat: " + responsebuf[1]);
+			}
 			
 		} 
 		catch (DWCommTimeOutException e) 
@@ -1197,18 +1224,13 @@ public class DWProtocolHandler implements Runnable
 
 	    return rslt;
 
-	}
-
-
-	public static void setCocoModel(int cocoModel) {
-		DWProtocolHandler.cocoModel = cocoModel;
-	}
-
-
-	public static int getCocoModel() {
-		return cocoModel;
 	}    
 
+	
+	public static GregorianCalendar getDWInitTime()
+	{
+		return(dwinitTime);
+	}
 
 	
 }

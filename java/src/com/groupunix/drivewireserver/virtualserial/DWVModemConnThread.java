@@ -34,7 +34,6 @@ public class DWVModemConnThread implements Runnable {
 			DWVSerialPorts.markConnected(vport);
 			DWVSerialPorts.setPortOutput(vport, skt.getOutputStream());
 				
-			@SuppressWarnings("unused")
 			int lastbyte = 0;
 				
 			while (skt.isConnected())

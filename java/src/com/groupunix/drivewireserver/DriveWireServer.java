@@ -46,6 +46,8 @@ public class DriveWireServer
 	@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	public static void main(String[] args)
 	{
+		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
+		
 		// Start up the web interface.
 		new Jetty();
 		

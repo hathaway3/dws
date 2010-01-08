@@ -159,6 +159,15 @@ public class DWDisk {
 		return(ret);
 	}
 	
+	public String getDiskName()
+	{
+		return(cocoString(DD_NAM()));
+	}
+	
+	public long getDiskSectors()
+	{
+		return(DD_TOT());
+	}
 	
 	
 	private String cocoString(byte[] bytes) 
@@ -168,7 +177,8 @@ public class DWDisk {
 		
 		int i = 0;
 		
-		while ((i < bytes.length) && (bytes[i] > 0))
+		// thanks Christopher Hawks
+		while ((i < bytes.length - 1) && (bytes[i] > 0))
 		{
 			ret += Character.toString((char) bytes[i]);
 			i++;

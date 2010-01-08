@@ -3,11 +3,10 @@ package com.groupunix.drivewireserver.virtualserial;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URL;
 
 import org.apache.log4j.Logger;
 
-public class DWUtilHTTPDThread implements Runnable 
+public class DWUtilTCPListenerThread implements Runnable 
 {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWUtilWgetThread");
@@ -16,31 +15,19 @@ public class DWUtilHTTPDThread implements Runnable
 	private int vport = -1;
 	private int tcpport = 80;
 	
-	public DWUtilHTTPDThread(int vport, String arg, DWVSerialCircularBuffer utilstream)
+	public DWUtilTCPListenerThread(int vport, DWVSerialCircularBuffer utilstream, int tcpport)
 	{
-		logger.debug("init httpd thread: "+arg);	
+		logger.debug("init tcp listener thread on port "+ tcpport );	
 		this.vport = vport;
-		
-		try
-		{
-			this.tcpport = Integer.parseInt(arg);
-		}
-		catch (NumberFormatException e)
-		{
-			logger.debug("non integer port passed, default to 80");
-		}
-		
+		this.tcpport = tcpport;
 		this.input = utilstream;
 		
 	}
 	
 	public void run() 
 	{
-		URL url = null;
 		
-		
-		
-		Thread.currentThread().setName("httpd-" + Thread.currentThread().getId());
+		Thread.currentThread().setName("tcplisten-" + Thread.currentThread().getId());
 		
 		logger.debug("run");
 		
@@ -48,22 +35,27 @@ public class DWUtilHTTPDThread implements Runnable
 		
 		// startup server 
 		ServerSocket srvr = null;
-
-		
 		
 		try 
 		{
 			srvr = new ServerSocket(this.tcpport);
-			logger.info("httpd listening on port " + srvr.getLocalPort());
+			logger.info("tcp listening on port " + srvr.getLocalPort());
 		} 
 		catch (IOException e2) 
 		{
 			logger.error("Error opening socket on port " + this.tcpport +": " + e2.getMessage());
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 12, e2.getMessage());
 			wanttodie = 1;
+			return;
 		}
-			
-			
-		while ((wanttodie == 0) && (DWVSerialPorts.isCocoInit(this.vport)))
+		
+		DWVSerialPorts.sendUtilityOKResponse(this.vport, "listening on port " + this.tcpport + (char) 0);
+		
+		// set pass through mode
+		DWVSerialPorts.setUtilMode(this.vport, 1);
+		
+		
+		while ((wanttodie == 0) && DWVSerialPorts.isCocoInit(this.vport) && (srvr.isClosed() == false))
 		{
 			logger.debug("waiting for connection");
 			Socket skt = null;
@@ -124,7 +116,7 @@ public class DWUtilHTTPDThread implements Runnable
 			
 				
 				
-			byte[] buffer = new byte[409600];
+			// byte[] buffer = new byte[409600];
 			int reqbytes = 0;
 				
 			if ((skt.isClosed() == false) && DWVSerialPorts.isCocoInit(this.vport)) 
@@ -133,7 +125,7 @@ public class DWUtilHTTPDThread implements Runnable
 				int cocobyte = -1;
 				int numzeros = 0;
 					
-				int bytessent = 0;
+				// int bytessent = 0;
 					
 				boolean inresp = true;
 					
@@ -151,29 +143,57 @@ public class DWUtilHTTPDThread implements Runnable
 						
 						// logger.debug("coco: " + cocobyte + " / " + reqbytes);
 						
-					if ((cocobyte != 0) && (numzeros == 1))
+					if ((cocobyte == 13) && (numzeros > 0))
 					{
 						inresp = false;
 						logger.debug("end of resp");
 					}
-					else if ((cocobyte != 0) && (numzeros == 2))
-					{
-						buffer[reqbytes] = 0;
-						reqbytes++;
-							
-						logger.debug("second 0, dedup");
-							
-						numzeros = 0;
-					}
+					/*
 					else if (cocobyte == 0)
 					{
-						logger.debug("first 0");
-						numzeros++;
+							
+						if (numzeros == 0)
+						{
+							logger.debug("first 0 - " + numzeros);
+							numzeros++;
+						}
+						else
+						{
+							buffer[reqbytes] = 0;
+							try 
+							{
+								skt.getOutputStream().write(cocobyte);
+							} 
+							catch (IOException e) 
+							{
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							logger.debug("second 0, dedup");
+							
+							numzeros = 0;
+							
+						}
+					
 					}
-					else if (cocobyte > -1)
+				  */
+					else 
 					{
 //						buffer[reqbytes] = (byte) cocobyte;
 						reqbytes++;
+						
+						if (cocobyte == 0)
+						{
+							
+							numzeros++;
+							// logger.debug("got 0 #" +numzeros);
+						}
+						else if (numzeros > 0)
+						{
+							// logger.debug("reset 0");
+							numzeros = 0;
+						}
+						
 						try {
 							if (skt.isClosed() == false)
 							{
@@ -220,9 +240,10 @@ public class DWUtilHTTPDThread implements Runnable
 				
 		}
 			
-		reqWrite(0,0,"");
+		reqWrite(0,0,"exiting");
 		
 		DWVSerialPorts.setUtilMode(this.vport, 0);
+		DWVSerialPorts.clearUtilityInputBuffer(this.vport);
 		
 		if (srvr != null)
 		{
@@ -236,7 +257,7 @@ public class DWUtilHTTPDThread implements Runnable
 			}
 		}
 		
-		logger.debug("httpd thread exit");
+		logger.debug("tcp listener thread exiting");
 	}
 
 	private void reqWrite(int connid, int ctl, String inp)
