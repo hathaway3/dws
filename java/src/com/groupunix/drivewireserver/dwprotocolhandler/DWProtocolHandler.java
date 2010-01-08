@@ -83,7 +83,7 @@ public class DWProtocolHandler implements Runnable
 	private static int lastError = 0;
 	private static byte[] lastLSN = new byte[3];
 	private static String lastMessage = "DriveWire Server " + DriveWireServer.DWServerVersion;
-
+	
 	public static byte[] lastSector = new byte[256];
 	private static GregorianCalendar dwinitTime = new GregorianCalendar();
 	
@@ -100,7 +100,6 @@ public class DWProtocolHandler implements Runnable
 	{
 		DoOP_RESET();
 	}
-	
 	
 	public static boolean connected()
 	{
@@ -220,7 +219,11 @@ public class DWProtocolHandler implements Runnable
 			
 		}
 	}
-
+	
+	// Used by the client web interface to determine the coco model
+	public static int getCocoModel() {
+		return DriveWireServer.config.getInt("CocoModel", 3);
+	}
 	
 	private void comWrite(byte[] data, int len)
 	{	
