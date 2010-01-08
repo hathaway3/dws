@@ -105,6 +105,8 @@ public class Status extends Composite {
 					public void onSuccess(StatusData result) {
 						// Refresh all the client labels with the data
 						refreshClientData(result);
+						// start the timer again
+						startTimer(DriveWireGWT.REFRESH_RATE_IN_MS);
 						
 					}
 					

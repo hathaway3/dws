@@ -37,7 +37,7 @@ public class Drives extends Composite {
 		return TABNAME;
 	}
 	
-	@UiHandler ("choose")
+	@UiHandler ("chooseButton")
 	void onClick(ClickEvent e) {
 		pp.setWidget(new FileManager());
 		pp.center();
