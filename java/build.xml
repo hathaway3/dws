@@ -84,6 +84,7 @@
             <fileset dir="${basedir}/war/" includes="*.html" />
             <fileset dir="${basedir}/war/" includes="*.css" />
             <fileset dir="${basedir}/war/" includes="drivewiregwt/**" />
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/chatengine.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-collections-3.2.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-configuration-1.6.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-lang-2.4.jar"/>
@@ -97,6 +98,7 @@
         	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/gwt-servlet.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/ostermillerutils_1_07_00.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/RXTXcomm.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jython.jar"/>
         </jar>
     </target>
 
