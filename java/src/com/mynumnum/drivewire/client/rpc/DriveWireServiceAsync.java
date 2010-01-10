@@ -1,4 +1,4 @@
-package com.mynumnum.drivewire.client;
+package com.mynumnum.drivewire.client.rpc;
 
 import java.util.ArrayList;
 
@@ -29,4 +29,6 @@ public interface DriveWireServiceAsync {
 	void getLogFileData(int numberOfLines, AsyncCallback<ArrayList<String>> asyncCallback);
 
 	void getFileList(AsyncCallback<ArrayList<FileListData>> asyncCallback);
+
+	void getDrives(AsyncCallback<ArrayList<String>> callback);
 }

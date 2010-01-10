@@ -19,7 +19,7 @@ public class Common {
 	public Common() {
 		// Nothing to do here
 	}
-	public void showErrorMessage() {
+	public static void showErrorMessage() {
 		PopupPanel p = new PopupPanel();
 		p.add(new Label(DriveWireGWT.ERROR_MESSAGE));
 		p.center();

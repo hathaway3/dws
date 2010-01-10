@@ -10,6 +10,8 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.mynumnum.drivewire.client.ports.Ports;
+import com.mynumnum.drivewire.client.rpc.DriveWireService;
+import com.mynumnum.drivewire.client.rpc.DriveWireServiceAsync;
 import com.mynumnum.drivewire.client.status.Status;
 import com.mynumnum.drivewire.client.tabs.About;
 import com.mynumnum.drivewire.client.tabs.Drives;
@@ -43,7 +45,7 @@ public class DriveWireGWT implements EntryPoint, ValueChangeHandler<String> {
 		
 		// Build the tabs
 		tp.add(new Status(), Status.getTabname());
-		tp.add(new Drives("drives tab"), Drives.getTabname());
+		tp.add(new Drives(), Drives.getTabname());
 		tp.add(new Ports(), Ports.getTabname());
 		tp.add(new Settings("settings tab"), Settings.getTabname());
 		tp.add(new About(), About.getTabname());

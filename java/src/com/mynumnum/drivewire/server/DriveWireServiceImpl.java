@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
-import com.mynumnum.drivewire.client.DriveWireService;
+import com.mynumnum.drivewire.client.rpc.DriveWireService;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
@@ -87,6 +87,11 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	}
 	// TODO fetch the file and folder data and return to client
 	public ArrayList<FileListData> getFileList() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public ArrayList<String> getDrives() {
 		// TODO Auto-generated method stub
 		return null;
 	}

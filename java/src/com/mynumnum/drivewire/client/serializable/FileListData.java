@@ -17,7 +17,6 @@ public class FileListData implements IsSerializable{
 	private String fileFolder;
 	private ArrayList<String> fileNames;
 	public FileListData() {
-		// TODO Auto-generated constructor stub
 	}
 	/**
 	 * @param fileFolder
@@ -41,6 +40,4 @@ public class FileListData implements IsSerializable{
 		return fileNames;
 	}
 	
-	
-
 }

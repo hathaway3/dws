@@ -1,4 +1,4 @@
-package com.mynumnum.drivewire.client;
+package com.mynumnum.drivewire.client.rpc;
 
 import java.util.ArrayList;
 
@@ -21,5 +21,6 @@ public interface DriveWireService extends RemoteService {
 	String resetLogFile();
 	ArrayList<String> getLogFileData(int numberOfLines);
 	ArrayList<FileListData> getFileList();
+	ArrayList<String> getDrives();
 	
 }
