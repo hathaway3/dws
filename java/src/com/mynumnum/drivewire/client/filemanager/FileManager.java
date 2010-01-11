@@ -83,8 +83,9 @@ public class FileManager extends Composite {
 			ti.setText(fld.getFileFolder());
 			fileTree.addItem(ti);
 			// For each folder we will add all the folder 'children'
-			for (String file : fld.getFileNames()) {
-				ti.addItem(file);
+			for (FileListData.FileDetails file : fld.getFileNames()) {
+				ti.addItem(file.getFileName());
+				ti.setTitle(file.getDiskName());
 			}
 		}
 		

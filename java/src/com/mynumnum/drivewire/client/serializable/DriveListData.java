@@ -14,6 +14,7 @@ public class DriveListData implements IsSerializable {
 	private boolean writeProtect;
 	private long diskSectors;
 	private int driveNumber;
+	private String diskName;
 	public DriveListData() {
 		// TODO Auto-generated constructor stub
 	}
@@ -21,12 +22,14 @@ public class DriveListData implements IsSerializable {
 	/**
 	 * @param fileName
 	 * @param writeProtect
+	 * @param diskName 
 	 */
-	public DriveListData(String fileName, boolean writeProtect, int driveNumber) {
+	public DriveListData(String fileName, boolean writeProtect, int driveNumber, String diskName) {
 		super();
 		this.fileName = fileName;
 		this.writeProtect = writeProtect;
 		this.driveNumber = driveNumber;
+		this.diskName = diskName;
 	}
 
 	/**
@@ -69,5 +72,11 @@ public class DriveListData implements IsSerializable {
 	
 	public void setDriveNumber(int driveNumber) {
 		this.driveNumber = driveNumber;
+	}
+	public String getDiskName() {
+		return diskName;
+	}
+	public void setDiskName(String diskName) {
+		this.diskName = diskName;
 	}
 }

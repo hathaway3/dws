@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWDisk;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
@@ -16,6 +17,7 @@ import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
+import com.mynumnum.drivewire.client.serializable.FileListData.FileDetails;
 
 /**
  * The server side implementation of the RPC service.
@@ -121,11 +123,25 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		ArrayList<FileListData> afld = new ArrayList<FileListData>();
 		FileListData fld = new FileListData();
 		fld.setFileFolder(fileFolder);
-		ArrayList<String> files = new ArrayList<String>();
+		ArrayList<FileListData.FileDetails> files = new ArrayList<FileListData.FileDetails>();
 		for (String s : dir.list()) {
-			files.add(s);
+			DWDisk disk = new DWDisk();
+			try {
+				disk.setFilePath(fld + "/" + s);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				// e.printStackTrace();
+			}
+			FileListData.FileDetails file = new FileListData.FileDetails();
+			try {
+				file.setDiskName(disk.getDiskName());
+			} catch (Exception e) {
+				file.setDiskName("unknown");
+			}
+			file.setFileName(s);
+			files.add(file);
+			
 		}
-		fld.setFileNames(files);
 		afld.add(fld);
 		return afld;
 	}
@@ -167,9 +183,10 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			if (DWDiskDrives.diskLoaded(drive)) {
 				DriveListData dld = new DriveListData();
 				dld.setDriveNumber(drive);
-				dld.setFileName(DWDiskDrives.getDiskName(drive));
+				dld.setFileName(DWDiskDrives.getDiskFile(drive));
 				dld.setWriteProtect(DWDiskDrives.getWriteProtect(drive));
 				dld.setDiskSectors(DWDiskDrives.getDiskSectors(drive));
+				dld.setDiskName(DWDiskDrives.getDiskName(drive));
 				adld.add(dld);
 				
 			}

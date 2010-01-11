@@ -15,14 +15,14 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class FileListData implements IsSerializable{
 	private String fileFolder;
-	private ArrayList<String> fileNames;
+	private ArrayList<FileDetails> fileNames;
 	public FileListData() {
 	}
 	/**
 	 * @param fileFolder
 	 * @param fileNames
 	 */
-	public FileListData(String fileFolder, ArrayList<String> fileNames) {
+	public FileListData(String fileFolder, ArrayList<FileDetails> fileNames) {
 		super();
 		this.fileFolder = fileFolder;
 		this.fileNames = fileNames;
@@ -36,7 +36,7 @@ public class FileListData implements IsSerializable{
 	/**
 	 * @return the fileNames
 	 */
-	public ArrayList<String> getFileNames() {
+	public ArrayList<FileDetails> getFileNames() {
 		return fileNames;
 	}
 	public void setFileFolder(String fileFolder) {
@@ -44,10 +44,25 @@ public class FileListData implements IsSerializable{
 		this.fileFolder = fileFolder;
 		
 	}
-	public void setFileNames(ArrayList<String> files) {
+	public void setFileNames(ArrayList<FileDetails> files) {
 		// TODO Auto-generated method stub
 		this.fileNames = files;
 		
 	}
-	
+	public static class FileDetails {
+		private String fileName;
+		private String diskName;
+		public String getDiskName() {
+			return diskName;
+		}
+		public String getFileName() {
+			return fileName;
+		}
+		public void setDiskName(String diskName) {
+			this.diskName = diskName;
+		}
+		public void setFileName(String fileName) {
+			this.fileName = fileName;
+		}
+	}
 }

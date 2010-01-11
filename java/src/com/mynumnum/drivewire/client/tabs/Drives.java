@@ -179,6 +179,7 @@ public class Drives extends Composite {
 				int column = 0;
 				drivesListFlexTable.setText(0, column++, "Drive");
 				drivesListFlexTable.setText(0, column++, "File Name");
+				drivesListFlexTable.setText(0, column++, "Disk Name");
 				drivesListFlexTable.setText(0, column++, "Write Protect");
 				drivesListFlexTable.setText(0, column++, "Number of Sectors");
 				int row = 1;
@@ -187,6 +188,7 @@ public class Drives extends Composite {
 				for (DriveListData dld : result) {
 					drivesListFlexTable.setText(row, column++, "Drive " + String.valueOf(dld.getDriveNumber()));
 					drivesListFlexTable.setText(row, column++, dld.getFileName());
+					drivesListFlexTable.setText(row, column++, dld.getDiskName());
 					drivesListFlexTable.setText(row, column++, String.valueOf(dld.isWriteProtect()));
 					drivesListFlexTable.setText(row++, column++, String.valueOf(dld.getDiskSectors()));
 					column = 0;
