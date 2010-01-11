@@ -63,7 +63,7 @@ public class FileManager extends Composite {
 		DriveWireGWT.driveWireService.getFileList(new AsyncCallback<ArrayList<FileListData>>() {
 
 			public void onFailure(Throwable caught) {
-				new Common().showErrorMessage();
+				Common.showErrorMessage();
 				
 			}
 
@@ -79,6 +79,8 @@ public class FileManager extends Composite {
 		// For each folder we will add a new top level tree value
 		for (FileListData fld : fileData) {
 			TreeItem ti = new TreeItem();
+			// Set the file folder for this tree element
+			ti.setText(fld.getFileFolder());
 			fileTree.addItem(ti);
 			// For each folder we will add all the folder 'children'
 			for (String file : fld.getFileNames()) {
@@ -94,6 +96,8 @@ public class FileManager extends Composite {
 		// Do something when the user selects ok
 		// TODO populate the file box with the name of the file selected by the user
 		Drives.setFileName(getFileName());
+		// Close the file manager
+		Drives.hidePopup();
 	}
 	// TODO make this method return the correct fileFolder and filename path based on the OS
 	private String getFileName() {

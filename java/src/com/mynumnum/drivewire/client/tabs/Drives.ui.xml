@@ -33,5 +33,6 @@
 			<g:Button ui:field="saveSetButton">Save Set</g:Button>
 			<g:HTML>&nbsp;</g:HTML>
 		</g:HorizontalPanel>
+		<g:FlexTable ui:field="drivesListFlexTable"></g:FlexTable>
 	</g:VerticalPanel>
 </ui:UiBinder> 

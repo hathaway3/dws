@@ -39,5 +39,15 @@ public class FileListData implements IsSerializable{
 	public ArrayList<String> getFileNames() {
 		return fileNames;
 	}
+	public void setFileFolder(String fileFolder) {
+		// TODO Auto-generated method stub
+		this.fileFolder = fileFolder;
+		
+	}
+	public void setFileNames(ArrayList<String> files) {
+		// TODO Auto-generated method stub
+		this.fileNames = files;
+		
+	}
 	
 }

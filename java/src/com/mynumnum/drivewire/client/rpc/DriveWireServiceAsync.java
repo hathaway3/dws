@@ -30,5 +30,11 @@ public interface DriveWireServiceAsync {
 
 	void getFileList(AsyncCallback<ArrayList<FileListData>> asyncCallback);
 
-	void getDrives(AsyncCallback<ArrayList<String>> callback);
+	void getDrives(AsyncCallback<ArrayList<Integer>> callback);
+
+	void setDriveWriteProtect(Integer driveNumber, boolean writeProtect,
+			AsyncCallback<String> callback);
+
+	void loadDiskFromFile(Integer drive, String path,
+			AsyncCallback<String> callback);
 }

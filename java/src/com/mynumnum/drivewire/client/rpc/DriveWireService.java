@@ -21,6 +21,9 @@ public interface DriveWireService extends RemoteService {
 	String resetLogFile();
 	ArrayList<String> getLogFileData(int numberOfLines);
 	ArrayList<FileListData> getFileList();
-	ArrayList<String> getDrives();
+	ArrayList<Integer> getDrives();
+	String setDriveWriteProtect(Integer driveNumber, boolean writeProtect);
+	String loadDiskFromFile(Integer drive, String path);
+	
 	
 }

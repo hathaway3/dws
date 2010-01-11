@@ -22,6 +22,8 @@ public class Common {
 	public static void showErrorMessage() {
 		PopupPanel p = new PopupPanel();
 		p.add(new Label(DriveWireGWT.ERROR_MESSAGE));
+		p.setAnimationEnabled(true);
+		p.setAutoHideEnabled(true);
 		p.center();
 	}
 }
