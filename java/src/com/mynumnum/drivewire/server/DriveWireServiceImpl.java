@@ -12,6 +12,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 import com.mynumnum.drivewire.client.rpc.DriveWireService;
+import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
@@ -157,5 +158,22 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			//e.printStackTrace();
 		}
 		return error;
+	}
+	@Override
+	public ArrayList<DriveListData> getDrivesList() {
+		// Get the list of drives, paths, and write protect, and disk sector information and return to the client
+		ArrayList<DriveListData> adld = new ArrayList<DriveListData>();
+		for (int drive = 0; drive < DWDiskDrives.MAX_DRIVES; drive++) {
+			if (DWDiskDrives.diskLoaded(drive)) {
+				DriveListData dld = new DriveListData();
+				dld.setDriveNumber(drive);
+				dld.setFileName(DWDiskDrives.getDiskName(drive));
+				dld.setWriteProtect(DWDiskDrives.getWriteProtect(drive));
+				dld.setDiskSectors(DWDiskDrives.getDiskSectors(drive));
+				adld.add(dld);
+				
+			}
+		}
+		return adld;
 	}
 }

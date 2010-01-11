@@ -3,10 +3,10 @@ package com.mynumnum.drivewire.client.tabs;
 import java.util.ArrayList;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiConstructor;
-import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.mynumnum.drivewire.client.DriveWireGWT;
 import com.mynumnum.drivewire.client.common.Common;
 import com.mynumnum.drivewire.client.filemanager.FileManager;
+import com.mynumnum.drivewire.client.serializable.DriveListData;
 
 public class Drives extends Composite {
 	private final static String TABNAME = "Drives"; 
@@ -157,7 +158,48 @@ public class Drives extends Composite {
 	}
 	
 	private void updateFilesTable() {
-		// TODO Auto-generated method stub
+		DriveWireGWT.driveWireService.getDrivesList(new AsyncCallback<ArrayList<DriveListData>>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				Common.showErrorMessage();
+				
+			}
+
+			public void onSuccess(ArrayList<DriveListData> result) {
+				drivesListFlexTable.clear();
+				// Set styles of flex table
+				StyleInjector.inject(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().getText());
+				drivesListFlexTable.setStyleName(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().sample());
+
+				// Set header row style
+				drivesListFlexTable.getRowFormatter().setStyleName(0, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().h1());
+
+				// Set text of header
+				int column = 0;
+				drivesListFlexTable.setText(0, column++, "Drive");
+				drivesListFlexTable.setText(0, column++, "File Name");
+				drivesListFlexTable.setText(0, column++, "Write Protect");
+				drivesListFlexTable.setText(0, column++, "Number of Sectors");
+				int row = 1;
+				column = 0;
+				// Loop for each returned disk
+				for (DriveListData dld : result) {
+					drivesListFlexTable.setText(row, column++, "Drive " + String.valueOf(dld.getDriveNumber()));
+					drivesListFlexTable.setText(row, column++, dld.getFileName());
+					drivesListFlexTable.setText(row, column++, String.valueOf(dld.isWriteProtect()));
+					drivesListFlexTable.setText(row++, column++, String.valueOf(dld.getDiskSectors()));
+					column = 0;
+					if (row % 2 == 0)
+						drivesListFlexTable.getRowFormatter().setStyleName(row, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().d0());
+					else
+						drivesListFlexTable.getRowFormatter().setStyleName(row, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().d1());
+
+					
+				}
+				
+			}
+		});
 		
 		
 	}

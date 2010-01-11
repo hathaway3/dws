@@ -35,7 +35,7 @@ public class Ports extends Composite {
 		startTimer(DriveWireGWT.REFRESH_RATE_IN_MS);
 		StyleInjector.inject(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().getText());
 		portsTable.setStyleName(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().sample());
-		System.out.println("the style is" + portsTable.getStyleName());
+		//System.out.println("the style is" + portsTable.getStyleName());
 
 
 		

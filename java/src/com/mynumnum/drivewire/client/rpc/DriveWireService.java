@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
+import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
@@ -24,6 +25,6 @@ public interface DriveWireService extends RemoteService {
 	ArrayList<Integer> getDrives();
 	String setDriveWriteProtect(Integer driveNumber, boolean writeProtect);
 	String loadDiskFromFile(Integer drive, String path);
-	
+	ArrayList<DriveListData> getDrivesList(); 
 	
 }

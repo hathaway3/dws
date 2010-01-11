@@ -3,6 +3,7 @@ package com.mynumnum.drivewire.client.rpc;
 import java.util.ArrayList;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
@@ -37,4 +38,6 @@ public interface DriveWireServiceAsync {
 
 	void loadDiskFromFile(Integer drive, String path,
 			AsyncCallback<String> callback);
+
+	void getDrivesList(AsyncCallback<ArrayList<DriveListData>> asyncCallback);
 }
