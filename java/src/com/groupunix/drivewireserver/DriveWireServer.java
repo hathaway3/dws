@@ -100,7 +100,7 @@ public class DriveWireServer
     	
     	if (config.containsKey("DefaultDiskSet"))
     	{
-    		DWDiskDrives.LoadDiskSet(config.getString("DefaultDiskSet"));
+    		DWDiskDrives.loadDiskSet(config.getString("DefaultDiskSet"));
     	}
     	if (config.containsKey("DefaultPortSet"))
     	{

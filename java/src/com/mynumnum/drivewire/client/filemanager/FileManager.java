@@ -29,6 +29,7 @@ import com.mynumnum.drivewire.client.tabs.Drives;
 public class FileManager extends Composite {
 	private static String fileName;
 	private static String fileFolder;
+	private static String fileType;
 	
 	private static FileManagerUiBinder uiBinder = GWT
 			.create(FileManagerUiBinder.class);
@@ -38,30 +39,18 @@ public class FileManager extends Composite {
 
 
 	public FileManager() {
-		
 		initWidget(uiBinder.createAndBindUi(this));
 		// TODO Fetch the Directory listing from the 'server' and add it to the tree
-		getServerFileList();
-		// The following code was only used for testing
-		/*
-		TreeItem ti = new TreeItem();
-		ti.setText("this is a test");
-		ti.addItem("item 1");
-		ti.addItem("item 2");
-		ti.addItem("item 3");
-		TreeItem ti2 = new TreeItem();
-		ti2.setText("this is a test2");
-		ti2.addItem("item 1");
-		ti2.addItem("item 2");
-		ti2.addItem("item 3");
-		fileTree.addItem(ti);
-		fileTree.addItem(ti2);
-		*/
 		
 	}
-	private void getServerFileList() {
-		// TODO Auto-generated method stub
-		DriveWireGWT.driveWireService.getFileList(new AsyncCallback<ArrayList<FileListData>>() {
+	/**
+	 * Param type should be either 'disk' or 'set'
+	 * @param fileType
+	 */
+	public void getServerFileList(String fileType) {
+		// TODO Add option to filter file type (so we can use disk images or disk sets)
+		FileManager.fileType = fileType;
+		DriveWireGWT.driveWireService.getFileList(fileType, new AsyncCallback<ArrayList<FileListData>>() {
 
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage();
@@ -98,9 +87,11 @@ public class FileManager extends Composite {
 	@UiHandler("okButton")
 	void onClick2(ClickEvent e) {
 		// Do something when the user selects ok
-		// TODO populate the file box with the name of the file selected by the user
-		Drives.setFileName(getFileName());
-		// Close the file manager
+		if (fileType.equals("disk"))
+			Drives.setFileName(getFileName());
+		if (fileType.equals("set"))
+			Drives.openDiskSet(getFileName());
+		// Close the file manager - always to this for either disk sets or disk images
 		Drives.hidePopup();
 	}
 	// TODO make this method return the correct fileFolder and filename path based on the OS

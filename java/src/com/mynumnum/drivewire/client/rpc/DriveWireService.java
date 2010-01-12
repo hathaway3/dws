@@ -8,6 +8,7 @@ import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
+import com.mynumnum.drivewire.client.serializable.VersionData;
 
 /**
  * The client side stub for the RPC service.
@@ -21,10 +22,14 @@ public interface DriveWireService extends RemoteService {
 	ArrayList<SerialPortData> getPortData();
 	String resetLogFile();
 	ArrayList<String> getLogFileData(int numberOfLines);
-	ArrayList<FileListData> getFileList();
+	ArrayList<FileListData> getFileList(String fileType);
 	ArrayList<Integer> getDrives();
 	String setDriveWriteProtect(Integer driveNumber, boolean writeProtect);
 	String loadDiskFromFile(Integer drive, String path);
-	ArrayList<DriveListData> getDrivesList(); 
+	ArrayList<DriveListData> getDrivesList();
+	VersionData getServerVersion();
+	String openDiskSet(String fileName);
+	String saveDiskSet(String fileName);
+	String ejectDisk(Integer driveNumber);
 	
 }

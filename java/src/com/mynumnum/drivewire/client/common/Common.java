@@ -3,8 +3,9 @@
  */
 package com.mynumnum.drivewire.client.common;
 
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.PopupPanel;
 import com.mynumnum.drivewire.client.DriveWireGWT;
 
 /**
@@ -16,14 +17,28 @@ import com.mynumnum.drivewire.client.DriveWireGWT;
  *
  */
 public class Common {
+	private static DialogBox errorBox = new DialogBox();
 	public Common() {
 		// Nothing to do here
 	}
+	
 	public static void showErrorMessage() {
-		PopupPanel p = new PopupPanel();
-		p.add(new Label(DriveWireGWT.ERROR_MESSAGE));
-		p.setAnimationEnabled(true);
-		p.setAutoHideEnabled(true);
-		p.center();
+		errorBox.setWidget(new Label(DriveWireGWT.ERROR_MESSAGE));
+		showMessage();
+	}
+	
+	public static void showErrorMessage(String errorMessage) {
+		errorBox.setWidget(new HTML(errorMessage));
+		showMessage();
+		
+	}
+	
+	private static void showMessage() {
+		errorBox.setText("Error:");
+		errorBox.setAnimationEnabled(true);
+		errorBox.setAutoHideEnabled(true);
+		errorBox.setGlassEnabled(true);
+		errorBox.center();
+		
 	}
 }

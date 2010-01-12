@@ -7,6 +7,7 @@ import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
+import com.mynumnum.drivewire.client.serializable.VersionData;
 
 /**
  * The async counterpart of <code>GreetingService</code>.
@@ -29,8 +30,6 @@ public interface DriveWireServiceAsync {
 
 	void getLogFileData(int numberOfLines, AsyncCallback<ArrayList<String>> asyncCallback);
 
-	void getFileList(AsyncCallback<ArrayList<FileListData>> asyncCallback);
-
 	void getDrives(AsyncCallback<ArrayList<Integer>> callback);
 
 	void setDriveWriteProtect(Integer driveNumber, boolean writeProtect,
@@ -40,4 +39,15 @@ public interface DriveWireServiceAsync {
 			AsyncCallback<String> callback);
 
 	void getDrivesList(AsyncCallback<ArrayList<DriveListData>> asyncCallback);
+
+	void getFileList(String fileType,
+			AsyncCallback<ArrayList<FileListData>> callback);
+
+	void getServerVersion(AsyncCallback<VersionData> callback);
+
+	void openDiskSet(String fileName, AsyncCallback<String> callback);
+
+	void saveDiskSet(String fileName, AsyncCallback<String> callback);
+
+	void ejectDisk(Integer driveNumber, AsyncCallback<String> callback);
 }

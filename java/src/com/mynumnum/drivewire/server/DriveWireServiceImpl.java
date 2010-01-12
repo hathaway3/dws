@@ -6,7 +6,9 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDisk;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
@@ -17,7 +19,7 @@ import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
-import com.mynumnum.drivewire.client.serializable.FileListData.FileDetails;
+import com.mynumnum.drivewire.client.serializable.VersionData;
 
 /**
  * The server side implementation of the RPC service.
@@ -25,7 +27,7 @@ import com.mynumnum.drivewire.client.serializable.FileListData.FileDetails;
 @SuppressWarnings("serial")
 public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		DriveWireService {
-
+	private CharSequence filterString;
 	private Integer counter = 0;
 	public String greetServer(String input) {
 		counter++;
@@ -95,29 +97,21 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		return "Success";
 	}
 	// TODO fetch the file and folder data and return to client
-	public ArrayList<FileListData> getFileList() {
-		ArrayList<FileListData> fileList = new ArrayList<FileListData>();
+	public ArrayList<FileListData> getFileList(String fileType) {
 		File dir = new File(".");
-
-		String[] children = dir.list();
-		if (children == null) {
-		    // Either dir does not exist or is not a directory
-		} else {
-		    for (int i=0; i<children.length; i++) {
-		        // Get filename of file or directory
-		        String filename = children[i];
-		    }
-		}
-
-		// It is also possible to filter the list of returned files.
-		// This example does not return any files that start with `.'.
+		if (fileType.equals("disk"))
+			filterString = ".dsk";
+		if (fileType.equals("set"))
+			filterString = ".set";
+		System.out.println("the value of fileType is " + filterString);
+		// Define filter for the types of files we want to see
 		FilenameFilter filter = new FilenameFilter() {
 		    public boolean accept(File dir, String name) {
-		        return name.contains(".dsk");
+				return name.contains(filterString);
 		    }
 		};
-		children = dir.list(filter);
 
+		// Get the current folder in the file system
 		String fileFolder = System.getProperty("user.dir");
 
 		ArrayList<FileListData> afld = new ArrayList<FileListData>();
@@ -197,4 +191,30 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		}
 		return adld;
 	}
+	public VersionData getServerVersion() {
+		return(new VersionData(DriveWireServer.DWServerVersion, DriveWireServer.DWServerVersionDate));
+	}
+	@Override
+	public String openDiskSet(String fileName) {
+		DWDiskDrives.loadDiskSet(fileName);
+		return null;
+	}
+	@Override
+	public String saveDiskSet(String fileName) {
+		DWDiskDrives.saveDiskSet(fileName);
+		return null;
+	}
+	@Override
+	public String ejectDisk(Integer driveNumber) {
+		String errorMessage = "none";
+		try {
+			DWDiskDrives.EjectDisk(driveNumber);
+		} catch (DWDriveNotValidException e) {
+			errorMessage = "Drive not valid.";
+		} catch (DWDriveNotLoadedException e) {
+			errorMessage = "Drive not loaded.";
+		}
+		return errorMessage;
+	}
+	
 }

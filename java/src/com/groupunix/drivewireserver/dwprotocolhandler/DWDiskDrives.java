@@ -28,7 +28,7 @@ public class DWDiskDrives
 	
 	
 	
-	public static void LoadDiskSet(String filename)
+	public static void loadDiskSet(String filename)
 	{
 		if (filename == null)
 		{

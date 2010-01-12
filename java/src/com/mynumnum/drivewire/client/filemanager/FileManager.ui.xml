@@ -3,7 +3,6 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<g:HTMLPanel>
 		<g:VerticalPanel>
-			<g:Label>File Manager</g:Label>
 			<g:Tree ui:field="fileTree"></g:Tree>
 			<g:HTML>&nbsp;</g:HTML>
 			<g:HorizontalPanel>
