@@ -49,9 +49,12 @@ public class FileListData implements IsSerializable{
 		this.fileNames = files;
 		
 	}
-	public static class FileDetails {
+	public static class FileDetails implements IsSerializable {
 		private String fileName;
 		private String diskName;
+		public FileDetails() {
+			// TODO Auto-generated constructor stub
+		}
 		public String getDiskName() {
 			return diskName;
 		}

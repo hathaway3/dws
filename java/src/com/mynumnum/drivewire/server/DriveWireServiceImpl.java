@@ -127,6 +127,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		for (String s : dir.list()) {
 			DWDisk disk = new DWDisk();
 			try {
+				System.out.println("disk file path is " + disk.getFilePath());
 				disk.setFilePath(fld + "/" + s);
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -142,6 +143,9 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			files.add(file);
 			
 		}
+		// Add the files to the file list
+		fld.setFileNames(files);
+		// add this directory to the directory list
 		afld.add(fld);
 		return afld;
 	}

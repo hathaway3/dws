@@ -77,6 +77,7 @@ public class Drives extends Composite {
 	@UiHandler ("chooseButton")
 	void onClick(ClickEvent e) {
 		pp.setWidget(new FileManager());
+		pp.setAnimationEnabled(true);
 		pp.center();
 		
 	}
