@@ -130,7 +130,7 @@ public class Status extends Composite {
 		DriveWireGWT.driveWireService.resetLogFile(new AsyncCallback<String>() {
 
 			public void onFailure(Throwable caught) {
-				new Common().showErrorMessage();
+				Common.showErrorMessage();
 				
 			}
 
@@ -150,7 +150,7 @@ public class Status extends Composite {
 		DriveWireGWT.driveWireService.getLogFileData(numberOfLines, new AsyncCallback<ArrayList<String>>() {
 
 			public void onFailure(Throwable caught) {
-				new Common().showErrorMessage();
+				Common.showErrorMessage();
 			}
 
 			public void onSuccess(ArrayList<String> result) {
