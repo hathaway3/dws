@@ -34,7 +34,7 @@ public class Common {
 	}
 	
 	private static void showMessage() {
-		errorBox.setText("Error:");
+		errorBox.setHTML("<b>Error:</b>");
 		errorBox.setAnimationEnabled(true);
 		errorBox.setAutoHideEnabled(true);
 		errorBox.setGlassEnabled(true);

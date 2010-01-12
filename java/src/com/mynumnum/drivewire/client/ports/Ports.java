@@ -11,6 +11,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.mynumnum.drivewire.client.DriveWireGWT;
+import com.mynumnum.drivewire.client.common.Common;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
 
 /**
@@ -35,51 +36,51 @@ public class Ports extends Composite {
 		startTimer(DriveWireGWT.REFRESH_RATE_IN_MS);
 		StyleInjector.inject(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().getText());
 		portsTable.setStyleName(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().sample());
-		//System.out.println("the style is" + portsTable.getStyleName());
-
-
 		
 	}
-
 
 	private void defineTimer() {
 		refreshTimer = new Timer() {
 			
 			public void run() {
-				// Make RPC call
-				DriveWireGWT.driveWireService.getPortData(new AsyncCallback<ArrayList<SerialPortData>>() {
-					
-					public void onSuccess(ArrayList<SerialPortData> result) {
-						// Refresh all the client labels with the data
-						refreshClientData(result);
-						//RootPanel.get().add(new Label("Got results from server"));
-						startTimer(DriveWireGWT.REFRESH_RATE_IN_MS);
-						
-					}
-					
-					public void onFailure(Throwable caught) {
-						// schedule refresh in the future to try again
-						startTimer(DriveWireGWT.ERROR_REFRESH_RATE_IN_MS);
-						
-					}
-					
-				});
+				// Only make the RPC call if the ports tab is visible
+				if (Ports.this.isVisible()) {
+					getServerData();
+				}
 				
 			}
+
 			
 		};
 		
 	}
 
+	/**
+	 * Make the RPC to the server and fetch the data
+	 */
+	private void getServerData() {
+		DriveWireGWT.driveWireService.getPortData(new AsyncCallback<ArrayList<SerialPortData>>() {
+			
+			public void onSuccess(ArrayList<SerialPortData> result) {
+				// Refresh all the client labels with the data
+				refreshClientData(result);
+				
+			}
+			
+			public void onFailure(Throwable caught) {
+				Common.showErrorMessage(caught.toString());
+				refreshTimer.cancel();
+			}
+			
+		});
+		
+	}
+
 	public void startTimer(int refreshRateInMs) {
-		refreshTimer.schedule(refreshRateInMs);
+		refreshTimer.scheduleRepeating(refreshRateInMs);
 		
 	}
 	
-	public void cancelTimer() {
-		refreshTimer.cancel();
-	}
-
 	public static String getTabname() {
 		return TABNAME;
 	}
@@ -87,6 +88,7 @@ public class Ports extends Composite {
 	private void refreshClientData(ArrayList<SerialPortData> result) {
 		// Refresh all the client data
 		int column = 0;
+		portsTable.removeAllRows();
 		portsTable.setHTML(0, column++, "Port");
 		portsTable.setHTML(0, column++, "Mode");
 		portsTable.setHTML(0, column++, "Connected");

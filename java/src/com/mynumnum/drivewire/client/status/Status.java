@@ -56,19 +56,14 @@ public class Status extends Composite {
 		defineTimer();
 		// Start the timer with the default refresh rate
 		startTimer(DriveWireGWT.REFRESH_RATE_IN_MS);
-		// TODO add code that will stop the timer when the tab is changed, this is probably going to need to be done in class DriveWireGWT
 		
 	}
 
 	public void startTimer(int refreshRateInMs) {
-		refreshTimer.schedule(refreshRateInMs);
+		refreshTimer.scheduleRepeating(refreshRateInMs);
 		
 	}
 	
-	public void cancelTimer() {
-		refreshTimer.cancel();
-	}
-
 	public static String getTabname() {
 		return TABNAME;
 	}
@@ -98,30 +93,40 @@ public class Status extends Composite {
 		refreshTimer = new Timer() {
 			
 			public void run() {
-				// Make RPC call
-				DriveWireGWT.driveWireService.getStatusData(new AsyncCallback<StatusData>() {
-					
-					public void onSuccess(StatusData result) {
-						// Refresh all the client labels with the data
-						refreshClientData(result);
-						// start the timer again
-						startTimer(DriveWireGWT.REFRESH_RATE_IN_MS);
-						
-					}
-					
-					public void onFailure(Throwable caught) {
-						// schedule refresh in the future to try again
-						startTimer(DriveWireGWT.ERROR_REFRESH_RATE_IN_MS);
-						
-					}
-					
-				});
+				// Make RPC call only if this tab is visible
+				if (Status.this.isVisible()) {
+					getServerData();
+				}
 				
 			}
+
 			
 		};
 		
 	}
+	
+	/**
+	 * Fetch the Status data from the server via GWT RPC
+	 */
+	private void getServerData() {
+		DriveWireGWT.driveWireService.getStatusData(new AsyncCallback<StatusData>() {
+			
+			public void onSuccess(StatusData result) {
+				// Refresh all the client labels with the data
+				refreshClientData(result);
+				
+			}
+			
+			public void onFailure(Throwable caught) {
+				Common.showErrorMessage(caught.toString());
+				refreshTimer.cancel();
+				
+			}
+			
+		});
+		
+	}
+	
 	// This will handle the click of the reset button by sending an RPC
 	// request to the server to reset the log file
 	@UiHandler("reset")
@@ -130,7 +135,7 @@ public class Status extends Composite {
 		DriveWireGWT.driveWireService.resetLogFile(new AsyncCallback<String>() {
 
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
 				
 			}
 
@@ -140,6 +145,7 @@ public class Status extends Composite {
 			}
 		});
 	}
+	
 	// This will handle the click request to display log results
 	// it will request x number of rows from the log file and display
 	// the results in a popup window with a close button
@@ -150,7 +156,8 @@ public class Status extends Composite {
 		DriveWireGWT.driveWireService.getLogFileData(numberOfLines, new AsyncCallback<ArrayList<String>>() {
 
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
+
 			}
 
 			public void onSuccess(ArrayList<String> result) {

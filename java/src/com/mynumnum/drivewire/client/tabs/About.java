@@ -80,7 +80,7 @@ public class About extends Composite {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
 				
 			}
 		});

@@ -75,7 +75,7 @@ public class Drives extends Composite {
 			
 			@Override
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
 				
 			}
 		});
@@ -97,7 +97,7 @@ public class Drives extends Composite {
 		pp.setWidget(fm);
 		pp.setAnimationEnabled(true);
 		pp.setGlassEnabled(true);
-		pp.setText("Select disk to load");
+		pp.setHTML("<b>Select disk to load:</b>");
 		pp.center();
 		
 	}
@@ -153,7 +153,7 @@ public class Drives extends Composite {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
 				
 			}
 
@@ -181,7 +181,7 @@ public class Drives extends Composite {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
 				
 			}
 
@@ -206,7 +206,7 @@ public class Drives extends Composite {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
 				
 			}
 
@@ -253,9 +253,8 @@ public class Drives extends Composite {
 	}
 
 	private static void findDriveAfterUpdate() {
-		// TODO Auto-generated method stub
 		int totalRows = drivesListFlexTable.getRowCount();
-		for (int row = 1; row <= totalRows; row++) {
+		for (int row = 1; row < totalRows-1; row++) {
 			if (Integer.valueOf(drivesListFlexTable.getText(row, DRIVE_COLUMN)) == gridDriveNumber) {
 				selectRow(row);
 			}
@@ -279,9 +278,8 @@ public class Drives extends Composite {
 		pp.setWidget(fm);
 		pp.setAnimationEnabled(true);
 		pp.setGlassEnabled(true);
-		pp.setText("Select the disk set to load");
+		pp.setHTML("<b>Select the disk set to load:</b>");
 		pp.center();
-
 		
 	}
 
@@ -290,7 +288,7 @@ public class Drives extends Composite {
 		// Open box to get the file name
 		db.setAnimationEnabled(true);
 		db.setGlassEnabled(true);
-		db.setText("Enter file name for this disk set");
+		db.setHTML("<b>Enter file name for this disk set:</b>");
 		VerticalPanel vp = new VerticalPanel();
 		vp.setSpacing(10);
 		HorizontalPanel hp = new HorizontalPanel();
@@ -342,7 +340,7 @@ public class Drives extends Composite {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
 				
 			}
 

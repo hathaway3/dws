@@ -53,7 +53,7 @@ public class FileManager extends Composite {
 		DriveWireGWT.driveWireService.getFileList(fileType, new AsyncCallback<ArrayList<FileListData>>() {
 
 			public void onFailure(Throwable caught) {
-				Common.showErrorMessage();
+				Common.showErrorMessage(caught.toString());
 				
 			}
 
