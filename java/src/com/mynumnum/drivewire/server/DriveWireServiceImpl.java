@@ -113,7 +113,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		// This example does not return any files that start with `.'.
 		FilenameFilter filter = new FilenameFilter() {
 		    public boolean accept(File dir, String name) {
-		        return !name.startsWith(".");
+		        return name.contains(".dsk");
 		    }
 		};
 		children = dir.list(filter);
@@ -124,11 +124,10 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		FileListData fld = new FileListData();
 		fld.setFileFolder(fileFolder);
 		ArrayList<FileListData.FileDetails> files = new ArrayList<FileListData.FileDetails>();
-		for (String s : dir.list()) {
+		for (String s : dir.list(filter)) {
 			DWDisk disk = new DWDisk();
 			try {
-				System.out.println("disk file path is " + disk.getFilePath());
-				disk.setFilePath(fld + "/" + s);
+				disk.setFilePath(fileFolder + "/" + s);
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				// e.printStackTrace();
@@ -136,6 +135,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			FileListData.FileDetails file = new FileListData.FileDetails();
 			try {
 				file.setDiskName(disk.getDiskName());
+				System.out.println("the disk name is " + disk.getDiskName());
 			} catch (Exception e) {
 				file.setDiskName("unknown");
 			}
