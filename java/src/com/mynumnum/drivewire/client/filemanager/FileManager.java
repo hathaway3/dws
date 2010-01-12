@@ -13,6 +13,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
@@ -84,8 +85,10 @@ public class FileManager extends Composite {
 			fileTree.addItem(ti);
 			// For each folder we will add all the folder 'children'
 			for (FileListData.FileDetails file : fld.getFileNames()) {
-				ti.addItem(file.getFileName());
-				ti.setTitle(file.getDiskName());
+				Label fileLabel = new Label();
+				fileLabel.setTitle(file.getDiskName());
+				fileLabel.setText(file.getFileName());
+				ti.addItem(fileLabel);
 			}
 		}
 		
@@ -113,6 +116,8 @@ public class FileManager extends Composite {
 	@UiHandler("fileTree") 
 	void onSelection(SelectionEvent<TreeItem> event) {
 		fileFolder = event.getSelectedItem().getParentItem().getText();
-		fileName = event.getSelectedItem().getText();
+		Label fileLabel = (Label) event.getSelectedItem().getWidget(); 
+		fileName = fileLabel.getText();
 	}
+	
 }
