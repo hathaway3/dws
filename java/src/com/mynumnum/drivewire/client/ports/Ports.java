@@ -93,8 +93,8 @@ public class Ports extends Composite {
 		portsTable.setHTML(0, column++, "Mode");
 		portsTable.setHTML(0, column++, "Connected");
 		portsTable.setHTML(0, column++, "Coco Init");
-		portsTable.setHTML(0, column++, "Password Set");
-		portsTable.setHTML(0, column++, "Action File Set");
+		portsTable.setHTML(0, column++, "Host IP");
+		portsTable.setHTML(0, column++, "Host Port");
 		portsTable.setHTML(0, column++, "PD_INT");
 		portsTable.setHTML(0, column++, "PD_QUT");
 		int row;
@@ -108,8 +108,8 @@ public class Ports extends Composite {
 			portsTable.setHTML(row, column++, spd.getMode());
 			portsTable.setHTML(row, column++, String.valueOf(spd.isConnected()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.isCocoInit()));
-			portsTable.setHTML(row, column++, String.valueOf(spd.isPasswordSet()));
-			portsTable.setHTML(row, column++, String.valueOf(spd.isActionFileDefined()));
+			portsTable.setHTML(row, column++, String.valueOf(spd.getHostIP()));
+			portsTable.setHTML(row, column++, String.valueOf(spd.getPort()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.getPD_INT()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.getPD_QUT()));
 			if (row % 2 == 0)

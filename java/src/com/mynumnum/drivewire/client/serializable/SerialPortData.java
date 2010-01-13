@@ -20,6 +20,8 @@ public class SerialPortData implements IsSerializable {
 	private byte PD_QUT;
 	private String prettyPort;
 	private int port;
+	private String hostIP;
+	private int hostPort;
 	
 	public SerialPortData() {
 		// Nothing to do here, but this is required if you expect GWT to serialize this
@@ -144,6 +146,22 @@ public class SerialPortData implements IsSerializable {
 	 */
 	public void setPort(int port) {
 		this.port = port;
+	}
+
+	public void setHostIP(String hostIP) {
+		this.hostIP = hostIP;
+	}
+
+	public String getHostIP() {
+		return hostIP;
+	}
+
+	public void setHostPort(int hostPort) {
+		this.hostPort = hostPort;
+	}
+
+	public int getHostPort() {
+		return hostPort;
 	}
 
 
