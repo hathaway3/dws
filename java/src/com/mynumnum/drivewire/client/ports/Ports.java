@@ -109,7 +109,7 @@ public class Ports extends Composite {
 			portsTable.setHTML(row, column++, String.valueOf(spd.isConnected()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.isCocoInit()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.getHostIP()));
-			portsTable.setHTML(row, column++, String.valueOf(spd.getPort()));
+			portsTable.setHTML(row, column++, String.valueOf(spd.getHostPort()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.getPD_INT()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.getPD_QUT()));
 			if (row % 2 == 0)
