@@ -1,5 +1,7 @@
 package com.mynumnum.drivewire.server;
 
+import gnu.io.UnsupportedCommOperationException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
@@ -13,11 +15,13 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDisk;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.tcpserver.DWTCPServer;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 import com.mynumnum.drivewire.client.rpc.DriveWireService;
 import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
+import com.mynumnum.drivewire.client.serializable.SettingsData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
 import com.mynumnum.drivewire.client.serializable.VersionData;
 
@@ -219,5 +223,45 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		}
 		return errorMessage;
 	}
+	@Override
+	public ArrayList<String> getPorts() {
+		return DWProtocolHandler.getPortNames();
+	}
+	@Override
+	public String setPort(String port) {
+		DWProtocolHandler.setPort(port);
+		return ("Success");
+	}
+	/**
+	 * Return the current settings for the 'Settings' tab to the client
+	 */
+	@Override
+	public SettingsData getSettings() {
+		SettingsData settings = new SettingsData();
+		settings.setPort(DWProtocolHandler.getSerialPort().getName());
+		settings.setModel(DWProtocolHandler.getCocoModel());
+		settings.setTcpServerEnabled(DriveWireServer.isTcpEnabled());
+		settings.setTcpPort(DWTCPServer.getTcpPort());
+		settings.setLogLevel(DriveWireServer.getLogLevel());
+		settings.setWriteToFile(DriveWireServer.isWriteToFileEnabled());
+		settings.setLogFileName(DriveWireServer.getLogFileName());
+		return settings;
+	}
+	@Override
+	public String setLogLevel(String level) {
+		DriveWireServer.setLogLevel(level);
+		return "Success";
+	}
+	@Override
+	public String setModel(int model) {
+		String error = "none";
+		try {
+			DWProtocolHandler.setCocoModel(model);
+		} catch (UnsupportedCommOperationException e) {
+			error = e.toString();
+		}
+		return error;
+	}
+	
 	
 }

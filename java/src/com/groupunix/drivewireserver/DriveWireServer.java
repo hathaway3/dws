@@ -26,6 +26,7 @@ public class DriveWireServer
 {
 	public static final String DWServerVersion = "3.1.2";
 	public static final String DWServerVersionDate = "12/21/2009";
+	private static boolean loggingToFile = false;
 	
 	
 	public static Logger logger = Logger.getLogger("DWServer");
@@ -85,13 +86,17 @@ public class DriveWireServer
     		{
 				fileAppender = new FileAppender(logLayout,config.getString("LogFile"),true,true,4096);
 				logger.addAppender(fileAppender);
+				loggingToFile = true;
 			} 
     		catch (IOException e) 
     		{
 				logger.error("Cannot log to file '" + config.getString("LogFile") +"': " + e.getMessage());
 			}
     		
+    	} else {
+    		loggingToFile = false;
     	}
+    	
     	
     	logger.setLevel(Level.toLevel(config.getString("LogLevel", "WARN")));
     	
@@ -202,6 +207,39 @@ public class DriveWireServer
 	{
 		return(totalServed);
 	}
-	
+	// TODO Have this determine if TCP is enabled.  Code not yet implemented here.
+	public static boolean isTcpEnabled() {
+		return true;
+	}
+	/**
+	 * Returns the current logger level for use by the client UI
+	 * @return
+	 */
+	public static String getLogLevel() {
+		return logger.getLevel().toString();
+	}
+	/**
+	 * Used by the client UI to display if the write to file option is selected
+	 * @return
+	 */
+	public static boolean isWriteToFileEnabled() {
+		return loggingToFile;
+	}
+	/**
+	 * Used by the client UI to show the current log file name
+	 * @return
+	 */
+	public static String getLogFileName() {
+		return config.getString("LogFile");
+	}
+
+
+
+	public static void setLogLevel(String level) {
+		logger.setLevel(Level.toLevel(level));
+		// TODO Write this new value back to .properties file
+	}
+
+
 	
 }

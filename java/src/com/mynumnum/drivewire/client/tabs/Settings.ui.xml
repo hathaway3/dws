@@ -7,31 +7,31 @@
 				<g:HorizontalPanel>
 					<g:Label>Serial</g:Label>
 					<g:Label>Serial Device:</g:Label>
-					<g:ListBox ui:field="serialDevice"></g:ListBox>
+					<g:ListBox ui:field="serialDeviceListBox"></g:ListBox>
 				</g:HorizontalPanel>
 				<g:HorizontalPanel>
 					<g:Label>CoCo Model:</g:Label>
-					<g:ListBox ui:field="cocoModel"></g:ListBox>
+					<g:ListBox ui:field="cocoModelListBox"></g:ListBox>
 				</g:HorizontalPanel>
 			</g:VerticalPanel>
 			<g:VerticalPanel ui:field="tcpServerPanel">
 				<g:Label>TCP Server</g:Label>
-				<g:CheckBox>Enabled</g:CheckBox>
+				<g:CheckBox ui:field="tcpServerEnabledCheckBox">Enabled</g:CheckBox>
 				<g:Label>Port:</g:Label>
-				<g:TextBox ui:field="port"></g:TextBox>
+				<g:TextBox ui:field="portTextBox"></g:TextBox>
 			</g:VerticalPanel>
 		</g:HorizontalPanel>
 		<g:VerticalPanel>
 			<g:Label>Logging</g:Label>
 			<g:HorizontalPanel ui:field="loggingPanel">
 				<g:Label>Log Level:</g:Label>
-				<g:ListBox ui:field="logLevel"></g:ListBox>
+				<g:ListBox ui:field="logLevelListBox"></g:ListBox>
 				<g:HTML>&nbsp;</g:HTML>
-				<g:CheckBox ui:field="writeToFile">Write To File</g:CheckBox>
+				<g:CheckBox ui:field="writeToFileCheckBox">Write To File</g:CheckBox>
 			</g:HorizontalPanel>
 			<g:HorizontalPanel>
 				<g:Label>Log File:</g:Label>
-				<g:TextBox ui:field="logFileName"></g:TextBox>
+				<g:Label ui:field="logFileNameLabel"></g:Label>
 				<g:HTML>&nbsp;</g:HTML>
 				<g:Button>Choose...</g:Button>
 			</g:HorizontalPanel>

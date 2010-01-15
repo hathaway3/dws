@@ -6,6 +6,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
+import com.mynumnum.drivewire.client.serializable.SettingsData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
 import com.mynumnum.drivewire.client.serializable.VersionData;
 
@@ -50,4 +51,14 @@ public interface DriveWireServiceAsync {
 	void saveDiskSet(String fileName, AsyncCallback<String> callback);
 
 	void ejectDisk(Integer driveNumber, AsyncCallback<String> callback);
+
+	void getPorts(AsyncCallback<ArrayList<String>> callback);
+
+	void setPort(String port, AsyncCallback<String> callback);
+
+	void getSettings(AsyncCallback<SettingsData> callback);
+
+	void setModel(int model, AsyncCallback<String> callback);
+
+	void setLogLevel(String level, AsyncCallback<String> callback);
 }

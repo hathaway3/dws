@@ -7,6 +7,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.mynumnum.drivewire.client.serializable.DriveListData;
 import com.mynumnum.drivewire.client.serializable.FileListData;
 import com.mynumnum.drivewire.client.serializable.SerialPortData;
+import com.mynumnum.drivewire.client.serializable.SettingsData;
 import com.mynumnum.drivewire.client.serializable.StatusData;
 import com.mynumnum.drivewire.client.serializable.VersionData;
 
@@ -31,5 +32,10 @@ public interface DriveWireService extends RemoteService {
 	String openDiskSet(String fileName);
 	String saveDiskSet(String fileName);
 	String ejectDisk(Integer driveNumber);
+	ArrayList<String> getPorts();
+	String setPort(String port);
+	SettingsData getSettings();
+	String setModel(int model);
+	String setLogLevel(String level);
 	
 }

@@ -13,6 +13,8 @@ public class DWTCPServer implements Runnable {
 	private static final Logger logger = Logger.getLogger("DWServer.DWTCPServer");
 	
 	private int wanttodie = 0;
+	
+	private static int tcpPort = 0;
 
 	
 	public void run() 
@@ -24,6 +26,8 @@ public class DWTCPServer implements Runnable {
 		
 		try {
 			srvr = new ServerSocket(DriveWireServer.config.getInt("TCPPort",6809));
+			
+			tcpPort = srvr.getLocalPort();
 			
 			logger.info("server listening on port " + srvr.getLocalPort());
 			
@@ -45,6 +49,13 @@ public class DWTCPServer implements Runnable {
 			logger.error("Error binding to socket, TCP server exiting");
 		}
 	
+	}
+	/**
+	 * Used by the client UI to determine the current TCP port
+	 * @return
+	 */
+	public static int getTcpPort() {
+		return tcpPort;
 	}
 
 	

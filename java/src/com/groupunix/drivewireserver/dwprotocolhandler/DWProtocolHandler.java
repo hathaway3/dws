@@ -8,7 +8,9 @@ import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 
 import org.apache.log4j.Logger;
@@ -86,6 +88,7 @@ public class DWProtocolHandler implements Runnable
 	
 	public static byte[] lastSector = new byte[256];
 	private static GregorianCalendar dwinitTime = new GregorianCalendar();
+	private static int cocoModel = 0;
 	
 	// serial port instance
 	private static SerialPort serialPort;
@@ -162,6 +165,24 @@ public class DWProtocolHandler implements Runnable
 		
 	}
 	
+	@SuppressWarnings("unchecked")
+	public static ArrayList<String> getPortNames() {
+		ArrayList<String> ports = new ArrayList<String>();
+		
+		//
+		// Get an enumeration of all ports known to JavaComm
+		//
+		Enumeration portIdentifiers = CommPortIdentifier.getPortIdentifiers();
+		while (portIdentifiers.hasMoreElements())
+		{
+		    CommPortIdentifier pid = (CommPortIdentifier) portIdentifiers.nextElement();
+		    if (pid.getPortType() == CommPortIdentifier.PORT_SERIAL)
+		    		ports.add(pid.getName());
+		}
+		return ports;
+		
+	}
+	
 	private static void connectSerial ( String portName ) throws IOException, NoSuchPortException, PortInUseException, UnsupportedCommOperationException
     {
 		logger.info("attempting to open device '" + portName + "'");
@@ -205,7 +226,10 @@ public class DWProtocolHandler implements Runnable
 
 	private static void setSerialParams(SerialPort sport) throws UnsupportedCommOperationException 
 	{
-		switch(DriveWireServer.config.getInt("CocoModel", 3))
+		if (cocoModel == 0) {
+			cocoModel = DriveWireServer.config.getInt("CocoModel", 3); 
+		}
+		switch(cocoModel)
 		{
 			case 1:
 				sport.setSerialPortParams(38400,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
@@ -222,7 +246,7 @@ public class DWProtocolHandler implements Runnable
 	
 	// Used by the client web interface to determine the coco model
 	public static int getCocoModel() {
-		return DriveWireServer.config.getInt("CocoModel", 3);
+		return cocoModel;
 	}
 	
 	private void comWrite(byte[] data, int len)
@@ -1233,6 +1257,12 @@ public class DWProtocolHandler implements Runnable
 	public static GregorianCalendar getDWInitTime()
 	{
 		return(dwinitTime);
+	}
+
+	public static void setCocoModel(int model) throws UnsupportedCommOperationException {
+		cocoModel = model;
+		setSerialParams(serialPort);
+		
 	}
 
 	
