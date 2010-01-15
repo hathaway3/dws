@@ -84,8 +84,7 @@ public class Status extends Composite {
 		writeRetries.setText(result.getWriteRetries());
 		writeSectors.setText(result.getSectorsWritten());
 		lastSetStat.setText(result.getLastSetStat());
-		// TODO Figure out if 'device' is needed and code or remove from UI
-		device.setText("N/A");
+		device.setText(result.getDevice());
 				
 	}
 

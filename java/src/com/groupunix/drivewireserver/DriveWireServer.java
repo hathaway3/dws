@@ -27,8 +27,10 @@ public class DriveWireServer
 	public static final String DWServerVersion = "3.1.2";
 	public static final String DWServerVersionDate = "12/21/2009";
 	private static boolean loggingToFile = false;
+	private static String logLevel = "WARN";
 	
-	
+	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-10t] %20.20C: %m%n");
+
 	public static Logger logger = Logger.getLogger("DWServer");
 	private static FileAppender fileAppender = null;
 	private static ConsoleAppender consoleAppender = null;
@@ -44,13 +46,9 @@ public class DriveWireServer
 	private static int totalServed = 0;
 
 		
-	@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	public static void main(String[] args)
 	{
 		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
-		
-		// Start up the web interface.
-		new Jetty();
 		
 		BasicConfigurator.configure();
 		
@@ -69,36 +67,13 @@ public class DriveWireServer
     	// set up logging
     	
     	// must be a better way
-    	logger.getRoot().removeAllAppenders();
+    	// logger.getRoot().removeAllAppenders();
     	
-    	
-    	PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-10t] %20.20C: %m%n");
+    	loggingToFile = config.getBoolean("LogToConsole", loggingToFile);
     	    	
-    	if (config.getBoolean("LogToConsole", true))
-    	{
-    		consoleAppender = new ConsoleAppender(logLayout);
-    		logger.addAppender(consoleAppender);
-    	}
+    	logToFile(loggingToFile);
     	
-    	if ((config.getBoolean("LogToFile", false)) && !(config.getString("LogFile","").equals("")))
-    	{
-    		try 
-    		{
-				fileAppender = new FileAppender(logLayout,config.getString("LogFile"),true,true,4096);
-				logger.addAppender(fileAppender);
-				loggingToFile = true;
-			} 
-    		catch (IOException e) 
-    		{
-				logger.error("Cannot log to file '" + config.getString("LogFile") +"': " + e.getMessage());
-			}
-    		
-    	} else {
-    		loggingToFile = false;
-    	}
-    	
-    	
-    	logger.setLevel(Level.toLevel(config.getString("LogLevel", "WARN")));
+    	logger.setLevel(Level.toLevel(config.getString("LogLevel", logLevel)));
     	
     	logger.info("DriveWire Server " + DWServerVersion + " (" + DWServerVersionDate + ") starting up");
     	
@@ -131,7 +106,9 @@ public class DriveWireServer
 		
 		TCPServerT.start();
 		
-		
+		// Start up the web interface.
+		new Jetty();
+
 		// headless mode, just wait for protohandler to die
 		try {
 			protoHandlerT.join();
@@ -141,8 +118,20 @@ public class DriveWireServer
 		
 	}
 	
-	
-	
+	public static void logToFile(boolean loggingToFile2) {
+    	if (loggingToFile2)
+    	{
+    		consoleAppender = new ConsoleAppender(logLayout);
+    		logger.addAppender(consoleAppender);
+    	} else {
+        	if (!config.getString("LogFile","").equals(""))
+        	{
+        		setLogFileName(config.getString("LogFile"));
+        	}    		
+    	}
+		
+	}
+
 	public static void connectSerialPort()
 	{
 		// stop PH if we have one running
@@ -216,7 +205,7 @@ public class DriveWireServer
 	 * @return
 	 */
 	public static String getLogLevel() {
-		return logger.getLevel().toString();
+		return logLevel;
 	}
 	/**
 	 * Used by the client UI to display if the write to file option is selected
@@ -233,11 +222,26 @@ public class DriveWireServer
 		return config.getString("LogFile");
 	}
 
-
-
 	public static void setLogLevel(String level) {
 		logger.setLevel(Level.toLevel(level));
+		logLevel = level;
 		// TODO Write this new value back to .properties file
+	}
+
+	public static void setLogFileName(String fileName) {
+    	logger.removeAllAppenders();
+		try 
+		{
+			fileAppender = new FileAppender(logLayout,fileName,true,true,4096);
+			logger.addAppender(fileAppender);
+			loggingToFile = true;
+		} 
+		catch (IOException e) 
+		{
+			logger.error("Cannot log to file '" + fileName +"': " + e.getMessage());
+		}
+		// TODO Write the new log filename value back to the .properties file
+		
 	}
 
 

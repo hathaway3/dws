@@ -47,7 +47,7 @@ public class DriveWireGWT implements EntryPoint, ValueChangeHandler<String> {
 		tp.add(new Status(), Status.getTabname());
 		tp.add(new Drives(), Drives.getTabname());
 		tp.add(new Ports(), Ports.getTabname());
-		tp.add(new Settings("settings tab"), Settings.getTabname());
+		tp.add(new Settings(), Settings.getTabname());
 		tp.add(new About(), About.getTabname());
 		// Show the user our new tabPanel
 		RootPanel.get().add(tp);

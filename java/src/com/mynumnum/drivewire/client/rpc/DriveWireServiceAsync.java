@@ -61,4 +61,10 @@ public interface DriveWireServiceAsync {
 	void setModel(int model, AsyncCallback<String> callback);
 
 	void setLogLevel(String level, AsyncCallback<String> callback);
+
+	void setLogFileName(String fileName, AsyncCallback<String> callback);
+
+	void setLogToFile(boolean logToFile, AsyncCallback<String> callback);
+
+	void setTcpPort(int port, AsyncCallback<String> callback);
 }

@@ -4,20 +4,29 @@ import java.util.ArrayList;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.mynumnum.drivewire.client.DriveWireGWT;
 import com.mynumnum.drivewire.client.common.Common;
 
 public class Settings extends Composite {
 	private final static String TABNAME = "Settings"; 
+	private static DialogBox db = new DialogBox();
+
 
 	private static SettingsUiBinder uiBinder = GWT
 			.create(SettingsUiBinder.class);
@@ -26,7 +35,7 @@ public class Settings extends Composite {
 	}
 
 
-	public Settings(String firstName) {
+	public Settings() {
 		initWidget(uiBinder.createAndBindUi(this));
 		getPorts();
 		getModels();
@@ -78,7 +87,7 @@ public class Settings extends Composite {
 				portTextBox.setText(String.valueOf(result.getTcpPort()));
 				setLogLevel(result.getLogLevel());
 				writeToFileCheckBox.setValue(result.isWriteToFile());
-				logFileNameLabel.setValue(result.getLogFileName());
+				logFileNameLabel.setText(result.getLogFileName());
 				
 			}
 
@@ -90,7 +99,7 @@ public class Settings extends Composite {
 	 * @param port
 	 */
 	private void setSerialDevice(String port) {
-		for (int x = 0; x < serialDeviceListBox.getItemCount()-1; x++) {
+		for (int x = 0; x < serialDeviceListBox.getItemCount(); x++) {
 			if (serialDeviceListBox.getValue(x).equals(port)) {
 				serialDeviceListBox.setSelectedIndex(x);
 				break;
@@ -103,8 +112,8 @@ public class Settings extends Composite {
 	 * @param model
 	 */
 	private void setModel(int model) {
-		for (int x = 0; x < cocoModelListBox.getItemCount()-1; x++) {
-			if (cocoModelListBox.getValue(x).equals(model)) {
+		for (int x = 0; x < cocoModelListBox.getItemCount(); x++) {
+			if (cocoModelListBox.getValue(x).equals(String.valueOf(model))) {
 				cocoModelListBox.setSelectedIndex(x);
 				break;
 			}
@@ -116,7 +125,7 @@ public class Settings extends Composite {
 	 * @param logLevel
 	 */
 	private void setLogLevel(String logLevel) {
-		for (int x = 0; x < logLevelListBox.getItemCount()-1; x++) {
+		for (int x = 0; x < logLevelListBox.getItemCount(); x++) {
 			if (logLevelListBox.getItemText(x).equals(logLevel)) {
 				logLevelListBox.setSelectedIndex(x);
 				break;
@@ -180,11 +189,115 @@ public class Settings extends Composite {
 	ListBox logLevelListBox;
 	
 	@UiField
-	TextBox logFileNameLabel;
+	Label logFileNameLabel;
 	
 	@UiField
 	CheckBox writeToFileCheckBox;
 	
+	@UiHandler("chooseLogFileNameButton")
+	void onChooseClick(ClickEvent c) {
+		showFileSaveWindow();
+	}
+	@UiHandler("writeToFileCheckBox")
+	void onWriteToFileClick(ClickEvent ce) {
+		setWriteToFile(writeToFileCheckBox.getValue());
+	}
+	@UiHandler("portTextBox")
+	void onPortChangeEvent(ChangeEvent ce) {
+		setTcpPort(portTextBox.getText());
+	}
+	
+	/**
+	 * This is not implemented very well.  If the user types that is not a number 
+	 * A dialog box will pop up.  We probably need to have a button to assign the port number once they
+	 * are done entering it into the text box rather then fire a change event (that only fires when the TextBox 
+	 * loses focus in the browser.
+	 * @param text
+	 */
+	private void setTcpPort(String text) {
+		int tcpPort = 6809;
+		try {
+			tcpPort = Integer.valueOf(text);
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			Common.showErrorMessage("Port number must not contain letters or characters!");
+		}
+		DriveWireGWT.driveWireService.setTcpPort(tcpPort, new AsyncCallback<String>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				Common.showErrorMessage(caught.toString());
+				
+			}
+
+			@Override
+			public void onSuccess(String result) {
+				// Nothing to do here!
+				
+			}
+		});
+		
+	}
+	private void setWriteToFile(boolean logToFile) {
+		DriveWireGWT.driveWireService.setLogToFile(logToFile, new AsyncCallback<String>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				Common.showErrorMessage(caught.toString());
+				
+			}
+
+			@Override
+			public void onSuccess(String result) {
+				// Nothing to do here
+				
+			}
+		});
+		
+	}
+	private void showFileSaveWindow() {
+		db.setAnimationEnabled(true);
+		db.setGlassEnabled(true);
+		db.setHTML("<b>Enter file name for log file:</b>");
+		VerticalPanel vp = new VerticalPanel();
+		vp.setSpacing(10);
+		HorizontalPanel hp = new HorizontalPanel();
+		hp.add(new Label("File Name:"));
+		hp.setSpacing(10);
+		final TextBox fileTextBox = new TextBox();
+		hp.add(fileTextBox);
+		vp.add(hp);
+		HorizontalPanel hp2 = new HorizontalPanel();
+		hp2.setSpacing(10);
+		Button ok = new Button("OK");
+		Button cancel = new Button("Cancel");
+		hp2.add(ok);
+		hp2.add(cancel);
+		vp.add(hp2);
+		db.setWidget(vp);
+		ok.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				setServerLogFileName(fileTextBox.getText());
+				
+			}
+
+		});
+		cancel.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				db.hide();
+				
+			}
+		});
+		
+		db.setWidget(vp);
+		db.center();
+		fileTextBox.setFocus(true);
+		
+	}
 	@UiHandler("serialDeviceListBox")
 	void onSerialPortChange(ChangeEvent e) {
 		// Make request to server to change serial port
@@ -262,6 +375,26 @@ public class Settings extends Composite {
 		});
 		
 	}
+	
+	private void setServerLogFileName(String text) {
+		// Hide our dialog box and set the new file name in the label
+		db.hide();
+		logFileNameLabel.setText(text);
+		// Call the server to update the file name
+		DriveWireGWT.driveWireService.setLogFileName(text, new AsyncCallback<String>() {
 
+			@Override
+			public void onFailure(Throwable caught) {
+				Common.showErrorMessage(caught.toString());
+				
+			}
+
+			@Override
+			public void onSuccess(String result) {
+				
+			}
+		});
+		
+	}
 
 }

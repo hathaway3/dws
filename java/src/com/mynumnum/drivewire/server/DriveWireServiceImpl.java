@@ -67,6 +67,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		sd.setWriteRetries(DWProtocolHandler.getWriteRetries());
 		sd.setModel(DWProtocolHandler.getCocoModel());
 		// Need to add the rest of the getters and setters.
+		sd.setDevice(getPortName());
 		return sd;
 	}
 	public ArrayList<SerialPortData> getPortData() {
@@ -87,7 +88,6 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			spd.setHostPort(DWVSerialPorts.getHostPort(port));
 			// Add this instance of spd to our array list
 			portData.add(spd);
-			
 			 	
 		}
 		
@@ -233,12 +233,25 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		return ("Success");
 	}
 	/**
+	 * Fetch the port name from drivewire server
+	 * @return
+	 */
+	private String getPortName() {
+		String portName = "none";
+		try {
+			portName = DWProtocolHandler.getSerialPort().getName();
+		} catch (NullPointerException e) {
+			 e.printStackTrace();
+		}
+		return portName;
+	}
+	/**
 	 * Return the current settings for the 'Settings' tab to the client
 	 */
 	@Override
 	public SettingsData getSettings() {
 		SettingsData settings = new SettingsData();
-		settings.setPort(DWProtocolHandler.getSerialPort().getName());
+		settings.setPort(getPortName());
 		settings.setModel(DWProtocolHandler.getCocoModel());
 		settings.setTcpServerEnabled(DriveWireServer.isTcpEnabled());
 		settings.setTcpPort(DWTCPServer.getTcpPort());
@@ -261,6 +274,21 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			error = e.toString();
 		}
 		return error;
+	}
+	@Override
+	public String setLogFileName(String fileName) {
+		DriveWireServer.setLogFileName(fileName);
+		return "Success";
+	}
+	@Override
+	public String setLogToFile(boolean logToFile) {
+		DriveWireServer.logToFile(logToFile);
+		return "success";
+	}
+	@Override
+	public String setTcpPort(int port) {
+		DWTCPServer.setTcpPort(port);
+		return "success";
 	}
 	
 	

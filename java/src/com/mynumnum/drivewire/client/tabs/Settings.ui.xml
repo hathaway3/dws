@@ -33,7 +33,7 @@
 				<g:Label>Log File:</g:Label>
 				<g:Label ui:field="logFileNameLabel"></g:Label>
 				<g:HTML>&nbsp;</g:HTML>
-				<g:Button>Choose...</g:Button>
+				<g:Button ui:field="chooseLogFileNameButton">Choose...</g:Button>
 			</g:HorizontalPanel>
 		</g:VerticalPanel>
 	</g:VerticalPanel>

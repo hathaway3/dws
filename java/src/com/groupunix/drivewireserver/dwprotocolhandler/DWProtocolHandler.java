@@ -88,7 +88,7 @@ public class DWProtocolHandler implements Runnable
 	
 	public static byte[] lastSector = new byte[256];
 	private static GregorianCalendar dwinitTime = new GregorianCalendar();
-	private static int cocoModel = 0;
+	private static int cocoModel = 3;
 	
 	// serial port instance
 	private static SerialPort serialPort;
@@ -226,9 +226,7 @@ public class DWProtocolHandler implements Runnable
 
 	private static void setSerialParams(SerialPort sport) throws UnsupportedCommOperationException 
 	{
-		if (cocoModel == 0) {
-			cocoModel = DriveWireServer.config.getInt("CocoModel", 3); 
-		}
+		cocoModel = DriveWireServer.config.getInt("CocoModel", cocoModel); 
 		switch(cocoModel)
 		{
 			case 1:

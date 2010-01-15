@@ -37,5 +37,8 @@ public interface DriveWireService extends RemoteService {
 	SettingsData getSettings();
 	String setModel(int model);
 	String setLogLevel(String level);
+	String setLogFileName(String fileName);
+	String setLogToFile(boolean logToFile);
+	String setTcpPort(int port);
 	
 }

@@ -14,7 +14,7 @@ public class DWTCPServer implements Runnable {
 	
 	private int wanttodie = 0;
 	
-	private static int tcpPort = 0;
+	private static int tcpPort = 6809;
 
 	
 	public void run() 
@@ -25,7 +25,7 @@ public class DWTCPServer implements Runnable {
 
 		
 		try {
-			srvr = new ServerSocket(DriveWireServer.config.getInt("TCPPort",6809));
+			srvr = new ServerSocket(DriveWireServer.config.getInt("TCPPort",tcpPort));
 			
 			tcpPort = srvr.getLocalPort();
 			
@@ -56,6 +56,12 @@ public class DWTCPServer implements Runnable {
 	 */
 	public static int getTcpPort() {
 		return tcpPort;
+	}
+	public static void setTcpPort(int port) {
+		// TODO Auto-generated method stub
+		// looks like we probably need to kill the previous Socket and then create a new one if the
+		// port number is changed.  Aaron, can you implement this method?
+		
 	}
 
 	
