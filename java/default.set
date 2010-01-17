@@ -1,0 +1,11 @@
+# disk set for DriveWire
+
+# format:
+# A,/path/to/disk.dsk,B
+# where A=0-255 (the drive to load this disk into)
+# and B=0 or 1 (0 for read/write, 1 for write protect)
+
+0,E:\xfer\dwserver.dsk,0
+1,E:\cocodisks\scratch1.dsk,0
+2,E:\cocodisks\work.dsk,0
+3,E:\xfer\dwserver.dsk,1

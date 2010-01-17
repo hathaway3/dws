@@ -63,7 +63,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		sd.setSectorsRead(DWProtocolHandler.getSectorsRead());
 		sd.setSectorsWritten(DWProtocolHandler.getSectorsWritten());
 		sd.setWriteRetries(DWProtocolHandler.getWriteRetries());
-		// sd.setModel(DWProtocolHandler.getCocoModel());
+		sd.setModel(DriveWireServer.getCocoModel());
 		// Need to add the rest of the getters and setters.
 		sd.setDevice(getPortName());
 		return sd;
@@ -249,11 +249,9 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	public SettingsData getSettings() {
 
 		SettingsData settings = new SettingsData();
-				return settings;
-	}
-/*		
+		
 		settings.setPort(getPortName());
-		settings.setModel(DWProtocolHandler.getCocoModel());
+		settings.setModel(DriveWireServer.getCocoModel());
 		settings.setLogLevel(DriveWireServer.getLogLevel());
 		settings.setWriteToFile(DriveWireServer.isWriteToFileEnabled());
 		settings.setLogFileName(DriveWireServer.getLogFileName());
@@ -268,11 +266,11 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	@Override
 	public String setModel(int model) {
 		String error = "none";
-		try {
-			DWProtocolHandler.setCocoModel(model);
-		} catch (UnsupportedCommOperationException e) {
-			error = e.toString();
-		}
+		//try {
+			DriveWireServer.setCocoModel(model);
+		//} catch (UnsupportedCommOperationException e) {
+		//	error = e.toString();
+		//}
 		return error;
 	}
 	@Override
@@ -284,10 +282,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	public String setLogToFile(boolean logToFile) {
 		DriveWireServer.logToFile(logToFile);
 		return "success";
-		
-	*/	
-
-
+	}
 	
 	
 }
