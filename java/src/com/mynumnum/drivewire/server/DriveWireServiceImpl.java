@@ -15,7 +15,6 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDisk;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
-import com.groupunix.drivewireserver.tcpserver.DWTCPServer;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 import com.mynumnum.drivewire.client.rpc.DriveWireService;
 import com.mynumnum.drivewire.client.serializable.DriveListData;
@@ -58,14 +57,13 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		sd.setLastDrive(DWProtocolHandler.getLastDrive());
 		sd.setLastGetStat(DWProtocolHandler.getLastGetStat());
 		sd.setLastLSN(DWProtocolHandler.getLastLSN());
-		sd.setLastMessage(DWProtocolHandler.getLastMessage());
 		sd.setLastOpcode(DWProtocolHandler.getLastOpcode());
 		sd.setLastSetStat(DWProtocolHandler.getLastSetStat());
 		sd.setReadRetries(DWProtocolHandler.getReadRetries());
 		sd.setSectorsRead(DWProtocolHandler.getSectorsRead());
 		sd.setSectorsWritten(DWProtocolHandler.getSectorsWritten());
 		sd.setWriteRetries(DWProtocolHandler.getWriteRetries());
-		sd.setModel(DWProtocolHandler.getCocoModel());
+		// sd.setModel(DWProtocolHandler.getCocoModel());
 		// Need to add the rest of the getters and setters.
 		sd.setDevice(getPortName());
 		return sd;
@@ -76,9 +74,8 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			SerialPortData spd = new SerialPortData();
 			// set all the fields of the SerialPortData class so the client will have access to the data
 			// spd.setActionFileDefined(DWVSerialPorts.getActionFileDefined(port));
-			spd.setCocoInit(DWVSerialPorts.isCocoInit(port));
+			
 			spd.setConnected(DWVSerialPorts.isConnected(port));
-			spd.setMode(DWVSerialPorts.prettyMode(port));
 			// spd.setPasswordSet(DWVSerialPorts.isPasswordRequired(port));
 			spd.setPD_INT(DWVSerialPorts.getPD_INT(port));
 			spd.setPD_QUT(DWVSerialPorts.getPD_QUT(port));
@@ -158,7 +155,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		return drivesList;
 	}
 	public String setDriveWriteProtect(Integer driveNumber, boolean writeProtect) {
-		DWDiskDrives.setWriteProtect(driveNumber, writeProtect);
+		DWProtocolHandler.getDiskDrives().setWriteProtect(driveNumber, writeProtect);
 		return ("Success");
 		
 	}
@@ -167,7 +164,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		String error = "none";
 		// Call DWDiskDrives loadDiskFromFile
 		try {
-			DWDiskDrives.LoadDiskFromFile(drive, path);
+			DWProtocolHandler.getDiskDrives().LoadDiskFromFile(drive, path);
 		} catch (FileNotFoundException e) {
 			error = "Could not find the specified file.";
 			//e.printStackTrace();
@@ -185,13 +182,13 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		// Get the list of drives, paths, and write protect, and disk sector information and return to the client
 		ArrayList<DriveListData> adld = new ArrayList<DriveListData>();
 		for (int drive = 0; drive < DWDiskDrives.MAX_DRIVES; drive++) {
-			if (DWDiskDrives.diskLoaded(drive)) {
+			if (DWProtocolHandler.getDiskDrives().diskLoaded(drive)) {
 				DriveListData dld = new DriveListData();
 				dld.setDriveNumber(drive);
-				dld.setFileName(DWDiskDrives.getDiskFile(drive));
-				dld.setWriteProtect(DWDiskDrives.getWriteProtect(drive));
-				dld.setDiskSectors(DWDiskDrives.getDiskSectors(drive));
-				dld.setDiskName(DWDiskDrives.getDiskName(drive));
+				dld.setFileName(DWProtocolHandler.getDiskDrives().getDiskFile(drive));
+				dld.setWriteProtect(DWProtocolHandler.getDiskDrives().getWriteProtect(drive));
+				dld.setDiskSectors(DWProtocolHandler.getDiskDrives().getDiskSectors(drive));
+				dld.setDiskName(DWProtocolHandler.getDiskDrives().getDiskName(drive));
 				adld.add(dld);
 				
 			}
@@ -203,19 +200,19 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	}
 	@Override
 	public String openDiskSet(String fileName) {
-		DWDiskDrives.loadDiskSet(fileName);
+		DWProtocolHandler.getDiskDrives().LoadDiskSet(fileName);
 		return null;
 	}
 	@Override
 	public String saveDiskSet(String fileName) {
-		DWDiskDrives.saveDiskSet(fileName);
+		DWProtocolHandler.getDiskDrives().saveDiskSet(fileName);
 		return null;
 	}
 	@Override
 	public String ejectDisk(Integer driveNumber) {
 		String errorMessage = "none";
 		try {
-			DWDiskDrives.EjectDisk(driveNumber);
+			DWProtocolHandler.getDiskDrives().EjectDisk(driveNumber);
 		} catch (DWDriveNotValidException e) {
 			errorMessage = "Drive not valid.";
 		} catch (DWDriveNotLoadedException e) {
@@ -250,16 +247,19 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	 */
 	@Override
 	public SettingsData getSettings() {
+
 		SettingsData settings = new SettingsData();
+				return settings;
+	}
+/*		
 		settings.setPort(getPortName());
 		settings.setModel(DWProtocolHandler.getCocoModel());
-		settings.setTcpServerEnabled(DriveWireServer.isTcpEnabled());
-		settings.setTcpPort(DWTCPServer.getTcpPort());
 		settings.setLogLevel(DriveWireServer.getLogLevel());
 		settings.setWriteToFile(DriveWireServer.isWriteToFileEnabled());
 		settings.setLogFileName(DriveWireServer.getLogFileName());
 		return settings;
 	}
+
 	@Override
 	public String setLogLevel(String level) {
 		DriveWireServer.setLogLevel(level);
@@ -284,12 +284,10 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	public String setLogToFile(boolean logToFile) {
 		DriveWireServer.logToFile(logToFile);
 		return "success";
-	}
-	@Override
-	public String setTcpPort(int port) {
-		DWTCPServer.setTcpPort(port);
-		return "success";
-	}
+		
+	*/	
+
+
 	
 	
 }

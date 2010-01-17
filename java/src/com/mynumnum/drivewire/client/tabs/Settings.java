@@ -83,8 +83,6 @@ public class Settings extends Composite {
 			public void onSuccess(com.mynumnum.drivewire.client.serializable.SettingsData result) {
 				setSerialDevice(result.getPort());
 				setModel(result.getModel());
-				tcpServerEnabledCheckBox.setValue(result.isTcpServerEnabled());
-				portTextBox.setText(String.valueOf(result.getTcpPort()));
 				setLogLevel(result.getLogLevel());
 				writeToFileCheckBox.setValue(result.isWriteToFile());
 				logFileNameLabel.setText(result.getLogFileName());
@@ -180,12 +178,6 @@ public class Settings extends Composite {
 	ListBox cocoModelListBox;
 	
 	@UiField
-	CheckBox tcpServerEnabledCheckBox;
-	
-	@UiField
-	TextBox portTextBox;
-	
-	@UiField
 	ListBox logLevelListBox;
 	
 	@UiField
@@ -202,42 +194,8 @@ public class Settings extends Composite {
 	void onWriteToFileClick(ClickEvent ce) {
 		setWriteToFile(writeToFileCheckBox.getValue());
 	}
-	@UiHandler("portTextBox")
-	void onPortChangeEvent(ChangeEvent ce) {
-		setTcpPort(portTextBox.getText());
-	}
 	
-	/**
-	 * This is not implemented very well.  If the user types that is not a number 
-	 * A dialog box will pop up.  We probably need to have a button to assign the port number once they
-	 * are done entering it into the text box rather then fire a change event (that only fires when the TextBox 
-	 * loses focus in the browser.
-	 * @param text
-	 */
-	private void setTcpPort(String text) {
-		int tcpPort = 6809;
-		try {
-			tcpPort = Integer.valueOf(text);
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			Common.showErrorMessage("Port number must not contain letters or characters!");
-		}
-		DriveWireGWT.driveWireService.setTcpPort(tcpPort, new AsyncCallback<String>() {
 
-			@Override
-			public void onFailure(Throwable caught) {
-				Common.showErrorMessage(caught.toString());
-				
-			}
-
-			@Override
-			public void onSuccess(String result) {
-				// Nothing to do here!
-				
-			}
-		});
-		
-	}
 	private void setWriteToFile(boolean logToFile) {
 		DriveWireGWT.driveWireService.setLogToFile(logToFile, new AsyncCallback<String>() {
 

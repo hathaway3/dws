@@ -66,5 +66,4 @@ public interface DriveWireServiceAsync {
 
 	void setLogToFile(boolean logToFile, AsyncCallback<String> callback);
 
-	void setTcpPort(int port, AsyncCallback<String> callback);
 }

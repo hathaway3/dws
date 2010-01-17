@@ -39,6 +39,5 @@ public interface DriveWireService extends RemoteService {
 	String setLogLevel(String level);
 	String setLogFileName(String fileName);
 	String setLogToFile(boolean logToFile);
-	String setTcpPort(int port);
 	
 }
