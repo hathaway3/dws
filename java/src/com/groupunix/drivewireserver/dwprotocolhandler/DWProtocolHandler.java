@@ -881,6 +881,8 @@ public class DWProtocolHandler implements Runnable
 					byte[] devdescr = new byte[26];
 					devdescr = comRead(26);
 					
+					logger.debug("COMST: " + byteArrayToHexString(devdescr));
+					
 					// should move into DWVSerialPorts
 					
 					// store it

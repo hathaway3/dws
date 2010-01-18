@@ -75,7 +75,8 @@ public class DriveWireServer
     	}
     	
     	dwAppender = new DWLogAppender(logLayout);
-    	    	
+    	logger.addAppender(dwAppender);    	
+    	
     	if (config.getBoolean("LogToConsole", true))
     	{
     		consoleAppender = new ConsoleAppender(logLayout);

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
@@ -339,6 +340,20 @@ public class DWUtilDWThread implements Runnable
 				
 				text += "\r\n";
 			}
+			
+		}
+		else if (arg.toLowerCase().startsWith("l"))
+		{
+			text += "\r\nDriveWire Server Log:\r\n\n";
+			
+			ArrayList<String> loglines = DriveWireServer.getLogEvents(10);
+			
+			for (int i = 0;i<loglines.size();i++)
+			{
+				text += loglines.get(i);
+				text += "\r\n";
+			}
+			
 			
 		}
 		else if (arg.toLowerCase().startsWith("po"))

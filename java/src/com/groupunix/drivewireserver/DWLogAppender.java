@@ -58,7 +58,8 @@ public class DWLogAppender extends AppenderSkeleton
 		
 		for (int i = start;i<events.size();i++)
 		{
-			eventstxt.add(events.get(i).toString());
+			
+			eventstxt.add(layout.format(events.get(i)));
 		}
 		
 		return(eventstxt);
