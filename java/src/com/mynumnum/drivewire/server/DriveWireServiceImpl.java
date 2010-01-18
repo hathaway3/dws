@@ -1,7 +1,5 @@
 package com.mynumnum.drivewire.server;
 
-import gnu.io.UnsupportedCommOperationException;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
@@ -37,35 +35,21 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		return (counter.toString());
 
 	}
-	public String allowIncoming(String serialPort, boolean isChecked) {
-		// Make call to appropriate method in drivewire server
-		System.out.println("Just got an allow incoming change for serial port " + serialPort + " value= " + isChecked );
-		return null;
-	}
-	public String requirePassword(String serialPort, boolean isChecked) {
-		// Make call to appropriate method in drivewire server
-		System.out.println("Just got an require password change for serial port " + serialPort + " value= " + isChecked );
-		return null;
-	}
-	public String serialPortDestination(String serialPort, String destination) {
-		// Make call to appropriate method in drivewire server
-		System.out.println("Just got a serial port destination change for serial port " + serialPort + " destination= " + destination );
-		return null;
-	}
-	public StatusData getStatusData() {
+		public StatusData getStatusData() {
 		StatusData sd = new StatusData();
 		sd.setLastDrive(DWProtocolHandler.getLastDrive());
-		sd.setLastGetStat(DWProtocolHandler.getLastGetStat());
+		sd.setLastGetStat(DWProtocolHandler.prettySS(DWProtocolHandler.getLastGetStat()));
 		sd.setLastLSN(DWProtocolHandler.getLastLSN());
-		sd.setLastOpcode(DWProtocolHandler.getLastOpcode());
-		sd.setLastSetStat(DWProtocolHandler.getLastSetStat());
+		sd.setLastOpcode(DWProtocolHandler.prettyOP(DWProtocolHandler.getLastOpcode()));
+		sd.setLastSetStat(DWProtocolHandler.prettySS(DWProtocolHandler.getLastSetStat()));
 		sd.setReadRetries(DWProtocolHandler.getReadRetries());
 		sd.setSectorsRead(DWProtocolHandler.getSectorsRead());
 		sd.setSectorsWritten(DWProtocolHandler.getSectorsWritten());
 		sd.setWriteRetries(DWProtocolHandler.getWriteRetries());
 		sd.setModel(DriveWireServer.getCocoModel());
 		// Need to add the rest of the getters and setters.
-		sd.setDevice(getPortName());
+		sd.setDevice(DriveWireServer.getPortName());
+		sd.setVersion(new VersionData(DriveWireServer.DWServerVersion, DriveWireServer.DWServerVersionDate));
 		return sd;
 	}
 	public ArrayList<SerialPortData> getPortData() {
@@ -97,7 +81,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	}
 	// TODO need a method in DriveWireServer that can reset the log file.
 	public String resetLogFile() {
-		// DriveWireServer.resetLogFile();
+		DriveWireServer.resetLogFile();
 		return "Success";
 	}
 	// TODO fetch the file and folder data and return to client
@@ -229,19 +213,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		DWProtocolHandler.setPort(port);
 		return ("Success");
 	}
-	/**
-	 * Fetch the port name from drivewire server
-	 * @return
-	 */
-	private String getPortName() {
-		String portName = "none";
-		try {
-			portName = DWProtocolHandler.getSerialPort().getName();
-		} catch (NullPointerException e) {
-			 e.printStackTrace();
-		}
-		return portName;
-	}
+
 	/**
 	 * Return the current settings for the 'Settings' tab to the client
 	 */
@@ -250,7 +222,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 
 		SettingsData settings = new SettingsData();
 		
-		settings.setPort(getPortName());
+		settings.setPort(DriveWireServer.getPortName());
 		settings.setModel(DriveWireServer.getCocoModel());
 		settings.setLogLevel(DriveWireServer.getLogLevel());
 		settings.setWriteToFile(DriveWireServer.isWriteToFileEnabled());

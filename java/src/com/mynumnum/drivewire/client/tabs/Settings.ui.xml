@@ -14,12 +14,7 @@
 					<g:ListBox ui:field="cocoModelListBox"></g:ListBox>
 				</g:HorizontalPanel>
 			</g:VerticalPanel>
-			<g:VerticalPanel ui:field="tcpServerPanel">
-				<g:Label>TCP Server</g:Label>
-				<g:CheckBox ui:field="tcpServerEnabledCheckBox">Enabled</g:CheckBox>
-				<g:Label>Port:</g:Label>
-				<g:TextBox ui:field="portTextBox"></g:TextBox>
-			</g:VerticalPanel>
+			
 		</g:HorizontalPanel>
 		<g:VerticalPanel>
 			<g:Label>Logging</g:Label>

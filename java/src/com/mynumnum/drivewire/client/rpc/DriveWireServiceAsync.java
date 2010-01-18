@@ -14,15 +14,7 @@ import com.mynumnum.drivewire.client.serializable.VersionData;
  * The async counterpart of <code>GreetingService</code>.
  */
 public interface DriveWireServiceAsync {
-	void allowIncoming(String serialPort, boolean isChecked,
-			AsyncCallback<String> callback);
-
-	void requirePassword(String serialPort, boolean isChecked,
-			AsyncCallback<String> callback);
-
-	void serialPortDestination(String serialPort, String destination,
-			AsyncCallback<String> callback);
-
+	
 	void getStatusData(AsyncCallback<StatusData> callback);
 
 	void getPortData(AsyncCallback<ArrayList<SerialPortData>> callback);

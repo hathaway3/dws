@@ -43,7 +43,7 @@ public class Status extends Composite {
 	HorizontalPanel sectorsPanel;
 	
 	@UiField
-	Label lastMessage, lastOpCode, lastLsn, lastDrive
+	Label version, lastOpCode, lastLsn, lastDrive
 		,readSectors, writeSectors, readRetries, writeRetries, readGood
 		,writeGood, lastGetStat, lastSetStat, device, model;
 	
@@ -74,7 +74,6 @@ public class Status extends Composite {
 		lastDrive.setText(result.getLastDrive());
 		lastGetStat.setText(result.getLastGetStat());
 		lastLsn.setText(result.getLastLSN());
-		lastMessage.setText(result.getLastMessage());
 		lastOpCode.setText(result.getLastOpcode());
 		model.setText(result.getModel());
 		readGood.setText(result.getReadGood());
@@ -85,7 +84,7 @@ public class Status extends Composite {
 		writeSectors.setText(result.getSectorsWritten());
 		lastSetStat.setText(result.getLastSetStat());
 		device.setText(result.getDevice());
-				
+		version.setText(result.getVersion().getVersion() + " (" + result.getVersion().getDate() + ")");	
 	}
 
 	private void defineTimer() {

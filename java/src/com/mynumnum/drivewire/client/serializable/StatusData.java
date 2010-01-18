@@ -17,19 +17,19 @@ public class StatusData implements IsSerializable {
 	private int writeRetries = 0;
 	private int sectorsRead = 0;
 	private int sectorsWritten = 0;
-	private byte lastOpcode = 0;
-	private byte lastGetStat = (byte) 255;
-	private byte lastSetStat = (byte) 255;
+	private String lastOpcode = null;
+	private String lastGetStat = null;
+	private String lastSetStat = null;
 	private byte[] lastLSN = new byte[3];
-	private String lastMessage = "";
 	private String device = "";
 	private int model = 0;
-
+	private VersionData version;
+	
 	public StatusData(byte lastDrive, int readRetries, int writeRetries,
-			int sectorsRead, int sectorsWritten, byte lastOpcode,
-			byte lastGetStat, byte lastSetStat, int lastChecksum,
+			int sectorsRead, int sectorsWritten, String lastOpcode,
+			String lastGetStat, String lastSetStat, int lastChecksum,
 			int lastError, byte[] lastLSN, String lastMessage,
-			String device, int model) {
+			String device, int model, VersionData version) {
 		super();
 		
 		// Set the new vales
@@ -42,10 +42,9 @@ public class StatusData implements IsSerializable {
 		this.lastGetStat = lastGetStat;
 		this.lastSetStat = lastSetStat;
 		this.lastLSN = lastLSN;
-		this.lastMessage = lastMessage;
 		this.device = device;
 		this.model = model;
-		
+		this.setVersion(version);
 		
 	}
 	public StatusData() {
@@ -84,20 +83,20 @@ public class StatusData implements IsSerializable {
 	public String getLastOpcode() {
 		return String.valueOf(lastOpcode);
 	}
-	public void setLastOpcode(byte lastOpcode) {
-		this.lastOpcode = lastOpcode;
+	public void setLastOpcode(String string) {
+		this.lastOpcode = string;
 	}
 	public String getLastGetStat() {
 		return String.valueOf(lastGetStat);
 	}
-	public void setLastGetStat(byte lastGetStat) {
-		this.lastGetStat = lastGetStat;
+	public void setLastGetStat(String string) {
+		this.lastGetStat = string;
 	}
 	public String getLastSetStat() {
 		return String.valueOf(lastSetStat);
 	}
-	public void setLastSetStat(byte lastSetStat) {
-		this.lastSetStat = lastSetStat;
+	public void setLastSetStat(String string) {
+		this.lastSetStat = string;
 	}
 	public String getLastLSN() {
 		long l = ((lastLSN[0] & 0xFF) << 16) + ((lastLSN[1] & 0xFF) << 8) + (lastLSN[2] & 0xFF);
@@ -106,12 +105,7 @@ public class StatusData implements IsSerializable {
 	public void setLastLSN(byte[] lastLSN) {
 		this.lastLSN = lastLSN;
 	}
-	public String getLastMessage() {
-		return lastMessage;
-	}
-	public void setLastMessage(String lastMessage) {
-		this.lastMessage = lastMessage;
-	}
+
 	public String getDevice() {
 		// TODO Auto-generated method stub
 		return device;
@@ -147,6 +141,14 @@ public class StatusData implements IsSerializable {
 	}
 	public void setModel(int model) {
 		this.model = model;
+	}
+	public void setVersion(VersionData version)
+	{
+		this.version = version;
+	}
+	public VersionData getVersion()
+	{
+		return version;
 	}
 
 

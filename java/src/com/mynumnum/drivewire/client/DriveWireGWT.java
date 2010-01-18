@@ -7,6 +7,8 @@ import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.ui.DockPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.mynumnum.drivewire.client.ports.Ports;
@@ -43,14 +45,26 @@ public class DriveWireGWT implements EntryPoint, ValueChangeHandler<String> {
               History.newItem(Status.getTabname());
         }
 		
+		// use panel for screen layout
+		DockPanel dock = new DockPanel();
+	    dock.setStyleName("cw-DockPanel");
+	    dock.setSpacing(4);
+	    dock.setHorizontalAlignment(DockPanel.ALIGN_CENTER);
+
+		
 		// Build the tabs
 		tp.add(new Status(), Status.getTabname());
 		tp.add(new Drives(), Drives.getTabname());
 		tp.add(new Ports(), Ports.getTabname());
 		tp.add(new Settings(), Settings.getTabname());
 		tp.add(new About(), About.getTabname());
-		// Show the user our new tabPanel
-		RootPanel.get().add(tp);
+		
+		// add tabs to dock
+		dock.add( new HTML("DriveWire Server"), DockPanel.NORTH);
+		dock.add(tp, DockPanel.NORTH);
+		
+		// add dock to root
+		RootPanel.get().add(dock);
 		// Selection handler will add the history to our browser as the user clicks the tabs
 		tp.addSelectionHandler(new SelectionHandler<Integer>(){
 	            public void onSelection(SelectionEvent<Integer> event) {

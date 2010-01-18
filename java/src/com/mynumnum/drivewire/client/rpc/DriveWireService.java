@@ -16,9 +16,6 @@ import com.mynumnum.drivewire.client.serializable.VersionData;
  */
 @RemoteServiceRelativePath("driveWire")
 public interface DriveWireService extends RemoteService {
-	String allowIncoming(String serialPort, boolean isChecked);
-	String requirePassword(String serialPort, boolean isChecked);
-	String serialPortDestination(String serialPort, String destination);
 	StatusData getStatusData();
 	ArrayList<SerialPortData> getPortData();
 	String resetLogFile();

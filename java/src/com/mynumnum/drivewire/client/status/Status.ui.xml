@@ -1,24 +1,45 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:s="urn:import:com.mynumnum.drivewire.client.status">
+	
+	<ui:style>
+    	.labelbox { padding-right: 10px; }
+    	
+	</ui:style>	
+	
 	<g:HorizontalPanel ui:field="mainPanel">
 		<g:VerticalPanel ui:field="leftPanel">
-			<g:HorizontalPanel ui:field="lastMessagePanel">
-				<g:Label>Last Message:</g:Label>
-				<g:Label ui:field="lastMessage"></g:Label>
-			</g:HorizontalPanel>
+			
 			<g:HorizontalPanel>
-				<g:Label>Last OpCode:</g:Label>
-				<g:Label ui:field="lastOpCode"></g:Label>
+			
+				<g:VerticalPanel addStyleNames='{style.labelbox}'>
+								
+					<g:Label>Server version:</g:Label>
+					
+					<g:Label>Last OpCode:</g:Label>
+					
+					<g:Label>Last LSN:</g:Label>
+					
+					<g:Label>Last Drive:</g:Label>
+				
+						
+				</g:VerticalPanel>
+					
+				<g:VerticalPanel>
+				
+					<g:Label ui:field="version"></g:Label>
+				
+					<g:Label ui:field="lastOpCode"></g:Label>
+				
+					<g:Label ui:field="lastLsn"></g:Label>
+				
+					<g:Label ui:field="lastDrive"></g:Label>
+				
+						
+				</g:VerticalPanel>
+				
 			</g:HorizontalPanel>
-			<g:HorizontalPanel>
-				<g:Label>Last LSN:</g:Label>
-				<g:Label ui:field="lastLsn"></g:Label>
-			</g:HorizontalPanel>
-			<g:HorizontalPanel>
-				<g:Label>Last Drive:</g:Label>
-				<g:Label ui:field="lastDrive"></g:Label>
-			</g:HorizontalPanel>
+			
 			<g:HorizontalPanel ui:field="sectorsPanel">
 				<g:VerticalPanel>
 					<g:HTML>&nbsp;</g:HTML>
