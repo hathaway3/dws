@@ -7,6 +7,7 @@ import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.DockPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -46,24 +47,31 @@ public class DriveWireGWT implements EntryPoint, ValueChangeHandler<String> {
         }
 		
 		// use panel for screen layout
-		DockPanel dock = new DockPanel();
-	    dock.setStyleName("cw-DockPanel");
-	    dock.setSpacing(4);
-	    dock.setHorizontalAlignment(DockPanel.ALIGN_CENTER);
-
-		
+		AbsolutePanel dock = new AbsolutePanel();
+	    dock.setWidth("100%");
+	    dock.setHeight("100%");
 		// Build the tabs
+	   
 		tp.add(new Status(), Status.getTabname());
 		tp.add(new Drives(), Drives.getTabname());
 		tp.add(new Ports(), Ports.getTabname());
 		tp.add(new Settings(), Settings.getTabname());
 		tp.add(new About(), About.getTabname());
 		
+		
+		tp.setHeight("100%");
+		tp.setWidth("100%");
+		
 		// add tabs to dock
-		dock.add( new HTML("DriveWire Server"), DockPanel.NORTH);
-		dock.add(tp, DockPanel.NORTH);
+		dock.add( new HTML("<div style='width: 100%; margin: 0px; padding: 0px; background-image:url(dw4fill.gif); background-repeat:repeat-x;'><img src=dw4.gif></div>"));
+		
+		dock.add(tp);
+		dock.setWidgetPosition(tp, 0, 47);
 		
 		// add dock to root
+		RootPanel.get().setHeight("100%");
+		RootPanel.get().setWidth("100%");
+		
 		RootPanel.get().add(dock);
 		// Selection handler will add the history to our browser as the user clicks the tabs
 		tp.addSelectionHandler(new SelectionHandler<Integer>(){

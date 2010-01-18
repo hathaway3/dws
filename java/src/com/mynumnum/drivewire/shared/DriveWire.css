@@ -35,3 +35,13 @@ table.sample tr.h1 td {
 	background-color: #CCCCCC;
 	font-weight: bold;
 }
+
+
+#tabby {
+	background-color: #4488AA;	
+	font-weight: bold;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	
+	}

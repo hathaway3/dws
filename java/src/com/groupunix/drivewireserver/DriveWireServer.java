@@ -20,13 +20,13 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
-// import com.mynumnum.drivewire.server.Jetty;
+import com.mynumnum.drivewire.server.Jetty;
 
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.1.4";
-	public static final String DWServerVersionDate = "1/14/2009";
+	public static final String DWServerVersion = "3.9.0";
+	public static final String DWServerVersionDate = "1/17/2009";
 	
 	
 	public static Logger logger = Logger.getLogger("DWServer");
@@ -110,8 +110,12 @@ public class DriveWireServer
 		if (config.getBoolean("UseGUI", false))
 		{
 			// Start up the web interface.
-			// logger.debug("Starting Jetty");
-			// new Jetty();
+			logger.debug("Starting Jetty (Web UI) on port " + config.getInt("GUIPort",8080));
+			new Jetty();
+		}
+		else
+		{
+			logger.debug("Running in headless mode (no web GUI)");
 		}
 		
 		
