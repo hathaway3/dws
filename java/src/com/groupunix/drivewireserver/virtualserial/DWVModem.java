@@ -1,8 +1,7 @@
 package com.groupunix.drivewireserver.virtualserial;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import org.apache.log4j.Logger;
+
 import com.groupunix.drivewireserver.DriveWireServer;
 
 
@@ -11,15 +10,13 @@ public class DWVModem {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVModem");
 	
-	private int port;
-	private OutputStream output;
-		
+	private int vport;
+	
 	// modem state
-	private boolean vmodem_echo = true;
+	private boolean vmodem_echo = false;
 	private boolean vmodem_verbose = true;
 	private boolean vmodem_quiet = false;
 	private int[] vmodem_registers = new int[256];
-	private String vmodem_command = new String();
 	private String vmodem_lastcommand = new String();
 	private String vmodem_dialstring = new String();
 	
@@ -42,74 +39,19 @@ public class DWVModem {
 	private static final int REG_BS = 5;
 	private static final int REG_GUARDTIME = 12;
 	
+	private Thread tcpthread;
 	
-	
-	public DWVModem(int port, OutputStream output) 
+	public DWVModem(int port) 
 	{
-		this.port = port;
-		this.output = output;
-		
-		// reset modem
-		doCommandReset();
+		this.vport = port;
 		
 		logger.debug("new vmodem for port " + port);
+		
+		doCommandReset();
 	}
 
-	public void takeInput(int databyte) 
-	{
-		//  vmodem input 
-		
-		// echo character if echo is on
-		if (vmodem_echo)
-		{
-			try 
-			{
-				output.write((byte) databyte);
-				
-				// send extra lf on cr, not sure if this is right
-				if (databyte == this.vmodem_registers[REG_CR])
-				{
-					output.write((byte) this.vmodem_registers[REG_LF]);
-				} 
-			} 
-			catch (IOException e) 
-			{
-				logger.error("IO exception writing to port " + port);
-			}
-		}
-		
-		// process command if enter
-		if (databyte == this.vmodem_registers[REG_CR])
-		{
-			logger.debug("vmodem command '" + vmodem_command + "'");
-			
-			processCommand(vmodem_command);
-			
-			// set lastcmd, clear cmd
-			this.vmodem_lastcommand = this.vmodem_command;
-			this.vmodem_command = new String();
-		}
-		else
-		{
-			// add character to command
-			
-			// handle backspace
-			if (databyte == this.vmodem_registers[REG_BS])
-			{
-				this.vmodem_command = this.vmodem_command.substring(0, this.vmodem_command.length() - 1);
-			}
-			else
-			{
-				// is this really the easiest way to append a character to a string??  
-				this.vmodem_command += Character.toString((char) databyte);
-			}
-			
-			
-		}
-		
-	}
-
-	private void processCommand(String cmd) 
+	
+	public void processCommand(String cmd) 
 	{	
 		
 		int errors = 0;
@@ -124,6 +66,10 @@ public class DWVModem {
 		if (cmd.equalsIgnoreCase("A/"))
 		{
 			cmd = this.vmodem_lastcommand;
+		}
+		else
+		{
+			this.vmodem_lastcommand = cmd;
 		}
 		
 		// must start with AT
@@ -371,14 +317,14 @@ public class DWVModem {
 				switch(val)
 				{
 					case 0:
-						write("\n\rDWVM T" + this.port + "\r\n");
+						write("\n\rDWVM " + DWVSerialPorts.prettyPort(this.vport) + "\r\n");
 						break;
 					case 1:
 					case 3:
-						write("\n\rDriveWire " + DriveWireServer.DWServerVersion + " Virtual Modem on port T" + this.port + "\r\n");
+						write("\n\rDriveWire " + DriveWireServer.DWServerVersion + " Virtual Modem on port " + DWVSerialPorts.prettyPort(this.vport) + "\r\n");
 						break;
 					case 2:
-						write("\n\rConnected to " + DWVSerialPorts.getHostIP(this.port) + ":" + DWVSerialPorts.getHostPort(this.port) + "\n\r");
+						write("\n\rConnected to " + DWVSerialPorts.getHostIP(this.vport) + ":" + DWVSerialPorts.getHostPort(this.vport) + "\n\r");
 						break;
 					case 4:
 						doCommandShowProfile();
@@ -471,7 +417,7 @@ public class DWVModem {
 
 	private int doDial() 
 	{
-		String host;
+		String tcphost;
 		int tcpport;
 		
 		// parse dialstring
@@ -479,12 +425,12 @@ public class DWVModem {
 
 		if (dparts.length == 1)
 		{
-			host = dparts[0];
+			tcphost = dparts[0];
 			tcpport = 23;
 		}
 		else if (dparts.length == 2)
 		{
-			host = dparts[0];
+			tcphost = dparts[0];
 			tcpport = Integer.parseInt(dparts[1]);
 		}
 		else
@@ -492,8 +438,10 @@ public class DWVModem {
 			return 0;
 		}
 		
-		Thread connthread = new Thread(new DWVModemConnThread(this.port,host,tcpport));
-		connthread.start();
+		// start TCP thread
+		this.tcpthread = new Thread(new DWVPortTCPConnectionThread(this.vport, tcphost, tcpport));
+		this.tcpthread.start();
+
 		return 1;
 	}
 
@@ -529,7 +477,7 @@ public class DWVModem {
 	private void doCommandReset() 
 	{
 		// state
-		this.vmodem_echo = true;
+		this.vmodem_echo = false;
 		this.vmodem_lastcommand = new String();
 		this.vmodem_quiet = false;
 		this.vmodem_verbose = true;
@@ -609,14 +557,33 @@ public class DWVModem {
 	
 	private void write(String str)
 	{
-		try 
-		{
-			output.write(str.getBytes());
-		} 
-		catch (IOException e) 
-		{
-			logger.error("IO error writing to port T" + this.port);
-		}
+		DWVSerialPorts.write(this.vport, str);
 	}
 
+
+	public boolean isEcho() 
+	{
+		return(this.vmodem_echo);
+	}
+
+
+	public int getCR() 
+	{
+		// TODO Auto-generated method stub
+		return(this.vmodem_registers[REG_CR]);
+	}
+
+	public int getLF() 
+	{
+		// TODO Auto-generated method stub
+		return(this.vmodem_registers[REG_LF]);
+	}
+	
+	public int getBS() 
+	{
+		// TODO Auto-generated method stub
+		return(this.vmodem_registers[REG_BS]);
+	}
+	
+	
 }

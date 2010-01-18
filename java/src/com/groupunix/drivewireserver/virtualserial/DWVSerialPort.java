@@ -3,6 +3,8 @@ package com.groupunix.drivewireserver.virtualserial;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
@@ -11,17 +13,17 @@ public class DWVSerialPort {
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialPort");
 	
 	private static final int BUFFER_SIZE = -1;  //infinite
-	private int mode = 0;
+
 	private int port = -1;
 	private boolean connected = false;
-	private boolean cocoinit = false;
-	private String password = null;
-	private String actionfile = null;
-	private DWVModem vmodem = null;
-	private DWUtilHandler utilhandler = null;
+	private int opens = 0;
+
+	private DWVPortHandler porthandler = null;
+
 	
 	private byte PD_INT = 0;
 	private byte PD_QUT = 0;
+	private byte[] DD = new byte[26];
 	
 	private	DWVSerialCircularBuffer inputBuffer = new DWVSerialCircularBuffer(BUFFER_SIZE, true);
 	private	OutputStream output;
@@ -29,15 +31,19 @@ public class DWVSerialPort {
 	private String hostIP = null;
 	private int hostPort = -1;
 	
+	private int userGroup = -1;
+	private String userName = "unknown";
+	
 	private boolean wanttodie = false;
+	private Socket socket = null;
+	private ServerSocket serversocket = null;
+	
 	
 	public DWVSerialPort(int port)
 	{
 		this.port = port;
-		logger.debug("init port " + DWVSerialPorts.prettyPort(port));
+		this.porthandler = new DWVPortHandler(port);
 	}
-	
-	
 	
 	public int bytesWaiting() 
 	{
@@ -61,11 +67,11 @@ public class DWVSerialPort {
 	
 	public void write(int databyte) 
 	{
+		// if we are connected, pass the data
 		if (this.connected)
 		{
 			try 
 			{
-				
 				output.write((byte) databyte);
 				// logger.debug("wrote byte to output buffer, size now " + output.getAvailable());
 			} 
@@ -74,22 +80,45 @@ public class DWVSerialPort {
 				logger.error("in write: " + e.getMessage());
 			}
 		}
+		// otherwise process as command
 		else
 		{
-			if (this.mode == DWVSerialPorts.MODE_VMODEM)
-			{
-				this.vmodem.takeInput(databyte);
-			}
-			else if (this.mode == DWVSerialPorts.MODE_UTIL)
-			{
-				
-				this.utilhandler.takeInput(databyte);
-			}
+			this.porthandler.takeInput(databyte);
 		}
 		
 	}
 
-
+	public void writeM(String str)
+	{
+		for (int i = 0;i<str.length();i++)
+		{
+			write(str.charAt(i));
+		}
+	}
+	
+	
+	public void writeToCoco(String str)
+	{
+		try {
+			inputBuffer.getOutputStream().write(str.getBytes());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void writeToCoco(byte databyte)
+	{
+		try {
+			inputBuffer.getOutputStream().write(databyte);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
 	public OutputStream getPortInput()
 	{
 		return(inputBuffer.getOutputStream());
@@ -140,28 +169,6 @@ public class DWVSerialPort {
 	}
 
 
-	public void setMode(int mode) 
-	{
-		this.mode = mode;
-		if (mode == DWVSerialPorts.MODE_VMODEM)
-		{
-			this.vmodem = new DWVModem(this.port, this.inputBuffer.getOutputStream());
-		}
-		else if (mode == DWVSerialPorts.MODE_UTIL)
-		{
-			this.utilhandler = new DWUtilHandler(this.port, this.inputBuffer.getOutputStream());
-		}
-	}
-
-
-
-	public int getMode() 
-	{
-		return mode;
-	}
-
-
-
 	public void setConnected(boolean connected) 
 	{
 		this.connected = connected;
@@ -174,48 +181,93 @@ public class DWVSerialPort {
 		return connected;
 	}
 
-
-
-	public void setCocoinit(boolean cocoinit) 
-	{
-		this.cocoinit = cocoinit;
-	}
-
-
-
-	public boolean isCocoinit() 
-	{
-		return cocoinit;
-	}
-
-
-
-	public void setPassword(String string) 
-	{
-		this.password = string;
-		
-	}
 	
-	public boolean checkPassword(String pw)
+	public boolean isOpen()
 	{
-		if (pw.equals(this.password))
+		if (this.opens > 0)
 		{
 			return(true);
 		}
-		return(false);
-	}
-	
-	// For use with the web UI
-	public boolean isPasswordRequired() {
-		boolean isPasswordRequired  = false;
-		if (password == null) {
-			isPasswordRequired = false;
-		} else {
-			isPasswordRequired = true;
+		else
+		{
+			return(false);
 		}
-		return isPasswordRequired;
 	}
 
+
+	public void open()
+	{
+		this.opens++;
+		logger.debug("open port " + this.port + ", total opens: " + this.opens);
+	}
+	
+	public void close()
+	{
+		if (this.opens > 0)
+		{
+			this.opens--;
+			logger.debug("close port " + this.port + ", total opens: " + this.opens);
+			
+			// send term if last open
+			if (this.opens == 0)
+			{
+				logger.debug("setting term on port " + this.port);
+				this.wanttodie = true;
+				
+				if (this.output != null)
+				{
+					logger.debug("closing output on port " + this.port);
+					try {
+						output.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				
+				if (this.serversocket != null)
+				{
+					logger.debug("closing server socket on port " + this.port);
+					
+					try {
+						this.serversocket.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					this.serversocket = null;
+				}
+				
+				if (this.socket != null)
+				{
+					logger.debug("closing socket on port " + this.port);
+					
+					try {
+						this.socket.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				
+					this.socket = null;
+				}
+				
+			}
+		}
+		else
+		{
+			logger.error("close port " + this.port + " with no opens?");
+		}
+		
+	}
+	
+	public boolean isTerm()
+	{
+		return(wanttodie);
+	}
+	
+	
 	public void setPortOutput(OutputStream output) 
 	{
 		this.output = output;
@@ -246,21 +298,7 @@ public class DWVSerialPort {
 	
 	public void setUtilMode(int mode)
 	{
-		this.utilhandler.setUtilmode(mode);
-	}
-
-
-
-	public void setActionFile(String fname) 
-	{
-		this.actionfile = fname;
-	}
-
-
-
-	public String getActionFile() 
-	{
-		return(this.actionfile);
+		//this.utilhandler.setUtilmode(mode);
 	}
 
 
@@ -294,36 +332,77 @@ public class DWVSerialPort {
 
 
 
-	public void clearUtilityInputBuffer() 
+
+	public void sendUtilityFailResponse(int errno, String txt) 
 	{
-		this.inputBuffer.clear();
-	}
-
-
-
-	public void sendUtilityFailResponse(int code, String txt) 
-	{
-		this.utilhandler.respondFail(code, txt);
+		String perrno = String.format("%03d", errno);
+		logger.debug("command failed: " + perrno + " " + txt);
+		try {
+			inputBuffer.getOutputStream().write(("FAIL " + perrno + " " + txt + (char) 13).getBytes());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//this.utilhandler.respondFail(code, txt);
 	}
 	
 	public void sendUtilityOKResponse(String txt) 
 	{
-		this.utilhandler.respondOk(txt);
+		try {
+			inputBuffer.getOutputStream().write(("OK " + txt + (char) 13).getBytes());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//this.utilhandler.respondOk(txt);
 	}
 
 
 
-	public void term() 
+	public void setDD(byte[] devdescr) 
 	{
-		// give ourselves the axe
-		this.wanttodie = true;
-		
+		this.DD = devdescr;
+	}
+
+	public byte[] getDD()
+	{
+		return(this.DD);
+	}
+
+	public int getOpen() 
+	{
+		return(this.opens);
+	}
+
+	public void setUserGroup(int userGroup) {
+		this.userGroup = userGroup;
+	}
+
+	public int getUserGroup() {
+		return userGroup;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setSocket(ServerSocket skt) 
+	{
+		this.serversocket = skt;
 	}
 	
-	public boolean isTerm()
+	public void setSocket(Socket skt) 
 	{
-		return(this.wanttodie);
+		this.socket = skt;
 	}
+	
+
+	
+
 	
 }
 

@@ -2,6 +2,10 @@
 package com.groupunix.drivewireserver;
 
 
+
+import gnu.io.UnsupportedCommOperationException;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -15,22 +19,16 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
-import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
-import com.groupunix.drivewireserver.tcpserver.DWTCPServer;
-import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
-import com.mynumnum.drivewire.server.Jetty;
+// import com.mynumnum.drivewire.server.Jetty;
 
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.1.2";
-	public static final String DWServerVersionDate = "12/21/2009";
-	private static boolean loggingToFile = false;
-	private static String logLevel = "WARN";
+	public static final String DWServerVersion = "3.1.4";
+	public static final String DWServerVersionDate = "1/14/2009";
 	
-	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-10t] %20.20C: %m%n");
-
+	
 	public static Logger logger = Logger.getLogger("DWServer");
 	private static FileAppender fileAppender = null;
 	private static ConsoleAppender consoleAppender = null;
@@ -40,12 +38,13 @@ public class DriveWireServer
 	
 	private static Thread protoHandlerT = new Thread(new DWProtocolHandler());
 	
-	private static Thread TCPServerT = new Thread(new DWTCPServer());
-	
 	private static GregorianCalendar startTime = new GregorianCalendar();
 	private static int totalServed = 0;
 
+	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
+	
 		
+	@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	public static void main(String[] args)
 	{
 		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
@@ -67,27 +66,32 @@ public class DriveWireServer
     	// set up logging
     	
     	// must be a better way
-    	// logger.getRoot().removeAllAppenders();
+    	logger.getRoot().removeAllAppenders();
     	
-    	loggingToFile = config.getBoolean("LogToConsole", loggingToFile);
+    	if (config.containsKey("LogFormat"))
+    	{
+    		logLayout = new PatternLayout(config.getString("LogFormat"));
+    	}
+    	
     	    	
-    	logToFile(loggingToFile);
+    	if (config.getBoolean("LogToConsole", true))
+    	{
+    		consoleAppender = new ConsoleAppender(logLayout);
+    		logger.addAppender(consoleAppender);
+    	}
     	
-    	logger.setLevel(Level.toLevel(config.getString("LogLevel", logLevel)));
+    	
+    	if ((config.getBoolean("LogToFile", false)) && !(config.getString("LogFile","").equals("")))
+    	{
+    		attachFileAppender(config.getString("LogFile"));
+    	 		
+    	}
+    	
+    	logger.setLevel(Level.toLevel(config.getString("LogLevel", "WARN")));
     	
     	logger.info("DriveWire Server " + DWServerVersion + " (" + DWServerVersionDate + ") starting up");
     	
     	
-    	if (config.containsKey("DefaultDiskSet"))
-    	{
-    		DWDiskDrives.loadDiskSet(config.getString("DefaultDiskSet"));
-    	}
-    	if (config.containsKey("DefaultPortSet"))
-    	{
-    		DWVSerialPorts.LoadPortSet(config.getString("DefaultPortSet"));
-    	}
-    	
-		
 		// set up protocol handler and autostart if defined in config
 		
 		if (config.containsKey("SerialDevice"))
@@ -102,14 +106,16 @@ public class DriveWireServer
 				}
 			}
 		}
-		
-		
-		TCPServerT.start();
-		
-		// Start up the web interface.
-		new Jetty();
 
-		// headless mode, just wait for protohandler to die
+		if (config.getBoolean("UseGUI", false))
+		{
+			// Start up the web interface.
+			// logger.debug("Starting Jetty");
+			// new Jetty();
+		}
+		
+		
+		//  wait for protohandler to die
 		try {
 			protoHandlerT.join();
 		} catch (InterruptedException e) {
@@ -118,20 +124,8 @@ public class DriveWireServer
 		
 	}
 	
-	public static void logToFile(boolean loggingToFile2) {
-    	if (loggingToFile2)
-    	{
-    		consoleAppender = new ConsoleAppender(logLayout);
-    		logger.addAppender(consoleAppender);
-    	} else {
-        	if (!config.getString("LogFile","").equals(""))
-        	{
-        		setLogFileName(config.getString("LogFile"));
-        	}    		
-    	}
-		
-	}
-
+	
+	
 	public static void connectSerialPort()
 	{
 		// stop PH if we have one running
@@ -196,54 +190,187 @@ public class DriveWireServer
 	{
 		return(totalServed);
 	}
-	// TODO Have this determine if TCP is enabled.  Code not yet implemented here.
-	public static boolean isTcpEnabled() {
-		return true;
-	}
-	/**
-	 * Returns the current logger level for use by the client UI
-	 * @return
-	 */
-	public static String getLogLevel() {
-		return logLevel;
-	}
-	/**
-	 * Used by the client UI to display if the write to file option is selected
-	 * @return
-	 */
-	public static boolean isWriteToFileEnabled() {
-		return loggingToFile;
-	}
-	/**
-	 * Used by the client UI to show the current log file name
-	 * @return
-	 */
-	public static String getLogFileName() {
-		return config.getString("LogFile");
+
+
+
+	public static String getLogLevel()
+	{
+		return(config.getString("LogLevel","INFO"));
 	}
 
-	public static void setLogLevel(String level) {
+
+
+	public static boolean isWriteToFileEnabled()
+	{
+		return(config.getBoolean("LogToFile",false));
+	}
+	
+	public static int getCocoModel()
+	{
+		return(config.getInt("CocoModel",3));
+	}
+
+
+
+	public static String getLogFileName()
+	{
+		return(config.getString("LogFile",null));
+	}
+
+
+
+	public static void setLogLevel(String level)
+	{
+		logger.debug("setting log level to " + level);
+		
+		config.setProperty("LogLevel", level);
 		logger.setLevel(Level.toLevel(level));
-		logLevel = level;
-		// TODO Write this new value back to .properties file
+		
 	}
 
-	public static void setLogFileName(String fileName) {
-    	logger.removeAllAppenders();
+
+
+	public static void setLogFileName(String fileName)
+	{
+		logger.debug("setting log file name to '" + fileName + "'");
+		
+		config.setProperty("LogFile", fileName);
+		
+		if (config.getBoolean("LogToFile",false))
+		{
+			
+			// are we already logging to file?
+			if (logger.isAttached(fileAppender))
+			{
+				logger.removeAppender(fileAppender);
+			}
+			
+			attachFileAppender(fileName);
+		}
+		
+	}
+
+
+
+	private static void attachFileAppender(String fileName)
+	{
 		try 
 		{
 			fileAppender = new FileAppender(logLayout,fileName,true,true,4096);
 			logger.addAppender(fileAppender);
-			loggingToFile = true;
 		} 
 		catch (IOException e) 
 		{
 			logger.error("Cannot log to file '" + fileName +"': " + e.getMessage());
 		}
-		// TODO Write the new log filename value back to the .properties file
 		
 	}
 
 
+
+	public static void logToFile(boolean logToFile)
+	{
+		logger.debug("set log to file: " + logToFile);
+		
+		config.setProperty("LogToFile", logToFile);
+		
+		if ((logToFile) && (!logger.isAttached(fileAppender)))
+		{
+			attachFileAppender(config.getString("LogFile"));
+				
+		}
+		else if ((!logToFile) && (logger.isAttached(fileAppender)))
+		{
+			logger.removeAppender(fileAppender);
+		}
+		
+	}
+
+
+
+	public static void setCocoModel(int model)
+	{
+		
+		if (config.getInt("CocoModel") != model)
+		{
+			logger.debug("set coco model to " + model);
+			
+			config.setProperty("CocoModel", model);
+			
+			try
+			{
+				DWProtocolHandler.resetCocoModel();
+			} 
+			catch (UnsupportedCommOperationException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+	}
+
+
+
+	public static String getPortName()
+	{
+		return(config.getString("SerialDevice","unknown"));
+	}
+
+
+
+	public static void resetLogFile()
+	{
+		logger.debug("WebUI sent log reset request");
+		
+		if (logger.isAttached(fileAppender))
+		{
+			// stop logging to the file
+			logger.removeAppender(fileAppender);
+			
+			// delete file
+			File f = new File(config.getString("LogFile"));
+
+			if (f.exists())
+			{
+			    if (f.canWrite())
+			    { 
+			    	if (!f.isDirectory()) 
+			    	{
+			    		if (f.delete())
+			    		{
+			    			logger.info("deleted log file '" + config.getString("LogFile") + "'");
+			    		}
+			    		else
+			    		{
+			    			logger.warn("log file '" + config.getString("LogFile") + "' could not be deleted for reset");
+			    			return;
+			    		}
+			    	}
+			    	else
+			    	{
+			    		logger.warn("log file '" + config.getString("LogFile") + "' is a directory!");
+			    		return;
+			    	}
+			    }
+			    else
+			    {
+			    	logger.warn("log file '" + config.getString("LogFile") + "' is not writeable while trying to reset it");
+			    	return;
+			    }
+			}
+			else
+			{
+				logger.warn("log file '" + config.getString("LogFile") + "' does not exist while trying to reset it");
+			}
+			
+					
+		}
+		
+		// replace appender
+		attachFileAppender(config.getString("LogFile") );
+		
+	}
 	
 }

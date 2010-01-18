@@ -20,15 +20,23 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException
 public class DWDiskDrives 
 {
 	public static final int MAX_DRIVES = 256;
-		
-	private static DWDisk[] diskDrives = new DWDisk[MAX_DRIVES];
 	
+	private DWDisk[] diskDrives = new DWDisk[MAX_DRIVES];
 	private static final Logger logger = Logger.getLogger("DWServer.DWDiskDrives");
+	private Thread lazyWriterThread;
+	
+	public DWDiskDrives()
+	{
+		logger.debug("disk drives init");
+		
+		// start lazy writer
+		lazyWriterThread = new Thread(new DWDiskLazyWriter());
+		lazyWriterThread.start();
+		
+	}
 	
 	
-	
-	
-	public static void loadDiskSet(String filename)
+	public void LoadDiskSet(String filename)
 	{
 		if (filename == null)
 		{
@@ -58,40 +66,51 @@ public class DWDiskDrives
 	    
 		try 
 		{
-			line = br.readLine();
 		    
-			while (line != null) 
+			while ((line = br.readLine()) != null)
 		    {
+				
 		    	String[] parts = new String[3];
-		    	
 		    	parts = line.split(",", 3);
-		    	DWDisk tmpdisk = new DWDisk();
 		    	
-		    	tmpdisk.setFilePath(parts[1]);
-		    	
-		    	if (parts[2].equals("1"))
-		    		tmpdisk.setWriteProtect(true);
-		    	
-		    	LoadDisk(Integer.parseInt(parts[0]), tmpdisk);
-		    	
-		    	line = br.readLine();
+		    	if (parts != null)
+		    	{
+		    		if ((parts.length == 3) && (!line.startsWith("#")))
+		    		{
+		    			
+		    			DWDisk tmpdisk = new DWDisk();
+		    			
+		    			try 
+		    			{
+							tmpdisk.setFilePath(parts[1]);
+							if (parts[2].equals("1"))
+			    				tmpdisk.setWriteProtect(true);
+			    			LoadDisk(Integer.parseInt(parts[0]), tmpdisk);
+						} 
+		    			catch (FileNotFoundException e) 
+		    			{
+		    				logger.warn("File not found attempting to load drive " + parts[0]);
+		    			}
+		    			
+		    		}
+		    	}	
 			}
-		} 
-		catch (IOException e1) 
-		{
-			logger.error(e1.getMessage());
 		} 
 		catch (NumberFormatException e2) 
 		{
-			logger.error(e2.getMessage());
+			logger.error("NumberFormat: " + e2.getMessage());
 		} 
 		catch (DWDriveNotValidException e3) 
 		{
-			logger.error(e3.getMessage());
+			logger.error("DriveNotValid: " + e3.getMessage());
 		} 
 		catch (DWDriveAlreadyLoadedException e4) 
 		{
-			logger.error(e4.getMessage());
+			logger.error("DriveAlreadyLoaded: " + e4.getMessage());
+		} 
+		catch (IOException e) 
+		{
+			logger.error("IO error: " + e.getMessage());
 		}
 		finally
 		{
@@ -108,7 +127,7 @@ public class DWDiskDrives
 	}
 	
 	
-	public static void saveDiskSet(String filename)
+	public void saveDiskSet(String filename)
 	{
 		// save current disk set to file
 		
@@ -153,7 +172,7 @@ public class DWDiskDrives
 	}
 	
 	
-	public static void LoadDiskFromFile(int driveno, String path) throws FileNotFoundException, DWDriveNotValidException, DWDriveAlreadyLoadedException
+	public  void LoadDiskFromFile(int driveno, String path) throws FileNotFoundException, DWDriveNotValidException, DWDriveAlreadyLoadedException
 	{
 		DWDisk tmpdisk = new DWDisk();
     	
@@ -163,7 +182,7 @@ public class DWDiskDrives
 	}
 	
 	
-	public static void LoadDisk(int driveno, DWDisk disk) throws DWDriveNotValidException, DWDriveAlreadyLoadedException
+	public void LoadDisk(int driveno, DWDisk disk) throws DWDriveNotValidException, DWDriveAlreadyLoadedException
 	{
 		validateDriveNo(driveno);
 		
@@ -182,7 +201,7 @@ public class DWDiskDrives
 	}
 	
 	
-	public static void EjectDisk(int driveno) throws DWDriveNotValidException, DWDriveNotLoadedException
+	public void EjectDisk(int driveno) throws DWDriveNotValidException, DWDriveNotLoadedException
 	{
 		checkLoadedDriveNo(driveno);
 		
@@ -190,7 +209,7 @@ public class DWDiskDrives
 		logger.info("ejected disk from drive " + driveno);
 	}
 	
-	public static void EjectAllDisks()
+	public void EjectAllDisks()
 	{
 		for (int i=0;i<MAX_DRIVES;i++)
 		{
@@ -215,33 +234,30 @@ public class DWDiskDrives
 	}
 	
 	
-	public static void seekSector(int driveno, long lsn) throws DWDriveNotLoadedException, DWDriveNotValidException
+	public void seekSector(int driveno, int lsn) throws DWDriveNotLoadedException, DWDriveNotValidException
 	{
 		checkLoadedDriveNo(driveno);
 
 		diskDrives[driveno].seekSector(lsn);
 	}
 	
-	public static void writeSector(int driveno, byte[] data) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDriveWriteProtectedException, IOException
+	public void writeSector(int driveno, byte[] data) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDriveWriteProtectedException, IOException
 	{
 		checkLoadedDriveNo(driveno);
 		
 		diskDrives[driveno].writeSector(data);
 	}
 	
-	public static byte[] readSector(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException
+	public byte[] readSector(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException
 	{
-		byte[] data;
-		
 		checkLoadedDriveNo(driveno);
 		
-		data = diskDrives[driveno].readSector();
+		return(diskDrives[driveno].readSector());
 	
-		return(data);
 	}
 	
 	
-	public static void validateDriveNo(int driveno) throws DWDriveNotValidException
+	public void validateDriveNo(int driveno) throws DWDriveNotValidException
 	{
 		if ((driveno < 0) || (driveno >= MAX_DRIVES))
 		{
@@ -249,7 +265,7 @@ public class DWDiskDrives
 		}
 	}
 	
-	private static void checkLoadedDriveNo(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException
+	private void checkLoadedDriveNo(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException
 	{
 		validateDriveNo(driveno);
 		
@@ -260,7 +276,7 @@ public class DWDiskDrives
 	}
 
 
-	public static boolean diskLoaded(int i) 
+	public boolean diskLoaded(int i) 
 	{
 		if (diskDrives[i] == null)
 		{
@@ -270,7 +286,7 @@ public class DWDiskDrives
 	}
 
 
-	public static String getDiskFile(int i) 
+	public String getDiskFile(int i) 
 	{
 		if (diskDrives[i] != null)
 		{
@@ -280,7 +296,7 @@ public class DWDiskDrives
 	}
 
 
-	public static boolean getWriteProtect(int i) {
+	public boolean getWriteProtect(int i) {
 		if (diskDrives[i] != null)
 		{
 			return(diskDrives[i].getWriteProtect());
@@ -289,7 +305,7 @@ public class DWDiskDrives
 	}
 
 
-	public static byte[] nullSector() 
+	public byte[] nullSector() 
 	{
 		byte[] tmp = new byte[256];
 		
@@ -300,19 +316,49 @@ public class DWDiskDrives
 	}
 
 
-	public static void setWriteProtect(int driveno, boolean onoff) 
+	public void setWriteProtect(int driveno, boolean onoff) 
 	{
 		diskDrives[driveno].setWriteProtect(onoff);
 	}
 	
-	public static String getDiskName(int driveno)
+	public String getDiskName(int driveno)
 	{
 		return(diskDrives[driveno].getDiskName());
 	}
 	
-	public static long getDiskSectors(int driveno)
+	public int getDiskSectors(int driveno)
 	{
 		return(diskDrives[driveno].getDiskSectors());
+	}
+
+
+	public int getLSN(int i) 
+	{
+		return(diskDrives[i].getLSN());
+	}
+
+
+	public int getReads(int i) 
+	{
+		return(diskDrives[i].getReads());
+	}
+
+
+	public int getWrites(int i) 
+	{
+		return(diskDrives[i].getWrites());
+	}
+
+
+	public int getDirtySectors(int i) 
+	{
+		return(diskDrives[i].getDirtySectors());
+	}
+
+
+	public DWDisk getDisk(int driveno) 
+	{
+		return(diskDrives[driveno]);
 	}
 	
 }

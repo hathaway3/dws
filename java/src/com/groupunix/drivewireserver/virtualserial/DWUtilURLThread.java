@@ -1,9 +1,5 @@
 package com.groupunix.drivewireserver.virtualserial;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-
 import org.apache.log4j.Logger;
 
 public class DWUtilURLThread implements Runnable {

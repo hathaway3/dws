@@ -10,8 +10,8 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
@@ -20,6 +20,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
+import com.groupunix.drivewireserver.virtualprinter.DWVPrinter;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 
@@ -84,25 +85,30 @@ public class DWProtocolHandler implements Runnable
 	private static int lastChecksum = 0;
 	private static int lastError = 0;
 	private static byte[] lastLSN = new byte[3];
-	private static String lastMessage = "DriveWire Server " + DriveWireServer.DWServerVersion;
 	
-	public static byte[] lastSector = new byte[256];
 	private static GregorianCalendar dwinitTime = new GregorianCalendar();
-	private static int cocoModel = 3;
 	
 	// serial port instance
 	private static SerialPort serialPort;
 	
+	// printer
+	private static DWVPrinter vprinter;
+	
+	// disk drives
+	private static DWDiskDrives diskDrives;
+	
 	//internal
 	private static int wanttodie = 0;
-	// private static CircularByteBuffer serialInputBuf = new CircularByteBuffer();
 	// private static Thread readerthread;
 
+	
+	
 	
 	public static void reset()
 	{
 		DoOP_RESET();
 	}
+	
 	
 	public static boolean connected()
 	{
@@ -165,24 +171,6 @@ public class DWProtocolHandler implements Runnable
 		
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static ArrayList<String> getPortNames() {
-		ArrayList<String> ports = new ArrayList<String>();
-		
-		//
-		// Get an enumeration of all ports known to JavaComm
-		//
-		Enumeration portIdentifiers = CommPortIdentifier.getPortIdentifiers();
-		while (portIdentifiers.hasMoreElements())
-		{
-		    CommPortIdentifier pid = (CommPortIdentifier) portIdentifiers.nextElement();
-		    if (pid.getPortType() == CommPortIdentifier.PORT_SERIAL)
-		    		ports.add(pid.getName());
-		}
-		return ports;
-		
-	}
-	
 	private static void connectSerial ( String portName ) throws IOException, NoSuchPortException, PortInUseException, UnsupportedCommOperationException
     {
 		logger.info("attempting to open device '" + portName + "'");
@@ -226,8 +214,7 @@ public class DWProtocolHandler implements Runnable
 
 	private static void setSerialParams(SerialPort sport) throws UnsupportedCommOperationException 
 	{
-		cocoModel = DriveWireServer.config.getInt("CocoModel", cocoModel); 
-		switch(cocoModel)
+		switch(DriveWireServer.config.getInt("CocoModel", 3))
 		{
 			case 1:
 				sport.setSerialPortParams(38400,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
@@ -241,11 +228,7 @@ public class DWProtocolHandler implements Runnable
 			
 		}
 	}
-	
-	// Used by the client web interface to determine the coco model
-	public static int getCocoModel() {
-		return cocoModel;
-	}
+
 	
 	private void comWrite(byte[] data, int len)
 	{	
@@ -343,6 +326,12 @@ public class DWProtocolHandler implements Runnable
 
 
 	
+	
+	
+	
+	
+	
+	
 	public void run()
 	{
 		int opcodeint = -1;
@@ -354,6 +343,19 @@ public class DWProtocolHandler implements Runnable
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		
 		logger.info("DWProtocolHandler started");
+
+		// setup drives
+		diskDrives = new DWDiskDrives();
+		
+		if (DriveWireServer.config.containsKey("DefaultDiskSet"))
+    	{
+    		diskDrives.LoadDiskSet(DriveWireServer.config.getString("DefaultDiskSet"));
+    	}
+		
+		// setup ports
+		DWVSerialPorts.resetAllPorts();
+
+		vprinter = new DWVPrinter();
 		
 		while(wanttodie == 0)
 		{ 
@@ -368,6 +370,7 @@ public class DWProtocolHandler implements Runnable
 				logger.error(e.getMessage());
 			}
 			
+			// logger.debug("!!12: " + DWProtocolHandler.byteArrayToHexString(DWDiskDrives.readSector(driveno)) );
 			
 			// logger.debug("main sees byte: " + opcodeint);
 		
@@ -494,7 +497,7 @@ public class DWProtocolHandler implements Runnable
 		logger.info("DoOP_DWINIT");
 		
 		// coco has just booted nos9
-		this.dwinitTime = new GregorianCalendar();
+		dwinitTime = new GregorianCalendar();
 		
 		// reset all ports
 		DWVSerialPorts.resetAllPorts();
@@ -535,11 +538,10 @@ public class DWProtocolHandler implements Runnable
 		lastError = 0;
 		
 		lastLSN = new byte[3];
-		lastSector = new byte[256];
 		
 		// Sync disks??
 		
-		// reset all ports
+		// reset all ports?
 		DWVSerialPorts.resetAllPorts();
 		
 		logger.info("DoOP_RESET");
@@ -553,6 +555,7 @@ public class DWProtocolHandler implements Runnable
 		byte[] cocosum = new byte[2];
 		byte[] responsebuf = new byte[262];
 		byte response = 0;
+		byte[] sector = new byte[256];
 		
 		try 
 		{
@@ -561,12 +564,12 @@ public class DWProtocolHandler implements Runnable
 
 			lastDrive = responsebuf[0];
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
-			System.arraycopy( responsebuf, 4, lastSector, 0, 256 );
+			System.arraycopy( responsebuf, 4, sector, 0, 256 );
 			System.arraycopy( responsebuf, 260, cocosum, 0, 2 );
 
 			
 			// Compute Checksum on sector received - NOTE: no V1 version checksum
-			lastChecksum = computeChecksum(lastSector, 256);
+			lastChecksum = computeChecksum(sector, 256);
 			
 			
 			
@@ -583,29 +586,26 @@ public class DWProtocolHandler implements Runnable
 		
 		
 		// Compare checksums 
-		if (lastChecksum != long2(cocosum))
+		if (lastChecksum != int2(cocosum))
 		{
 			// checksums do not match, tell Coco
 			comWrite1(DWERROR_CRC);
 			
-			logger.warn("DoOP_WRITE: Bad checksum, drive: " + lastDrive + " LSN: " + long3(lastLSN) + " CocoSum: " + long2(cocosum) + " ServerSum: " + lastChecksum);
+			logger.warn("DoOP_WRITE: Bad checksum, drive: " + lastDrive + " LSN: " + int3(lastLSN) + " CocoSum: " + int2(cocosum) + " ServerSum: " + lastChecksum);
 			
 			return;
 		}
 
-		// checksums match
-		// comWrite1(DWOK);
-		
-		
+				
 		// do the write
 		response = DWOK;
 		
 		try 
 		{
 			// Seek to LSN in DSK image 
-			DWDiskDrives.seekSector(lastDrive,long3(lastLSN));
-			// Write lastSector to DSK image 
-			DWDiskDrives.writeSector(lastDrive,lastSector);
+			diskDrives.seekSector(lastDrive,int3(lastLSN));
+			// Write sector to DSK image 
+			diskDrives.writeSector(lastDrive,sector);
 		} 
 		catch (DWDriveNotLoadedException e1) 
 		{
@@ -631,7 +631,7 @@ public class DWProtocolHandler implements Runnable
 			// error on our end doing the write
 			response = DWERROR_WRITE;
 			logger.error(e4.getMessage());
-		}
+		} 
 		
 		// record error
 		if (response != DWOK)
@@ -647,11 +647,11 @@ public class DWProtocolHandler implements Runnable
 		if (opcode == OP_REWRITE)
 		{
 			writeRetries++;
-			logger.info("DoOP_REWRITE lastDrive: " + (int) lastDrive + " LSN: " + long3(lastLSN));
+			logger.info("DoOP_REWRITE lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 		}
 		else
 		{
-			logger.info("DoOP_WRITE lastDrive: " + (int) lastDrive + " LSN: " + long3(lastLSN));
+			logger.info("DoOP_WRITE lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 		}
 		
 		return;
@@ -685,6 +685,7 @@ public class DWProtocolHandler implements Runnable
 		byte[] cocosum = new byte[2];
 		byte[] mysum = new byte[2];
 		byte[] responsebuf = new byte[4];
+		byte[] sector = new byte[256];
 		
 		try 
 		{
@@ -696,28 +697,28 @@ public class DWProtocolHandler implements Runnable
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
 					
 			// seek to requested LSN
-			DWDiskDrives.seekSector(lastDrive,long3(lastLSN));
+			diskDrives.seekSector(lastDrive, int3(lastLSN));
 			
 			// load lastSector with bytes from file
-			lastSector = DWDiskDrives.readSector(lastDrive);
+			sector = diskDrives.readSector(lastDrive);
 				
 		} 
 		catch (DWDriveNotLoadedException e1) 
 		{
 			// zero sector
-			lastSector = DWDiskDrives.nullSector();
+			sector = diskDrives.nullSector();
 			logger.warn("DoOP_READEX: " + e1.getMessage());	
 		} 
 		catch (DWDriveNotValidException e2) 
 		{
 			// zero sector
-			lastSector = DWDiskDrives.nullSector();
+			sector = diskDrives.nullSector();
 			logger.warn("DoOP_READEX: " + e2.getMessage());
 		} 
 		catch (IOException e3) 
 		{
 			// zero sector
-			lastSector = DWDiskDrives.nullSector();
+			sector = diskDrives.nullSector();
 			logger.warn("DoOP_READEX: " + e3.getMessage());
 		} 
 		catch (DWCommTimeOutException e4) 
@@ -728,7 +729,7 @@ public class DWProtocolHandler implements Runnable
 		}
 				
 		// write out response sector
-		comWrite(lastSector, 256);
+		comWrite(sector, 256);
 		
 		try 
 		{
@@ -743,7 +744,7 @@ public class DWProtocolHandler implements Runnable
 			return;
 		}
 
-		lastChecksum = computeChecksum(lastSector, 256);
+		lastChecksum = computeChecksum(sector, 256);
 
 		mysum[0] = (byte) ((lastChecksum >> 8) & 0xFF);
 		mysum[1] = (byte) ((lastChecksum << 0) & 0xFF);
@@ -757,7 +758,7 @@ public class DWProtocolHandler implements Runnable
 			if (opcode == OP_REREADEX)
 			{
 				readRetries++;
-				logger.info("DoOP_REREADEX lastDrive: " + (int) lastDrive + " LSN: " + long3(lastLSN));
+				logger.info("DoOP_REREADEX lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 			}
 			else
 			{
@@ -773,11 +774,11 @@ public class DWProtocolHandler implements Runnable
 			if (opcode == OP_REREADEX)
 			{
 				readRetries++;
-				logger.info("DoOP_REREADEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + long3(lastLSN));
+				logger.info("DoOP_REREADEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 			}
 			else
 			{
-				logger.info("DoOP_READEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + long3(lastLSN));
+				logger.info("DoOP_READEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 			}
 			
 		}
@@ -808,12 +809,12 @@ public class DWProtocolHandler implements Runnable
 		if (opcode == OP_GETSTAT)
 		{
 			lastGetStat = responsebuf[1];
-			logger.info("DoOP_GETSTAT lastDrive: " + (int) lastDrive + " LSN: " + long3(lastLSN));
+			logger.info("DoOP_GETSTAT: " + prettySS(responsebuf[1]) + " lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 		}
 		else
 		{
 			lastSetStat = responsebuf[1];
-			logger.info("DoOP_SETSTAT lastDrive: " + (int) lastDrive + " LSN: " + long3(lastLSN));
+			logger.info("DoOP_SETSTAT " + prettySS(responsebuf[1]) + " lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 		}
 	}
 	
@@ -851,13 +852,13 @@ public class DWProtocolHandler implements Runnable
 			responsebuf = comRead(2);
 			if (responsebuf[1] != 1)
 			{
-				logger.info("DoOP_SER G ETSTAT for port " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ") stat: " + responsebuf[1]);
+				logger.info("DoOP_SERGETSTAT: " + prettySS(responsebuf[1]) + " port: " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ")");
 			}
 			
 		} 
 		catch (DWCommTimeOutException e) 
 		{
-			logger.error("Timeout reading packet byte in SER G ETSTAT");
+			logger.error("Timeout reading packet byte in SERGETSTAT");
 		}
 	}
 	
@@ -871,30 +872,45 @@ public class DWProtocolHandler implements Runnable
 			// get packet args
 			// port # and stat
 			responsebuf = comRead(2);
-			logger.info("DoOP_SERSETSTAT for port " + DWVSerialPorts.prettyPort(responsebuf[0]) + " stat: " + responsebuf[1]);
+			logger.info("DoOP_SERSETSTAT: " + prettySS(responsebuf[1]) + " port: " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ")");
 			
-			// if stat is $28, 26 bytes coming
-			if (responsebuf[1] == 0x28)
+			switch(responsebuf[1])
 			{
-				byte[] devdescr = new byte[26];
-				devdescr = comRead(26);
-				
-				// display it for now
-				String tmpstr = byteArrayToHexString(devdescr);
-				logger.debug("DoOP_SERSETSTAT DD: " + tmpstr);
-				
-				// set PD.INT offset 16 and PD.QUT offset 17
-				if (DWVSerialPorts.getPD_INT(responsebuf[0]) != devdescr[16])
-				{
-					DWVSerialPorts.setPD_INT(responsebuf[0], devdescr[16]);
-					logger.debug("Changed PD.INT to " + devdescr[16] + " on port " + DWVSerialPorts.prettyPort(responsebuf[0]));	
-				}
-				
-				if (DWVSerialPorts.getPD_QUT(responsebuf[0]) != devdescr[17])
-				{
-					DWVSerialPorts.setPD_QUT(responsebuf[0], devdescr[17]);
-					logger.debug("Changed PD.QUT to " + devdescr[17] + " on port " + DWVSerialPorts.prettyPort(responsebuf[0]));	
-				}
+				// SS.ComSt
+				case 0x28:
+					byte[] devdescr = new byte[26];
+					devdescr = comRead(26);
+					
+					// should move into DWVSerialPorts
+					
+					// store it
+					DWVSerialPorts.setDD(responsebuf[0],devdescr);
+					
+					// set PD.INT offset 16 and PD.QUT offset 17
+					if (DWVSerialPorts.getPD_INT(responsebuf[0]) != devdescr[16])
+					{
+						DWVSerialPorts.setPD_INT(responsebuf[0], devdescr[16]);
+						logger.debug("Changed PD.INT to " + devdescr[16] + " on port " + DWVSerialPorts.prettyPort(responsebuf[0]));	
+					}
+					
+					if (DWVSerialPorts.getPD_QUT(responsebuf[0]) != devdescr[17])
+					{
+						DWVSerialPorts.setPD_QUT(responsebuf[0], devdescr[17]);
+						logger.debug("Changed PD.QUT to " + devdescr[17] + " on port " + DWVSerialPorts.prettyPort(responsebuf[0]));	
+					}
+					
+					break;
+					
+				// SS.Open	
+				case 0x29:
+					DWVSerialPorts.openPort(responsebuf[0]);
+					break;
+					
+				//SS.Close
+				case 0x2A:
+					DWVSerialPorts.closePort(responsebuf[0]);
+					break;
+					
 			}
 			
 		} 
@@ -912,49 +928,15 @@ public class DWProtocolHandler implements Runnable
 		try 
 		{
 			// get packet args
-			// port # and mode
-			responsebuf = comRead(2);
+			// port # (mode no longer sent)
+			responsebuf = comRead(1);
 			
 			int portnum = responsebuf[0];
-			int portmode = responsebuf[1];
+			// int portmode = responsebuf[1];
 			
-			logger.info("DoOP_SERINIT for port " + DWVSerialPorts.prettyPort(portnum) + " mode " + portmode);
+			logger.info("DoOP_SERINIT for port " + DWVSerialPorts.prettyPort(portnum));
 			
-			if ((portnum >= 0) && (portnum <= DWVSerialPorts.MAX_PORTS))
-			{
-				// server side init if port isn't defined
-				if (!DWVSerialPorts.isEnabled(portnum))
-				{
-					logger.debug("coco sent init for port we don't have defined.. no big deal");
-					DWVSerialPorts.initPort(portnum, portmode);
-				}
 			
-
-				if (!DWVSerialPorts.isCocoInit(portnum))
-				{
-					// record coco init, do any per instance setup					
-					DWVSerialPorts.Cocoinit(portnum);
-				}
-				else
-				{
-					// check mode
-					if (DWVSerialPorts.getMode(portnum) != portmode)
-					{
-						logger.warn("Coco sent init for port " + DWVSerialPorts.prettyPort(portnum) +" in different mode than we have it in.. reinitializing");
-						
-						DWVSerialPorts.Cocoterm(portnum);
-						DWVSerialPorts.closePort(portnum);
-						DWVSerialPorts.initPort(portnum, portmode);
-						DWVSerialPorts.Cocoinit(portnum);
-						
-					}
-					
-				}
-			}
-			else
-			{
-				logger.warn("got init for invalid port " + portnum);
-			}
 		} 
 		catch (DWCommTimeOutException e) 
 		{
@@ -976,27 +958,7 @@ public class DWProtocolHandler implements Runnable
 			
 			logger.info("DoOP_SERTERM for port " + portnum);
 			
-			if ((portnum >= 0) && (portnum <= DWVSerialPorts.MAX_PORTS))
-			{
-				// if port isn't defined
-				if (!DWVSerialPorts.isEnabled(portnum))
-				{
-					logger.debug("coco sent TERM for port we don't have defined.. ignoring");
-				}
-				else if (!DWVSerialPorts.isCocoInit(portnum))
-				{
-					logger.debug("coco sent TERM for port we don't have inized.. ignoring");
-				}
-				else
-				{
-					// cocoterm
-					DWVSerialPorts.Cocoterm(portnum);
-				}
-			}
-			else
-			{
-				logger.warn("got term for invalid port " + portnum);
-			}
+			
 		} 
 		catch (DWCommTimeOutException e) 
 		{
@@ -1077,13 +1039,13 @@ public class DWProtocolHandler implements Runnable
 	private void DoOP_PRINT() 
 	{
 		int tmpint;
-		
-		// just throws the data away for now
-		
+
 		try 
 		{
 			tmpint = comRead1(true);
 			logger.info("DoOP_PRINT: byte "+ tmpint);
+			
+			vprinter.addByte((byte) tmpint);
 		} 
 		catch (DWCommTimeOutException e) 
 		{
@@ -1096,6 +1058,7 @@ public class DWProtocolHandler implements Runnable
 	private void DoOP_PRINTFLUSH() 
 	{
 		logger.info("DoOP_PRINTFLUSH");
+		vprinter.flush();
 	}
 	
 	
@@ -1120,14 +1083,18 @@ public class DWProtocolHandler implements Runnable
 	}
 
 
+	public static int int4(byte[] data) 
+	{
+		 return( (data[0] & 0xFF) << 32) + ((data[0] & 0xFF) << 16) + ((data[1] & 0xFF) << 8) + (data[2] & 0xFF);
+	}
 	
-	public static long long3(byte[] data) 
+	public static int int3(byte[] data) 
 	{
 		 return((data[0] & 0xFF) << 16) + ((data[1] & 0xFF) << 8) + (data[2] & 0xFF);
 	}
 
 	
-	public static long long2(byte[] data) 
+	public static int int2(byte[] data) 
 	{
 		 return((data[0] & 0xFF) << 8) + (data[1] & 0xFF);
 	}
@@ -1185,16 +1152,6 @@ public class DWProtocolHandler implements Runnable
 
 	public static byte[] getLastLSN() {
 		return lastLSN;
-	}
-
-
-	public static String getLastMessage() {
-		return lastMessage;
-	}
-
-
-	public static byte[] getLastSector() {
-		return lastSector;
 	}
 
 
@@ -1257,11 +1214,281 @@ public class DWProtocolHandler implements Runnable
 		return(dwinitTime);
 	}
 
-	public static void setCocoModel(int model) throws UnsupportedCommOperationException {
-		cocoModel = model;
-		setSerialParams(serialPort);
+	
+	public static String prettySS(byte statcode)
+	{
+		String result = "unknown";
 		
+		switch (statcode)
+		{
+			case 0x00:
+				result = "SS.Opt";
+				break;
+
+			case 0x02:
+				result = "SS.Size";
+				break;
+
+			case 0x03:
+				result = "SS.Reset";
+				break;
+
+			case 0x04:
+				result = "SS.WTrk";
+				break;
+
+			case 0x05:
+				result = "SS.Pos";
+				break;
+
+			case 0x06:
+				result = "SS.EOF";
+				break;
+
+			case 0x0A:
+				result = "SS.Frz";
+				break;
+
+			case 0x0B:
+				result = "SS.SPT";
+				break;
+
+			case 0x0C:
+				result = "SS.SQD";
+				break;
+
+			case 0x0D:
+				result = "SS.DCmd";
+				break;
+
+			case 0x0E:
+				result = "SS.DevNm";
+				break;
+
+			case 0x0F:
+				result = "SS.FD";
+				break;
+
+			case 0x10:
+				result = "SS.Ticks";
+				break;
+
+			case 0x11:
+				result = "SS.Lock";
+				break;
+
+			case 0x12:
+				result = "SS.VarSect";
+				break;
+
+			case 0x14:
+				result = "SS.BlkRd";
+				break;
+
+			case 0x15:
+				result = "SS.BlkWr";
+				break;
+
+			case 0x16:
+				result = "SS.Reten";
+				break;
+
+			case 0x17:
+				result = "SS.WFM";
+				break;
+
+			case 0x18:
+				result = "SS.RFM";
+				break;
+
+			case 0x1B:
+				result = "SS.Relea";
+				break;
+
+			case 0x1C:
+				result = "SS.Attr";
+				break;
+
+			case 0x1E:
+				result = "SS.RsBit";
+				break;
+
+			case 0x20:
+				result = "SS.FDInf";
+				break;
+
+			case 0x26:
+				result = "SS.DSize";
+				break;
+
+			// added for SCF/Ns	
+			case 0x28:
+				result = "SS.ComSt";
+				break;
+				
+			case 0x29:
+				result = "SS.Open";
+				break;	
+				
+			case 0x2A:
+				result = "SS.Close";
+				break;
+				
+			case 0x30:
+				result = "SS.HngUp";
+				break;
+				
+			case (byte) 255:
+				result =  "None";
+				break;
+			
+			default:
+				result = "Unknown: " + statcode;
+		}
+		
+		return(result);
 	}
+
+
+	public static String prettyOP(byte opcode) 
+	{
+		String res = "Unknown";
+
+		switch(opcode)
+		{
+		case OP_NOP:
+			res = "OP_NOP";
+			break;
+
+		case OP_INIT:
+			res = "OP_INIT";
+			break;
+
+		case OP_READ:
+			res = "OP_READ";
+			break;
+
+		case OP_READEX:
+			res = "OP_READEX";
+			break;
+
+		case OP_WRITE:
+			res = "OP_WRITE";
+			break;
+
+		case OP_REREAD:
+			res = "OP_REREAD";
+			break;
+
+		case OP_REREADEX:
+			res = "OP_REREADEX";
+			break;
+
+		case OP_REWRITE:
+			res = "OP_REWRITE";
+			break;
+
+		case OP_TERM:
+			res = "OP_TERM";
+			break;
+
+		case OP_RESET1:
+		case OP_RESET2:
+		case OP_RESET3:
+			res =  "OP_RESET";
+			break;
+
+		case OP_GETSTAT:
+			res = "OP_GETSTAT";
+			break;
+
+		case OP_SETSTAT:
+			res = "OP_SETSTAT";
+			break;
+
+		case OP_TIME:
+			res = "OP_TIME";
+			break;
+
+		case OP_PRINT:
+			res = "OP_PRINT";
+			break;
+
+		case OP_PRINTFLUSH:
+			res = "OP_PRINTFLUSH";
+			break;
+
+		case OP_SERREADM:
+			res = "OP_SERREADM";
+			break;
+
+		case OP_SERREAD:
+			res = "OP_SERREAD";      
+			break;
+
+		case OP_SERWRITE:
+			res = "OP_SERWRITE";
+			break;
+
+		case OP_SERSETSTAT:
+			res = "OP_SERSETSTAT";
+            break;
+            
+		case OP_SERGETSTAT:
+			res =  "OP_SERGETSTAT";
+            break;
+		
+		case OP_SERINIT:
+			res =  "OP_SERINIT";
+            break;
+            
+		case OP_SERTERM:
+			res =  "OP_SERTERM";
+            break;
+            
+		case OP_DWINIT:
+			res =  "OP_DWINIT";
+            break;
+            
+		default:
+				res = "Unknown: " + opcode;
+		}
+		
+		return(res);
+	}
+
+
+	public static DWDiskDrives getDiskDrives() {
+		return diskDrives;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static ArrayList<String> getPortNames()
+	{
+		ArrayList<String> ports = new ArrayList();
+		
+		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier.getPortIdentifiers();
+		while ( portEnum.hasMoreElements() ) 
+		{
+			CommPortIdentifier portIdentifier = portEnum.nextElement();
+		    if (portIdentifier.getPortType() == 1)
+		    {
+		    	ports.add(portIdentifier.getName());
+		    }
+		        
+		}        
+				
+		return(ports);
+	}
+
+
+	public static synchronized void resetCocoModel() throws UnsupportedCommOperationException
+	{
+		logger.debug("resetting serial port parameters to model " + DriveWireServer.config.getInt("CocoModel"));
+		setSerialParams(serialPort);
+	}
+
+
 
 	
 }

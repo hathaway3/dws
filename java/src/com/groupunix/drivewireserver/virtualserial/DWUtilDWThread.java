@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -21,13 +22,12 @@ public class DWUtilDWThread implements Runnable
 	
 	private int vport = -1;
 	private String strargs = null;
-	private DWVSerialCircularBuffer input;
 	
-	public DWUtilDWThread(int vport, DWVSerialCircularBuffer utilstream, String args)
+	public DWUtilDWThread(int vport, String args)
 	{
 		this.vport = vport;
 		this.strargs = args;
-		this.input = utilstream;
+
 		logger.debug("init dw util thread");	
 	}
 	
@@ -40,33 +40,34 @@ public class DWUtilDWThread implements Runnable
 		
 		String[] args = this.strargs.split(" ");
 		
-		if (((args.length >= 2) && (args[1].equalsIgnoreCase("help"))) || (args.length == 1))
+		
+		if (((args.length >= 2) && (args[1].toLowerCase().startsWith("h"))) || (args.length == 1))
 		{
 			doHelp();
 		}
-		else if ((args.length == 3) && (args[1].equalsIgnoreCase("show")))
+		else if ((args.length == 3) && (args[1].toLowerCase().startsWith("s")))
 		{
 			doShow(args[2]);
 		}
-		else if ((args.length >= 2) && (args[1].equalsIgnoreCase("dir")))
+		else if ((args.length >= 2) && (args[1].toLowerCase().startsWith("d")))
 		{
 			doDir(args);
 		}
-		else if ((args.length >= 3) && (args[1].equalsIgnoreCase("list")))
+		else if ((args.length >= 3) && (args[1].toLowerCase().startsWith("li")))
 		{
 			doList(strargs.substring(8));
 		}
-		else if ((args.length >= 3) && (args[1].equalsIgnoreCase("wall")))
-		{
-			doWall(strargs.substring(8));
-		}
-		else if ((args.length == 4) && (args[1].equalsIgnoreCase("load")))
+		else if ((args.length == 4) && (args[1].toLowerCase().startsWith("lo")))
 		{
 		    doDiskInsert(args[2],args[3]);
 		}
-		else if ((args.length == 3) && (args[1].equalsIgnoreCase("eject")))
+		else if ((args.length == 3) && (args[1].toLowerCase().startsWith("e")))
 		{
 			doDiskEject(args[2]);
+		}
+		else if ((args.length == 3) && (args[1].toLowerCase().startsWith("w")))
+		{
+			doDiskWPToggle(args[2]);
 		}
 		else
 		{
@@ -77,7 +78,7 @@ public class DWUtilDWThread implements Runnable
 		// wait for output to flush
 		// wait for output
 		try {
-			while ((DWVSerialPorts.bytesWaiting(this.vport) > 0) && (DWVSerialPorts.isCocoInit(this.vport)))
+			while ((DWVSerialPorts.bytesWaiting(this.vport) > 0) && (DWVSerialPorts.isOpen(this.vport)))
 			{
 				Thread.sleep(100);
 			}
@@ -97,20 +98,21 @@ public class DWUtilDWThread implements Runnable
 		{
 			int driveno = Integer.parseInt(drivestr);
 		
-			DWDiskDrives.validateDriveNo(driveno);
+			DWProtocolHandler.getDiskDrives().validateDriveNo(driveno);
 			
 			// eject any current disk
-			if (DWDiskDrives.diskLoaded(driveno))
+			if (DWProtocolHandler.getDiskDrives().diskLoaded(driveno))
 			{
-				DWDiskDrives.EjectDisk(driveno);
+				DWProtocolHandler.getDiskDrives().EjectDisk(driveno);
 			}
 			
 			// load new disk
 			
-			DWDiskDrives.LoadDiskFromFile(driveno, path);
+			DWProtocolHandler.getDiskDrives().LoadDiskFromFile(driveno, path);
 		
 			DWVSerialPorts.sendUtilityOKResponse(this.vport, "Disk inserted in drive " + driveno);
-			
+			DWVSerialPorts.writeToCoco(this.vport, "Disk loaded in drive " + driveno);
+
 		}
 		catch (NumberFormatException e)
 		{
@@ -146,9 +148,11 @@ public class DWUtilDWThread implements Runnable
 		{
 			int driveno = Integer.parseInt(drivestr);
 	
-			DWDiskDrives.EjectDisk(driveno);
+			DWProtocolHandler.getDiskDrives().EjectDisk(driveno);
 		
 			DWVSerialPorts.sendUtilityOKResponse(this.vport, "Disk ejected from drive " + driveno);
+			DWVSerialPorts.writeToCoco(this.vport, "Disk ejected from drive " + driveno);
+
 		}
 		catch (NumberFormatException e)
 		{
@@ -170,23 +174,38 @@ public class DWUtilDWThread implements Runnable
 	}
 		
 		
+	private void doDiskWPToggle(String drivestr) 
+	{
+		
+		try
+		{
+			int driveno = Integer.parseInt(drivestr);
+	
+			if (DWProtocolHandler.getDiskDrives().getWriteProtect(driveno))
+			{
+				DWProtocolHandler.getDiskDrives().setWriteProtect(driveno, false);
+				DWVSerialPorts.sendUtilityOKResponse(this.vport, "write protect toggle succeeded");
+			    DWVSerialPorts.writeToCoco(this.vport, "Disk in drive " + driveno + " is now writeable.");
+			}
+			else
+			{
+				DWProtocolHandler.getDiskDrives().setWriteProtect(driveno, true);
+				DWVSerialPorts.sendUtilityOKResponse(this.vport, "write protect toggle succeeded");
+			    DWVSerialPorts.writeToCoco(this.vport, "Disk in drive " + driveno + " is now write protected.");
+			}
+			
+		}
+		catch (NumberFormatException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric drive # '" + drivestr + "'");
+			
+		} 
+		
+		return;
+	}
 		
 	
-	private void doWall(String msg) 
-	{
-		DWVSerialPorts.sendUtilityOKResponse(this.vport, "Sending announcement");
-		DWVSerialPorts.write(this.vport, "Sending your announcement to all active telnet ports\r\n");
-		
-		// send message
-		for (int i = 0;i<DWVSerialPorts.MAX_PORTS;i++)
-		{
-			if ((DWVSerialPorts.getMode(i) == DWVSerialPorts.MODE_TELNET) && DWVSerialPorts.isConnected(i))
-			{
-				DWVSerialPorts.serWriteM(i, "\r\n\n***** " + msg + " *****\r\n\n");
-			}
-		}
-		
-	}
+
 
 	private void doList(String path) 
 	{
@@ -221,7 +240,7 @@ public class DWUtilDWThread implements Runnable
 		}
     
 		DWVSerialPorts.sendUtilityOKResponse(this.vport, "file data follows");
-	    DWVSerialPorts.write(this.vport, text);
+	    DWVSerialPorts.writeToCoco(this.vport, text);
 	}
 	
 	
@@ -267,7 +286,7 @@ public class DWUtilDWThread implements Runnable
 	    }
 		
 	    DWVSerialPorts.sendUtilityOKResponse(this.vport, "directory follows");
-	    DWVSerialPorts.write(this.vport, text);
+	    DWVSerialPorts.writeToCoco(this.vport, text);
 	}
 	
 	
@@ -276,24 +295,53 @@ public class DWUtilDWThread implements Runnable
 	{
 		String text = new String();
 		
-		if (arg.equalsIgnoreCase("disks"))
+		if (arg.toLowerCase().startsWith("d"))
 		{
 			text = "\r\nCurrent DriveWire Disks:\r\n\n";
 			
+			text += "D#   DSK File Name (* = write protected)       Disk Name\r\n";
+			text += "---- ----------------------------------------- --------------------------------\r\n";
+			
 			for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
 			{
-				if (DWDiskDrives.diskLoaded(i))
+				if (DWProtocolHandler.getDiskDrives().diskLoaded(i))
 				{
-					text += "X"+i;
-					text += ": " + String.format("%-32s",DWDiskDrives.getDiskFile(i));
-					text += String.format("%-34s", DWDiskDrives.getDiskName(i));
-					text += " " + DWDiskDrives.getDiskSectors(i);
+					String df = DWProtocolHandler.getDiskDrives().getDiskFile(i);
+					
+					if (DWProtocolHandler.getDiskDrives().getWriteProtect(i))
+					{
+						df = df + "*";
+					}
+					 
+					text += "X"+ String.format("%-3d ",i);
+					text += String.format("%-42s",df);
+					text += String.format("%-32s", DWProtocolHandler.getDiskDrives().getDiskName(i));
 					text += "\r\n";
 				}
+				
+				
+			}
+			
+			
+		}
+		else if (arg.toLowerCase().startsWith("pd"))
+		{
+			text += "\r\nCurrent port device descriptors:\r\n\n";
+			
+			for (int i = 0;i<DWVSerialPorts.MAX_PORTS;i++)
+			{
+				text += DWVSerialPorts.prettyPort(i) + " ";
+				
+				if (i<10)
+					text += " ";
+			
+				text += DWProtocolHandler.byteArrayToHexString(DWVSerialPorts.getDD(i));
+				
+				text += "\r\n";
 			}
 			
 		}
-		else if (arg.equalsIgnoreCase("ports"))
+		else if (arg.toLowerCase().startsWith("po"))
 		{
 			text += "\r\nCurrent port status:\r\n\n";
 			
@@ -301,68 +349,91 @@ public class DWUtilDWThread implements Runnable
 			{
 				text += DWVSerialPorts.prettyPort(i) + " ";
 				
-				if (DWVSerialPorts.isEnabled(i))
+				if (i<10)
+					text += " ";
+				
+				
+				if (DWVSerialPorts.isOpen(i))
 				{
-					text += String.format("enabled, %-10s", DWVSerialPorts.prettyMode(DWVSerialPorts.getMode(i)));
-					
-					if (DWVSerialPorts.isCocoInit(i))
-					{
-						text += "inized      ";
-					}
-					else
-					{
-						text += "not inized  ";
-					}
-					
-					text += String.format("%-15s", DWVSerialPorts.getActionFile(i));
-					
-					if ((DWVSerialPorts.getMode(i) == 0) || (DWVSerialPorts.getMode(i) == 1))
-					{
-						if (DWVSerialPorts.isConnected(i))
-						{
-							
-							text += DWVSerialPorts.getHostIP(i);
-							text += ":" + DWVSerialPorts.getHostPort(i);
-						}
-						else
-						{
-							text += "not connected";
-						}
-					}
+					text += "open (" + DWVSerialPorts.getOpen(i) + ") ";
 				}
 				else
 				{
-					text += "disabled";
+					text += "closed   ";
+				}
+				
+				
+				if (DWVSerialPorts.isConnected(i))
+				{
+							
+					text += DWVSerialPorts.getHostIP(i);
+					text += ":" + DWVSerialPorts.getHostPort(i);
+				}
+				else
+				{
+					text += "not connected";
+				}
+				
+				if (DriveWireServer.config.getBoolean("TelnetUseAuth", false))
+				{
+					text += "  " + DWVSerialPorts.getUserName(i);
+					text += " (" + DWVSerialPorts.getUserGroup(i) + ")";
+					
 				}
 				
 				text += "\r\n";
 			}
 			
 		}
-		else if (arg.equalsIgnoreCase("status"))
+		else if (arg.toLowerCase().startsWith("s"))
 		{
-			text += "\r\nDriveWire Status:\r\n\n";
+			text += "\r\nDriveWire version " + DriveWireServer.DWServerVersion + " (" + DriveWireServer.DWServerVersionDate + ") status:\r\n\n";
 			
 			text += "Device:        " + DriveWireServer.config.getString("SerialDevice","unknown") + "\r\n";
 			text += "CoCo Type:     " + DriveWireServer.config.getInt("CocoModel", 0) + "\r\n";
 			
 			text += "\r\n";
 			
-			text += "Last OpCode:   " + (int) (DWProtocolHandler.getLastOpcode() & 0xFF) + "\r\n";
-			text += "Last GetStat:  " + (int) (DWProtocolHandler.getLastGetStat() & 0xFF) + "\r\n";
-			text += "Last SetStat:  " + (int) (DWProtocolHandler.getLastSetStat() & 0xFF) + "\r\n";
+			text += "Last OpCode:   " + DWProtocolHandler.prettyOP(DWProtocolHandler.getLastOpcode()) + "\r\n";
+			text += "Last GetStat:  " + DWProtocolHandler.prettySS(DWProtocolHandler.getLastGetStat()) + "\r\n";
+			text += "Last SetStat:  " + DWProtocolHandler.prettySS(DWProtocolHandler.getLastSetStat()) + "\r\n";
 			text += "Last Drive:    " + DWProtocolHandler.getLastDrive() + "\r\n";
-			text += "Last LSN:      " + DWProtocolHandler.long3(DWProtocolHandler.getLastLSN()) + "\r\n";
+			text += "Last LSN:      " + DWProtocolHandler.int3(DWProtocolHandler.getLastLSN()) + "\r\n";
 			text += "Last Error:    " + (int) (DWProtocolHandler.getLastError() & 0xFF) + "\r\n";
 			
 			text += "\r\n";
 			
-			text += "Read Sectors:  " + DWProtocolHandler.getSectorsRead() + "\r\n";
-			text += "Read Retries:  " + DWProtocolHandler.getReadRetries() + "\r\n";
-			text += "Write Sectors: " + DWProtocolHandler.getSectorsWritten() + "\r\n";
-			text += "Write Retries: " + DWProtocolHandler.getWriteRetries() + "\r\n";
+			text += "Total Read Sectors:  " + String.format("%6d",DWProtocolHandler.getSectorsRead()) + "  (" + DWProtocolHandler.getReadRetries() + " retries)\r\n";
+			text += "Total Write Sectors: " + String.format("%6d",DWProtocolHandler.getSectorsWritten()) + "  (" + DWProtocolHandler.getWriteRetries() + " retries)\r\n";
 			
 			text += "\r\n";
+			
+			text += "D#   Sectors  LSN   WP       Reads  Writes  Dirty \r\n";
+			
+			for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
+			{
+				if (DWProtocolHandler.getDiskDrives().diskLoaded(i))
+				{
+					 
+					text += "X"+ String.format("%-3d ",i);
+					
+					text += String.format("%5d ", DWProtocolHandler.getDiskDrives().getDiskSectors(i));
+					
+					text += String.format(" %5d ", DWProtocolHandler.getDiskDrives().getLSN(i));
+					
+					text += String.format("  %5s  ", DWProtocolHandler.getDiskDrives().getWriteProtect(i));
+					
+					text += String.format(" %6d ", DWProtocolHandler.getDiskDrives().getReads(i));
+					
+					text += String.format(" %6d ", DWProtocolHandler.getDiskDrives().getWrites(i));
+					
+					text += String.format(" %5d ", DWProtocolHandler.getDiskDrives().getDirtySectors(i));
+					
+					text += "\r\n";
+				}
+				
+				
+			}
 			
 		}
 		else
@@ -372,39 +443,50 @@ public class DWUtilDWThread implements Runnable
 		}
 		
 		DWVSerialPorts.sendUtilityOKResponse(this.vport, "command response follows");
-	    DWVSerialPorts.write(this.vport, text);
+	    DWVSerialPorts.writeToCoco(this.vport, text);
 	}
 
 	private void doHelp()
 	{
 		String text = new String();
 		
-		text = "\r\nHelp for DriveWire server commands:";
+		text = "\r\nHelp for DriveWire " + DriveWireServer.DWServerVersion + " commands:";
 		
 		text += "\r\n\n";
 		
-		text += "  dw show [disks|ports|status] - Show various system information.";
+		text += "  dw show [disks|ports|pdesc|status] - Show various system information.";
 				
 		text += "\r\n\n";
 		
-		text += "  dw load [drive number] [filename] - load disk image into drive.";
+		text += "  dw load [drive number] [filename] - Load disk image into drive.";
 		
 		text += "\r\n";
 		
-		text += "  dw eject [drive number] - eject disk.";
+		text += "  dw eject [drive number] - Eject disk.";
+		
+		text += "\r\n";
+		
+		text += "  dw wp [drive number] - Toggle write protect on disk.";
 		
 		text += "\r\n\n";
 		
-		text += "  dw dir [path] - show directory in server's filesystem.";
+		text += "  dw dir [server path] - Show directory in server's filesystem.";
 		
 		text += "\r\n";
 		
-		text += "  dw list [path] - list contents of file in server's filesystem.";
+		text += "  dw list [server path] - List contents of file in server's filesystem.";
 		
 		text += "\r\n";
+		
+		text += "  dw copy [local path] [to|from] [server path] - Copy file from/to server.";
+		
+		
+		text += "\r\n\n";
+		
+		text += "  (all commands may be abbreviated to their shortest unique form)\r\n";
 		
 		DWVSerialPorts.sendUtilityOKResponse(this.vport, "help text follows");
-	    DWVSerialPorts.write(this.vport, text);
+	    DWVSerialPorts.writeToCoco(this.vport, text);
 	}
 	
 }

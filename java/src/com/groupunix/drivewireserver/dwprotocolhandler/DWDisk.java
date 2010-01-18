@@ -1,10 +1,10 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 
 import org.apache.log4j.Logger;
 
@@ -17,131 +17,112 @@ public class DWDisk {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 	
-	private long LSN;
+	public static final int MAX_SECTORS = 32768; // what is coco's max?
+	private int LSN;
 	private String filePath;
-	private File fh;
-	private MappedByteBuffer diskBuf;
-	private FileChannel rwChannel;
-	
 	private boolean	wrProt = false;
+	private DWDiskSector[] sectors = new DWDiskSector[MAX_SECTORS];
 	
-	public long DD_TOT()
+	private int reads = 0;
+	private int writes = 0;
+	
+	
+	public int DD_TOT()
 	{
 		byte[] dd_tot = new byte[3];
-		diskBuf.position(0);
-		diskBuf.get(dd_tot, 0, 3); 
-		return(long3(dd_tot));
+		System.arraycopy( sectors[0].getData(), 0, dd_tot, 0, 3 ); 
+		return(DWProtocolHandler.int3(dd_tot));
 	}
 	
 	public int DD_TKS()
 	{
-		byte[] dd_tks = new byte[1];
-		diskBuf.position(3);
-		diskBuf.get(dd_tks, 0, 1); 
-		return((int) dd_tks[0]);
+		return((int) sectors[0].getData()[3]);
 	}
 	
-	public long DD_MAP()
+	public int DD_MAP()
 	{
 		byte[] dd_map = new byte[2];
-		diskBuf.position(4);
-		diskBuf.get(dd_map, 0, 2); 
-		return(long2(dd_map));
+		System.arraycopy( sectors[0].getData(), 4, dd_map, 0, 2 ); 
+		return(DWProtocolHandler.int2(dd_map));
 	}
 	
-	public long DD_BIT()
+	public int DD_BIT()
 	{
 		byte[] dd_bit = new byte[2];
-		diskBuf.position(6);
-		diskBuf.get(dd_bit, 0, 2); 
-		return(long2(dd_bit));
+		System.arraycopy( sectors[0].getData(), 6, dd_bit, 0, 2 ); 
+		return(DWProtocolHandler.int2(dd_bit));
 	}
 	
-	public long DD_DIR()
+	public int DD_DIR()
 	{
 		byte[] dd_dir = new byte[3];
-		diskBuf.position(8);
-		diskBuf.get(dd_dir, 0, 3); 
-		return(long3(dd_dir));
+		System.arraycopy( sectors[0].getData(), 8, dd_dir, 0, 3 ); 
+		return(DWProtocolHandler.int3(dd_dir));
 	}
 	
-	public long DD_OWN()
+	public int DD_OWN()
 	{
 		byte[] dd_own = new byte[2];
-		diskBuf.position(11);
-		diskBuf.get(dd_own, 0, 2); 
-		return(long2(dd_own));
+		System.arraycopy( sectors[0].getData(), 11, dd_own, 0, 2 ); 
+		return(DWProtocolHandler.int2(dd_own));
 	}
 	
 	public byte DD_ATT()
 	{
-		byte[] dd_att = new byte[1];
-		diskBuf.position(13);
-		diskBuf.get(dd_att, 0, 1); 
-		return(dd_att[0]);
+		return(sectors[0].getData()[13]);
 	}
 	
 	public long DD_DSK()
 	{
 		byte[] dd_dsk = new byte[2];
-		diskBuf.position(14);
-		diskBuf.get(dd_dsk, 0, 2); 
-		return(long2(dd_dsk));
+		System.arraycopy( sectors[0].getData(), 14, dd_dsk, 0, 2 ); 
+		return(DWProtocolHandler.int2(dd_dsk));
 	}
 	
 	public byte DD_FMT()
 	{
-		byte[] dd_fmt = new byte[1];
-		diskBuf.position(16);
-		diskBuf.get(dd_fmt, 0, 1); 
-		return(dd_fmt[0]);
+		return(sectors[0].getData()[16]);
 	}
 	
 	public long DD_SPT()
 	{
 		byte[] dd_spt = new byte[2];
-		diskBuf.position(17);
-		diskBuf.get(dd_spt, 0, 2); 
-		return(long2(dd_spt));
+		System.arraycopy( sectors[0].getData(), 17, dd_spt, 0, 2 ); 
+		return(DWProtocolHandler.int2(dd_spt));
 	}
 	
 	public long DD_BT()
 	{
 		byte[] dd_bt = new byte[3];
-		diskBuf.position(21);
-		diskBuf.get(dd_bt, 0, 3); 
-		return(long3(dd_bt));
+		System.arraycopy( sectors[0].getData(), 21, dd_bt, 0, 3 ); 
+		return(DWProtocolHandler.int3(dd_bt));
 	}
 	
 	public long DD_BSZ()
 	{
 		byte[] dd_bsz = new byte[2];
-		diskBuf.position(24);
-		diskBuf.get(dd_bsz, 0, 2); 
-		return(long2(dd_bsz));
+		System.arraycopy( sectors[0].getData(), 24, dd_bsz, 0, 2 ); 
+		return(DWProtocolHandler.int2(dd_bsz));
 	}
 	
 	public byte[] DD_DAT()
 	{
 		byte[] dd_dat = new byte[5];
-		diskBuf.position(26);
-		diskBuf.get(dd_dat, 0, 5); 
+		System.arraycopy( sectors[0].getData(), 26, dd_dat, 0, 5 ); 
 		return(dd_dat);
 	}
 	
 	public byte[] DD_NAM()
 	{
 		byte[] dd_nam = new byte[32];
-		diskBuf.position(31);
-		diskBuf.get(dd_nam, 0, 32); 
+		System.arraycopy( sectors[0].getData(), 31, dd_nam, 0, 32 ); 
 		return(dd_nam);
 	}
 	
 	public byte[] DD_OPT()
 	{
 		byte[] dd_opt = new byte[32];
-		diskBuf.position(63);
-		diskBuf.get(dd_opt, 0, 32); 
+		System.arraycopy( sectors[0].getData(), 63, dd_opt, 0, 32 ); 
 		return(dd_opt);
 	}
 	
@@ -149,24 +130,32 @@ public class DWDisk {
 	public String diskInfo()
 	{
 		String ret = new String();
-		
 		ret = "Disk name: '" + cocoString(DD_NAM()) + "'";
 		
 		ret += ", Total sectors: " + DD_TOT();
 		
 		ret += ", Root dir @ " + DD_DIR();
-		
 		return(ret);
 	}
 	
-	public String getDiskName()
+	public synchronized String getDiskName()
 	{
 		return(cocoString(DD_NAM()));
 	}
 	
-	public long getDiskSectors()
+	public synchronized int getDiskSectors()
 	{
-		return(DD_TOT());
+		int num = 0;
+		
+		for (int i = 0;i<MAX_SECTORS;i++)
+		{
+			if (this.sectors[i] != null)
+			{
+				num++;
+			}
+		}
+		
+		return(num);
 	}
 	
 	
@@ -189,19 +178,19 @@ public class DWDisk {
 		return(ret);
 	}
 
-	public void seekSector(long newLSN)
+	public synchronized void seekSector(int newLSN)
 	{
 		// TODO should check that the sector exists..
 		this.LSN = newLSN;
 		// logger.debug("seek to sector " + newLSN + " for '" + this.filePath + "'");
 	}
 
-	public long getLSN()
+	public int getLSN()
 	{
 		return(this.LSN);
 	}
 	
-	public void setWriteProtect(boolean wp)
+	public synchronized void setWriteProtect(boolean wp)
 	{
 		if (wp)
 		{
@@ -215,35 +204,22 @@ public class DWDisk {
 		this.wrProt = wp;
 	}
 	
-	public boolean getWriteProtect()
+	public synchronized boolean getWriteProtect()
 	{
 		return(this.wrProt);
 	}
 	
-	public void setFilePath(String fp) throws FileNotFoundException
+	public synchronized void setFilePath(String fp) throws FileNotFoundException
 	{
 		// check file exists, maybe should check read/write access too
 		File tmp = new File(fp);
 		if (tmp.exists())
 		{
 			this.filePath = fp;
-			this.fh = new File(fp);
-			
-			this.rwChannel = new RandomAccessFile(fh, "rw").getChannel();
-	        
-			try 
-			{
-				this.diskBuf = this.rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, 4718592);
-				logger.debug("created memmap (using " + rwChannel.size() + " bytes)");
-			} 
-			catch (IOException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			
 			logger.debug("set filepath to '" + fp + "'");
+			
+			loadSectors(tmp);
+			
 		}
 		else
 		{
@@ -252,72 +228,127 @@ public class DWDisk {
 	}
 	
 	
+	private void loadSectors(File file) 
+	{
+		// load file into sector array
+	    FileInputStream fis;
+		try 
+		{
+			fis = new FileInputStream(file);
+			BufferedInputStream bis = new BufferedInputStream(fis);
+	        DataInputStream dis = new DataInputStream(bis);
+
+	        int sector = 0;
+	        	        
+		    while (dis.available() != 0) 
+		    {
+		    	byte[] buffer = new byte[256];
+		    	int bytesRead = dis.read(buffer, 0, 256);
+		    	
+		    	this.sectors[sector] = new DWDiskSector(sector);
+		    	this.sectors[sector].setData(buffer, false);
+		    	
+		    	if (bytesRead != 256)
+		    	{
+		    		logger.error("did not get 256 bytes for sector " + sector + ", got " + bytesRead);
+		    	}
+		    	
+		    	sector++;
+		    }
+		     
+		    // dispose all the resources after using them.
+		    fis.close();
+		    bis.close();
+		    dis.close();
+		    
+
+		} 
+		catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        	
+	}
+
+	
+	
 	public String getFilePath()
 	{
 		return(this.filePath);
 	}
 	
 	
-	public byte[] readSector() throws IOException
+	public synchronized byte[] readSector() throws IOException
 	{
-	// read 256 bytes from pos lastLSN of file into lastSector
+		// logger.debug("Read sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
+		this.reads++;
 		
-		int pos = (int) (this.LSN * 256);
-		
-		// logger.debug("reading sector " + this.LSN + " (" + pos + ") from '" + this.filePath + "'");
-		
-		byte[] buf = new byte[256];
-		    
-		try
+		if (this.sectors[this.LSN] == null)
 		{
-			diskBuf.position(pos);
-			diskBuf.get(buf, 0, 256);
-		}
-		catch (Exception e)
-		{
-			logger.error("DISK ERROR: " + e.getMessage());
+			logger.debug("request for undefined sector " + this.LSN);
+			this.sectors[this.LSN] = new DWDiskSector(this.LSN);
 		}
 		
-		
-		return(buf);	
+		return(this.sectors[this.LSN].getData());	
 	}
 	
-	public void writeSector(byte[] data) throws DWDriveWriteProtectedException, IOException
+	public synchronized void writeSector(byte[] data) throws DWDriveWriteProtectedException, IOException
 	{
-		// write 256 bytes from lastSector at pos lastLSN of file
-	
+		
 		if (this.wrProt)
 		{
 			throw new DWDriveWriteProtectedException("Disk is write protected");
 		}
 		else
 		{
-			int pos =  (int) (this.LSN * 256);
-		    
-			// logger.debug("writing to sector " + this.LSN + " (" + pos + ") in '" + this.filePath + "'");
+			if (sectors[this.LSN] == null)
+			{
+				// expand disk / add sector
+				this.sectors[this.LSN] = new DWDiskSector(this.LSN);
+				logger.debug("new sector " + this.LSN);
+			}
+			sectors[this.LSN].setData(data);
 			
-			diskBuf.position(pos);
-			diskBuf.put(data, 0, 256);
+			this.writes++;
+			
+			// logger.debug("write sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
+
+			
 		}
 	}
 
-	public static long long4(byte[] data) 
-	{
-		 return(((data[0] & 0xFF) << 32) + ((data[1] & 0xFF) << 16) + ((data[2] & 0xFF) << 8) + (data[3] & 0xFF));
+	public int getReads() {
+		return reads;
 	}
 
-	
-	public static long long3(byte[] data) 
-	{
-		 return((data[0] & 0xFF) << 16) + ((data[1] & 0xFF) << 8) + (data[2] & 0xFF);
+
+	public int getWrites() {
+		return writes;
 	}
 
-	
-	public static long long2(byte[] data) 
+	public synchronized int getDirtySectors() 
 	{
-		 return((data[0] & 0xFF) << 8) + (data[1] & 0xFF);
+		int drt = 0;
+		
+		for (int i=0;i<MAX_SECTORS;i++)
+		{
+			if (this.sectors[i] != null)
+			{
+				if (this.sectors[i].isDirty())
+				{
+					drt++;
+				}
+			}
+		}
+		
+		return(drt);
 	}
-
 	
-	
+	public synchronized DWDiskSector getSector(int no)
+	{
+		return(this.sectors[no]);
+	}
 }

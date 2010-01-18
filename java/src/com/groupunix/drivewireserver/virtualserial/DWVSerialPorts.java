@@ -1,30 +1,20 @@
 package com.groupunix.drivewireserver.virtualserial;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 import org.apache.log4j.Logger;
-import org.python.antlr.ast.IfDerived;
-import org.python.antlr.op.IsDerived;
-
-import com.groupunix.drivewireserver.DriveWireServer;
 
 public class DWVSerialPorts {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialPorts");
 	
+	// should move multiread toggle and max ports to config file
 	public static final int MULTIREAD_LIMIT = 4;
 	public static final int MAX_PORTS = 15;
-	public static final int MODE_TELNET = 0;
-	public static final int MODE_VMODEM = 1;
-	public static final int MODE_PTY = 2;
-	public static final int MODE_UTIL = 3;
-	public static final int MODE_DEFAULT = MODE_TELNET;
 	
 	public static final int CHUNK_SIZE = 240;
 	
@@ -32,46 +22,22 @@ public class DWVSerialPorts {
 	
 	private static int[] dataWait = new int[MAX_PORTS];
 	
-	public static void initPort(int port, int mode)
+	
+	public static void openPort(int port)
 	{
-		if (vserialPorts[port] != null)
-		{
-			// need to do clean shutdown
-			logger.debug("init req for port " + prettyPort(port) + " which is already open here" );
-			Cocoterm(port);
-			
-		}
-		
-		logger.info("init virtual serial port " + prettyPort(port) + " mode " + mode);
-		vserialPorts[port] = new DWVSerialPort(port);
-		
-		vserialPorts[port].setMode(mode);
-		
+		vserialPorts[port].open();
 	}
 
 
 	public static String prettyPort(int port) 
 	{
-		if (port < 8)
-		{
-			return("/T" + port);
-		}
-		else
-		{
-			return("/U" + (port - 8));
-		}
+		return("/N" + port);
 	}
 
 
 	public static void closePort(int port)
 	{
-		logger.info("closing virtual serial port " + prettyPort(port));
-		
-		
-		// send term
-		vserialPorts[port].term();
-		
-		
+		vserialPorts[port].close();	
 	}
 	
 
@@ -93,7 +59,7 @@ public class DWVSerialPorts {
 					
 					logger.info("sending terminated status to coco for port " + i);
 					
-					vserialPorts[i] = null;  // null our port?
+					vserialPorts[i] = new DWVSerialPort(i);
 					
 					return(response);
 				}
@@ -193,24 +159,15 @@ public class DWVSerialPorts {
 		
 		if (port < MAX_PORTS)
 		{
-			if (vserialPorts[port].isCocoinit())
+			if (vserialPorts[port].isOpen())
 			{
 				// normal write
 				vserialPorts[port].write(databyte);
 			}
-			else
-			{
-				// write to port we don't have open.. possibly due to server restart without coco restart.
-				// make the best of it by initializing the port and trying a write.. 
-				logger.info("write to non init port " + prettyPort(port) +", doing init then write");
-				initPort(port, vserialPorts[port].getMode());
-				Cocoinit(port);
-				vserialPorts[port].write(databyte);  
-			}
 		}
 		else
 		{
-			logger.error("asked to write to nonexistant port " + prettyPort(port));
+			logger.error("asked to write to nonexistant port " + port);
 		}
 		
 	}
@@ -226,60 +183,7 @@ public class DWVSerialPorts {
 		return(data);
 	}
 
-
-	public static int nextFreePort(int mode) 
-	{
-		for (int i = 0;i<MAX_PORTS;i++)
-		{
-			if (vserialPorts[i] != null)
-			{
-				if ((vserialPorts[i].getMode() == mode) && (vserialPorts[i].isCocoinit()) && (vserialPorts[i].isConnected() == false))
-				{
-					return(i);
-				}
-			}
-		}
-		
-		return(-1);
-	}
-
-	public static int numPortsMode(int mode) 
-	{
-		int tot = 0;
-		
-		for (int i = 0;i<MAX_PORTS;i++)
-		{
-			if (vserialPorts[i] != null)
-			{
-				if ((vserialPorts[i].getMode() == mode))
-						
-				{
-					tot++;
-				}
-			}
-		}
-		
-		return(tot);
-	}
 	
-	
-	public static int numConnectedPortsMode(int mode) 
-	{
-		int tot = 0;
-		
-		for (int i = 0;i<MAX_PORTS;i++)
-		{
-			if (vserialPorts[i] != null)
-			{
-				if ((vserialPorts[i].getMode() == mode) && (vserialPorts[i].isConnected() == true))
-				{
-					tot++;
-				}
-			}
-		}
-		
-		return(tot);
-	}
 	
 	
 	public static OutputStream getPortInput(int vport) 
@@ -309,197 +213,21 @@ public class DWVSerialPorts {
 		vserialPorts[vport].setConnected(false);
 	}
 
-	public static void Cocoinit(int vport) 
-	{
-		// start up handlers if needed
-		logger.debug("cocoinit " + prettyPort(vport));
-		if (DriveWireServer.config.containsKey("TelnetDefaultActionFile"))
-		{
-			vserialPorts[vport].setActionFile(DriveWireServer.config.getString("TelnetDefaultActionFile"));
-		}
-		vserialPorts[vport].setCocoinit(true);
-	}
-
-
-	public static void Cocoterm(int vport) 
-	{
-		logger.debug("cocoterm " + prettyPort(vport));
-		vserialPorts[vport].setCocoinit(false);
-		
-		if (vserialPorts[vport].getMode() == MODE_UTIL)
-		{
-			clearUtilityInputBuffer(vport);
-		}
-	}
-
-	
-
-	public static void LoadPortSet(String filename) 
-	{
-		// load port defaults
-	
-		if (filename == null)
-		{
-			return;
-		}
-			
-		logger.info("loading portset '" + filename + "'");
-			
-		File f = new File(filename);
-			
-	    FileReader fr;
-		try 
-		{
-			fr = new FileReader(f);
-		} 
-		catch (FileNotFoundException e) 
-		{
-			logger.warn("Portset file '" + filename + "' not found.");
-			return;
-		}
-			
-		BufferedReader br = new BufferedReader(fr);
-
-		String line;
-		    
-		try 
-		{
-			line = br.readLine();
-			    
-			while (line != null) 
-		    {
-				String[] parts = new String[3];
-		    	
-		    	parts = line.split(",", 4);
-		    	
-		    	int portnum = Integer.parseInt(parts[0]);
-		    	
-		    	if ((portnum >= 0) && (portnum < MAX_PORTS))
-		    	{
-		    		// port # is valid
-		    		
-		    		int mode = Integer.parseInt(parts[1]);
-		    		
-		    		if ((mode == MODE_TELNET) || (mode == MODE_VMODEM) || (mode == MODE_PTY) || (mode == MODE_UTIL))
-		    		{
-		    			// mode is valid
-		    			
-		    			initPort(portnum,mode);
-		    			
-		    			// if we have a third option
-		    			
-		    			if (parts.length > 2)
-		    			{
-		    				if (!parts[2].equals(""))
-		    				{
-		    					// password is set
-		    					vserialPorts[portnum].setPassword(parts[2]);
-		    				
-		    					logger.info("Port " + portnum +" is password protected");
-		    				}
-		    			
-		    				// a fourth option
-		    				if (parts.length > 3)
-		    				{
-		    					if (!parts[3].equals(""))
-			    				{
-			    					// password is set
-			    					vserialPorts[portnum].setActionFile(parts[3]);
-			    				
-			    					logger.info("Port " + portnum +" has action file: " + parts[3]);
-			    				}
-		    				}
-		    			}
-		    			
-		    			
-		    		}
-		    		else
-		    		{
-		    			logger.warn("invalid mode '" + parts[1] + "' for port " + portnum + " in set file");
-		    		}
-		    		
-		    	}
-		    	else
-		    	{
-		    		logger.warn("invalid port number '" + parts[0] +"' in set file");
-		    	}
-		    	
-		    	// get next line
-		    	line = br.readLine();
-			}
-		}
-		catch (IOException e1) 
-		{
-			logger.error(e1.getMessage());
-		} 
-		catch (NumberFormatException e2) 
-		{
-			logger.error(e2.getMessage());
-		} 
-		catch (ArrayIndexOutOfBoundsException e3)
-		{
-			logger.error(e3.getMessage());
-		}
-		finally
-		{
-			try 
-			{
-				br.close();
-				fr.close();
-			} 
-			catch (IOException e) 
-			{
-				logger.warn(e.getMessage());
-			}
-		}
-		
-	}
-
-
-	public static boolean isEnabled(int port)
-	{
-		if (vserialPorts[port] != null)
-		{
-			return(true);
-		}
-		return(false);
-	}
 
 	public static boolean isConnected(int port)
 	{
-		if (vserialPorts[port] != null)
-		{
-			return(vserialPorts[port].isConnected());
-		}
-		return(false);
+		return(vserialPorts[port].isConnected());
 	}
 
-	public static int getMode(int port)
-	{
-		if (vserialPorts[port] != null)
-		{
-			return(vserialPorts[port].getMode());
-		}
-		return(-1);
-	}
-	
 	
 	public static String getHostIP(int port) 
 	{
-		if (vserialPorts[port] != null)
-		{
-			return(vserialPorts[port].getHostIP());
-		}
-		return("unknown");
+		return(vserialPorts[port].getHostIP());
 	}
 
 	public static int getHostPort(int port) 
 	{
-		if (vserialPorts[port] != null)
-		{
-			return(vserialPorts[port].getHostPort());
-		}
-		return(-1);
+		return(vserialPorts[port].getHostPort());
 	}
 
 
@@ -515,41 +243,12 @@ public class DWVSerialPorts {
 	}
 
 
-	public static boolean isCocoInit(int port) 
-	{
-		if (vserialPorts[port] != null)
-		{
-			return(vserialPorts[port].isCocoinit());
-		}
-		return(false);
-	}
-
 	public static void setUtilMode(int port, int mode)
 	{
-		if (vserialPorts[port] != null)
-		{
-			vserialPorts[port].setUtilMode(mode);
-		}
+		vserialPorts[port].setUtilMode(mode);
 	}
 	
-	public static String prettyMode(int mode)
-	{
-		switch(mode)
-		{
-			case 0:
-				return("telnet");
-			case 1:
-				return("vmodem");
-			case 2:
-				return("psuedo tty");
-			case 3:
-				return("utility");
-		}
 		
-		return("unknown");
-	}
-	
-	
 	public static void writeSections(int port, String data) 
 	{
 		String dataleft = data;
@@ -595,137 +294,139 @@ public class DWVSerialPorts {
 	public static void write(int port, String str)
 	{
 		
-		try 
-		{
-			getPortInput(port).write(str.getBytes());
-		} 
-		catch (IOException e) 
-		{
-			logger.error("IO error writing to port " + prettyPort(port));
-		}
-	}
-
-
-	public static String getActionFile(int port) 
-	{
-		if (vserialPorts[port] != null)
-		{
-			return(vserialPorts[port].getActionFile());
-		}
+			vserialPorts[port].writeM(str);
 		
-		return(null);
 	}
+
 	
 	
 	public static void setPD_INT(int port, byte pD_INT) 
 	{
-		if (vserialPorts[port] != null)
-		{
-			vserialPorts[port].setPD_INT(pD_INT);
-		}
-		
+		vserialPorts[port].setPD_INT(pD_INT);
 	}
 
 
 
 	public static byte getPD_INT(int port) 
 	{
-		if (vserialPorts[port] != null)
-		{
-			return(vserialPorts[port].getPD_INT());
-		}
-		return(0);
+		return(vserialPorts[port].getPD_INT());
 	}
 
 
 
 	public static void setPD_QUT(int port, byte pD_QUT) 
 	{
-		if (vserialPorts[port] != null)
-		{
-			vserialPorts[port].setPD_QUT(pD_QUT);
-		}
+		vserialPorts[port].setPD_QUT(pD_QUT);
 	}
 
 
 
 	public static byte getPD_QUT(int port) 
 	{
-		if (vserialPorts[port] != null)
-		{
-			return(vserialPorts[port].getPD_QUT());
-		}
-		return(0);
+		return(vserialPorts[port].getPD_QUT());
 	}
 
 
-	public static void clearUtilityInputBuffer(int port) 
-	{
-		if (vserialPorts[port] != null)
-		{
-			vserialPorts[port].clearUtilityInputBuffer();
-		}
-	}
 
 
 
 
 	public static void sendUtilityFailResponse(int vport, int code, String txt) 
 	{
-		if (vserialPorts[vport] != null)
-		{
-			vserialPorts[vport].sendUtilityFailResponse(code, txt);
-		}
+		logger.debug("API FAIL: port " + vport + " code " + code + ": " + txt);
+		vserialPorts[vport].sendUtilityFailResponse(code, txt);
 	}
 
 
 	public static void sendUtilityOKResponse(int vport, String txt) 
 	{
-		if (vserialPorts[vport] != null)
-		{
-			vserialPorts[vport].sendUtilityOKResponse(txt);
-		}
-		
+		logger.debug("API OK: port " + vport + ": " + txt);
+		vserialPorts[vport].sendUtilityOKResponse(txt);
 	}
 
 
 	public static int bytesWaiting(int vport) 
 	{
-		if (vserialPorts[vport] != null)
-		{
-			return(vserialPorts[vport].bytesWaiting());
-		}
-		return(0);
+		return(vserialPorts[vport].bytesWaiting());
+	}
+
+	
+
+	public static void setDD(byte vport, byte[] devdescr)
+	{
+		vserialPorts[vport].setDD(devdescr);
 	}
 
 
 	public static void resetAllPorts() 
 	{
-		// shut em down
+		logger.debug("Resetting all virtual serial ports");
+		vserialPorts = new DWVSerialPort[MAX_PORTS];
 		for (int i = 0;i<MAX_PORTS;i++)
 		{
-			if (vserialPorts[i] != null)
-			{
-				Cocoterm(i);
-				vserialPorts[i] = null;
-			}
+			vserialPorts[i] = new DWVSerialPort(i);
 		}
 	}
-	// For use with the web UI
-	public static boolean getActionFileDefined(int port) {
-		boolean isDefined = false;
-		if (vserialPorts[port] == null)
-			isDefined = false;
-		else
-			isDefined = true;
-		return isDefined;
+
+
+	public static boolean isOpen(int vport) 
+	{
+		return(vserialPorts[vport].isOpen());
 	}
-	// For use with the web UI
-	public static boolean isPasswordRequired(int port) {
-		if (vserialPorts[port] != null) {
-			return vserialPorts[port].isPasswordRequired();	
-		}
-		return false;
-		
+
+
+	public static int getOpen(int i) 
+	{
+		return(vserialPorts[i].getOpen());
+	}
+
+
+	public static byte[] getDD(int i)
+	{
+		return(vserialPorts[i].getDD());
+	}
+
+
+	public static void setUserName(int vport, String username) 
+	{
+		vserialPorts[vport].setUserName(username);
+	}
+
+	public static String getUserName(int vport)
+	{
+		return(vserialPorts[vport].getUserName());
+	}
+	
+
+	public static void setUserGroup(int vport, int parseInt) 
+	{
+		vserialPorts[vport].setUserGroup(parseInt);
+	}
+
+	public static int getUserGroup(int vport)
+	{
+		return(vserialPorts[vport].getUserGroup());
+	}
+
+
+	public static void setSocket(int vport, ServerSocket skt) 
+	{
+		vserialPorts[vport].setSocket(skt);
+	}
+	
+	public static void setSocket(int vport, Socket skt) 
+	{
+		vserialPorts[vport].setSocket(skt);
+	}
+
+
+	public static void writeToCoco(int vport, byte databyte) 
+	{
+		vserialPorts[vport].writeToCoco(databyte);
+	}
+	
+	public static void writeToCoco(int vport, String str) 
+	{
+		vserialPorts[vport].writeToCoco(str);
 	}
 }

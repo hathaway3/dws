@@ -14,6 +14,104 @@ public class DWVModemConnThread implements Runnable {
 	private int clientPort = -1;
 	private int vport = -1;
 	
+	 /**
+	    * The Telnet command code IAC (255)
+	    */
+	   
+	public static final int IAC = 255;
+
+	   /**
+	    * The Telnet command code SE (240)
+	    */
+	   
+	public static final int SE = 240;
+
+	   /**
+	    * The Telnet command code NOP (241)
+	    */
+	public static final int NOP = 241;
+
+	   /**
+	    * The Telnet command code DM (242)
+	    */
+	   
+	public static final int DM = 242;
+
+	   /**
+	    * The Telnet command code BREAK (243)
+	    */
+	   
+	public static final int BREAK = 243;
+
+	   /**
+	    * The Telnet command code IP (244)
+	    */
+	   
+	public static final int IP = 244;
+
+	   /**
+	    * The Telnet command code AO (245)
+	    */
+	   
+	public static final int AO = 245;
+
+	   /**
+	    * The Telnet command code IAC (246)
+	    */
+	   
+	public static final int AYT = 246;
+
+	   /**
+	    * The Telnet command code EC (247)
+	    */
+	   
+	public static final int EC = 247;
+
+	   /**
+	    * The Telnet command code EL (248)
+	    */
+	   
+	public static final int EL = 248;
+
+	   /**
+	    * The Telnet command code GA (249)
+	    */
+	   
+	public static final int GA = 249;
+
+	   /**
+	    * The Telnet command code SB (250)
+	    */
+	   
+	public static final int SB = 250;
+
+	   /**
+	    * The Telnet command code WILL (251)
+	    */
+	   
+	public static final int WILL = 251;
+
+	   /**
+	    * The Telnet command code WONT (252)
+	    */
+	   
+	public static final int WONT = 252;
+
+	   /**
+	    * The Telnet command code DO (253)
+	    */
+	   
+	public static final int DO = 253;
+
+	   /**
+	    * The Telnet command code DONT (254)
+	    */
+	   
+	public static final int DONT = 254;
+	
+	
+	
+	
 	public DWVModemConnThread(int vport, String host, int tcpport) 
 	{
 		this.vport = vport;
@@ -34,17 +132,73 @@ public class DWVModemConnThread implements Runnable {
 			DWVSerialPorts.markConnected(vport);
 			DWVSerialPorts.setPortOutput(vport, skt.getOutputStream());
 				
-			int lastbyte = 0;
+			//int lastbyte = 0;
 				
+			int telmode = 0;
+			
 			while (skt.isConnected())
 			{
-			
 				int data = skt.getInputStream().read();
+				
 				if (data >= 0)
 				{
-					// write it to the serial port
-					DWVSerialPorts.getPortInput(vport).write((byte) data);
-					lastbyte = data;
+					// telnet stuff
+					if (telmode == 1)
+					{
+						switch(data)
+						{
+						  	case SE:
+						  	case NOP:
+						  	case DM:
+						  	case BREAK:
+						  	case IP:
+						  	case AO:
+						  	case AYT:
+						  	case EC:
+						  	case EL:
+						  	case GA:
+						  	case SB:
+						  		
+						  		break;
+						  		
+						  	case WILL:
+						  		data = skt.getInputStream().read();
+					        	skt.getOutputStream().write(255);
+					        	skt.getOutputStream().write(DONT);
+					        	skt.getOutputStream().write(data);
+					        	break;
+					        	
+					        case WONT:
+					        case DONT:
+					        	data = skt.getInputStream().read();
+					        	break;
+					        	
+					        case DO:
+					        	data = skt.getInputStream().read();
+					        	skt.getOutputStream().write(255);
+					        	skt.getOutputStream().write(WONT);
+					        	skt.getOutputStream().write(data);
+					        	break;
+						
+					        	
+						}
+						telmode  = 0;
+					}
+					switch(data)
+					{
+						case IAC:
+							telmode = 1;
+							break;
+						
+						default:
+							// write it to the serial port
+							DWVSerialPorts.getPortInput(vport).write((byte) data);
+			         
+			        	   
+					}
+					
+					
+				
 				}
 				else
 				{
