@@ -5,6 +5,10 @@
 	<ui:style>
     	.labelbox { padding-right: 10px; }
     	.drivestatuscontainer { padding: 10px; }
+    	.logcontainer { 
+    		padding: 10px;
+    		align: left; 
+    	}
     	.logtext { 	
     		font-family: monospace;
 			font-style: normal;
@@ -73,7 +77,8 @@
 			</g:HorizontalPanel>
 			
 		</g:VerticalPanel>
-		<g:VerticalPanel ui:field="rightPanel">
+		
+		<g:VerticalPanel addStyleNames='{style.logcontainer}'>
 			<g:HTML ui:field="logLines" addStyleNames='{style.logtext}'></g:HTML>
 			<g:HTML><P></P></g:HTML>
 			

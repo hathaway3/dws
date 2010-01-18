@@ -176,7 +176,7 @@ public class Status extends Composite {
 
 	private static void updateLogLines() 
 	{
-		int numberOfLines = 20;
+		int numberOfLines = 30;
 		DriveWireGWT.driveWireService.getLogFileData(numberOfLines, new AsyncCallback<ArrayList<String>>() {
 
 			public void onFailure(Throwable caught) {
