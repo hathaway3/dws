@@ -15,6 +15,11 @@ public class DriveListData implements IsSerializable {
 	private long diskSectors;
 	private int driveNumber;
 	private String diskName;
+	private int LSN;
+	private int reads;
+	private int writes;
+	private int dirty;
+	
 	public DriveListData() {
 		// TODO Auto-generated constructor stub
 	}
@@ -24,12 +29,17 @@ public class DriveListData implements IsSerializable {
 	 * @param writeProtect
 	 * @param diskName 
 	 */
-	public DriveListData(String fileName, boolean writeProtect, int driveNumber, String diskName) {
+	public DriveListData(String fileName, boolean writeProtect, int driveNumber, String diskName, int LSN, int reads, int writes, int dirty) 
+	{
 		super();
 		this.fileName = fileName;
 		this.writeProtect = writeProtect;
 		this.driveNumber = driveNumber;
 		this.diskName = diskName;
+		this.setLSN(LSN);
+		this.setReads(reads);
+		this.setWrites(writes);
+		this.setDirty(dirty);
 	}
 
 	/**
@@ -78,5 +88,45 @@ public class DriveListData implements IsSerializable {
 	}
 	public void setDiskName(String diskName) {
 		this.diskName = diskName;
+	}
+
+	public void setLSN(int lSN)
+	{
+		this.LSN = lSN;
+	}
+
+	public int getLSN()
+	{
+		return LSN;
+	}
+
+	public void setReads(int reads)
+	{
+		this.reads = reads;
+	}
+
+	public int getReads()
+	{
+		return reads;
+	}
+
+	public void setWrites(int writes)
+	{
+		this.writes = writes;
+	}
+
+	public int getWrites()
+	{
+		return writes;
+	}
+
+	public void setDirty(int dirty)
+	{
+		this.dirty = dirty;
+	}
+
+	public int getDirty()
+	{
+		return dirty;
 	}
 }

@@ -14,9 +14,11 @@
 			
 				<g:VerticalPanel addStyleNames='{style.labelbox}'>
 								
-					<g:Label>Server version:</g:Label>
-					
 					<g:Label>Last OpCode:</g:Label>
+					
+					<g:Label>Last GetStat:</g:Label>
+					
+					<g:Label>Last SetStat:</g:Label>
 					
 					<g:Label>Last LSN:</g:Label>
 					
@@ -26,11 +28,13 @@
 				</g:VerticalPanel>
 					
 				<g:VerticalPanel>
-				
-					<g:Label ui:field="version"></g:Label>
-				
+					
 					<g:Label ui:field="lastOpCode"></g:Label>
 				
+					<g:Label ui:field="lastGetStat"></g:Label>
+					
+					<g:Label ui:field="lastSetStat"></g:Label>
+					
 					<g:Label ui:field="lastLsn"></g:Label>
 				
 					<g:Label ui:field="lastDrive"></g:Label>
@@ -40,43 +44,17 @@
 				
 			</g:HorizontalPanel>
 			
-			<g:HorizontalPanel ui:field="sectorsPanel">
-				<g:VerticalPanel>
-					<g:HTML>&nbsp;</g:HTML>
-					<g:Label>Read:</g:Label>
-					<g:Label>Write:</g:Label>
-				</g:VerticalPanel>
-				<g:VerticalPanel>
-					<g:Label>Sectors</g:Label>
-					<g:Label ui:field="readSectors"></g:Label>
-					<g:Label ui:field="writeSectors"></g:Label>
-				</g:VerticalPanel>			
-				<g:VerticalPanel>
-					<g:Label>Retries</g:Label>
-					<g:Label ui:field="readRetries"></g:Label>
-					<g:Label ui:field="writeRetries"></g:Label>
-				</g:VerticalPanel>			
-				<g:VerticalPanel>
-					<g:Label>Good</g:Label>
-					<g:Label ui:field="readGood"></g:Label>
-					<g:Label ui:field="writeGood"></g:Label>
-				</g:VerticalPanel>			
+			<g:HorizontalPanel ui:field="driveStatusPanel">
+				<g:FlexTable ui:field="driveStatusFlexTable"></g:FlexTable>
 			</g:HorizontalPanel>
+
 			<g:HorizontalPanel>
-				<g:Label>Last GetStat:</g:Label>
-				<g:Label ui:field="lastGetStat"></g:Label>
-			</g:HorizontalPanel>
-			<g:HorizontalPanel>
-				<g:Label>Last SetStat:</g:Label>
-				<g:Label ui:field="lastSetStat"></g:Label>
-			</g:HorizontalPanel>
-			<g:HorizontalPanel>
-				<g:Label>Device:</g:Label>
+				<g:Label>Device: </g:Label>
+				<g:HTML>&nbsp;</g:HTML>
 				<g:Label ui:field="device"></g:Label>
-			</g:HorizontalPanel>
-			<g:HorizontalPanel>
-				<g:Label>Model:</g:Label>
+				<g:HTML>&nbsp;(</g:HTML>
 				<g:Label ui:field="model"></g:Label>
+				<g:HTML>&nbsp;)</g:HTML>
 			</g:HorizontalPanel>
 			
 		</g:VerticalPanel>

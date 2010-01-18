@@ -47,7 +47,6 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		sd.setSectorsWritten(DWProtocolHandler.getSectorsWritten());
 		sd.setWriteRetries(DWProtocolHandler.getWriteRetries());
 		sd.setModel(DriveWireServer.getCocoModel());
-		// Need to add the rest of the getters and setters.
 		sd.setDevice(DriveWireServer.getPortName());
 		sd.setVersion(new VersionData(DriveWireServer.DWServerVersion, DriveWireServer.DWServerVersionDate));
 		return sd;
@@ -173,6 +172,10 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 				dld.setWriteProtect(DWProtocolHandler.getDiskDrives().getWriteProtect(drive));
 				dld.setDiskSectors(DWProtocolHandler.getDiskDrives().getDiskSectors(drive));
 				dld.setDiskName(DWProtocolHandler.getDiskDrives().getDiskName(drive));
+				dld.setLSN(DWProtocolHandler.getDiskDrives().getLSN(drive));
+				dld.setReads(DWProtocolHandler.getDiskDrives().getReads(drive));
+				dld.setWrites(DWProtocolHandler.getDiskDrives().getWrites(drive));
+				dld.setDirty(DWProtocolHandler.getDiskDrives().getDirtySectors(drive));
 				adld.add(dld);
 				
 			}
@@ -210,7 +213,8 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	}
 	@Override
 	public String setPort(String port) {
-		DWProtocolHandler.setPort(port);
+		// should never call setPort like this, will do something better eventually
+		// DWProtocolHandler.setPort(port);
 		return ("Success");
 	}
 

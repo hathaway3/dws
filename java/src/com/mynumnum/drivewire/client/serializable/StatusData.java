@@ -25,6 +25,7 @@ public class StatusData implements IsSerializable {
 	private int model = 0;
 	private VersionData version;
 	
+	
 	public StatusData(byte lastDrive, int readRetries, int writeRetries,
 			int sectorsRead, int sectorsWritten, String lastOpcode,
 			String lastGetStat, String lastSetStat, int lastChecksum,

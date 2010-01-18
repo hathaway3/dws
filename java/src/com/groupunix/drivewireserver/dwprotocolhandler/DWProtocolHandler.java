@@ -1488,8 +1488,6 @@ public class DWProtocolHandler implements Runnable
 		setSerialParams(serialPort);
 	}
 
-
-
 	
 }
 	

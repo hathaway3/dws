@@ -90,7 +90,7 @@ public class DWVPortTCPListenerThread implements Runnable
 				int conno = DWVPortListenerPool.addConn(skt);
 			
 				// announce new connection to listener
-				DWVSerialPorts.write(this.vport, conno + " " + this.tcpport + " " +  skt.getInetAddress().getHostAddress() + (char) 13);		
+				DWVSerialPorts.writeToCoco(this.vport, conno + " " + this.tcpport + " " +  skt.getInetAddress().getHostAddress() + (char) 13);		
 			}
 			else if (mode ==2)
 			{
