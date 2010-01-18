@@ -557,7 +557,7 @@ public class DWVModem {
 	
 	private void write(String str)
 	{
-		DWVSerialPorts.write(this.vport, str);
+		DWVSerialPorts.writeToCoco(this.vport, str);
 	}
 
 
