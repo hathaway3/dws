@@ -5,6 +5,20 @@
 	<ui:style>
     	.labelbox { padding-right: 10px; }
     	.drivestatuscontainer { padding: 10px; }
+    	.logtext { 	
+    		font-family: monospace;
+			font-style: normal;
+			font-variant: normal;
+			font-weight: normal;
+			font-size: small;
+			line-height: 100%;
+			word-spacing: normal;
+			letter-spacing: normal;
+			text-decoration: none;
+			text-transform: none;
+			text-align: left;
+			text-indent: 0ex;
+    		}
 	</ui:style>	
 	
 	<g:HorizontalPanel ui:field="mainPanel">
@@ -57,13 +71,12 @@
 			<g:HorizontalPanel ui:field="driveStatusPanel" addStyleNames='{style.drivestatuscontainer}'>
 				<g:FlexTable ui:field="driveStatusFlexTable"></g:FlexTable>
 			</g:HorizontalPanel>
-
 			
 		</g:VerticalPanel>
 		<g:VerticalPanel ui:field="rightPanel">
-			<g:TextArea ui:field="logLines"></g:TextArea>
-			<g:HTML>&nbsp;</g:HTML>
-			<g:HTML>&nbsp;</g:HTML>
+			<g:HTML ui:field="logLines" addStyleNames='{style.logtext}'></g:HTML>
+			<g:HTML><P></P></g:HTML>
+			
 			<g:Button ui:field="viewLog">View Log...</g:Button>
 	
 		</g:VerticalPanel>

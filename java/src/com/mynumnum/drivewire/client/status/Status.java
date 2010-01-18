@@ -18,6 +18,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
@@ -55,7 +57,7 @@ public class Status extends Composite {
 	
 	@UiField
 	static
-	TextArea logLines;
+	HTML logLines;
 	
 	@UiConstructor
 	public Status() {
@@ -174,7 +176,7 @@ public class Status extends Composite {
 
 	private static void updateLogLines() 
 	{
-		int numberOfLines = 50;
+		int numberOfLines = 20;
 		DriveWireGWT.driveWireService.getLogFileData(numberOfLines, new AsyncCallback<ArrayList<String>>() {
 
 			public void onFailure(Throwable caught) {
@@ -188,10 +190,11 @@ public class Status extends Composite {
 				
 				for (String logline : result) 
 				{
-					lines += logline;
+					lines += logline + "<BR>";
 				}
 				
-				logLines.setText(lines);
+				logLines.setHTML(lines);
+				
 			}
 			
 		});
