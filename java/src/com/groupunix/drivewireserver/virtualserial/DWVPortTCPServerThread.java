@@ -16,12 +16,14 @@ public class DWVPortTCPServerThread implements Runnable {
 	private Socket skt; 
 	private int conno;
 	private boolean wanttodie = false;
+	private int mode = 0;
 	
 	public DWVPortTCPServerThread(int vport, int conno)
 	{
 		logger.debug("init tcp server thread for conn " + conno);	
 		this.vport = vport;
 		this.conno = conno;
+		this.mode = DWVPortListenerPool.getMode(conno);
 		this.skt = DWVPortListenerPool.getConn(conno);
 		
 	}
@@ -34,7 +36,36 @@ public class DWVPortTCPServerThread implements Runnable {
 		logger.debug("run");
 		
 		// connection mode
+		if (mode == 1)
+		{
+			// telnet processing
 			
+			// ask telnet to turn off echo, should probably be a setting or left to the client
+			byte[] buf = new byte[9];
+			
+			buf[0] = (byte) 255;
+			buf[1] = (byte) 251;
+			buf[2] = (byte) 1;
+			buf[3] = (byte) 255;
+			buf[4] = (byte) 251;
+			buf[5] = (byte) 3;
+			buf[6] = (byte) 255;
+			buf[7] = (byte) 253;
+			buf[8] = (byte) 243;
+			
+			try
+			{
+				skt.getOutputStream().write(buf, 0, 9);
+			} catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+		}
+		
+		
 		// set pass through mode
 		DWVSerialPorts.markConnected(vport);	
 		try {
@@ -46,6 +77,8 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 		while ((wanttodie == false) && (skt.isClosed() == false) && (DWVSerialPorts.isOpen(this.vport)))
 		{
+			int lastbyte = -1;
+			
 			try 
 			{
 				int tcpAvail = skt.getInputStream().available();
@@ -67,7 +100,21 @@ public class DWVPortTCPServerThread implements Runnable {
 					}
 					else
 					{
-						DWVSerialPorts.write1(this.vport,(byte)databyte);
+						if (mode == 1)
+						{
+							// filter CR/LF.. should really do this in the client or at least make it a setting
+							if (!((lastbyte == 13) && ((databyte == 10) || (databyte == 0))))
+							{
+								// write it to the serial port
+								DWVSerialPorts.write1(this.vport,(byte)databyte);
+								lastbyte = databyte;
+							}
+						}
+						else
+						{
+						
+							DWVSerialPorts.write1(this.vport,(byte)databyte);
+						}
 					}
 				}
 			} 

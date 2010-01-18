@@ -75,8 +75,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	}
 	// TODO Need method created in DriveWireServer that can return this data
 	public ArrayList<String> getLogFileData(int numberOfLines) {
-		// return DriveWireServer.getLogFileData(numberOfLines);
-		return null;
+		return(DriveWireServer.getLogEvents(numberOfLines));
 	}
 	// TODO need a method in DriveWireServer that can reset the log file.
 	public String resetLogFile() {

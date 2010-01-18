@@ -7,6 +7,7 @@ import gnu.io.UnsupportedCommOperationException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -376,6 +377,11 @@ public class DriveWireServer
 		// replace appender
 		attachFileAppender(config.getString("LogFile") );
 		
+	}
+	
+	public static ArrayList<String> getLogEvents(int num)
+	{
+		return(dwAppender.getLastEvents(num));
 	}
 	
 }

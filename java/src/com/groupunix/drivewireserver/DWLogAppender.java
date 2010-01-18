@@ -46,31 +46,22 @@ public class DWLogAppender extends AppenderSkeleton
 		}
 	}
 
-	public String[] getLastEvents(int num)
+	public ArrayList<String> getLastEvents(int num)
 	{
+		ArrayList<String> eventstxt = new ArrayList<String>();
+		int start = 0;
 		
 		if (events.size() > num)
 		{
-			String[] eventstxt = new String[num];
-			for (int i = (events.size() - num);i<events.size();i++)
-			{
-				eventstxt[i - (events.size() - num)] = events.get(i).toString();
-			}
-			
-			return(eventstxt);
-		}
-		else
-		{
-			String[] eventstxt = new String[events.size()];
-
-			for (int i = 0; i<events.size();i++)
-			{
-				eventstxt[i] = events.get(i).toString();
-			}
-			
-			return(eventstxt);
+			start = events.size() - num;
 		}
 		
+		for (int i = start;i<events.size();i++)
+		{
+			eventstxt.add(events.get(i).toString());
+		}
+		
+		return(eventstxt);
 	}
 	
 	public void close()
