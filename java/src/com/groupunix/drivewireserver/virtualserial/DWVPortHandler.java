@@ -238,7 +238,7 @@ public class DWVPortHandler
 	public void respondOk(String txt) 
 	{
 		logger.debug("command ok: " + txt);
-		DWVSerialPorts.write(this.vport, "OK " + txt + (char) 13);
+		DWVSerialPorts.writeToCoco(this.vport, "OK " + txt + (char) 13);
 	}
 	
 	
@@ -246,7 +246,7 @@ public class DWVPortHandler
 	{
 		String perrno = String.format("%03d", errno);
 		logger.debug("command failed: " + perrno + " " + txt);
-		DWVSerialPorts.write(this.vport, "FAIL " + perrno + " " + txt + (char) 13);
+		DWVSerialPorts.writeToCoco(this.vport, "FAIL " + perrno + " " + txt + (char) 13);
 	}
 	
 }

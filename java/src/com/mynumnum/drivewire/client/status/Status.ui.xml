@@ -4,7 +4,7 @@
 	
 	<ui:style>
     	.labelbox { padding-right: 10px; }
-    	
+    	.drivestatuscontainer { padding: 10px; }
 	</ui:style>	
 	
 	<g:HorizontalPanel ui:field="mainPanel">
@@ -13,6 +13,8 @@
 			<g:HorizontalPanel>
 			
 				<g:VerticalPanel addStyleNames='{style.labelbox}'>
+					
+					<g:Label>Device: </g:Label>	
 								
 					<g:Label>Last OpCode:</g:Label>
 					
@@ -29,6 +31,13 @@
 					
 				<g:VerticalPanel>
 					
+					<g:HorizontalPanel>
+						<g:Label ui:field="device"></g:Label>
+						<g:HTML>&nbsp;(</g:HTML>
+						<g:Label ui:field="model"></g:Label>
+						<g:HTML>&nbsp;)</g:HTML>
+					</g:HorizontalPanel>
+					
 					<g:Label ui:field="lastOpCode"></g:Label>
 				
 					<g:Label ui:field="lastGetStat"></g:Label>
@@ -39,31 +48,24 @@
 				
 					<g:Label ui:field="lastDrive"></g:Label>
 				
+					
 						
 				</g:VerticalPanel>
 				
 			</g:HorizontalPanel>
 			
-			<g:HorizontalPanel ui:field="driveStatusPanel">
+			<g:HorizontalPanel ui:field="driveStatusPanel" addStyleNames='{style.drivestatuscontainer}'>
 				<g:FlexTable ui:field="driveStatusFlexTable"></g:FlexTable>
 			</g:HorizontalPanel>
 
-			<g:HorizontalPanel>
-				<g:Label>Device: </g:Label>
-				<g:HTML>&nbsp;</g:HTML>
-				<g:Label ui:field="device"></g:Label>
-				<g:HTML>&nbsp;(</g:HTML>
-				<g:Label ui:field="model"></g:Label>
-				<g:HTML>&nbsp;)</g:HTML>
-			</g:HorizontalPanel>
 			
 		</g:VerticalPanel>
 		<g:VerticalPanel ui:field="rightPanel">
+			<g:TextArea ui:field="logLines"></g:TextArea>
 			<g:HTML>&nbsp;</g:HTML>
 			<g:HTML>&nbsp;</g:HTML>
 			<g:Button ui:field="viewLog">View Log...</g:Button>
-			<g:HTML>&nbsp;</g:HTML>
-			<g:Button ui:field="reset">Reset</g:Button>
+	
 		</g:VerticalPanel>
 	</g:HorizontalPanel>
 </ui:UiBinder> 

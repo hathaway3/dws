@@ -21,6 +21,7 @@ import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.mynumnum.drivewire.client.DriveWireGWT;
@@ -51,6 +52,10 @@ public class Status extends Composite {
 	@UiField
 	static
 	FlexTable driveStatusFlexTable;
+	
+	@UiField
+	static
+	TextArea logLines;
 	
 	@UiConstructor
 	public Status() {
@@ -83,6 +88,7 @@ public class Status extends Composite {
 		lastSetStat.setText(result.getLastSetStat());
 		device.setText(result.getDevice());
 		updateDriveStatusTable();
+		updateLogLines();
 	}
 
 	private void defineTimer() {
@@ -127,22 +133,7 @@ public class Status extends Composite {
 	
 	// This will handle the click of the reset button by sending an RPC
 	// request to the server to reset the log file
-	@UiHandler("reset")
-	void onClick(ClickEvent e) {
-		// Issue a log file reset request to the server using GWT RPC.
-		DriveWireGWT.driveWireService.resetLogFile(new AsyncCallback<String>() {
 
-			public void onFailure(Throwable caught) {
-				Common.showErrorMessage(caught.toString());
-				
-			}
-
-			public void onSuccess(String result) {
-				// Nothing to do here
-				
-			}
-		});
-	}
 	
 	// This will handle the click request to display log results
 	// it will request x number of rows from the log file and display
@@ -181,6 +172,32 @@ public class Status extends Composite {
 		
 	}
 
+	private static void updateLogLines() 
+	{
+		int numberOfLines = 50;
+		DriveWireGWT.driveWireService.getLogFileData(numberOfLines, new AsyncCallback<ArrayList<String>>() {
+
+			public void onFailure(Throwable caught) {
+				Common.showErrorMessage(caught.toString());
+
+			}
+
+			public void onSuccess(ArrayList<String> result) 
+			{
+				String lines = new String();
+				
+				for (String logline : result) 
+				{
+					lines += logline;
+				}
+				
+				logLines.setText(lines);
+			}
+			
+		});
+		
+	}
+	
 	private static void updateDriveStatusTable() {
 		DriveWireGWT.driveWireService.getDrivesList(new AsyncCallback<ArrayList<DriveListData>>() {
 

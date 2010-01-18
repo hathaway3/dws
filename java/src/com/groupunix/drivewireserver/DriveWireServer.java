@@ -32,7 +32,7 @@ public class DriveWireServer
 	public static Logger logger = Logger.getLogger("DWServer");
 	private static FileAppender fileAppender = null;
 	private static ConsoleAppender consoleAppender = null;
-	
+	private static DWLogAppender dwAppender = null;
 	
 	public static PropertiesConfiguration config = new PropertiesConfiguration();
 	
@@ -73,6 +73,7 @@ public class DriveWireServer
     		logLayout = new PatternLayout(config.getString("LogFormat"));
     	}
     	
+    	dwAppender = new DWLogAppender(logLayout);
     	    	
     	if (config.getBoolean("LogToConsole", true))
     	{
