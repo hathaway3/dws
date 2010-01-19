@@ -2,11 +2,20 @@ package com.groupunix.drivewireserver.virtualserial;
 
 
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
 
 
 import org.apache.log4j.Logger;
+import org.jasypt.util.password.BasicPasswordEncryptor;
+
+import com.groupunix.drivewireserver.DriveWireServer;
 
 public class DWVPortTCPServerThread implements Runnable {
 
@@ -17,6 +26,9 @@ public class DWVPortTCPServerThread implements Runnable {
 	private int conno;
 	private boolean wanttodie = false;
 	private int mode = 0;
+	
+
+	
 	
 	public DWVPortTCPServerThread(int vport, int conno)
 	{
@@ -33,51 +45,8 @@ public class DWVPortTCPServerThread implements Runnable {
 	{
 		Thread.currentThread().setName("tcpserv-" + Thread.currentThread().getId());
 		
-		logger.debug("run");
-		
-		// connection mode
-		if (mode == 1)
-		{
-			// telnet processing
-			
-			logger.debug("sending telnet init commands");
-			
-			try
-			{
-			
-				// ask telnet to turn off echo, should probably be a setting or left to the client
-				byte[] buf = new byte[9];
-			
-				buf[0] = (byte) 255;
-				buf[1] = (byte) 251;
-				buf[2] = (byte) 1;
-				buf[3] = (byte) 255;
-				buf[4] = (byte) 251;
-				buf[5] = (byte) 3;
-				buf[6] = (byte) 255;
-				buf[7] = (byte) 253;
-				buf[8] = (byte) 243;
-			
-			
-				skt.getOutputStream().write(buf, 0, 9);
-			
-				// 	read back the echoed controls - TODO has issues
-			
-				for (int i = 0; i<9; i++)
-				{
-					skt.getInputStream().read();
-				}
+		logger.debug("run for conn " + this.conno);
 				
-			} 
-			catch (IOException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-		}
-		
-		
 		// set pass through mode
 		DWVSerialPorts.markConnected(vport);	
 		try {
@@ -190,6 +159,11 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 		logger.debug("thread exiting");
 	}	
+	
+	
+	
+	
+	
 }
 
 	

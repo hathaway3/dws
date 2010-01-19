@@ -1299,10 +1299,14 @@ public class DWProtocolHandler implements Runnable
 				result = "SS.WFM";
 				break;
 
-			case 0x18:
+			case 0x18: 
 				result = "SS.RFM";
 				break;
-
+			
+			case 0x1A:
+				result = "SS.SSig";
+				break;
+				
 			case 0x1B:
 				result = "SS.Relea";
 				break;

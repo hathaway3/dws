@@ -84,13 +84,19 @@ public class DWVPortTCPListenerThread implements Runnable
 			
 			logger.info("new connection from " + skt.getInetAddress().getHostAddress());
 			
-			if ((mode == 1) || (mode == 0))
+			if (mode == 0)
 			{
-				// add connection to pool
+				//add connection to pool
 				int conno = DWVPortListenerPool.addConn(skt, mode);
-			
+
 				// announce new connection to listener
 				DWVSerialPorts.writeToCoco(this.vport, conno + " " + this.tcpport + " " +  skt.getInetAddress().getHostAddress() + (char) 13);		
+			}
+			else if (mode == 1)
+			{
+				// run telnet preflight, let it add the connection to the pool if things work out
+				Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.vport, skt));
+				pfthread.start();
 			}
 			else if (mode ==2)
 			{
