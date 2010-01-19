@@ -20,10 +20,9 @@ public class Jetty {
 	}
 
 	private void startWebInterface(int webPort) {
+		
 		Server server = new Server(webPort);
-		
-		System.setProperty("DEBUG", "true");
-		
+
 		String webDir = Jetty.class.getClassLoader().getResource(PACKAGE_BASE).toExternalForm();
 		try {
 			webDir = webDir.substring(0, webDir.lastIndexOf("WEB-INF/classes/" + PACKAGE_BASE));
