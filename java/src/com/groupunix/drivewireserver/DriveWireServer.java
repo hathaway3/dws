@@ -113,8 +113,9 @@ public class DriveWireServer
 		if (config.getBoolean("UseGUI", false))
 		{
 			// Start up the web interface.
-			logger.debug("Starting Jetty (Web UI) on port " + config.getInt("GUIPort",8080));
-			new Jetty();
+			Integer guiPort = config.getInt("GUIPort",8080);
+			logger.debug("Starting Jetty (Web UI) on port " + guiPort);
+			new Jetty(guiPort);
 		}
 		else
 		{

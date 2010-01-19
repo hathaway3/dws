@@ -11,16 +11,19 @@ import org.mortbay.jetty.servlet.ServletHolder;
  */
 public class Jetty {
 	private static final String PACKAGE_BASE ="com/mynumnum";
-	private static final int PORT = 8080;
+	private static final int DEFAULT_PORT = 8080;
 	public Jetty() {
-		main(new String[0]);
+		startWebInterface(DEFAULT_PORT);
+	}
+	public Jetty(Integer port) {
+		startWebInterface(port);
 	}
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		Server server = new Server(PORT);
+	private void startWebInterface(int webPort) {
+		Server server = new Server(webPort);
+		
+		System.setProperty("DEBUG", "true");
+		
 		String webDir = Jetty.class.getClassLoader().getResource(PACKAGE_BASE).toExternalForm();
 		try {
 			webDir = webDir.substring(0, webDir.lastIndexOf("WEB-INF/classes/" + PACKAGE_BASE));
@@ -53,6 +56,12 @@ public class Jetty {
 			e.printStackTrace();
 		}
 
+		
+	}
+	/**
+	 * @param args
+	 */
+	public static void main(Integer port) {
 	}
 
 }
