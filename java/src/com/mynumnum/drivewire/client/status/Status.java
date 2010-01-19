@@ -155,7 +155,7 @@ public class Status extends Composite {
 				for (String s : result) {
 					v.add(new Label(s));
 				}
-				Button close = new Button();
+				Button close = new Button("Close");
 				v.add(close);
 				close.addClickHandler(new ClickHandler() {
 					
