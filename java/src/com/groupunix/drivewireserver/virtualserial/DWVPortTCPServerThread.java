@@ -17,6 +17,7 @@ public class DWVPortTCPServerThread implements Runnable {
 	private boolean wanttodie = false;
 	private int mode = 0;
 	
+	private String tmpbuf = new String();
 
 	
 	
@@ -65,7 +66,7 @@ public class DWVPortTCPServerThread implements Runnable {
 					// read block
 					byte[] buffer = new byte[tcpAvail];
 					skt.getInputStream().read(buffer, 0, tcpAvail);
-					DWVSerialPorts.write(this.vport, new String(buffer));
+					DWVSerialPorts.writeToCoco(this.vport, new String(buffer));
 						
 				}
 				else
@@ -86,7 +87,7 @@ public class DWVPortTCPServerThread implements Runnable {
 							{
 								// write it to the serial port
 								// logger.debug("passing : " + databyte);
-								DWVSerialPorts.write1(this.vport,(byte)databyte);
+								DWVSerialPorts.writeToCoco(this.vport,(byte)databyte);
 								lastbyte = databyte;
 							}
 							

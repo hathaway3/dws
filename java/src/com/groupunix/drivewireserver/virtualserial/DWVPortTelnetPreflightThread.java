@@ -186,11 +186,12 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		if (skt.isClosed() == false)
 		{
 			
-			logger.debug("Preflight success, adding connection to pool and announcing it to telnetd");
+			logger.debug("Preflight success for " + skt.getInetAddress().getHostName());
 			
 			//add connection to pool
 			int conno = DWVPortListenerPool.addConn(skt, 1);
 
+			logger.debug("announcing connection #" + conno);
 			// announce new connection to listener
 			DWVSerialPorts.writeToCoco(this.vport, conno + " " + skt.getLocalPort() + " " +  skt.getInetAddress().getHostAddress() + (char) 13);		
 		}

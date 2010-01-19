@@ -46,18 +46,26 @@ public class DWVPortListenerPool {
 
 	public static void killConn(int conno)
 	{
-		try
+		
+		if (sockets[conno] != null)
 		{
-			sockets[conno].close();
-			logger.debug("killed conn #" + conno);
-		} 
-		catch (IOException e)
-		{
-			logger.debug("IO error closing conn #" + conno + ": " + e.getMessage());
+			try
+			{
+				sockets[conno].close();
+				logger.debug("killed conn #" + conno);
+			} 
+			catch (IOException e)
+			{
+				logger.debug("IO error closing conn #" + conno + ": " + e.getMessage());
+			}
+		
+			clearConn(conno);
+			
 		}
-		
-		clearConn(conno);
-		
+		else
+		{
+			logger.warn("asked to kill connection " + conno +" which does not exist");
+		}
 	}
 	
 }

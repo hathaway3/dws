@@ -13,7 +13,7 @@ public class DWVSerialPorts {
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialPorts");
 	
 	// should move multiread toggle and max ports to config file
-	public static final int MULTIREAD_LIMIT = 4;
+	public static final int MULTIREAD_LIMIT = 3;
 	public static final int MAX_PORTS = 15;
 	
 	public static final int CHUNK_SIZE = 240;

@@ -206,6 +206,7 @@ public class DWVPortHandler
 		if (DWVPortListenerPool.getConn(conno) == null)
 		{
 			respondFail(101,"invalid connection number");
+			return;
 		}
 		
 		logger.warn("Killing connection " + conno);
