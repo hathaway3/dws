@@ -27,7 +27,7 @@ import com.mynumnum.drivewire.server.Jetty;
 public class DriveWireServer 
 {
 	public static final String DWServerVersion = "3.9.0";
-	public static final String DWServerVersionDate = "1/17/2009";
+	public static final String DWServerVersionDate = "1/17/2010";
 	
 	
 	public static Logger logger = Logger.getLogger("DWServer");
