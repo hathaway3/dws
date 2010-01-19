@@ -43,7 +43,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		try
 		{
 			// hello
-			skt.getOutputStream().write(("DriveWire TCP Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
+			skt.getOutputStream().write(("DriveWire Telnet Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
 
 			// check banned
 			if (DriveWireServer.config.containsKey("TelnetBanned"))

@@ -1,8 +1,7 @@
 package com.groupunix.drivewireserver;
 
 import java.util.ArrayList;
-import java.util.List;
-
+import java.util.LinkedList;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
 import org.apache.log4j.spi.LoggingEvent;
@@ -13,8 +12,9 @@ import org.apache.log4j.spi.LoggingEvent;
 public class DWLogAppender extends AppenderSkeleton 
 {
 
+	public static final int MAX_EVENTS = 500;
 
-	private List<LoggingEvent> events = new ArrayList<LoggingEvent>();
+	private LinkedList<LoggingEvent> events = new LinkedList<LoggingEvent>();
 
 	public DWLogAppender(Layout layout) 
 	{
@@ -42,7 +42,12 @@ public class DWLogAppender extends AppenderSkeleton
 	{
 		synchronized (events) 
 		{
-			events.add(event);
+			if (events.size() == MAX_EVENTS)
+			{
+				events.removeFirst();
+			}
+			
+			events.addLast(event);
 		}
 	}
 
@@ -50,6 +55,9 @@ public class DWLogAppender extends AppenderSkeleton
 	{
 		ArrayList<String> eventstxt = new ArrayList<String>();
 		int start = 0;
+		
+		if (num > events.size())
+			num = events.size();
 		
 		if (events.size() > num)
 		{
@@ -68,5 +76,10 @@ public class DWLogAppender extends AppenderSkeleton
 	public void close()
 	{
 		
+	}
+
+	public int getEventsSize()
+	{
+		return(events.size());
 	}
 }

@@ -90,13 +90,13 @@ public class Ports extends Composite {
 		int column = 0;
 		portsTable.removeAllRows();
 		portsTable.setHTML(0, column++, "Port");
-		portsTable.setHTML(0, column++, "Mode");
+		portsTable.setHTML(0, column++, "Open");
 		portsTable.setHTML(0, column++, "Connected");
-		portsTable.setHTML(0, column++, "Coco Init");
-		portsTable.setHTML(0, column++, "Host IP");
-		portsTable.setHTML(0, column++, "Host Port");
+		portsTable.setHTML(0, column++, "Client");
+		portsTable.setHTML(0, column++, "User");
 		portsTable.setHTML(0, column++, "PD_INT");
 		portsTable.setHTML(0, column++, "PD_QUT");
+		portsTable.setHTML(0, column++, "PD Bytes");
 		int row;
 		portsTable.getRowFormatter().setStyleName(0, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().h1());
 		for (SerialPortData spd : result) {
@@ -104,14 +104,14 @@ public class Ports extends Composite {
 			// For each serial port we will set the text of the label
 			// Use the port number as the offset to the row in the flextable
 			row = spd.getPort() + 1;
-			portsTable.setHTML(row, column++, String.valueOf(spd.getPrettyPort()));
-			portsTable.setHTML(row, column++, spd.getMode());
+			portsTable.setHTML(row, column++, spd.getPrettyPort());
+			portsTable.setHTML(row, column++, spd.getPrettyOpen());
 			portsTable.setHTML(row, column++, String.valueOf(spd.isConnected()));
-			portsTable.setHTML(row, column++, String.valueOf(spd.isCocoInit()));
-			portsTable.setHTML(row, column++, String.valueOf(spd.getHostIP()));
-			portsTable.setHTML(row, column++, String.valueOf(spd.getHostPort()));
+			portsTable.setHTML(row, column++, spd.getHostIP() + ":" + String.valueOf(spd.getHostPort()));
+			portsTable.setHTML(row, column++, spd.getUsername());
 			portsTable.setHTML(row, column++, String.valueOf(spd.getPD_INT()));
 			portsTable.setHTML(row, column++, String.valueOf(spd.getPD_QUT()));
+			portsTable.setHTML(row, column++, spd.getPrettyPD());
 			if (row % 2 == 0)
 				portsTable.getRowFormatter().setStyleName(row, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().d0());
 			else

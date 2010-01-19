@@ -55,17 +55,19 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		ArrayList<SerialPortData> portData = new ArrayList<SerialPortData>();
 		for (int port = 0; port < DWVSerialPorts.MAX_PORTS; port++) {
 			SerialPortData spd = new SerialPortData();
-			// set all the fields of the SerialPortData class so the client will have access to the data
-			// spd.setActionFileDefined(DWVSerialPorts.getActionFileDefined(port));
-			
+				
 			spd.setConnected(DWVSerialPorts.isConnected(port));
-			// spd.setPasswordSet(DWVSerialPorts.isPasswordRequired(port));
 			spd.setPD_INT(DWVSerialPorts.getPD_INT(port));
 			spd.setPD_QUT(DWVSerialPorts.getPD_QUT(port));
 			spd.setPrettyPort(DWVSerialPorts.prettyPort(port));
 			spd.setPort(port);
 			spd.setHostIP(DWVSerialPorts.getHostIP(port));
 			spd.setHostPort(DWVSerialPorts.getHostPort(port));
+			
+			spd.setOpens(DWVSerialPorts.getOpen(port));
+			spd.setPrettyPD(DWProtocolHandler.byteArrayToHexString(DWVSerialPorts.getDD(port)));
+			spd.setUsername(DWVSerialPorts.getUserName(port));
+			
 			// Add this instance of spd to our array list
 			portData.add(spd);
 			 	

@@ -41,7 +41,7 @@ public class DWVPortHandler
 			
 		// process command if enter
 		
-		logger.debug("takeinput: " + databyte);
+		//logger.debug("takeinput: " + databyte);
 		
 		if (databyte == this.vModem.getCR())
 		{
@@ -119,6 +119,10 @@ public class DWVPortHandler
 				{
 					doTCPJoin(cmdparts[2]);
 				}
+				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("kill"))) 
+				{
+					doTCPKill(cmdparts[2]);
+				}
 				else
 				{
 					respondFail(2,"Syntax error in TCP command");
@@ -183,6 +187,36 @@ public class DWVPortHandler
 		this.utilthread.start();
 		
 	}
+	
+	private void doTCPKill(String constr) 
+	{
+		int conno;
+		
+		try
+		{
+			conno = Integer.parseInt(constr);
+		}
+		catch (NumberFormatException e)
+		{
+			respondFail(2,"non-numeric port in tcp kill command");
+			return;
+		}
+		
+
+		if (DWVPortListenerPool.getConn(conno) == null)
+		{
+			respondFail(101,"invalid connection number");
+		}
+		
+		logger.warn("Killing connection " + conno);
+		
+		// close socket
+		DWVPortListenerPool.killConn(conno);
+		
+		respondOk("killed connection " + conno);
+		
+	}
+	
 
 	private void doURL(String action,String url) 
 	{

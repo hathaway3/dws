@@ -46,9 +46,9 @@ public class DWUtilDWThread implements Runnable
 		{
 			doHelp();
 		}
-		else if ((args.length == 3) && (args[1].toLowerCase().startsWith("s")))
+		else if ((args.length >= 3) && (args[1].toLowerCase().startsWith("s")))
 		{
-			doShow(args[2]);
+			doShow(args);
 		}
 		else if ((args.length >= 2) && (args[1].toLowerCase().startsWith("d")))
 		{
@@ -292,11 +292,11 @@ public class DWUtilDWThread implements Runnable
 	
 	
 
-	private void doShow(String arg) 
+	private void doShow(String[] args) 
 	{
 		String text = new String();
 		
-		if (arg.toLowerCase().startsWith("d"))
+		if (args[2].toLowerCase().startsWith("d"))
 		{
 			text = "\r\nCurrent DriveWire Disks:\r\n\n";
 			
@@ -325,7 +325,7 @@ public class DWUtilDWThread implements Runnable
 			
 			
 		}
-		else if (arg.toLowerCase().startsWith("pd"))
+		else if (args[2].toLowerCase().startsWith("pd"))
 		{
 			text += "\r\nCurrent port device descriptors:\r\n\n";
 			
@@ -342,21 +342,49 @@ public class DWUtilDWThread implements Runnable
 			}
 			
 		}
-		else if (arg.toLowerCase().startsWith("l"))
+		else if (args[2].toLowerCase().startsWith("l"))
 		{
-			text += "\r\nDriveWire Server Log:\r\n\n";
+			int lines = 20;
 			
-			ArrayList<String> loglines = DriveWireServer.getLogEvents(10);
+			if (args.length == 4)
+			{
+				try
+				{
+					lines = Integer.parseInt(args[3]);
+				}
+				catch (NumberFormatException e)
+				{
+					// don't care
+				}
+			}
+			
+			text += "\r\nDriveWire Server Log (" + DriveWireServer.getLogEventsSize() + " events in buffer):\r\n\n";
+			
+			ArrayList<String> loglines = DriveWireServer.getLogEvents(lines);
 			
 			for (int i = 0;i<loglines.size();i++)
 			{
 				text += loglines.get(i);
-				text += "\r\n";
+				
 			}
 			
 			
 		}
-		else if (arg.toLowerCase().startsWith("po"))
+		else if (args[2].toLowerCase().startsWith("c"))
+		{
+			text += "\r\nDriveWire Server Connections:\r\n\n";
+
+			for (int i = 0; i<DWVPortListenerPool.MAX_CONN;i++)
+			{
+				if (DWVPortListenerPool.getConn(i) != null)
+				{
+					text += "Conn " + i + ": " + DWVPortListenerPool.getConn(i).getInetAddress().getHostName() + ":" + DWVPortListenerPool.getConn(i).getPort() + "\r\n";
+				}
+			}
+			
+			
+		}
+		else if (args[2].toLowerCase().startsWith("po"))
 		{
 			text += "\r\nCurrent port status:\r\n\n";
 			
@@ -400,7 +428,7 @@ public class DWUtilDWThread implements Runnable
 			}
 			
 		}
-		else if (arg.toLowerCase().startsWith("s"))
+		else if (args[2].toLowerCase().startsWith("s"))
 		{
 			text += "\r\nDriveWire version " + DriveWireServer.DWServerVersion + " (" + DriveWireServer.DWServerVersionDate + ") status:\r\n\n";
 			
@@ -453,7 +481,7 @@ public class DWUtilDWThread implements Runnable
 		}
 		else
 		{
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + arg + "' is not a valid option to show.");
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[2] + "' is not a valid option to show.");
 	    	return;
 		}
 		
@@ -469,7 +497,7 @@ public class DWUtilDWThread implements Runnable
 		
 		text += "\r\n\n";
 		
-		text += "  dw show [disks|ports|pdesc|status] - Show various system information.";
+		text += "  dw show [disks|ports|pdesc|status|conn|log] - Show system information.";
 				
 		text += "\r\n\n";
 		

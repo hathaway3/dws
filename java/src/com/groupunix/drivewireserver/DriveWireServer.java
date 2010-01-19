@@ -385,5 +385,12 @@ public class DriveWireServer
 	{
 		return(dwAppender.getLastEvents(num));
 	}
+
+
+
+	public static int getLogEventsSize()
+	{
+		return(dwAppender.getEventsSize());
+	}
 	
 }

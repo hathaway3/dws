@@ -2,20 +2,10 @@ package com.groupunix.drivewireserver.virtualserial;
 
 
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.Socket;
 
-
 import org.apache.log4j.Logger;
-import org.jasypt.util.password.BasicPasswordEncryptor;
-
-import com.groupunix.drivewireserver.DriveWireServer;
 
 public class DWVPortTCPServerThread implements Runnable {
 
@@ -47,6 +37,12 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 		logger.debug("run for conn " + this.conno);
 				
+		if (skt == null)
+		{
+			logger.warn("got a null socket, bailing out");
+			return;
+		}
+		
 		// set pass through mode
 		DWVSerialPorts.markConnected(vport);	
 		try {
@@ -84,12 +80,12 @@ public class DWVPortTCPServerThread implements Runnable {
 					{
 						if (mode == 1)
 						{
-							logger.debug("telnet in : " + databyte);
+							// logger.debug("telnet in : " + databyte);
 							// filter CR/LF.. should really do this in the client or at least make it a setting
 							if (!((lastbyte == 13) && ((databyte == 10) || (databyte == 0))))
 							{
 								// write it to the serial port
-								logger.debug("passing : " + databyte);
+								// logger.debug("passing : " + databyte);
 								DWVSerialPorts.write1(this.vport,(byte)databyte);
 								lastbyte = databyte;
 							}

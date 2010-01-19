@@ -10,45 +10,22 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  */
 public class SerialPortData implements IsSerializable {
-	private String mode;
-	private boolean isPasswordSet;
 	private boolean isConnected;
-	private boolean isCocoInit;
-	// This field is optional for a serial port
-	private boolean isActionFileDefined;
+	private int opens;
 	private byte PD_INT;
 	private byte PD_QUT;
 	private String prettyPort;
 	private int port;
 	private String hostIP;
 	private int hostPort;
+	private String username;
+	private String procd;
 	
 	public SerialPortData() {
 		// Nothing to do here, but this is required if you expect GWT to serialize this
 		// data, so please don't remove this!
 	}
 
-	public String getMode() {
-		return mode;
-	}
-
-	public void setMode(String mode) {
-		this.mode = mode;
-	}
-
-	/**
-	 * @param isPasswordSet the isPasswordSet to set
-	 */
-	public void setPasswordSet(boolean isPasswordSet) {
-		this.isPasswordSet = isPasswordSet;
-	}
-
-	/**
-	 * @return the isPasswordSet
-	 */
-	public boolean isPasswordSet() {
-		return isPasswordSet;
-	}
 
 	/**
 	 * @param isConnected the isConnected to set
@@ -64,34 +41,7 @@ public class SerialPortData implements IsSerializable {
 		return isConnected;
 	}
 
-	/**
-	 * @param isCocoInit the isCocoInit to set
-	 */
-	public void setCocoInit(boolean isCocoInit) {
-		this.isCocoInit = isCocoInit;
-	}
-
-	/**
-	 * @return the isCocoInit
-	 */
-	public boolean isCocoInit() {
-		return isCocoInit;
-	}
-
-	/**
-	 * @param isActionFileDefined the isActionFileDefined to set
-	 */
-	public void setActionFileDefined(boolean isActionFileDefined) {
-		this.isActionFileDefined = isActionFileDefined;
-	}
-
-	/**
-	 * @return the isActionFileDefined
-	 */
-	public boolean isActionFileDefined() {
-		return isActionFileDefined;
-	}
-
+	
 	/**
 	 * @param pD_INT the pD_INT to set
 	 */
@@ -162,6 +112,47 @@ public class SerialPortData implements IsSerializable {
 
 	public int getHostPort() {
 		return hostPort;
+	}
+
+	public String getPrettyOpen()
+	{
+		String tmp = new String();
+		
+		if (this.opens > 0)
+		{
+			tmp = this.opens + " opens";
+		}
+		else
+		{
+			tmp = "none";
+		}
+		
+		return(tmp);
+	}
+	
+	public void setOpens(int ops)
+	{
+		this.opens = ops;
+	}
+
+	public String getUsername()
+	{
+		return(this.username);
+	}
+
+	public void setUsername(String username)
+	{
+		this.username = username;
+	}
+	
+	public String getPrettyPD()
+	{
+		return(this.procd);
+	}
+	
+	public void setPrettyPD(String pd)
+	{
+		this.procd = pd;
 	}
 
 

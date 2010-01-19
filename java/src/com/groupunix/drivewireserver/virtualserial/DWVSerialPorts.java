@@ -360,7 +360,18 @@ public class DWVSerialPorts {
 
 	public static void resetAllPorts() 
 	{
-		logger.debug("Resetting all virtual serial ports");
+		logger.debug("Resetting all virtual serial ports - part 1, close all sockets");
+		
+		for (int i = 0;i<DWVPortListenerPool.MAX_CONN;i++)
+		{
+			if (DWVPortListenerPool.getConn(i) != null)
+			{
+				DWVPortListenerPool.killConn(i);
+			}
+		}
+		
+		logger.debug("Resetting all virtual serial ports - part 2, init all ports");
+		
 		vserialPorts = new DWVSerialPort[MAX_PORTS];
 		for (int i = 0;i<MAX_PORTS;i++)
 		{
