@@ -95,6 +95,8 @@
         	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/gwt-servlet.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/ostermillerutils_1_07_00.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/RXTXcomm.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/slf4j-api-1.5.10.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/slf4j-log4j12-1.5.10.jar"/>
         </jar>
     </target>
 
