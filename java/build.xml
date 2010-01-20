@@ -81,6 +81,7 @@
             <fileset dir="${basedir}/war/WEB-INF/classes"/>
             <fileset dir="${basedir}/war/" includes="*.html" />
             <fileset dir="${basedir}/war/" includes="*.css" />
+            <fileset dir="${basedir}/war/" includes="*.gif" />
             <fileset dir="${basedir}/war/" includes="drivewiregwt/**" />
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-collections-3.2.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-configuration-1.6.jar"/>
