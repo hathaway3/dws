@@ -1,6 +1,7 @@
 package com.mynumnum.drivewire.server;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -81,48 +82,68 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	// TODO fetch the file and folder data and return to client
 	public ArrayList<FileListData> getFileList(String fileType) {
 		File dir = new File(".");
+		File fileList;
 		if (fileType.equals("disk"))
 			filterString = ".dsk";
 		if (fileType.equals("set"))
 			filterString = ".set";
-		System.out.println("the value of fileType is " + filterString);
+		//System.out.println("the value of fileType is " + filterString);
+		
 		// Define filter for the types of files we want to see
-		FilenameFilter filter = new FilenameFilter() {
+		FilenameFilter fileFilter = new FilenameFilter() {
 		    public boolean accept(File dir, String name) {
 				return name.contains(filterString);
 		    }
 		};
-
+		
+		// This filter only returns directories
+		FileFilter directoryFilter = new FileFilter() {
+		    public boolean accept(File file) {
+		        return file.isDirectory();
+		    }
+		};
+		
 		// Get the current folder in the file system
-		String fileFolder = System.getProperty("user.dir");
+		String rootFolder = System.getProperty("user.dir");
 
 		ArrayList<FileListData> afld = new ArrayList<FileListData>();
-		FileListData fld = new FileListData();
-		fld.setFileFolder(fileFolder);
-		ArrayList<FileListData.FileDetails> files = new ArrayList<FileListData.FileDetails>();
-		for (String s : dir.list(filter)) {
-			DWDisk disk = new DWDisk();
-			try {
-				disk.setFilePath(fileFolder + "/" + s);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				// e.printStackTrace();
+		// Loop through each directory
+		for (File name : dir.listFiles(directoryFilter)) {
+			rootFolder = dir.getAbsolutePath() + java.io.File.separator + name.getName();
+			FileListData fld = new FileListData();
+			fld.setFileFolder(rootFolder);
+			fld.setDirectoryName(name.getName());
+			fld.setFileSeparator(java.io.File.separator);
+			ArrayList<FileListData.FileDetails> files = new ArrayList<FileListData.FileDetails>();
+			fileList = new File(rootFolder);
+			// Loop through all files in the folder that match the appropriate filter
+			for (String s : fileList.list(fileFilter)) {
+				// See if we can determine the OS9 Disk Name
+				DWDisk disk = new DWDisk();
+				try {
+					disk.setFilePath(rootFolder + java.io.File.separator + s);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					// e.printStackTrace();
+				}
+				// Create a new file that will contain the disk name and file name
+				FileListData.FileDetails file = new FileListData.FileDetails();
+				try {
+					file.setDiskName(disk.getDiskName());
+					//System.out.println("the disk name is " + disk.getDiskName());
+				} catch (Exception e) {
+					file.setDiskName("unknown");
+				}
+				file.setFileName(s);
+				files.add(file);
+				
 			}
-			FileListData.FileDetails file = new FileListData.FileDetails();
-			try {
-				file.setDiskName(disk.getDiskName());
-				System.out.println("the disk name is " + disk.getDiskName());
-			} catch (Exception e) {
-				file.setDiskName("unknown");
-			}
-			file.setFileName(s);
-			files.add(file);
-			
+			// Add the files to the file list
+			fld.setFileNames(files);
+			// add this directory to the directory list
+			afld.add(fld);
 		}
-		// Add the files to the file list
-		fld.setFileNames(files);
-		// add this directory to the directory list
-		afld.add(fld);
+		// return all the directories and files under the user.dir folder 
 		return afld;
 	}
 	// This method will return a list of the drives that are available for assignment by the user with a disk image

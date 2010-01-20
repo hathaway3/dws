@@ -13,7 +13,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
@@ -30,6 +30,7 @@ public class FileManager extends Composite {
 	private static String fileName;
 	private static String fileFolder;
 	private static String fileType;
+	private static String fileSeparator;
 	
 	private static FileManagerUiBinder uiBinder = GWT
 			.create(FileManagerUiBinder.class);
@@ -41,6 +42,7 @@ public class FileManager extends Composite {
 	public FileManager() {
 		initWidget(uiBinder.createAndBindUi(this));
 		// TODO Fetch the Directory listing from the 'server' and add it to the tree
+		fileTreeScrollPanel.setHeight("500px");
 		
 	}
 	/**
@@ -70,20 +72,26 @@ public class FileManager extends Composite {
 		for (FileListData fld : fileData) {
 			TreeItem ti = new TreeItem();
 			// Set the file folder for this tree element
-			ti.setText(fld.getFileFolder());
+			ti.setText(fld.getDirectoryName());
+			ti.setTitle(fld.getFileFolder());
+			// This technically only needs to happen one time
+			fileSeparator = fld.getFileSeparator();
 			fileTree.addItem(ti);
 			// For each folder we will add all the folder 'children'
 			for (FileListData.FileDetails file : fld.getFileNames()) {
-				Label fileLabel = new Label();
-				fileLabel.setTitle(file.getDiskName());
-				fileLabel.setText(file.getFileName());
-				ti.addItem(fileLabel);
+				//Label fileLabel = new Label();
+				ti.addItem(file.getFileName());
+				//fileLabel.setTitle(file.getDiskName());
+				//fileLabel.setText(file.getFileName());
+				//ti.addItem(fileLabel);
 			}
 		}
 		
 	}
 	@UiField
 	Tree fileTree;
+	@UiField
+	ScrollPanel fileTreeScrollPanel;
 	@UiHandler("okButton")
 	void onClick2(ClickEvent e) {
 		// Do something when the user selects ok
@@ -96,7 +104,7 @@ public class FileManager extends Composite {
 	}
 	// TODO make this method return the correct fileFolder and filename path based on the OS
 	private String getFileName() {
-		return fileFolder + "/" + fileName;
+		return fileFolder + fileSeparator + fileName;
 	}
 	@UiHandler("cancelButton")
 	void onClick3(ClickEvent e) {
@@ -106,9 +114,10 @@ public class FileManager extends Composite {
 
 	@UiHandler("fileTree") 
 	void onSelection(SelectionEvent<TreeItem> event) {
-		fileFolder = event.getSelectedItem().getParentItem().getText();
-		Label fileLabel = (Label) event.getSelectedItem().getWidget(); 
-		fileName = fileLabel.getText();
+		fileFolder = event.getSelectedItem().getParentItem().getTitle();
+		//Label fileLabel = (Label) event.getSelectedItem().getWidget();
+		//fileName = fileLabel.getText();
+		fileName = event.getSelectedItem().getText();
 	}
 	
 }

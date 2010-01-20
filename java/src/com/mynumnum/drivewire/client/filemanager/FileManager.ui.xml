@@ -3,7 +3,9 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<g:HTMLPanel>
 		<g:VerticalPanel>
-			<g:Tree ui:field="fileTree"></g:Tree>
+			<g:ScrollPanel ui:field="fileTreeScrollPanel">
+				<g:Tree ui:field="fileTree"></g:Tree>
+			</g:ScrollPanel>
 			<g:HTML>&nbsp;</g:HTML>
 			<g:HorizontalPanel>
 				<g:Button ui:field="okButton">OK</g:Button>

@@ -15,7 +15,9 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class FileListData implements IsSerializable{
 	private String fileFolder;
+	private String directoryName;
 	private ArrayList<FileDetails> fileNames;
+	private String fileSeparator;
 	public FileListData() {
 	}
 	/**
@@ -67,5 +69,19 @@ public class FileListData implements IsSerializable{
 		public void setFileName(String fileName) {
 			this.fileName = fileName;
 		}
+	}
+	public void setDirectoryName(String name) {
+		// TODO Auto-generated method stub
+		this.directoryName = name;
+		
+	}
+	public String getDirectoryName() {
+		return directoryName;
+	}
+	public String getFileSeparator() {
+		return fileSeparator;
+	}
+	public void setFileSeparator(String fileSeparator) {
+		this.fileSeparator = fileSeparator;
 	}
 }
