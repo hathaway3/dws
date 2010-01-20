@@ -29,13 +29,7 @@ import com.mynumnum.drivewire.client.serializable.VersionData;
 public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		DriveWireService {
 	private CharSequence filterString;
-	private Integer counter = 0;
-	public String greetServer(String input) {
-		counter++;
-		return (counter.toString());
-
-	}
-		public StatusData getStatusData() {
+	public StatusData getStatusData() {
 		StatusData sd = new StatusData();
 		sd.setLastDrive(DWProtocolHandler.getLastDrive());
 		sd.setLastGetStat(DWProtocolHandler.prettySS(DWProtocolHandler.getLastGetStat()));
@@ -178,7 +172,6 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 				dld.setWrites(DWProtocolHandler.getDiskDrives().getWrites(drive));
 				dld.setDirty(DWProtocolHandler.getDiskDrives().getDirtySectors(drive));
 				adld.add(dld);
-				
 			}
 		}
 		return adld;
