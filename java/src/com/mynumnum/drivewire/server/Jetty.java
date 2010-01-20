@@ -1,5 +1,6 @@
 package com.mynumnum.drivewire.server;
 
+import org.apache.log4j.BasicConfigurator;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.Context;
 import org.mortbay.jetty.servlet.DefaultServlet;
@@ -20,6 +21,8 @@ public class Jetty {
 	}
 
 	private void startWebInterface(int webPort) {
+		// Setup log4j so Jetty can log properly
+		BasicConfigurator.configure();
 		
 		Server server = new Server(webPort);
 
