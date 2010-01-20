@@ -17,7 +17,7 @@ public class DWVPortTCPServerThread implements Runnable {
 	private boolean wanttodie = false;
 	private int mode = 0;
 	
-	private String tmpbuf = new String();
+	//private String tmpbuf = new String();
 
 	
 	
@@ -61,15 +61,15 @@ public class DWVPortTCPServerThread implements Runnable {
 			try 
 			{
 				int tcpAvail = skt.getInputStream().available();
-				if (tcpAvail > 1)
-				{
+				if (tcpAvail > 0)
+				/*{
 					// read block
 					byte[] buffer = new byte[tcpAvail];
 					skt.getInputStream().read(buffer, 0, tcpAvail);
 					DWVSerialPorts.writeToCoco(this.vport, new String(buffer));
 						
 				}
-				else
+				else */
 				{
 					//wait for data/read one
 					int databyte = skt.getInputStream().read();
