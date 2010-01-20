@@ -171,6 +171,10 @@ public class DWVSerialPorts {
 				// normal write
 				vserialPorts[port].write(databyte);
 			}
+			else
+			{
+				logger.debug("write to closed port " + port);
+			}
 		}
 		else
 		{

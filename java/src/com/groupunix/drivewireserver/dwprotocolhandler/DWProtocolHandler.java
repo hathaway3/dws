@@ -994,7 +994,7 @@ public class DWProtocolHandler implements Runnable
 			
 			DWVSerialPorts.serWrite(cmdpacket[0],cmdpacket[1]);
 				
-			// logger.debug("DoOP_SERWRITE to port " + cmdpacket[0]);
+			//logger.debug("DoOP_SERWRITE to port " + cmdpacket[0]);
 			
 		} 
 		catch (DWCommTimeOutException e) 
@@ -1013,7 +1013,7 @@ public class DWProtocolHandler implements Runnable
 			cmdpacket = comRead(2);
 			
 			try {
-				logger.debug("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0] + " (" + DWVSerialPorts.getPortOutput(cmdpacket[0]).available() + " bytes remain)");
+				logger.debug("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0] + " (" + DWVSerialPorts.getPortOutput(cmdpacket[0]).available() + " bytes in buffer)");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

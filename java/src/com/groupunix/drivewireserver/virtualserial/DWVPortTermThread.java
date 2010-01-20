@@ -38,7 +38,7 @@ public class DWVPortTermThread implements Runnable
 		
 		// setup port
 		DWVSerialPorts.resetPort(TERM_PORT);
-		
+		DWVSerialPorts.openPort(TERM_PORT);
 		// startup server 
 		ServerSocket srvr = null;
 		
