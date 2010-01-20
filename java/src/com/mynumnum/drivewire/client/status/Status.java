@@ -37,7 +37,7 @@ import com.mynumnum.drivewire.client.serializable.StatusData;
 public class Status extends Composite {
 
 	private static PanelUiBinder uiBinder = GWT.create(PanelUiBinder.class);
-	private Timer refreshTimer;
+	private static Timer refreshTimer;
 	private final static String TABNAME = "Status"; 
 
 	interface PanelUiBinder extends UiBinder<Widget, Status> {
@@ -146,7 +146,7 @@ public class Status extends Composite {
 
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
-
+				refreshTimer.cancel();
 			}
 
 			public void onSuccess(ArrayList<String> result) {
@@ -179,7 +179,7 @@ public class Status extends Composite {
 
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
-
+				refreshTimer.cancel();
 			}
 
 			public void onSuccess(ArrayList<String> result) 
@@ -205,7 +205,8 @@ public class Status extends Composite {
 			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
-				
+				refreshTimer.cancel();
+			
 			}
 
 			public void onSuccess(ArrayList<DriveListData> result) {
