@@ -12,7 +12,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 public class DWVPortTCPListenerThread implements Runnable 
 {
 
-	private static final Logger logger = Logger.getLogger("DWServer.DWUtilWgetThread");
+	private static final Logger logger = Logger.getLogger("DWServer.DWVPortTCPListenerThread");
 	
 	private int vport;
 	private int tcpport;

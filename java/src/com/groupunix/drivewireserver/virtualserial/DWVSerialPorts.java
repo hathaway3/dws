@@ -14,7 +14,10 @@ public class DWVSerialPorts {
 	
 	// should move multiread toggle and max ports to config file
 	public static final int MULTIREAD_LIMIT = 3;
+	public static final int TERM_PORT = 0;
+	public static final int MODE_TERM = 3;
 	public static final int MAX_PORTS = 15;
+	
 	
 	public static final int CHUNK_SIZE = 240;
 	
@@ -31,6 +34,10 @@ public class DWVSerialPorts {
 
 	public static String prettyPort(int port) 
 	{
+		if (port == TERM_PORT)
+		{
+			return("Term");
+		}
 		return("/N" + port);
 	}
 
@@ -198,13 +205,27 @@ public class DWVSerialPorts {
 	
 	public static void setPortOutput(int vport, OutputStream output)
 	{
-		vserialPorts[vport].setPortOutput(output);
+		if (isNull(vport))
+		{
+			logger.debug("attempt to set output on null port " + vport);
+		}
+		else
+		{
+			vserialPorts[vport].setPortOutput(output);
+		}
 	}
 
 
 	public static void markConnected(int vport) 
 	{
-		vserialPorts[vport].setConnected(true);
+		if (vserialPorts[vport] == null)
+		{
+			logger.warn("mark connected on null port " + vport);
+		}
+		else
+		{
+			vserialPorts[vport].setConnected(true);
+		}
 	}
 
 
@@ -366,23 +387,36 @@ public class DWVSerialPorts {
 		{
 			if (DWVPortListenerPool.getConn(i) != null)
 			{
-				DWVPortListenerPool.killConn(i);
+				// don't reset term
+				if (DWVPortListenerPool.getMode(i) != MODE_TERM)
+				{
+					DWVPortListenerPool.killConn(i);
+				}
 			}
 		}
 		
 		logger.debug("Resetting all virtual serial ports - part 2, init all ports");
 		
-		vserialPorts = new DWVSerialPort[MAX_PORTS];
+		//vserialPorts = new DWVSerialPort[MAX_PORTS];
 		for (int i = 0;i<MAX_PORTS;i++)
 		{
-			vserialPorts[i] = new DWVSerialPort(i);
+			// dont reset term
+			if (i != TERM_PORT)
+				resetPort(i);
 		}
 	}
 
-
+	public static void resetPort(int i)
+	{
+		vserialPorts[i] = new DWVSerialPort(i);
+	}
+	
 	public static boolean isOpen(int vport) 
 	{
-		return(vserialPorts[vport].isOpen());
+		if (vserialPorts[vport] != null)
+			return(vserialPorts[vport].isOpen());
+		
+		return(false);
 	}
 
 
@@ -440,4 +474,24 @@ public class DWVSerialPorts {
 	{
 		vserialPorts[vport].writeToCoco(str);
 	}
+
+
+	public static boolean hasOutput(int vport)
+	{
+		if (vserialPorts[vport] != null)
+		{
+			return(vserialPorts[vport].hasOutput());
+		}
+
+		return false;
+	}
+	
+	public static boolean isNull(int vport)
+	{
+		if (vserialPorts[vport] == null)
+			return(true);
+		
+		return(false);
+	}
+	
 }

@@ -45,7 +45,7 @@ public class DWVModem {
 	{
 		this.vport = port;
 		
-		logger.debug("new vmodem for port " + port);
+		// logger.debug("new vmodem for port " + port);
 		
 		doCommandReset();
 	}

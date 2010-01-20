@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
 import com.mynumnum.drivewire.server.Jetty;
 
 
@@ -38,6 +39,8 @@ public class DriveWireServer
 	public static PropertiesConfiguration config = new PropertiesConfiguration();
 	
 	private static Thread protoHandlerT = new Thread(new DWProtocolHandler());
+	
+	private static Thread termT;
 	
 	private static GregorianCalendar startTime = new GregorianCalendar();
 	private static int totalServed = 0;
@@ -115,13 +118,25 @@ public class DriveWireServer
 			// Start up the web interface.
 			Integer guiPort = config.getInt("GUIPort",8080);
 			logger.debug("Starting Jetty (Web UI) on port " + guiPort);
-			new Jetty(guiPort);
+			//new Jetty(guiPort);
 		}
 		else
 		{
 			logger.debug("Running in headless mode (no web GUI)");
 		}
 		
+		
+		if (config.containsKey("TermPort"))
+		{
+			logger.info("Starting Term device listener thread");
+			termT = new Thread(new DWVPortTermThread(config.getInt("TermPort")));
+			termT.start();
+		}
+		else
+		{
+			logger.debug("not starting term listener");
+		}
+	
 		
 		//  wait for protohandler to die
 		try {

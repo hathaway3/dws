@@ -17,6 +17,9 @@ public class DWVPortTCPServerThread implements Runnable {
 	private boolean wanttodie = false;
 	private int mode = 0;
 	
+	private static final int MODE_TELNET = 1;
+	private static final int MODE_TERM = 3;
+	
 	//private String tmpbuf = new String();
 
 	
@@ -55,50 +58,38 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 		int lastbyte = -1;
 		
-		while ((wanttodie == false) && (skt.isClosed() == false) && (DWVSerialPorts.isOpen(this.vport)))
+		while ((wanttodie == false) && (skt.isClosed() == false) && (DWVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
 		{
 			
 			try 
 			{
-				int tcpAvail = skt.getInputStream().available();
-				if (tcpAvail > 0)
-				/*{
-					// read block
-					byte[] buffer = new byte[tcpAvail];
-					skt.getInputStream().read(buffer, 0, tcpAvail);
-					DWVSerialPorts.writeToCoco(this.vport, new String(buffer));
-						
-				}
-				else */
+				int databyte = skt.getInputStream().read();
+				if (databyte == -1)
 				{
-					//wait for data/read one
-					int databyte = skt.getInputStream().read();
-					if (databyte == -1)
+					wanttodie = true;
+				}
+				else
+				{
+					if ((mode == MODE_TELNET) || (mode == MODE_TERM))
 					{
-						wanttodie = true;
+						// logger.debug("telnet in : " + databyte);
+						// TODO filter CR/LF.. should do this better
+						if (!((lastbyte == 13) && ((databyte == 10) || (databyte == 0))))
+						{
+							// write it to the serial port
+							// logger.debug("passing : " + databyte);
+							DWVSerialPorts.writeToCoco(this.vport,(byte)databyte);
+							lastbyte = databyte;
+						}
+						
 					}
 					else
 					{
-						if (mode == 1)
-						{
-							// logger.debug("telnet in : " + databyte);
-							// filter CR/LF.. should really do this in the client or at least make it a setting
-							if (!((lastbyte == 13) && ((databyte == 10) || (databyte == 0))))
-							{
-								// write it to the serial port
-								// logger.debug("passing : " + databyte);
-								DWVSerialPorts.writeToCoco(this.vport,(byte)databyte);
-								lastbyte = databyte;
-							}
-							
-						}
-						else
-						{
 						
-							DWVSerialPorts.write1(this.vport,(byte)databyte);
-						}
+						DWVSerialPorts.write1(this.vport,(byte)databyte);
 					}
 				}
+				
 			} 
 			catch (IOException e) 
 			{
@@ -125,8 +116,8 @@ public class DWVPortTCPServerThread implements Runnable {
 		}
 			
 		
-		// only if we got connected..
-		if (skt != null)
+		// only if we got connected.. and its not term
+		if ((skt != null) && (mode != MODE_TERM))
 		{
 			if (skt.isConnected())
 			{

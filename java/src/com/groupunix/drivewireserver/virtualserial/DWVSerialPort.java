@@ -41,8 +41,12 @@ public class DWVSerialPort {
 	
 	public DWVSerialPort(int port)
 	{
+		logger.debug("New DWVSerialPort for port " + port);
 		this.port = port;
-		this.porthandler = new DWVPortHandler(port);
+		if (port != DWVSerialPorts.TERM_PORT)
+		{
+			this.porthandler = new DWVPortHandler(port);
+		}
 	}
 	
 	public int bytesWaiting() 
@@ -68,16 +72,23 @@ public class DWVSerialPort {
 	public void write(int databyte) 
 	{
 		// if we are connected, pass the data
-		if (this.connected)
+		if ((this.connected) || (this.port == DWVSerialPorts.TERM_PORT))
 		{
-			try 
+			if (output == null)
 			{
-				output.write((byte) databyte);
-				// logger.debug("wrote byte to output buffer, size now " + output.getAvailable());
-			} 
-			catch (IOException e) 
+				logger.debug("write to null stream on port " + this.port);
+			}
+			else
 			{
-				logger.error("in write: " + e.getMessage());
+				try 
+				{
+					output.write((byte) databyte);
+					// logger.debug("wrote byte to output buffer, size now " + output.getAvailable());
+				} 
+				catch (IOException e) 
+				{
+					logger.error("in write: " + e.getMessage());
+				}
 			}
 		}
 		// otherwise process as command
@@ -398,6 +409,19 @@ public class DWVSerialPort {
 	public void setSocket(Socket skt) 
 	{
 		this.socket = skt;
+	}
+
+	public boolean hasOutput()
+	{
+		if (output == null)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+		
 	}
 	
 

@@ -358,6 +358,9 @@ public class DWProtocolHandler implements Runnable
 		
 		while(wanttodie == 0)
 		{ 
+			if (DWVSerialPorts.isNull(0) == true)
+				logger.debug("NULL TERM OUT");
+			
 			// try to get an opcode, use int to avoid signed bytes
 			try 
 			{
