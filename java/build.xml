@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<project name="test" default="build" basedir=".">
+<project name="test" default="create_run_jar" basedir=".">
   <!-- We need access to env. so we can find the env.GWT_HOME -->
-	<property environment="env"/>
-	
+  <property environment="env"/>
 
   <path id="project.class.path">
     <pathelement location="war/WEB-INF/classes"/>
@@ -39,40 +38,37 @@
       <!-- add jvmarg -Xss16M or similar if you see a StackOverflowError -->
       <jvmarg value="-Xmx256M"/>
       <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+  	  <arg value="-localWorkers"/>
+  	  <arg value="2"/>
       <arg value="com.mynumnum.drivewire.DriveWireGWT"/>
     </java>
   </target>
 
-  <target name="devmode" depends="javac" description="Run development mode">
-    <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
-      <classpath>
-        <pathelement location="src"/>
-        <path refid="project.class.path"/>
-      </classpath>
-      <jvmarg value="-Xmx256M"/>
-      <arg value="-startupUrl"/>
-      <arg value="test.html"/>
-      <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
-      <arg value="com.mynumnum.drivewire"/>
-    </java>
-  </target>
+	<target name="devmode" depends="javac" description="Run development mode">
+		<java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
+	  		<classpath>
+				<pathelement location="src"/>
+				<path refid="project.class.path"/>
+	  		</classpath>
+	  		<jvmarg value="-Xmx256M"/>
+	  		<arg value="-startupUrl"/>
+	  		<arg value="test.html"/>
+	  		<!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+	  		<arg value="com.mynumnum.drivewire"/>
+		</java>
+	</target>
 
-  <target name="hosted" depends="devmode" description="Run development mode (NOTE: the 'hosted' target is deprecated)" />
+	<target name="hosted" depends="devmode" description="Run development mode (NOTE: the 'hosted' target is deprecated)" />
 
-  <target name="build" depends="gwtc" description="Build this project" />
+	<target name="build" depends="gwtc" description="Build this project" />
 
-  <target name="war" depends="build" description="Create a war file">
-    <zip destfile="test.war" basedir="war"/>
-  </target>
-
-  <target name="clean" description="Cleans this project">
-    <delete dir="war/WEB-INF/classes" failonerror="false" />
-    <delete dir="war/test" failonerror="false" />
-  	<delete file="DriveWire.jar"></delete>
-  </target>
+	<target name="clean" description="Cleans this project">
+		<delete dir="war/WEB-INF/classes" failonerror="false" />
+		<delete dir="war/test" failonerror="false" />
+		<delete file="${basedir}/war/WEB-INF/lib/gwt-servlet.jar"></delete>
+	</target>
 	
-	
-    <target name="create_run_jar" depends="gwtc">
+    <target name="create_run_jar" depends="build">
         <jar destfile="DriveWire.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Main-Class" value="com.groupunix.drivewireserver.DriveWireServer"/>
@@ -100,6 +96,4 @@
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/slf4j-log4j12-1.5.10.jar"/>
         </jar>
     </target>
-
-
 </project>
