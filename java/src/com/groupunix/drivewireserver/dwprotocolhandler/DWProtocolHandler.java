@@ -1329,6 +1329,10 @@ public class DWProtocolHandler implements Runnable
 				result = "SS.DSize";
 				break;
 
+			case 0x27:
+				result = "SS.KySns";
+				break;
+
 			// added for SCF/Ns	
 			case 0x28:
 				result = "SS.ComSt";
