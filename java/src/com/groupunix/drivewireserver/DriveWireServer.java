@@ -48,7 +48,7 @@ public class DriveWireServer
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
 	
 		
-	@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
+	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	public static void main(String[] args)
 	{
 		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
@@ -70,7 +70,8 @@ public class DriveWireServer
     	// set up logging
     	
     	// must be a better way
-    	logger.getRoot().removeAllAppenders();
+    	//logger.getRoot().removeAllAppenders();
+    	Logger.getRootLogger().removeAllAppenders();
     	
     	if (config.containsKey("LogFormat"))
     	{
@@ -78,12 +79,14 @@ public class DriveWireServer
     	}
     	
     	dwAppender = new DWLogAppender(logLayout);
-    	logger.addAppender(dwAppender);    	
+    	//logger.addAppender(dwAppender);
+    	Logger.getRootLogger().addAppender(dwAppender);
     	
     	if (config.getBoolean("LogToConsole", true))
     	{
     		consoleAppender = new ConsoleAppender(logLayout);
-    		logger.addAppender(consoleAppender);
+    		//logger.addAppender(consoleAppender);
+    		Logger.getRootLogger().addAppender(consoleAppender);
     	}
     	
     	
@@ -118,7 +121,7 @@ public class DriveWireServer
 			// Start up the web interface.
 			Integer guiPort = config.getInt("GUIPort",8080);
 			logger.debug("Starting Jetty (Web UI) on port " + guiPort);
-			//new Jetty(guiPort);
+			new Jetty(guiPort);
 		}
 		else
 		{
@@ -305,6 +308,7 @@ public class DriveWireServer
 		else if ((!logToFile) && (logger.isAttached(fileAppender)))
 		{
 			logger.removeAppender(fileAppender);
+
 		}
 		
 	}
@@ -326,7 +330,6 @@ public class DriveWireServer
 			} 
 			catch (UnsupportedCommOperationException e)
 			{
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

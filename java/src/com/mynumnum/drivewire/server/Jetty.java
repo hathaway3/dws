@@ -1,6 +1,5 @@
 package com.mynumnum.drivewire.server;
 
-import org.apache.log4j.BasicConfigurator;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.Context;
 import org.mortbay.jetty.servlet.DefaultServlet;
@@ -21,8 +20,6 @@ public class Jetty {
 	}
 
 	private void startWebInterface(int webPort) {
-		// Setup log4j so Jetty can log properly
-		// BasicConfigurator.configure();
 		
 		Server server = new Server(webPort);
 
@@ -31,15 +28,14 @@ public class Jetty {
 			webDir = webDir.substring(0, webDir.lastIndexOf("WEB-INF/classes/" + PACKAGE_BASE));
 		} catch (Exception e1) {
 			// This is not an error, need to know this for debugging
-			System.out.println("working in jar");
+			//System.out.println("working in jar");
 		}
 		try {
 			webDir = webDir.substring(0, webDir.lastIndexOf(PACKAGE_BASE));
 		} catch (Exception e1) {
 			// This is not an error, need to know this for debugging
-			System.out.println("working in eclipse");
+			//System.out.println("working in eclipse");
 		}
-		//System.out.println(webDir);
 		// time to create a new context, set the base location, and the welcome files, etc
 		final Context context = new Context(server, "/" , Context.SESSIONS);
 		context.setResourceBase(webDir);
@@ -57,13 +53,7 @@ public class Jetty {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 		
 	}
-	/**
-	 * @param args
-	 */
-	public static void main(Integer port) {
-	}
-
+	
 }
