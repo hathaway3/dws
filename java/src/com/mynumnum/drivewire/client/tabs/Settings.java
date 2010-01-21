@@ -37,11 +37,20 @@ public class Settings extends Composite {
 
 	public Settings() {
 		initWidget(uiBinder.createAndBindUi(this));
+		disableSerialPortListBox();
 		getPorts();
 		getModels();
 		getLogLevels();
 		getSettings();
 		
+		
+	}
+	/**
+	 * Disable the serial port drop down list box
+	 */
+	private void disableSerialPortListBox() {
+		serialDeviceListBox.setTitle("You must make port changes in the DriveWireServer.properties");
+		serialDeviceListBox.setEnabled(false);
 		
 	}
 	private void getLogLevels() {
@@ -70,7 +79,6 @@ public class Settings extends Composite {
 	 * setup initially on this tab
 	 */
 	private void getSettings() {
-		// TODO Auto-generated method stub
 		DriveWireGWT.driveWireService.getSettings(new AsyncCallback<com.mynumnum.drivewire.client.serializable.SettingsData>() {
 
 			@Override
@@ -194,7 +202,6 @@ public class Settings extends Composite {
 	void onWriteToFileClick(ClickEvent ce) {
 		setWriteToFile(writeToFileCheckBox.getValue());
 	}
-	
 
 	private void setWriteToFile(boolean logToFile) {
 		DriveWireGWT.driveWireService.setLogToFile(logToFile, new AsyncCallback<String>() {
@@ -238,6 +245,7 @@ public class Settings extends Composite {
 			@Override
 			public void onClick(ClickEvent event) {
 				setServerLogFileName(fileTextBox.getText());
+				logFileNameLabel.setText(fileTextBox.getText());
 				
 			}
 
