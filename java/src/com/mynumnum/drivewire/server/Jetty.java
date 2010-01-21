@@ -22,7 +22,7 @@ public class Jetty {
 
 	private void startWebInterface(int webPort) {
 		// Setup log4j so Jetty can log properly
-		BasicConfigurator.configure();
+		// BasicConfigurator.configure();
 		
 		Server server = new Server(webPort);
 

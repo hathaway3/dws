@@ -152,7 +152,7 @@ public class Settings extends Composite {
 				for (String s : result) {
 					serialDeviceListBox.addItem(s);
 				}
-				serialDeviceListBox.setTitle("Select Serial Port");
+				// serialDeviceListBox.setTitle("Select Serial Port");
 				// Disable the serial port drop down list box if there are no serial ports found!
 				if (result.size() == 0) {
 					serialDeviceListBox.setTitle("No Serial Ports Found!");

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.mynumnum.drivewire.client.status;
+package com.mynumnum.drivewire.client.tabs;
 
 import java.util.ArrayList;
 
@@ -22,6 +22,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.mynumnum.drivewire.client.DriveWireGWT;
@@ -131,15 +132,11 @@ public class Status extends Composite {
 		
 	}
 	
-	// This will handle the click of the reset button by sending an RPC
-	// request to the server to reset the log file
-
-	
 	// This will handle the click request to display log results
 	// it will request x number of rows from the log file and display
 	// the results in a popup window with a close button
 	@UiHandler("viewLog")
-	void onClick2(ClickEvent e) {
+	void onViewLogClickEvent(ClickEvent e) {
 		// Fetch the log file data from the server using GWT RPC
 		int numberOfLines = 50;
 		DriveWireGWT.driveWireService.getLogFileData(numberOfLines, new AsyncCallback<ArrayList<String>>() {
@@ -150,22 +147,29 @@ public class Status extends Composite {
 			}
 
 			public void onSuccess(ArrayList<String> result) {
-				final PopupPanel p = new PopupPanel();
-				VerticalPanel v = new VerticalPanel();
+				final PopupPanel popupPanel = new PopupPanel();
+				popupPanel.setAnimationEnabled(true);
+				popupPanel.setGlassEnabled(true);
+				VerticalPanel logDetailsVerticalPanel = new VerticalPanel();
+				ScrollPanel logDetailsScrollPanel = new ScrollPanel();
+				VerticalPanel vp = new VerticalPanel();
 				for (String s : result) {
-					v.add(new Label(s));
+					logDetailsVerticalPanel.add(new Label(s));
 				}
+				logDetailsScrollPanel.setWidget(logDetailsVerticalPanel);
 				Button close = new Button("Close");
-				v.add(close);
+				vp.add(logDetailsScrollPanel);
+				vp.add(close);
 				close.addClickHandler(new ClickHandler() {
 					
 					public void onClick(ClickEvent event) {
-						p.hide();
+						popupPanel.hide();
 						
 					}
 				});
-				p.setWidget(v);
-				p.center();
+				logDetailsScrollPanel.setSize("800px", "600px");
+				popupPanel.setWidget(vp);
+				popupPanel.center();
 				
 			}
 		});
@@ -210,37 +214,7 @@ public class Status extends Composite {
 			}
 
 			public void onSuccess(ArrayList<DriveListData> result) {
-				driveStatusFlexTable.removeAllRows();
-				// Set styles of flex table
-				StyleInjector.inject(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().getText());
-				driveStatusFlexTable.setStyleName(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().sample());
-
-				// Set header row style
-				driveStatusFlexTable.getRowFormatter().setStyleName(0, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().h1());
-
-				// Set text of header
-				int column = 0;
-				driveStatusFlexTable.setText(0, column++, "Drive");
-				driveStatusFlexTable.setText(0, column++, "Sectors");
-				driveStatusFlexTable.setText(0, column++, "LSN");
-				driveStatusFlexTable.setText(0, column++, "Reads");
-				driveStatusFlexTable.setText(0, column++, "Writes");
-				driveStatusFlexTable.setText(0, column++, "Dirty");
-				int row = 1;
-				column = 0;
-				// Loop for each returned disk
-				for (DriveListData dld : result) {
-					driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getDriveNumber()));
-					driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getDiskSectors()));
-					driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getLSN()));
-					driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getReads()));
-					driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getWrites()));
-					driveStatusFlexTable.setText(row++, column++, String.valueOf(dld.getDirty()));
-					column = 0;
-					
-					
-				}
-				
+				refreshDriveStatusTable(result);
 			}
 
 		});
@@ -248,5 +222,52 @@ public class Status extends Composite {
 		
 	}
 	
+	/**
+	 * Take the RPC result and refresh the Drive Status Table with the data
+	 * @param result
+	 */
+	private static void refreshDriveStatusTable(ArrayList<DriveListData> result) {
+		driveStatusFlexTable.removeAllRows();
+		// Set styles of flex table
+		StyleInjector.inject(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().getText());
+		driveStatusFlexTable.setStyleName(com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().sample());
+
+		// Set header row style
+		driveStatusFlexTable.getRowFormatter().setStyleName(0, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().h1());
+
+		// Set text of header
+		int column = 0;
+		driveStatusFlexTable.setText(0, column++, "Drive");
+		driveStatusFlexTable.setText(0, column++, "Sectors");
+		driveStatusFlexTable.setText(0, column++, "LSN");
+		driveStatusFlexTable.setText(0, column++, "Reads");
+		driveStatusFlexTable.setText(0, column++, "Writes");
+		driveStatusFlexTable.setText(0, column++, "Dirty");
+		int row = 1;
+		column = 0;
+		// Loop for each returned disk
+		for (DriveListData dld : result) {
+			driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getDriveNumber()));
+			driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getDiskSectors()));
+			driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getLSN()));
+			driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getReads()));
+			driveStatusFlexTable.setText(row, column++, String.valueOf(dld.getWrites()));
+			driveStatusFlexTable.setText(row++, column++, String.valueOf(dld.getDirty()));
+			column = 0;
+			// Set the styles of the table based on the row number
+			if (row % 2 == 0)
+				driveStatusFlexTable.getRowFormatter().setStyleName(row, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().d0());
+			else
+				driveStatusFlexTable.getRowFormatter().setStyleName(row, com.mynumnum.drivewire.client.bundle.ClientBundle.INSTANCE.driveWire().d1());
+
+			
+			
+		}
+		
+	}
+
 	
 }
+
+	
+	

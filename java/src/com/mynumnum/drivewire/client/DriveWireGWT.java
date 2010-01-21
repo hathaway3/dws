@@ -11,13 +11,13 @@ import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TabPanel;
-import com.mynumnum.drivewire.client.ports.Ports;
 import com.mynumnum.drivewire.client.rpc.DriveWireService;
 import com.mynumnum.drivewire.client.rpc.DriveWireServiceAsync;
-import com.mynumnum.drivewire.client.status.Status;
 import com.mynumnum.drivewire.client.tabs.About;
 import com.mynumnum.drivewire.client.tabs.Drives;
+import com.mynumnum.drivewire.client.tabs.Ports;
 import com.mynumnum.drivewire.client.tabs.Settings;
+import com.mynumnum.drivewire.client.tabs.Status;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.mynumnum.drivewire.client.ports;
+package com.mynumnum.drivewire.client.tabs;
 
 import java.util.ArrayList;
 
