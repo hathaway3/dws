@@ -240,7 +240,7 @@ public class DWVPortHandler
 			return;
 		}
 		
-		respondOk("connecting");
+		// respondOk("connecting");
 		
 		// start TCP thread
 		this.utilthread = new Thread(new DWVPortTCPConnectionThread(this.vport, tcphost, tcpport));

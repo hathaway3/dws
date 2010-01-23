@@ -86,7 +86,7 @@ public class DWVPortTCPServerThread implements Runnable {
 					else
 					{
 						
-						DWVSerialPorts.write1(this.vport,(byte)databyte);
+						DWVSerialPorts.writeToCoco(this.vport,(byte)databyte);
 					}
 				}
 				

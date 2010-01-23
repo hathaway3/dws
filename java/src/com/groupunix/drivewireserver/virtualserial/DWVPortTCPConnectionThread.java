@@ -73,28 +73,17 @@ public class DWVPortTCPConnectionThread implements Runnable {
 							
 				try 
 				{
-					int tcpAvail = skt.getInputStream().available();
-					if (tcpAvail > 1)
+					int databyte = skt.getInputStream().read();
+					if (databyte == -1)
 					{
-						// read block
-						byte[] buffer = new byte[tcpAvail];
-						skt.getInputStream().read(buffer, 0, tcpAvail);
-						DWVSerialPorts.write(this.vport, new String(buffer));
-						
+						logger.debug("got -1 in input stream");
+						wanttodie = true;
 					}
 					else
 					{
-						//wait for data/read one
-						int databyte = skt.getInputStream().read();
-						if (databyte == -1)
-						{
-							wanttodie = true;
-						}
-						else
-						{
-							DWVSerialPorts.write1(this.vport,(byte)databyte);
-						}
+						DWVSerialPorts.writeToCoco(this.vport,(byte)databyte);
 					}
+					
 				} 
 				catch (IOException e) 
 				{
@@ -104,6 +93,15 @@ public class DWVPortTCPConnectionThread implements Runnable {
 				
 			}
 		
+			
+			if (wanttodie)
+				logger.debug("exit because wanttodie");
+			
+			if (skt.isClosed())
+				logger.debug("exit because skt isClosed");
+			
+			if (!DWVSerialPorts.isOpen(this.vport))
+				logger.debug("exit because port is not open");			
 			
 			DWVSerialPorts.markDisconnected(this.vport);
 			DWVSerialPorts.setPortOutput(vport, null);
