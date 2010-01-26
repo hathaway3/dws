@@ -103,17 +103,13 @@ public class DWVPortHandler
 				{
 					doTCPConnect(cmdparts[2],cmdparts[3]);
 				}
-				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("listen"))) 
+				else if ((cmdparts.length >= 3) && (cmdparts[1].equalsIgnoreCase("listen"))) 
 				{
-					doTCPListen(cmdparts[2], 0);
+					doTCPListen(cmdparts);
 				}
 				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("listentelnet"))) 
 				{
-					doTCPListen(cmdparts[2], 1);
-				}
-				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("listenhttp"))) 
-				{
-					doTCPListen(cmdparts[2], 2);
+					doTCPListen(cmdparts[2],1);
 				}
 				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("join"))) 
 				{
@@ -248,23 +244,83 @@ public class DWVPortHandler
 		
 	}
 	
-	private void doTCPListen(String tcpportstr, int mode) 
+	private void doTCPListen(String strport, int mode)
 	{
 		int tcpport;
 		
 		// get port #
 		try
 		{
-			tcpport = Integer.parseInt(tcpportstr);
+			tcpport = Integer.parseInt(strport);
 		}
 		catch (NumberFormatException e)
 		{
 			respondFail(2,"non-numeric port in tcp listen command");
 			return;
 		}
+		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.vport, tcpport);
+		this.utilthread = new Thread(listener);
+		
+		// simulate old behavior
+		listener.setMode(mode);
+		listener.setDo_auth(true);
+		listener.setDo_protect(true);
+		listener.setDo_banner(true);
+		listener.setDo_telnet(true);
 		
 		// start TCP listener thread
-		this.utilthread = new Thread(new DWVPortTCPListenerThread(this.vport, tcpport, mode));
+		this.utilthread.start();
+		
+	}
+	
+	private void doTCPListen(String[] cmdparts) 
+	{
+		int tcpport;
+		
+		// get port #
+		try
+		{
+			tcpport = Integer.parseInt(cmdparts[2]);
+		}
+		catch (NumberFormatException e)
+		{
+			respondFail(2,"non-numeric port in tcp listen command");
+			return;
+		}
+		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.vport, tcpport);
+		this.utilthread = new Thread(listener);
+				
+		// parse options
+		if (cmdparts.length > 3)
+		{
+			for (int i = 3;i<cmdparts.length;i++)
+			{
+				if (cmdparts[i].equalsIgnoreCase("telnet"))
+				{
+					listener.setDo_telnet(true);
+				}
+				else if (cmdparts[i].equalsIgnoreCase("httpd"))
+				{
+					listener.setMode(2);
+				}
+				else if (cmdparts[i].equalsIgnoreCase("auth"))
+				{
+					listener.setDo_auth(true);
+				}
+				else if (cmdparts[i].equalsIgnoreCase("protect"))
+				{
+					listener.setDo_protect(true);
+				}
+				else if (cmdparts[i].equalsIgnoreCase("banner"))
+				{
+					listener.setDo_banner(true);
+				}
+				
+			}
+				
+		}
+		
+		// start TCP listener thread
 		this.utilthread.start();
 		
 	}

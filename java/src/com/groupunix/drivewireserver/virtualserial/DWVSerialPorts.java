@@ -497,5 +497,15 @@ public class DWVSerialPorts {
 		
 		return(false);
 	}
+
+
+	public static boolean isValid(byte b)
+	{
+	  if ((b >= 0) && (b < MAX_PORTS))
+		  return(true);
+	  
+	  return(false);
+		
+	}
 	
 }

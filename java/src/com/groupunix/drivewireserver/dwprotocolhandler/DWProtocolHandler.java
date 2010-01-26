@@ -876,6 +876,12 @@ public class DWProtocolHandler implements Runnable
 			responsebuf = comRead(2);
 			logger.info("DoOP_SERSETSTAT: " + prettySS(responsebuf[1]) + " port: " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ")");
 			
+			if (!DWVSerialPorts.isValid(responsebuf[0]))
+			{
+				logger.debug("Invalid port '" + responsebuf[0] + "' in sersetstat, ignored.");
+				return;
+			}
+			
 			switch(responsebuf[1])
 			{
 				// SS.ComSt
@@ -982,7 +988,7 @@ public class DWProtocolHandler implements Runnable
 		comWrite(result, 2);
 		
 		//if (result[0] != 0)
-		// logger.debug("DoOP_SERREAD response " + (int) (result[0] & 0xFF) + ":" + (int) (result[1] & 0xFF));
+		//logger.debug("DoOP_SERREAD response " + (int) (result[0] & 0xFF) + ":" + (int) (result[1] & 0xFF));
 	}
 	
 	private void DoOP_SERWRITE() 

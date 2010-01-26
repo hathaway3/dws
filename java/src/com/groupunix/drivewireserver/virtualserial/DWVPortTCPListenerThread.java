@@ -16,17 +16,20 @@ public class DWVPortTCPListenerThread implements Runnable
 	
 	private int vport;
 	private int tcpport;
-	private int mode;
+	private int mode = 0;
+	private boolean do_auth = false;
+	private boolean do_protect = false;
+	private boolean do_banner = false;
+	private boolean do_telnet = false;
 	private boolean wanttodie = false;
 	
 	private static int BACKLOG = 20;
 	
-	public DWVPortTCPListenerThread(int vport, int tcpport, int mode)
+	public DWVPortTCPListenerThread(int vport, int tcpport)
 	{
-		logger.debug("init tcp listener thread on port "+ tcpport + " mode " + mode);	
+		logger.debug("init tcp listener thread on port "+ tcpport);	
 		this.vport = vport;
 		this.tcpport = tcpport;
-		this.mode = mode;
 		
 	}
 	
@@ -84,26 +87,19 @@ public class DWVPortTCPListenerThread implements Runnable
 			
 			logger.info("new connection from " + skt.getInetAddress().getHostAddress());
 			
-			if (mode == 0)
-			{
-				//add connection to pool
-				int conno = DWVPortListenerPool.addConn(skt, mode);
-
-				// announce new connection to listener
-				DWVSerialPorts.writeToCoco(this.vport, conno + " " + this.tcpport + " " +  skt.getInetAddress().getHostAddress() + (char) 13);		
-			}
-			else if (mode == 1)
-			{
-				// run telnet preflight, let it add the connection to the pool if things work out
-				Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.vport, skt));
-				pfthread.start();
-			}
-			else if (mode ==2)
+			if (mode == 2)
 			{
 				// http mode
 				processHTTPReq(skt);
-				
+			
 			}
+			else
+			{
+				// run telnet preflight, let it add the connection to the pool if things work out
+				Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.vport, skt, this.do_telnet, this.do_auth, this.do_protect, this.do_banner));
+				pfthread.start();
+			}
+			
 			
 		}
 			
@@ -322,9 +318,60 @@ public class DWVPortTCPListenerThread implements Runnable
 		DWVSerialPorts.writeToCoco(this.vport, (byte) connid);
 		DWVSerialPorts.writeToCoco(this.vport, (byte) ctl);
 		DWVSerialPorts.writeToCoco(this.vport, req);
+	
+	}
+
+	
+	public void setDo_auth(boolean do_auth)
+	{
+		this.do_auth = do_auth;
+	}
+
+	public boolean isDo_auth()
+	{
+		return do_auth;
+	}
+
+	public void setDo_protect(boolean do_protect)
+	{
+		this.do_protect = do_protect;
+	}
+
+	public boolean isDo_protect()
+	{
+		return do_protect;
+	}
+
+	public void setDo_banner(boolean do_banner)
+	{
+		this.do_banner = do_banner;
+	}
+
+	public boolean isDo_banner()
+	{
+		return do_banner;
+	}
+
+	
+	public void setMode(int mode)
+	{
+		this.mode = mode;
+	}
+	
+	public int getMode()
+	{
+		return(this.mode);
+	}
+
+	public void setDo_telnet(boolean b)
+	{
+		this.do_telnet = b;
 		
-		
-		
+	}
+	
+	public boolean isDo_telnet()
+	{
+		return do_telnet;
 	}
 	
 }

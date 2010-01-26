@@ -29,11 +29,20 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	private int usergroup = -1;
 	private String username = "unknown";
 	private boolean loginOK = true;
+	private boolean auth = false;
+	private boolean protect = false;
+	private boolean banner = false;
+	private boolean telnet = false;
 	
-	public DWVPortTelnetPreflightThread(int vport, Socket skt)
+	
+	public DWVPortTelnetPreflightThread(int vport, Socket skt, boolean doTelnet, boolean doAuth, boolean doProtect, boolean doBanner)
 	{
 		this.vport = vport;
 		this.skt = skt;
+		this.auth = doAuth;
+		this.protect = doProtect;
+		this.banner = doBanner;
+		this.telnet = doTelnet;
 	}
 
 	public void run()
@@ -46,7 +55,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			skt.getOutputStream().write(("DriveWire Telnet Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
 
 			// check banned
-			if (DriveWireServer.config.containsKey("TelnetBanned"))
+			if ((DriveWireServer.config.containsKey("TelnetBanned")) && (this.protect == true))
 			{
 				String[] thebanned = DriveWireServer.config.getStringArray("TelnetBanned");
 			
@@ -86,33 +95,35 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				return;
 			}
 		
-		
-			// ask telnet to turn off echo, should probably be a setting or left to the client
-			byte[] buf = new byte[9];
-		
-			buf[0] = (byte) 255;
-			buf[1] = (byte) 251;
-			buf[2] = (byte) 1;
-			buf[3] = (byte) 255;
-			buf[4] = (byte) 251;
-			buf[5] = (byte) 3;
-			buf[6] = (byte) 255;
-			buf[7] = (byte) 253;
-			buf[8] = (byte) 243;
-		
-		
-			skt.getOutputStream().write(buf, 0, 9);
-		
-			// 	read back the echoed controls - TODO has issues
-		
-			for (int i = 0; i<9; i++)
+
+			if (telnet == true)
 			{
-				skt.getInputStream().read();
+				// ask telnet to turn off echo, should probably be a setting or left to the client
+				byte[] buf = new byte[9];
+		
+				buf[0] = (byte) 255;
+				buf[1] = (byte) 251;
+				buf[2] = (byte) 1;
+				buf[3] = (byte) 255;
+				buf[4] = (byte) 251;
+				buf[5] = (byte) 3;
+				buf[6] = (byte) 255;
+				buf[7] = (byte) 253;
+				buf[8] = (byte) 243;
+		
+		
+				skt.getOutputStream().write(buf, 0, 9);
+		
+				// 	read back the echoed controls - TODO has issues
+		
+				for (int i = 0; i<9; i++)
+				{
+					skt.getInputStream().read();
+				}
 			}
-			
-			// auth
+				
 			// do auth
-			if (DriveWireServer.config.getBoolean("TelnetUseAuth", false))
+			if (auth == true)
 			{
 				this.loginOK = false;
 				
@@ -164,13 +175,13 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				return;
 			}
 			
-			if (DriveWireServer.config.getBoolean("TelnetUseAuth", false))
+			if (auth == true)
 			{
 				DWVSerialPorts.setUserName(this.vport,this.username);
 				DWVSerialPorts.setUserGroup(this.vport, this.usergroup);
 			}
 			
-			if (DriveWireServer.config.containsKey("TelnetBannerFile"))
+			if ((DriveWireServer.config.containsKey("TelnetBannerFile")) && (banner == true))
 			{
 				displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannerFile"));
 			}
