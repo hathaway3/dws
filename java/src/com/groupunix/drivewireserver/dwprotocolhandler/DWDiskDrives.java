@@ -193,11 +193,25 @@ public class DWDiskDrives
 		else
 		{
 			diskDrives[driveno] = disk;
-			logger.info("loaded disk '" + disk.getFilePath() + "' in drive " + driveno);
+			logger.info("loaded disk '" + disk.getFilePath() + "' in drive " + driveno + " with checksum " + disk.getChecksum());
 			
 			logger.debug(disk.diskInfo());
 			
 		}
+	}
+	
+	public void ReLoadDisk(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, FileNotFoundException, DWDriveAlreadyLoadedException
+	{
+		if (diskDrives[driveno] == null)
+		{
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);
+		}
+		
+		String filename = diskDrives[driveno].getFilePath();
+		
+		EjectDisk(driveno);
+		LoadDiskFromFile(driveno,filename);
+		
 	}
 	
 	
@@ -359,6 +373,28 @@ public class DWDiskDrives
 	public DWDisk getDisk(int driveno) 
 	{
 		return(diskDrives[driveno]);
+	}
+
+
+	public String getChecksum(int driveno)
+	{
+		return(diskDrives[driveno].getChecksum());
+	}
+	
+	public String getDiskChecksum(int driveno)
+	{
+		return(diskDrives[driveno].getMD5Checksum(diskDrives[driveno].getFilePath()));
+	}
+	
+	public void syncDisk(int driveno)
+	{
+		diskDrives[driveno].syncDisk();
+	}
+
+
+	public void mergeMemWithDisk(int driveno)
+	{
+		diskDrives[driveno].mergeMemWithDisk();		
 	}
 	
 }

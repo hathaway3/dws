@@ -1,9 +1,5 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -48,55 +44,44 @@ public class DWDiskLazyWriter implements Runnable {
 		{
 			if (DWProtocolHandler.getDiskDrives().diskLoaded(driveno))
 			{
-				// check for dirtys
+				boolean diskchanged = false;
+				boolean memchanged = false;
+			
+				if (!DWProtocolHandler.getDiskDrives().getChecksum(driveno).equals(DWProtocolHandler.getDiskDrives().getDiskChecksum(driveno)))
+				{
+					logger.debug("disk file for drive " + driveno + " has changed (mem chksum = " + DWProtocolHandler.getDiskDrives().getChecksum(driveno) + ", dsk chksum = " + DWProtocolHandler.getDiskDrives().getDiskChecksum(driveno) + ")" );
+					diskchanged = true;
+				}
+				
 				if (DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) > 0)
 				{
-					// write dirty sectors to dsk file
-					logger.debug("drive " + driveno + " has " + DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
+					logger.debug("cache for drive " + driveno + " has changed, " + DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
 					
-					syncDisk(driveno);
-					
+					memchanged = true;
 				}
-			}
-		}
-		
-	}
-
-
-	private void syncDisk(int driveno) 
-	{
-		
-		try 
-		{
-			RandomAccessFile raf = new RandomAccessFile(DWProtocolHandler.getDiskDrives().getDiskFile(driveno), "rw");
-			
-			for (int i = 0;i<DWDisk.MAX_SECTORS;i++)
-			{
-				if (DWProtocolHandler.getDiskDrives().getDisk(driveno).getSector(i) != null)
+				
+				if (memchanged && !diskchanged)
 				{
-					if (DWProtocolHandler.getDiskDrives().getDisk(driveno).getSector(i).isDirty())
-					{
-						long pos = i * 256;
-						raf.seek(pos);
-						raf.write(DWProtocolHandler.getDiskDrives().getDisk(driveno).getSector(i).getData());
-						logger.debug("wrote sector " + i + " in " + DWProtocolHandler.getDiskDrives().getDisk(driveno).getFilePath() );
-						DWProtocolHandler.getDiskDrives().getDisk(driveno).getSector(i).setDirty(false);
-					}
+					// mem copy changed, disk did not, just write it out
+					DWProtocolHandler.getDiskDrives().syncDisk(driveno);
+					
 				}
+				else if (diskchanged)
+				{
+					// merge disk with mem
+					DWProtocolHandler.getDiskDrives().mergeMemWithDisk(driveno);
+					
+				}
+				
 			}
-			
-			raf.close();
-		} 
-		catch (FileNotFoundException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		
-		
 	}
+
+
+
+	
+	
+
 	
 }
