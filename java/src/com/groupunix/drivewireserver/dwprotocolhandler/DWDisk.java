@@ -568,6 +568,8 @@ public class DWDisk {
 		        		this.sectors[sector] = null;
 		        		logger.debug("clearing sector " + sector + " because it no longer exists in " + this.filePath);
 		        	}
+		        	
+		        	sector++;
 		        }
 		        
 
