@@ -16,6 +16,7 @@ public class DWVPortTermThread implements Runnable
 	
 	private int tcpport;
 	private boolean wanttodie = false;
+	private int vport = 0;  // port 0 is always Term now..
 	
 	private static final int TERM_PORT = 0;
 	private static final int MODE_TERM = 3;
@@ -28,7 +29,6 @@ public class DWVPortTermThread implements Runnable
 	{
 		logger.debug("init term device thread on port "+ tcpport);	
 		this.tcpport = tcpport;
-		
 		
 	}
 	
@@ -159,7 +159,7 @@ public class DWVPortTermThread implements Runnable
 		
 		
 		// pass through till connection is lost
-		conno = DWVPortListenerPool.addConn(skt,MODE_TERM);
+		conno = DWVPortListenerPool.addConn(this.vport, skt,MODE_TERM);
 		connthread = new Thread(new DWVPortTCPServerThread(TERM_PORT, conno));
 		connthread.start();
 	

@@ -3,7 +3,6 @@ package com.groupunix.drivewireserver.virtualserial;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
@@ -36,8 +35,7 @@ public class DWVSerialPort {
 	
 	private boolean wanttodie = false;
 	private Socket socket = null;
-	private ServerSocket serversocket = null;
-	
+		
 	
 	public DWVSerialPort(int port)
 	{
@@ -236,19 +234,7 @@ public class DWVSerialPort {
 					}
 				}
 				
-				if (this.serversocket != null)
-				{
-					logger.debug("closing server socket on port " + this.port);
-					
-					try {
-						this.serversocket.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					this.serversocket = null;
-				}
+				
 				
 				if (this.socket != null)
 				{
@@ -401,10 +387,6 @@ public class DWVSerialPort {
 		return userName;
 	}
 
-	public void setSocket(ServerSocket skt) 
-	{
-		this.serversocket = skt;
-	}
 	
 	public void setSocket(Socket skt) 
 	{
@@ -421,6 +403,12 @@ public class DWVSerialPort {
 		{
 			return true;
 		}
+		
+	}
+
+	public void sendConnectionAnnouncement(int conno, int localport, String hostaddr)
+	{
+		this.porthandler.announceConnection(conno, localport, hostaddr);
 		
 	}
 	

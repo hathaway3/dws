@@ -20,7 +20,7 @@ public class DWVPortHandler
 		this.vport = port;	
 		this.vModem = new DWVModem(port);
 		
-		logger.debug("init handler for port " + port);
+		//logger.debug("init handler for port " + port);
 	}
 
 	public void takeInput(int databyte) 
@@ -259,7 +259,7 @@ public class DWVPortHandler
 			return;
 		}
 		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.vport, tcpport);
-		this.utilthread = new Thread(listener);
+		
 		
 		// simulate old behavior
 		listener.setMode(mode);
@@ -269,7 +269,8 @@ public class DWVPortHandler
 		listener.setDo_telnet(true);
 		
 		// start TCP listener thread
-		this.utilthread.start();
+		Thread listenThread = new Thread(listener);
+		listenThread.start();
 		
 	}
 	
@@ -288,7 +289,6 @@ public class DWVPortHandler
 			return;
 		}
 		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.vport, tcpport);
-		this.utilthread = new Thread(listener);
 				
 		// parse options
 		if (cmdparts.length > 3)
@@ -321,7 +321,8 @@ public class DWVPortHandler
 		}
 		
 		// start TCP listener thread
-		this.utilthread.start();
+		Thread listenThread = new Thread(listener);
+		listenThread.start();
 		
 	}
 	
@@ -338,6 +339,11 @@ public class DWVPortHandler
 		String perrno = String.format("%03d", errno);
 		logger.debug("command failed: " + perrno + " " + txt);
 		DWVSerialPorts.writeToCoco(this.vport, "FAIL " + perrno + " " + txt + (char) 13);
+	}
+	
+	public synchronized void announceConnection(int conno, int localport, String hostaddr)
+	{
+		DWVSerialPorts.writeToCoco(this.vport, conno + " " + localport + " " +  hostaddr + (char) 13);		
 	}
 	
 }

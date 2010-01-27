@@ -67,7 +67,9 @@ public class DWVPortTCPListenerThread implements Runnable
 		
 		DWVSerialPorts.sendUtilityOKResponse(this.vport, "listening on port " + this.tcpport + (char) 0);
 		
-		DWVSerialPorts.setSocket(this.vport, srvr);
+		// DWVSerialPorts.setSocket(this.vport, srvr);
+		DWVPortListenerPool.addListener(this.vport, srvr);
+		
 		
 		while ((wanttodie == false) && DWVSerialPorts.isOpen(this.vport) && (srvr.isClosed() == false))
 		{
@@ -184,7 +186,7 @@ public class DWVPortTCPListenerThread implements Runnable
 		
 			
 			
-		// byte[] buffer = new byte[409600];
+		
 		int reqbytes = 0;
 			
 		if ((skt.isClosed() == false) && DWVSerialPorts.isOpen(this.vport)) 

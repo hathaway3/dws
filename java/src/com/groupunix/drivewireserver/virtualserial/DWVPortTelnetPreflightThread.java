@@ -200,11 +200,12 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			logger.debug("Preflight success for " + skt.getInetAddress().getHostName());
 			
 			//add connection to pool
-			int conno = DWVPortListenerPool.addConn(skt, 1);
+			int conno = DWVPortListenerPool.addConn(this.vport, skt, 1);
 
-			logger.debug("announcing connection #" + conno);
+			
 			// announce new connection to listener
-			DWVSerialPorts.writeToCoco(this.vport, conno + " " + skt.getLocalPort() + " " +  skt.getInetAddress().getHostAddress() + (char) 13);		
+			DWVSerialPorts.sendConnectionAnnouncement(this.vport, conno, skt.getLocalPort(), skt.getInetAddress().getHostAddress());
+					
 		}
 		
 		logger.debug("exiting");

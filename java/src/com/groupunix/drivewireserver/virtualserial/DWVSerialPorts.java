@@ -3,7 +3,6 @@ package com.groupunix.drivewireserver.virtualserial;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
@@ -19,7 +18,6 @@ public class DWVSerialPorts {
 	public static final int MAX_PORTS = 15;
 	
 	
-	public static final int CHUNK_SIZE = 240;
 	
 	private static DWVSerialPort[] vserialPorts = new DWVSerialPort[MAX_PORTS];
 	
@@ -274,34 +272,7 @@ public class DWVSerialPorts {
 	}
 	
 		
-	public static void writeSections(int port, String data) 
-	{
-		String dataleft = data;
-		
-		// send data in (numbytes)(bytes) format
-		
-		while (dataleft.length() > CHUNK_SIZE)
-		{
-			// send a chunk
-			
-			write1(port, (byte) CHUNK_SIZE);
-			write(port, dataleft.substring(0, CHUNK_SIZE));
-			dataleft = dataleft.substring(CHUNK_SIZE);
-			logger.debug("sent chunk for " + prettyPort(port) + ", left: " + dataleft.length());
-		}
-		
-		// send last chunk
-		int bytes = dataleft.length();
-		
-		write1(port, (byte) bytes);
-		
-		write(port, dataleft);
-		
-		// send termination
-		write1(port, (byte) 0);
-		
-	}
-
+	
 	
 	public static void write1(int port, byte data)
 	{
@@ -387,16 +358,11 @@ public class DWVSerialPorts {
 	{
 		logger.debug("Resetting all virtual serial ports - part 1, close all sockets");
 		
-		for (int i = 0;i<DWVPortListenerPool.MAX_CONN;i++)
+		
+		for (int i = 0;i<MAX_PORTS;i++)
 		{
-			if (DWVPortListenerPool.getConn(i) != null)
-			{
-				// don't reset term
-				if (DWVPortListenerPool.getMode(i) != MODE_TERM)
-				{
-					DWVPortListenerPool.killConn(i);
-				}
-			}
+			DWVPortListenerPool.closePortConnectionSockets(i);
+			DWVPortListenerPool.closePortServerSockets(i);
 		}
 		
 		logger.debug("Resetting all virtual serial ports - part 2, init all ports");
@@ -458,10 +424,6 @@ public class DWVSerialPorts {
 	}
 
 
-	public static void setSocket(int vport, ServerSocket skt) 
-	{
-		vserialPorts[vport].setSocket(skt);
-	}
 	
 	public static void setSocket(int vport, Socket skt) 
 	{
@@ -506,6 +468,12 @@ public class DWVSerialPorts {
 	  
 	  return(false);
 		
+	}
+
+
+	public static void sendConnectionAnnouncement(int vport, int conno, int localport, String hostaddr)
+	{
+		vserialPorts[vport].sendConnectionAnnouncement(conno, localport, hostaddr);
 	}
 	
 }

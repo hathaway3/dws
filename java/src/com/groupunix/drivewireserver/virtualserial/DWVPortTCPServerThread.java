@@ -39,6 +39,8 @@ public class DWVPortTCPServerThread implements Runnable {
 	{
 		Thread.currentThread().setName("tcpserv-" + Thread.currentThread().getId());
 		
+		DWVPortListenerPool.setConnPort(this.conno, this.vport);
+		
 		logger.debug("run for conn " + this.conno);
 				
 		if (skt == null)

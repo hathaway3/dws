@@ -22,7 +22,6 @@ import org.apache.log4j.PatternLayout;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
-import com.mynumnum.drivewire.server.Jetty;
 
 
 public class DriveWireServer 

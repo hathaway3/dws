@@ -378,7 +378,17 @@ public class DWUtilDWThread implements Runnable
 			{
 				if (DWVPortListenerPool.getConn(i) != null)
 				{
-					text += "Conn " + i + ": " + DWVPortListenerPool.getConn(i).getInetAddress().getHostName() + ":" + DWVPortListenerPool.getConn(i).getPort() + "\r\n";
+					text += "Connection " + i + ": " + DWVPortListenerPool.getConn(i).getInetAddress().getHostName() + ":" + DWVPortListenerPool.getConn(i).getPort() + " (connected to port " + DWVSerialPorts.prettyPort(DWVPortListenerPool.getConnPort(i)) + ")\r\n";
+				}
+			}
+			
+			text += "\r\n";
+			
+			for (int i = 0; i<DWVPortListenerPool.MAX_LISTEN;i++)
+			{
+				if (DWVPortListenerPool.getListener(i) != null)
+				{
+					text += "Listener " + i + ": TCP port " + DWVPortListenerPool.getListener(i).getLocalPort() + " (control port " + DWVSerialPorts.prettyPort(DWVPortListenerPool.getListenerPort(i)) +")\r\n";
 				}
 			}
 			
