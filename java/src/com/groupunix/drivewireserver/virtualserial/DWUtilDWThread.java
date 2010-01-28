@@ -10,6 +10,7 @@ import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
+import org.jasypt.util.password.BasicPasswordEncryptor;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
@@ -40,6 +41,7 @@ public class DWUtilDWThread implements Runnable
 		Thread.currentThread().setName("dwutil-" + Thread.currentThread().getId());
 		
 		logger.debug("run");
+		
 		
 		String[] args = this.strargs.split(" ");
 		
@@ -72,6 +74,10 @@ public class DWUtilDWThread implements Runnable
 		{
 			doDiskWPToggle(args[2]);
 		}
+		else if ((args.length == 3) && (args[1].toLowerCase().startsWith("makepass")))
+		{
+			doMakePass(args[2]);
+		}
 		else
 		{
 			// unknown command/syntax
@@ -95,6 +101,21 @@ public class DWUtilDWThread implements Runnable
 	}
 
 	
+	private void doMakePass(String pw)
+	{
+		DWVSerialPorts.sendUtilityOKResponse(this.vport, "encrypted pw follows");
+		
+		BasicPasswordEncryptor bpe = new BasicPasswordEncryptor();
+				
+		DWVSerialPorts.writeToCoco(this.vport, "Encypted form of '" + pw + "' is: " + bpe.encryptPassword(pw));
+
+	}
+
+	private void doAccessDenied()
+	{
+		 DWVSerialPorts.sendUtilityFailResponse(this.vport, 128, "Access denied.");
+	}
+
 	private void doDiskInsert(String drivestr, String path) 
 	{
 		try

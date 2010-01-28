@@ -322,7 +322,7 @@ public class DWVSerialCircularBuffer {
 			{
 				if (((this.DW_PD_INT != 0) &&(buffer[i] == this.DW_PD_INT)) || ((this.DW_PD_QUT != 0) &&(buffer[i] == this.DW_PD_QUT)))
 				{
-					logger.debug("CC found in input1");
+					logger.debug("CC found in input1 pos " + i);
 					// must go no further in a multi, but allow single control char out
 					if (i > readPosition)
 						return(i - readPosition);

@@ -26,8 +26,6 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	// telnet login prompt timeout, 50ms * X
 	private static int MAX_TIMEOUT = 900;
 	
-	private int usergroup = -1;
-	private String username = "unknown";
 	private boolean loginOK = true;
 	private boolean auth = false;
 	private boolean protect = false;
@@ -174,8 +172,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 							if (checkAuth(username,password))
 							{
 								this.loginOK = true;
-								logger.info("AUTH: login from " + username);
-								skt.getOutputStream().write(("\r\n\nAuthorized for group " + this.usergroup + "\r\n\n").getBytes());
+								logger.info("AUTH: login from " + username + " (group " + DWVSerialPorts.getUserGroup(this.vport) + ")");
 							}
 							else
 							{
@@ -200,11 +197,6 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				return;
 			}
 			
-			if (auth == true)
-			{
-				DWVSerialPorts.setUserName(this.vport,this.username);
-				DWVSerialPorts.setUserGroup(this.vport, this.usergroup);
-			}
 			
 			if ((DriveWireServer.config.containsKey("TelnetBannerFile")) && (banner == true))
 			{
@@ -253,6 +245,8 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	
 
 	
+	
+
 	private boolean checkAuth(String username, String password) 
 	{
 		boolean result = false;
@@ -261,6 +255,8 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		{
 			// look for username in passwd file
 			FileInputStream fstream;
+			
+			BasicPasswordEncryptor bpe = new BasicPasswordEncryptor();
 			
 			try 
 			{
@@ -271,38 +267,48 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				BufferedReader br = new BufferedReader(new InputStreamReader(in));
 					
 				String strLine;
-				String userData = null;   
+				String founduser = null;
+				String foundpass = null;
+				int foundgroup = -1;
 				
-				while (((strLine = br.readLine()) != null) && (userData == null))
+				
+				while (((strLine = br.readLine()) != null) && (founduser == null))
 				{
-					if (strLine.startsWith(username))
+					if (!strLine.startsWith("#"))
 					{
-						userData = strLine;
+						String[] parts = new String[3];
+				    	parts = strLine.split(",", 3);
+
+				    	if (parts.length == 3)
+				    	{
+				    		if (parts[0].equals(username))
+				    		{
+				    			founduser = parts[0];
+				    			foundpass = parts[1];
+				    			foundgroup = Integer.parseInt(parts[2]);
+				    			 
+				    			logger.info("AUTH: login from '" + founduser + "' group " + foundgroup);
+				    		}
+				    	}
 					}
 				}
 				
 				fstream.close();
 				
-				if (userData == null)
+				if (founduser == null)
 				{
 					logger.debug("AUTH: User not found: '" + username + "'");
 				}
 				else
 				{
-					String[] parts = new String[3];
-			    	
-			    	parts = userData.split(",", 3);
-			    	
-			    	BasicPasswordEncryptor bpe = new BasicPasswordEncryptor();
-			    	
-			    	// logger.debug(bpe.encryptPassword("test"));
-			    	
-			    	if (bpe.checkPassword(password, parts[1]))
+					// found user
+					
+			    	if (bpe.checkPassword(password, foundpass))
 			    	{
 			    		// match
 			    		result = true;
-			    		this.username = username;
-			    		this.usergroup = Integer.parseInt(parts[2]);
+			    		DWVSerialPorts.setUserName(this.vport, founduser);
+			    		DWVSerialPorts.setUserGroup(this.vport, foundgroup);
 			    		
 			    	}
 			    	else

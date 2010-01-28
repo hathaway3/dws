@@ -72,7 +72,8 @@ public class DWVPortTCPServerThread implements Runnable {
 				}
 				else
 				{
-					if ((mode == MODE_TELNET) || (mode == MODE_TERM))
+					// filter CR,NULL if in telnet or term mode unless PD.INT and PD.QUT = 0
+					if (((mode == MODE_TELNET) || (mode == MODE_TERM)) && ((DWVSerialPorts.getPD_INT(this.vport) != 0) || (DWVSerialPorts.getPD_QUT(this.vport) != 0)))
 					{
 						// logger.debug("telnet in : " + databyte);
 						// TODO filter CR/LF.. should do this better

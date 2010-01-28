@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 
 public class DWVPortTCPConnectionThread implements Runnable {
 
-	private static final Logger logger = Logger.getLogger("DWServer.DWUtilTCPConnectionThread");
+	private static final Logger logger = Logger.getLogger("DWServer.DWVPortTCPConnectionThread");
 	
 	private int vport = -1;
 	private int tcpport = -1;
