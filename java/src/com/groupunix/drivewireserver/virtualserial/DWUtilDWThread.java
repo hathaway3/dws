@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
@@ -394,6 +396,18 @@ public class DWUtilDWThread implements Runnable
 			
 			
 		}
+		else if (args[2].toLowerCase().startsWith("t"))
+		{
+			text += "\r\nDriveWire Server Threads:\r\n\n";
+
+			Thread[] threads = getAllThreads();
+			
+			for (int i = 0;i<threads.length;i++)
+			{
+				text += String.format("%20s %3d %-8s %-14s %s",threads[i].getName(),threads[i].getPriority(),threads[i].getThreadGroup().getName(), threads[i].getState().toString(), threads[i].getClass().getCanonicalName()) + "\r\n";
+			}
+			
+		}
 		else if (args[2].toLowerCase().startsWith("po"))
 		{
 			text += "\r\nCurrent port status:\r\n\n";
@@ -540,6 +554,29 @@ public class DWUtilDWThread implements Runnable
 		
 		DWVSerialPorts.sendUtilityOKResponse(this.vport, "help text follows");
 	    DWVSerialPorts.writeToCoco(this.vport, text);
+	}
+
+	private ThreadGroup getRootThreadGroup( ) {
+
+	    ThreadGroup tg = Thread.currentThread( ).getThreadGroup( );
+	    ThreadGroup ptg;
+	    while ( (ptg = tg.getParent( )) != null )
+	        tg = ptg;
+	    return tg;
+	}
+	
+	private Thread[] getAllThreads( ) {
+	    final ThreadGroup root = getRootThreadGroup( );
+	    final ThreadMXBean thbean = ManagementFactory.getThreadMXBean( );
+	    int nAlloc = thbean.getThreadCount( );
+	    int n = 0;
+	    Thread[] threads;
+	    do {
+	        nAlloc *= 2;
+	        threads = new Thread[ nAlloc ];
+	        n = root.enumerate( threads, true );
+	    } while ( n == nAlloc );
+	    return java.util.Arrays.copyOf( threads, n );
 	}
 	
 }

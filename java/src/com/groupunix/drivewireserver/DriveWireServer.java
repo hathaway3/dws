@@ -22,12 +22,13 @@ import org.apache.log4j.PatternLayout;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
+import com.mynumnum.drivewire.server.Jetty;
 
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.0";
-	public static final String DWServerVersionDate = "1/17/2010";
+	public static final String DWServerVersion = "3.9.1";
+	public static final String DWServerVersionDate = "1/27/2010";
 	
 	
 	public static Logger logger = Logger.getLogger("DWServer");
@@ -68,8 +69,6 @@ public class DriveWireServer
 
     	// set up logging
     	
-    	// must be a better way
-    	//logger.getRoot().removeAllAppenders();
     	Logger.getRootLogger().removeAllAppenders();
     	
     	if (config.containsKey("LogFormat"))
@@ -78,13 +77,11 @@ public class DriveWireServer
     	}
     	
     	dwAppender = new DWLogAppender(logLayout);
-    	//logger.addAppender(dwAppender);
     	Logger.getRootLogger().addAppender(dwAppender);
     	
     	if (config.getBoolean("LogToConsole", true))
     	{
     		consoleAppender = new ConsoleAppender(logLayout);
-    		//logger.addAppender(consoleAppender);
     		Logger.getRootLogger().addAppender(consoleAppender);
     	}
     	
@@ -95,7 +92,7 @@ public class DriveWireServer
     	 		
     	}
     	
-    	logger.setLevel(Level.toLevel(config.getString("LogLevel", "WARN")));
+    	Logger.getRootLogger().setLevel(Level.toLevel(config.getString("LogLevel", "WARN")));
     	
     	logger.info("DriveWire Server " + DWServerVersion + " (" + DWServerVersionDate + ") starting up");
     	
@@ -119,7 +116,7 @@ public class DriveWireServer
 		{
 			// Start up the web interface.
 			Integer guiPort = config.getInt("GUIPort",8080);
-			logger.debug("Starting Jetty (Web UI) on port " + guiPort);
+			//logger.debug("Starting Jetty (Web UI) on port " + guiPort);
 			//new Jetty(guiPort);
 		}
 		else
@@ -265,9 +262,9 @@ public class DriveWireServer
 		{
 			
 			// are we already logging to file?
-			if (logger.isAttached(fileAppender))
+			if (Logger.getRootLogger().isAttached(fileAppender))
 			{
-				logger.removeAppender(fileAppender);
+				Logger.getRootLogger().removeAppender(fileAppender);
 			}
 			
 			attachFileAppender(fileName);
@@ -282,7 +279,7 @@ public class DriveWireServer
 		try 
 		{
 			fileAppender = new FileAppender(logLayout,fileName,true,true,4096);
-			logger.addAppender(fileAppender);
+			Logger.getRootLogger().addAppender(fileAppender);
 		} 
 		catch (IOException e) 
 		{
@@ -306,7 +303,7 @@ public class DriveWireServer
 		}
 		else if ((!logToFile) && (logger.isAttached(fileAppender)))
 		{
-			logger.removeAppender(fileAppender);
+			Logger.getRootLogger().removeAppender(fileAppender);
 
 		}
 		
@@ -349,10 +346,10 @@ public class DriveWireServer
 	{
 		logger.debug("WebUI sent log reset request");
 		
-		if (logger.isAttached(fileAppender))
+		if (Logger.getRootLogger().isAttached(fileAppender))
 		{
 			// stop logging to the file
-			logger.removeAppender(fileAppender);
+			Logger.getRootLogger().removeAppender(fileAppender);
 			
 			// delete file
 			File f = new File(config.getString("LogFile"));
