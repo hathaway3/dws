@@ -66,22 +66,47 @@ public class DWVPortTelnetPreflightThread implements Runnable
 						logger.info("Connection from banned IP " + thebanned[i]);
 					
 						// IP is banned
-						if (DriveWireServer.config.containsKey("TelnetBannedFile"))
+						
+						if (DriveWireServer.config.getBoolean("TelnetBannedAnnoy",false))
 						{
-							displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannedFile"));
+							logger.debug("attempting to annoy banned client");
+							
+							while (!skt.isClosed())
+							{
+								skt.getOutputStream().write(7);
+								try
+								{
+									Thread.sleep(330);
+								} catch (InterruptedException e)
+								{
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
+							
+							logger.debug("thread exiting after annoy");
+							return;
+							
 						}
 						else
 						{
-							skt.getOutputStream().write("No ports available.\r\n".getBytes());
-						}
+							if (DriveWireServer.config.containsKey("TelnetBannedFile"))
+							{
+								displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannedFile"));
+							}
+							else
+							{
+								skt.getOutputStream().write("No ports available.\r\n".getBytes());
+							}
 					
-						if (skt.isConnected())
-						{
-							logger.debug("closing socket");
-							skt.close();
+							if (skt.isConnected())
+							{
+								logger.debug("closing socket");
+								skt.close();
 							
-						}
+							}
 						
+						}
 					}
 				}
 			
@@ -189,8 +214,22 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		} 
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("IOException: " + e.getMessage());
+			
+			if (skt.isConnected())
+			{
+				logger.debug("closing socket");
+				try
+				{
+					skt.close();
+				} catch (IOException e1)
+				{
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			
+			}
+			
 		}
 			
 		

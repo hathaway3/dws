@@ -49,7 +49,7 @@ public class DWDiskLazyWriter implements Runnable {
 			
 				if (!DWProtocolHandler.getDiskDrives().getChecksum(driveno).equals(DWProtocolHandler.getDiskDrives().getDiskChecksum(driveno)))
 				{
-					logger.debug("disk file for drive " + driveno + " has changed (mem chksum = " + DWProtocolHandler.getDiskDrives().getChecksum(driveno) + ", dsk chksum = " + DWProtocolHandler.getDiskDrives().getDiskChecksum(driveno) + ")" );
+					logger.debug("disk file for drive " + driveno + " has changed");
 					diskchanged = true;
 				}
 				

@@ -440,8 +440,7 @@ public class DWDisk {
 		} 
 		catch (FileNotFoundException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("File not found for checksum: " + filename);
 		} 
 		catch (IOException e)
 		{
@@ -461,6 +460,13 @@ public class DWDisk {
    public String getMD5Checksum(String filename) 
    {
      byte[] b = createChecksum(filename);
+     
+     if (b == null)
+     {
+    	 // we couldn't get a checksum, probably file error
+    	 return(null);
+     }
+     
      String result = "";
      for (int i=0; i < b.length; i++) {
        result +=
@@ -583,9 +589,10 @@ public class DWDisk {
 		    updateChecksum();
 
 		} 
-		catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		catch (FileNotFoundException e) 
+		{
+			logger.warn("File not found for merge: " + this.filePath);
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -624,8 +631,7 @@ public class DWDisk {
 	   } 
 	   catch (FileNotFoundException e)
 	   {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("File not found for writing sectors: " + this.filePath);
 		} 
 	   catch (IOException e1)
 	   {
