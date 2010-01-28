@@ -13,6 +13,10 @@ import org.apache.log4j.Logger;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
+import com.maxmind.geoip.regionName;
+import com.maxmind.geoip.timeZone;
 
 public class DWVPortTelnetPreflightThread implements Runnable
 {
@@ -52,6 +56,24 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			// hello
 			skt.getOutputStream().write(("DriveWire Telnet Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
 
+			// GeoIP
+			
+			if (DriveWireServer.config.getBoolean("GeoIPLookup",false))
+			{
+				if (geoIPBanned(skt.getInetAddress().getHostAddress()) == true)
+				{
+					doBanned();
+				}
+			}
+			
+			if (skt.isClosed())
+			{
+				// bail out
+				logger.debug("thread exiting after geoip ban check");
+				return;
+			}
+			
+			
 			// check banned
 			if ((DriveWireServer.config.containsKey("TelnetBanned")) && (this.protect == true))
 			{
@@ -63,48 +85,8 @@ public class DWVPortTelnetPreflightThread implements Runnable
 					{
 						logger.info("Connection from banned IP " + thebanned[i]);
 					
-						// IP is banned
-						
-						if (DriveWireServer.config.getBoolean("TelnetBannedAnnoy",false))
-						{
-							logger.debug("attempting to annoy banned client");
-							
-							while (!skt.isClosed())
-							{
-								skt.getOutputStream().write(7);
-								try
-								{
-									Thread.sleep(330);
-								} catch (InterruptedException e)
-								{
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-							}
-							
-							logger.debug("thread exiting after annoy");
-							return;
-							
-						}
-						else
-						{
-							if (DriveWireServer.config.containsKey("TelnetBannedFile"))
-							{
-								displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannedFile"));
-							}
-							else
-							{
-								skt.getOutputStream().write("No ports available.\r\n".getBytes());
-							}
-					
-							if (skt.isConnected())
-							{
-								logger.debug("closing socket");
-								skt.close();
-							
-							}
-						
-						}
+						doBanned();
+
 					}
 				}
 			
@@ -114,7 +96,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			if (skt.isClosed())
 			{
 				// bail out
-				logger.debug("thread exiting after ban check");
+				logger.debug("thread exiting after IP ban check");
 				return;
 			}
 		
@@ -247,6 +229,141 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	
 	
 
+	private void doBanned()
+	{
+		// IP is banned
+		
+		if (DriveWireServer.config.getBoolean("TelnetBannedAnnoy",false))
+		{
+			logger.debug("attempting to annoy banned client");
+			
+			while (!skt.isClosed())
+			{
+				try
+				{
+					skt.getOutputStream().write(7);
+					Thread.sleep(330);
+				} 
+				catch (InterruptedException e)
+				{
+					logger.warn("Interrupted while annoying");
+					
+				} 
+				catch (IOException e1)
+				{
+					logger.warn("IOException: " + e1.getMessage());
+					if (skt.isConnected())
+					{
+						logger.debug("closing socket");
+						try
+						{
+							skt.close();
+						} catch (IOException e)
+						{
+							logger.warn("IOException closing socket: " + e.getMessage());
+						}
+						
+					}	
+				}
+			}
+			
+			
+		}
+		else
+		{
+			try
+			{
+				
+				if (DriveWireServer.config.containsKey("TelnetBannedFile"))
+				{
+					displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannedFile"));
+				}
+				else
+				{
+					skt.getOutputStream().write("No ports available.\r\n".getBytes());
+				}
+	
+			}
+			catch (IOException e1)
+			{
+				logger.warn("IOException: " + e1.getMessage());
+			}
+		
+		}
+			
+		if (skt.isConnected())
+		{
+			logger.debug("closing socket");
+			try
+			{
+				skt.close();
+			} catch (IOException e)
+			{
+				logger.warn("IOException closing socket: " + e.getMessage());
+			}
+			
+		}	
+	}
+
+	private boolean geoIPBanned(String hostAddress)
+	{
+		Location loc = lookupGeoIP(hostAddress);
+
+		
+		if (loc != null)
+		{
+			// log details
+			logger.info("GeoIP: cc='" + loc.countryCode + "' country='" + loc.countryName + "' region='" + regionName.regionNameByCode(loc.countryCode, loc.region) + "' city='" + loc.city + "'  lat: " + loc.latitude + " lng: " + loc.longitude );
+			
+			// do country, regionName, city
+			if (DriveWireServer.config.containsKey("GeoIPBannedCountries"))
+			{
+				String[] thebanned = DriveWireServer.config.getStringArray("GeoIPBannedCountries");
+				
+				for (int i = 0;i<thebanned.length ;i++)
+				{
+					if ((loc.countryName.equalsIgnoreCase(thebanned[i])) || (loc.countryCode.equalsIgnoreCase(thebanned[i]))) 
+					{
+						logger.info("Connection from banned country: " + thebanned[i]);
+						return true;
+					}
+				}	
+			}
+			
+			if (DriveWireServer.config.containsKey("GeoIPBannedRegions"))
+			{
+				String[] thebanned = DriveWireServer.config.getStringArray("GeoIPBannedRegions");
+				
+				for (int i = 0;i<thebanned.length ;i++)
+				{
+					if ((loc.region.equalsIgnoreCase(thebanned[i])) || (regionName.regionNameByCode(loc.countryCode, loc.region).equalsIgnoreCase(thebanned[i]))) 
+					{
+						logger.info("Connection from banned region: " + thebanned[i]);
+						return true;
+					}
+				}	
+			}
+			
+			if (DriveWireServer.config.containsKey("GeoIPBannedCities"))
+			{
+				String[] thebanned = DriveWireServer.config.getStringArray("GeoIPBannedCities");
+				
+				for (int i = 0;i<thebanned.length ;i++)
+				{
+					if (loc.city.equalsIgnoreCase(thebanned[i]))
+					{
+						logger.info("Connection from banned city: " + thebanned[i]);
+						return true;
+					}
+				}	
+			}
+			
+		}
+		
+		return false;
+	}
+
+	
 	private boolean checkAuth(String username, String password) 
 	{
 		boolean result = false;
@@ -444,6 +561,31 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		 
 	}
 	
+	
+	private Location lookupGeoIP(String ip)
+	{
+		try {
+		    LookupService cl = new LookupService(DriveWireServer.config.getString("GeoIPDatabaseFile"), LookupService.GEOIP_MEMORY_CACHE );
+	      
+		    
+		    Location l2 = cl.getLocation(ip);
+		    
+	          
+		    if (l2 == null)
+		    {
+		    	logger.debug("no results from GeoIP lookup");
+		    }
+		  
+		    cl.close();
+		    
+		    return(l2);
+		}
+		catch (IOException e) {
+		    System.out.println("IO Exception");
+		}
+		
+		return(null);
+	}
 	
 	
 }
