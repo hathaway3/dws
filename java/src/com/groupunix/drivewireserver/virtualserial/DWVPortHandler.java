@@ -124,7 +124,7 @@ public class DWVPortHandler
 					respondFail(2,"Syntax error in TCP command");
 				}
 			}
-			if (cmdparts[0].equalsIgnoreCase("url"))
+			else if (cmdparts[0].equalsIgnoreCase("url"))
 			{
 				if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("get"))) 
 				{
@@ -145,6 +145,11 @@ public class DWVPortHandler
 				
 				this.utilthread = new Thread(new DWUtilDWThread(this.vport, cmd));
 				this.utilthread.start();
+			}
+			else if (cmdparts[0].equalsIgnoreCase("log"))
+			{
+				// log entry
+				logger.info("coco " + cmd);
 			}
 		}
 		else
