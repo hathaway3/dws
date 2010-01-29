@@ -57,15 +57,7 @@ public class DriveWireServer
 		
 		// load settings
     	
-    	try 
-    	{
-			config = new PropertiesConfiguration("DriveWireServer.properties");
-		} 
-    	catch (ConfigurationException e1) 
-    	{
-    		System.out.println("Fatal - Could not process config file 'DriveWireServer.properties'.  Please consult the documentation.");
-    		System.exit(-1);
-		}
+    	loadConfig();
 
     	// set up logging
     	
@@ -116,8 +108,8 @@ public class DriveWireServer
 		{
 			// Start up the web interface.
 			Integer guiPort = config.getInt("GUIPort",8080);
-			//logger.debug("Starting Jetty (Web UI) on port " + guiPort);
-			//new Jetty(guiPort);
+			logger.debug("Starting Jetty (Web UI) on port " + guiPort);
+			new Jetty(guiPort);
 		}
 		else
 		{
@@ -405,6 +397,37 @@ public class DriveWireServer
 	public static int getLogEventsSize()
 	{
 		return(dwAppender.getEventsSize());
+	}
+	
+	public static void saveConfig()
+	{
+		try
+		{
+			config.save();
+		} catch (ConfigurationException e)
+		{
+			logger.error("ConfigurationException while saving config: " + e.getMessage());
+		}
+	}
+	
+	public static void loadConfig()
+	{
+		try 
+    	{
+			config = new PropertiesConfiguration("DriveWireServer.properties");
+		} 
+    	catch (ConfigurationException e1) 
+    	{
+    		System.out.println("Fatal - Could not process config file 'DriveWireServer.properties'.  Please consult the documentation.");
+    		System.exit(-1);
+		}
+	}
+
+
+
+	public static void reloadConfig()
+	{
+		config.reload();
 	}
 	
 }

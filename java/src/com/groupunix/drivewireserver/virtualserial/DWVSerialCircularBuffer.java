@@ -18,11 +18,15 @@ package com.groupunix.drivewireserver.virtualserial;
  * See COPYING.TXT for details.
  */
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.apache.log4j.Logger;
 
 import com.Ostermiller.util.BufferOverflowException;
+import com.Ostermiller.util.CircularCharBuffer;
+import com.Ostermiller.util.CircularObjectBuffer;
 
 /**
  * Implements the Circular Buffer producer/consumer model for bytes.

@@ -16,7 +16,6 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.maxmind.geoip.Location;
 import com.maxmind.geoip.LookupService;
 import com.maxmind.geoip.regionName;
-import com.maxmind.geoip.timeZone;
 
 public class DWVPortTelnetPreflightThread implements Runnable
 {
@@ -233,63 +232,24 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	{
 		// IP is banned
 		
-		if (DriveWireServer.config.getBoolean("TelnetBannedAnnoy",false))
+		try
 		{
-			logger.debug("attempting to annoy banned client");
-			
-			while (!skt.isClosed())
-			{
-				try
-				{
-					skt.getOutputStream().write(7);
-					Thread.sleep(330);
-				} 
-				catch (InterruptedException e)
-				{
-					logger.warn("Interrupted while annoying");
-					
-				} 
-				catch (IOException e1)
-				{
-					logger.warn("IOException: " + e1.getMessage());
-					if (skt.isConnected())
-					{
-						logger.debug("closing socket");
-						try
-						{
-							skt.close();
-						} catch (IOException e)
-						{
-							logger.warn("IOException closing socket: " + e.getMessage());
-						}
-						
-					}	
-				}
-			}
-			
-			
-		}
-		else
-		{
-			try
-			{
 				
-				if (DriveWireServer.config.containsKey("TelnetBannedFile"))
-				{
-					displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannedFile"));
-				}
-				else
-				{
-					skt.getOutputStream().write("No ports available.\r\n".getBytes());
-				}
-	
-			}
-			catch (IOException e1)
+			if (DriveWireServer.config.containsKey("TelnetBannedFile"))
 			{
-				logger.warn("IOException: " + e1.getMessage());
+				displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannedFile"));
 			}
-		
+			else
+			{
+				skt.getOutputStream().write("No ports available.\r\n".getBytes());
+			}
+	
 		}
+		catch (IOException e1)
+		{
+			logger.warn("IOException: " + e1.getMessage());
+		}
+		
 			
 		if (skt.isConnected())
 		{
@@ -305,6 +265,8 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		}	
 	}
 
+	
+	
 	private boolean geoIPBanned(String hostAddress)
 	{
 		Location loc = lookupGeoIP(hostAddress);
@@ -322,10 +284,19 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				
 				for (int i = 0;i<thebanned.length ;i++)
 				{
-					if ((loc.countryName.equalsIgnoreCase(thebanned[i])) || (loc.countryCode.equalsIgnoreCase(thebanned[i]))) 
+					try 
 					{
-						logger.info("Connection from banned country: " + thebanned[i]);
-						return true;
+						
+					
+						if ((loc.countryName.equalsIgnoreCase(thebanned[i])) || (loc.countryCode.equalsIgnoreCase(thebanned[i]))) 
+						{
+							logger.info("Connection from banned country: " + thebanned[i]);
+							return true;
+						}
+					}
+					catch (NullPointerException e) 
+					{
+						// don't care
 					}
 				}	
 			}
@@ -336,10 +307,17 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				
 				for (int i = 0;i<thebanned.length ;i++)
 				{
-					if ((loc.region.equalsIgnoreCase(thebanned[i])) || (regionName.regionNameByCode(loc.countryCode, loc.region).equalsIgnoreCase(thebanned[i]))) 
+					try
 					{
-						logger.info("Connection from banned region: " + thebanned[i]);
-						return true;
+						if ((loc.region.equalsIgnoreCase(thebanned[i])) || (regionName.regionNameByCode(loc.countryCode, loc.region).equalsIgnoreCase(thebanned[i]))) 
+						{
+							logger.info("Connection from banned region: " + thebanned[i]);
+							return true;
+						}
+					}
+					catch (NullPointerException e) 
+					{
+						// don't care
 					}
 				}	
 			}
@@ -350,10 +328,17 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				
 				for (int i = 0;i<thebanned.length ;i++)
 				{
-					if (loc.city.equalsIgnoreCase(thebanned[i]))
+					try
 					{
-						logger.info("Connection from banned city: " + thebanned[i]);
-						return true;
+						if (loc.city.equalsIgnoreCase(thebanned[i]))
+						{
+							logger.info("Connection from banned city: " + thebanned[i]);
+							return true;
+						}
+					}
+					catch (NullPointerException e) 
+					{
+						// don't care
 					}
 				}	
 			}

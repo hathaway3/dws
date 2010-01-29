@@ -24,6 +24,7 @@ public class DWVPortTCPListenerThread implements Runnable
 	private boolean wanttodie = false;
 	
 	private static int BACKLOG = 20;
+	private static int HTTP_TIMEOUT = 200;
 	
 	public DWVPortTCPListenerThread(int vport, int tcpport)
 	{
@@ -125,6 +126,7 @@ public class DWVPortTCPListenerThread implements Runnable
 
 	private void processHTTPReq(Socket skt) 
 	{
+		
 		// get request
 		
 		boolean inreq = true;
@@ -142,10 +144,23 @@ public class DWVPortTCPListenerThread implements Runnable
 				
 			int inbyte = 0;
 			
-			
+			int timeout = 0;
 			
 			try 
 			{
+				while ((skt.getInputStream().available() == 0) && (timeout < HTTP_TIMEOUT))
+				{
+					Thread.sleep(50);
+					timeout++;
+				}
+			
+				if (timeout >= HTTP_TIMEOUT)
+				{
+					logger.info("HTTPD: reading request timed out");
+					skt.close();
+				}
+			
+			
 				inbyte = skt.getInputStream().read();
 			} 
 			catch (IOException e) 
@@ -159,6 +174,10 @@ public class DWVPortTCPListenerThread implements Runnable
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+			} catch (InterruptedException e2)
+			{
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
 			}
 			
 				
