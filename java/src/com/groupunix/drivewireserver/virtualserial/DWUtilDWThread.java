@@ -18,6 +18,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWDisk;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
@@ -350,7 +351,12 @@ public class DWUtilDWThread implements Runnable
 				
 				if (DWVSerialPorts.isOpen(i))
 				{
-					text += "open (" + DWVSerialPorts.getOpen(i) + ") ";
+					text += "open(" + DWVSerialPorts.getOpen(i) + ") ";
+					
+					text += " PD.INT=" + DWVSerialPorts.getPD_INT(i);
+					text += " PD.QUT=" + DWVSerialPorts.getPD_QUT(i);
+					
+					
 				}
 				else
 				{
@@ -358,23 +364,18 @@ public class DWUtilDWThread implements Runnable
 				}
 				
 				
+				
 				if (DWVSerialPorts.isConnected(i))
 				{
-							
-					text += DWVSerialPorts.getHostIP(i);
-					text += ":" + DWVSerialPorts.getHostPort(i);
+					text += " " + DWVSerialPorts.getHostIP(i) + ":" + DWVSerialPorts.getHostPort(i);
 				}
 				else
 				{
-					text += "not connected";
+					text += " not connected";
 				}
 				
-				if (DriveWireServer.config.getBoolean("TelnetUseAuth", false))
-				{
-					text += "  " + DWVSerialPorts.getUserName(i);
-					text += " (" + DWVSerialPorts.getUserGroup(i) + ")";
-					
-				}
+				//text += " " + DWProtocolHandler.byteArrayToHexString(DWVSerialPorts.getDD(i));	
+				
 				
 				text += "\r\n";
 			}
@@ -493,7 +494,35 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("se"))
 		{
-			text += "not implemented";
+			// disk sets
+			if (args.length == 5)
+			{
+				if (args[3].toLowerCase().startsWith("sh"))
+				{
+					doDiskSetShow(args[4]);
+					return;
+				}
+				else if (args[3].toLowerCase().startsWith("sa"))
+				{
+					doDiskSetSave(args[4]);
+					return;
+				}
+				else if (args[3].toLowerCase().startsWith("l"))
+				{
+					doDiskSetLoad(args[4]);
+					return;
+				}
+				else
+				{
+					DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[3] + "' is not a valid option to dw disk set.");
+					return;
+				}
+			}
+			else
+			{
+				DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error in dw disk set command.");
+				return;
+			}
 		}
 		else
 		{
@@ -506,6 +535,105 @@ public class DWUtilDWThread implements Runnable
 	}
 
 	
+	private void doDiskSetLoad(String filename)
+	{
+		DWProtocolHandler.getDiskDrives().LoadDiskSet(filename);
+		DWVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
+		DWVSerialPorts.writeToCoco(this.vport, "Loaded disk set '" + filename +"'.  Check log for errors.");
+	}
+
+	private void doDiskSetSave(String filename)
+	{
+		DWProtocolHandler.getDiskDrives().saveDiskSet(filename);
+		DWVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
+		DWVSerialPorts.writeToCoco(this.vport, "Wrote current drive settings to disk set '" + filename +"'.  Check log for errors.");
+	}
+
+	private void doDiskSetShow(String filename)
+	{
+		String text = new String();
+		
+		File f = new File(filename);
+		
+	    FileReader fr;
+		try 
+		{
+			fr = new FileReader(f);
+		} 
+		catch (FileNotFoundException e) 
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Error: '" + filename + "' not found on server.");
+			return;
+		}
+		
+		text = "Contents of disk set file '" + filename + "':\r\n\n";
+		
+	    BufferedReader br = new BufferedReader(fr);
+
+	    String line;
+	    
+		try 
+		{
+		    
+			while ((line = br.readLine()) != null)
+		    {
+				
+		    	String[] parts = new String[3];
+		    	parts = line.split(",", 3);
+		    	
+		    	if (parts != null)
+		    	{
+		    		if ((parts.length == 3) && (!line.startsWith("#")))
+		    		{
+		    			
+		    			text += "Drive " + parts[0] + ": " + parts[1];
+		    			if (parts[2].equals("1"))
+		    				text += " (WP)";
+		    			
+		    			DWDisk tmpdisk = new DWDisk();
+		    			
+		    			try 
+		    			{
+							tmpdisk.setFilePath(parts[1]);
+							text += " - " + tmpdisk.getDiskName();
+						} 
+		    			catch (FileNotFoundException e) 
+		    			{
+		    				text += " - File not found!";
+		    			}
+		    			
+		    			text += "\r\n";
+		    				
+		    		}
+		    	}	
+			}
+		} 
+		catch (NumberFormatException e2) 
+		{
+			logger.error("NumberFormat: " + e2.getMessage());
+		} 
+		catch (IOException e) 
+		{
+			logger.error("IO error: " + e.getMessage());
+		}
+		finally
+		{
+			try 
+			{
+				br.close();
+				fr.close();
+			} 
+			catch (IOException e) 
+			{
+				logger.warn(e.getMessage());
+			}
+		}
+		
+		
+		DWVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
+		DWVSerialPorts.writeToCoco(this.vport, text);
+	}
+
 	@SuppressWarnings("unchecked")
 	private void doConfig(String[] args)
 	{

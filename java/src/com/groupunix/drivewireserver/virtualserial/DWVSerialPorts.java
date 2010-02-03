@@ -239,32 +239,14 @@ public class DWVSerialPorts {
 
 	public static boolean isConnected(int port)
 	{
-		return(vserialPorts[port].isConnected());
+		if (vserialPorts[port] != null)
+		{
+			return(vserialPorts[port].isConnected());
+		}
+		return(false);
 	}
 
 	
-	public static String getHostIP(int port) 
-	{
-		return(vserialPorts[port].getHostIP());
-	}
-
-	public static int getHostPort(int port) 
-	{
-		return(vserialPorts[port].getHostPort());
-	}
-
-
-	public static void setHostIP(int vport, String clientIP) 
-	{
-		vserialPorts[vport].setHostIP(clientIP);
-	}
-
-
-	public static void setHostPort(int vport, int clientPort) 
-	{
-		vserialPorts[vport].setHostPort(clientPort);
-	}
-
 
 	public static void setUtilMode(int port, int mode)
 	{
@@ -398,37 +380,19 @@ public class DWVSerialPorts {
 
 	public static byte[] getDD(int i)
 	{
-		return(vserialPorts[i].getDD());
-	}
-
-
-	public static void setUserName(int vport, String username) 
-	{
-		vserialPorts[vport].setUserName(username);
-	}
-
-	public static String getUserName(int vport)
-	{
-		return(vserialPorts[vport].getUserName());
-	}
-	
-
-	public static void setUserGroup(int vport, int parseInt) 
-	{
-		vserialPorts[vport].setUserGroup(parseInt);
-	}
-
-	public static int getUserGroup(int vport)
-	{
-		return(vserialPorts[vport].getUserGroup());
+		if (vserialPorts[i] != null)
+		{
+			return(vserialPorts[i].getDD());
+		}
+		return(null);
 	}
 
 
 	
-	public static void setSocket(int vport, Socket skt) 
-	{
-		vserialPorts[vport].setSocket(skt);
-	}
+	//public static void setSocket(int vport, Socket skt) 
+	//{
+	//	vserialPorts[vport].setSocket(skt);
+	//}
 
 
 	public static void writeToCoco(int vport, byte databyte) 
@@ -474,6 +438,38 @@ public class DWVSerialPorts {
 	public static void sendConnectionAnnouncement(int vport, int conno, int localport, String hostaddr)
 	{
 		vserialPorts[vport].sendConnectionAnnouncement(conno, localport, hostaddr);
+	}
+
+
+	public static void setConn(int vport, int conno)
+	{
+		vserialPorts[vport].setConn(conno);
+		
+	}
+	
+	public static int getConn(int vport)
+	{
+		return(vserialPorts[vport].getConn());
+	}
+
+
+	public static String getHostIP(int vport)
+	{
+		if (vserialPorts[vport] != null)
+		{
+			return(DWVPortListenerPool.getConn(vserialPorts[vport].getConn()).getInetAddress().getCanonicalHostName());
+		}
+		return(null);
+	}
+
+
+	public static int getHostPort(int vport)
+	{
+		if (vserialPorts[vport] != null)
+		{
+			return(DWVPortListenerPool.getConn(vserialPorts[vport].getConn()).getPort());
+		}
+		return(-1);
 	}
 	
 }

@@ -56,7 +56,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 			logger.debug("Connected to " + this.tcphost + ":" + this.tcpport);
 			DWVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
 			
-			DWVSerialPorts.setSocket(this.vport, skt);
+			//DWVSerialPorts.setSocket(this.vport, skt);
 
 			DWVSerialPorts.markConnected(vport);	
 			try 

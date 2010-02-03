@@ -222,8 +222,8 @@ public class DWVPortHandler
 
 	private void doURL(String action,String url) 
 	{
-		//this.utilthread = new Thread(new DWUtilURLThread(this.vport, action, url));
-		//this.utilthread.start();
+		this.utilthread = new Thread(new DWUtilURLThread(this.vport, url, action));
+		this.utilthread.start();
 	}
 
 	private void doTCPConnect(String tcphost, String tcpportstr) 

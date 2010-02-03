@@ -35,7 +35,8 @@ public class DWVSerialPort {
 	
 	private boolean wanttodie = false;
 	private Socket socket = null;
-		
+	
+	private int conno = -1;
 	
 	public DWVSerialPort(int port)
 	{
@@ -411,8 +412,16 @@ public class DWVSerialPort {
 		this.porthandler.announceConnection(conno, localport, hostaddr);
 		
 	}
-	
 
+	public void setConn(int conno)
+	{
+		this.conno = conno;
+	}
+	
+	public int getConn()
+	{
+		return(this.conno);
+	}
 	
 
 	

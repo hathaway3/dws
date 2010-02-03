@@ -153,7 +153,8 @@ public class DWVPortTelnetPreflightThread implements Runnable
 							if (checkAuth(username,password))
 							{
 								this.loginOK = true;
-								logger.info("AUTH: login from " + username + " (group " + DWVSerialPorts.getUserGroup(this.vport) + ")");
+								logger.info("AUTH: login from " + username);
+								
 							}
 							else
 							{
@@ -409,8 +410,6 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			    	{
 			    		// match
 			    		result = true;
-			    		DWVSerialPorts.setUserName(this.vport, founduser);
-			    		DWVSerialPorts.setUserGroup(this.vport, foundgroup);
 			    		
 			    	}
 			    	else
