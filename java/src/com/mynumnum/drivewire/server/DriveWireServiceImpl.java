@@ -61,7 +61,6 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			
 			spd.setOpens(DWVSerialPorts.getOpen(port));
 			spd.setPrettyPD(DWProtocolHandler.byteArrayToHexString(DWVSerialPorts.getDD(port)));
-			spd.setUsername(DWVSerialPorts.getUserName(port));
 			
 			// Add this instance of spd to our array list
 			portData.add(spd);

@@ -6,8 +6,6 @@ package com.mynumnum.drivewire.server;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import com.groupunix.drivewireserver.DriveWireServer;
-
 /**
  * @author Jim Hathaway
  * This is used when you launch this project as a GWT project
