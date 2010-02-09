@@ -174,38 +174,6 @@ public class DriveWireServer
 		
 	}
     	
-	
-	public static String getUptimeStr()
-	{
-		String upt = new String();
-	
-		GregorianCalendar nowTime = new GregorianCalendar();
-	      
-	    Date d1 = startTime.getTime();
-	    Date d2 = nowTime.getTime();
-	    long l1 = d1.getTime();
-	    long l2 = d2.getTime();
-	    long millis = l2 - l1;
-	      
-	    // upt = String.format("%d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(millis), TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
-	    	
-	    upt = millis + " milliseconds";
-	    
-		return(upt);
-	}
-
-	
-	public static void incServed()
-	{
-		totalServed++;
-	}
-
-	public static int getServed()
-	{
-		return(totalServed);
-	}
-
-
 
 	public static String getLogLevel()
 	{
