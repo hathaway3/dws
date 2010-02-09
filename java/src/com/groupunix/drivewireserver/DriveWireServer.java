@@ -8,8 +8,6 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -22,7 +20,6 @@ import org.apache.log4j.PatternLayout;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
-import com.mynumnum.drivewire.server.Jetty;
 
 
 public class DriveWireServer 
@@ -41,9 +38,8 @@ public class DriveWireServer
 	private static Thread protoHandlerT = new Thread(new DWProtocolHandler());
 	
 	private static Thread termT;
+	private static Thread jettyT;
 	
-	private static GregorianCalendar startTime = new GregorianCalendar();
-	private static int totalServed = 0;
 
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
 	
@@ -107,9 +103,9 @@ public class DriveWireServer
 		if (config.getBoolean("UseGUI", false))
 		{
 			// Start up the web interface.
-			Integer guiPort = config.getInt("GUIPort",8080);
-			logger.debug("Starting Jetty (Web UI) on port " + guiPort);
-			new Jetty(guiPort);
+			jettyT = new Thread(new DWJettyThread(config.getInt("GUIPort",8080)));
+			jettyT.start();
+			
 		}
 		else
 		{
