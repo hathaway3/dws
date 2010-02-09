@@ -26,6 +26,8 @@ public class DWVSerialPorts {
 	
 	public static void openPort(int port)
 	{
+System.out.println("port = " + port);
+System.out.println("vserialPorts = " + vserialPorts);
 		vserialPorts[port].open();
 	}
 

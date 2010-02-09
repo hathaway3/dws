@@ -988,7 +988,9 @@ public class DWUtilDWThread implements Runnable
 	        threads = new Thread[ nAlloc ];
 	        n = root.enumerate( threads, true );
 	    } while ( n == nAlloc );
-	    return java.util.Arrays.copyOf( threads, n );
+            Thread[] copy = new Thread[threads.length];
+            System.arraycopy(threads, 0, copy, 0, threads.length);
+	    return copy;
 	}
 	
 }
