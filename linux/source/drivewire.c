@@ -47,7 +47,7 @@
 #define		OP_RESET1	0xFF
 #define		OP_PRINT	'P'
 #define		OP_PRINTFLUSH	'F'
-
+#define     OP_VPORT_READ    'C'
 
 
 struct dwTransferData
@@ -93,6 +93,7 @@ void DoOP_TERM(struct dwTransferData *dp);
 void DoOP_TIME(struct dwTransferData *dp);
 void DoOP_PRINT(struct dwTransferData *dp);
 void DoOP_PRINTFLUSH(struct dwTransferData *dp);
+void DoOP_VPORT_READ(struct dwTransferData *dp);
 char *getStatCode(int statcode);
 void WinInit(void);
 void WinSetup(WINDOW *window);
@@ -490,6 +491,10 @@ void *CoCoProcessor(void *data)
 					DoOP_PRINTFLUSH(dp);
 					break;
 
+				case OP_VPORT_READ:
+					DoOP_VPORT_READ(dp);
+					break;
+                    
 				default:
 					break;
 			}
@@ -854,6 +859,16 @@ void DoOP_PRINTFLUSH(struct dwTransferData *dp)
 	logHeader();
 	fprintf(logfp, "OP_PRINTFLUSH\n");
 
+	return;
+}
+
+
+void DoOP_VPORT_READ(struct dwTransferData *dp)
+{
+	logHeader();
+	fprintf(logfp, "OP_VPORT_READ\n");
+	comWrite(dp, (void *)"\x00\x00", 2);
+    
 	return;
 }
 
