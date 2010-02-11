@@ -29,6 +29,8 @@ public class DWProtocolHandler implements Runnable
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWProtocolHandler");
 	  
+	// DW protocol contants
+	public static final byte DW_PROTOCOL_VERSION = 4;
 	
 	// DW protocol op codes
 	
@@ -496,13 +498,34 @@ public class DWProtocolHandler implements Runnable
 	
 	private void DoOP_DWINIT() 
 	{
+		int drv_version;
+	
 		logger.info("DoOP_DWINIT");
 		
-		// coco has just booted nos9
-		dwinitTime = new GregorianCalendar();
-		
-		// reset all ports
-		DWVSerialPorts.resetAllPorts();
+		try
+		{
+			drv_version = comRead1(true);
+			
+			// send response
+			comWrite1(DW_PROTOCOL_VERSION);
+			
+			logger.info("DWINIT send proto ver " + DW_PROTOCOL_VERSION + ", got driver version " + drv_version);
+			
+			// driver version is not used for anything yet...
+			
+			// coco has just booted nos9
+			dwinitTime = new GregorianCalendar();
+			
+			// reset all ports
+			DWVSerialPorts.resetAllPorts();
+			
+		} 
+		catch (DWCommTimeOutException e)
+		{
+			logger.error("Timed out reading DWINIT data byte");
+		}
+			
+
 	}
 	
 	private void DoOP_NOP() 
