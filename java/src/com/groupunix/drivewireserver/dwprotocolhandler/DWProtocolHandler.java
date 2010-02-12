@@ -506,19 +506,26 @@ public class DWProtocolHandler implements Runnable
 		{
 			drv_version = comRead1(true);
 			
-			// send response
-			comWrite1(DW_PROTOCOL_VERSION);
+			// are we limited to dw3?
+			if (!DriveWireServer.config.getBoolean("DW3Only", false))
+			{
+				// send response
+				comWrite1(DW_PROTOCOL_VERSION);
 			
-			logger.info("DWINIT send proto ver " + DW_PROTOCOL_VERSION + ", got driver version " + drv_version);
+				logger.info("DWINIT send proto ver " + DW_PROTOCOL_VERSION + ", got driver version " + drv_version);
 			
-			// driver version is not used for anything yet...
+				// driver version is not used for anything yet...
 			
-			// coco has just booted nos9
-			dwinitTime = new GregorianCalendar();
+				// coco has just booted nos9
+				dwinitTime = new GregorianCalendar();
 			
-			// reset all ports
-			DWVSerialPorts.resetAllPorts();
-			
+				// reset all ports
+				DWVSerialPorts.resetAllPorts();
+			}
+			else
+			{
+				logger.info("DWINIT recieved, ignoring due to DW3Only setting");
+			}
 		} 
 		catch (DWCommTimeOutException e)
 		{
