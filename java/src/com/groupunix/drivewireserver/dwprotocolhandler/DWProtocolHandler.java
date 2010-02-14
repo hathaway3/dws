@@ -1083,7 +1083,7 @@ public class DWProtocolHandler implements Runnable
 		try 
 		{
 			tmpint = comRead1(true);
-			logger.info("DoOP_PRINT: byte "+ tmpint);
+			//logger.info("DoOP_PRINT: byte "+ tmpint);
 			
 			vprinter.addByte((byte) tmpint);
 		} 
