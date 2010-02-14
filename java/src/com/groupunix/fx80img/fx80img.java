@@ -9,41 +9,67 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 import javax.imageio.ImageIO;
 
-public class fx80img {
+import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
+
+public class fx80img implements Runnable {
+
+	private static final Logger logger = Logger.getLogger("fx80img");
+	
+	// 300 dpi
 	public static final double DEF_XSIZE = 300 * 8.5;
 	public static final double DEF_YSIZE = 300 * 11;
 	
-	private static double line_height = DEF_YSIZE / 66;
-	private static double char_width = DEF_XSIZE / 132;
+	private double line_height;
+	private double char_width;
 	
-	private static characterset charset = new characterset();
-	private static Graphics rGraphic;
+	private characterset charset = new characterset();
+	private Graphics rGraphic;
 	
-	public static void print(String printText, File printFile) throws NumberFormatException, IOException 
+	private String printText;
+	private File printDir;
+	private File printFile;
+	
+	private double xpos;
+	private double ypos;
+	
+	private BufferedImage rImage;
+	
+	
+	public fx80img(String text, File dir)
+	{
+		this.printDir = dir;
+		this.printText = text;
+		this.line_height = DEF_YSIZE / DriveWireServer.config.getInt("PrinterLines", 66);
+		this.char_width = DEF_XSIZE / DriveWireServer.config.getInt("PrinterColumns", 80);
+	}
+	
+	public void print(String printText, File printDir) throws NumberFormatException, IOException 
 	{
 	
 		// load settings?
 		
 		// load characters
 		
-		loadCharacter("default.chars");
+		loadCharacter(DriveWireServer.config.getString("PrinterCharacterFile","default.chars"));
 
-		System.out.println("DEF_XSIZE: " + DEF_XSIZE);
-		System.out.println("DEF_YSIZE: " + DEF_YSIZE);
-		System.out.println("Line height:" + line_height);
-		System.out.println("Character width: " + char_width);
-		
-		
+		//System.out.println("DEF_XSIZE: " + DEF_XSIZE);
+		//System.out.println("DEF_YSIZE: " + DEF_YSIZE);
+		//System.out.println("Line height:" + line_height);
+		//System.out.println("Character width: " + char_width);
+	
+		// first file
+		printFile = File.createTempFile("dw_print_",".png",printDir);
+				
 		// init img
 		
-        BufferedImage rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_USHORT_GRAY );
+        rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_USHORT_GRAY );
         rGraphic = rImage.getGraphics();
 
        
@@ -55,10 +81,8 @@ public class fx80img {
 		
 		// process file
 		
-        // testing
-       
-	    double xpos = 0;
-	    double ypos = line_height;
+	    xpos = 0;
+	    ypos = line_height;
 	    
 	    for (int i = 0;i<printText.length();i++)
 	    {
@@ -70,7 +94,8 @@ public class fx80img {
 //	    	}
 //	    	else if ((int) c == 10) 
 //	    	{
-	    		ypos += line_height;
+	    		newline();
+	    		
 	    	}
 	    	else if ((int) c == 9)
 	    	{
@@ -81,6 +106,14 @@ public class fx80img {
 	    		drawCharacter(c,xpos,ypos);
 	    		// drawCharacter(c,xpos+2,ypos,2);
 	    		xpos += char_width;
+	    		
+	    		if (xpos >= DEF_XSIZE)
+	    		{
+	    			// line wrap
+	    			xpos = 0;
+	    			newline();
+	    		}
+	    		
 	    	}
 	    
 	    	
@@ -89,12 +122,10 @@ public class fx80img {
 	    
 		// output img
 
-        try {
-       //     ImageIO.write(rImage, "JPEG", new File("fx80img.jpg"));
-        	
-        	
-        	
-            ImageIO.write(rImage, "PNG", printFile);	
+        try 
+        {
+            ImageIO.write(rImage, "PNG", printFile);
+            logger.info("wrote last print page image to: " + printFile.getAbsolutePath());
         } 
         catch (IOException ex) 
         {
@@ -104,7 +135,38 @@ public class fx80img {
         
 	}
 
-	private static void drawCharacter(int ch, double xpos, double ypos) 
+	private void newline()
+	{
+		ypos += line_height;
+		
+		if (ypos >= DEF_YSIZE)
+		{
+			// new page
+			ypos = line_height;
+			
+			try 
+		    {
+				ImageIO.write(rImage, "PNG", printFile);
+				
+				logger.info("wrote print page image to: " + printFile.getAbsolutePath());
+				
+				printFile = File.createTempFile("dw_print_",".png",printDir);
+				rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_USHORT_GRAY );
+				rGraphic = rImage.getGraphics();
+			       
+				rGraphic.setColor(Color.WHITE);	
+			    rGraphic.fillRect(0, 0, (int) DEF_XSIZE, (int) DEF_YSIZE);
+		    } 
+		    catch (IOException ex) 
+		    {
+		    	logger.error("Cannot save result image.");
+		    }
+			
+			
+		}
+	}
+
+	private void drawCharacter(int ch, double xpos, double ypos) 
 	{
 		// draw one character.. just testing
 		
@@ -118,7 +180,7 @@ public class fx80img {
 		
 	}
 
-	private static void drawCharCol(int lbits, double xpos, double ypos) 
+	private void drawCharCol(int lbits, double xpos, double ypos) 
 	{
 		// draw one column
 		
@@ -173,7 +235,7 @@ public class fx80img {
 		
 	}
 
-	private static void loadCharacter(String fname) throws NumberFormatException, IOException 
+	private void loadCharacter(String fname) throws NumberFormatException, IOException 
 	{
 	    int curline = 0;
 	    int curchar = -1;
@@ -299,6 +361,30 @@ public class fx80img {
 		{
 			System.err.println("Error reading characters at line " + curline +" (in character " + curchar + "): " + e.getMessage());
 		}*/	
+	}
+
+	@Override
+	public void run()
+	{
+		logger.debug("run");
+		
+		try
+		{
+			print(this.printText, this.printDir);
+		} 
+		catch (NumberFormatException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		logger.debug("exiting");
+		
 	}
 
 }

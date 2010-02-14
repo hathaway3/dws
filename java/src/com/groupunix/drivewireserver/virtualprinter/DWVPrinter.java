@@ -70,9 +70,9 @@ public class DWVPrinter {
 					{
 						// FX80 simulator output
 						File theDir = new File(DriveWireServer.config.getString("PrinterDir"));
-						File theFile = File.createTempFile("dw_print_",".png",theDir);
 						
-						fx80img.print(tmp,theFile);
+						Thread fx80thread = new Thread(new fx80img(tmp, theDir));
+						fx80thread.start();
 						
 					}
 				}
