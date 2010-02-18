@@ -38,6 +38,7 @@ public class DWVPortTCPListenerThread implements Runnable
 	{
 		
 		Thread.currentThread().setName("tcplisten-" + Thread.currentThread().getId());
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
 		logger.debug("run");
 		

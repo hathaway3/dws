@@ -374,13 +374,10 @@ public class DWProtocolHandler implements Runnable
 				logger.error(e.getMessage());
 			}
 			
-			// logger.debug("!!12: " + DWProtocolHandler.byteArrayToHexString(DWDiskDrives.readSector(driveno)) );
-			
-			// logger.debug("main sees byte: " + opcodeint);
 		
 			if (opcodeint > -1)
 			{
-								
+				
 				lastOpcode = (byte) opcodeint;
 				
 				switch(lastOpcode)
@@ -500,7 +497,10 @@ public class DWProtocolHandler implements Runnable
 	{
 		int drv_version;
 	
-		logger.info("DoOP_DWINIT");
+		if (DriveWireServer.config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_DWINIT");
+		}
 		
 		try
 		{
@@ -512,7 +512,7 @@ public class DWProtocolHandler implements Runnable
 				// send response
 				comWrite1(DW_PROTOCOL_VERSION);
 			
-				logger.info("DWINIT send proto ver " + DW_PROTOCOL_VERSION + ", got driver version " + drv_version);
+				logger.debug("DWINIT sent proto ver " + DW_PROTOCOL_VERSION + ", got driver version " + drv_version);
 			
 				// driver version is not used for anything yet...
 			
@@ -524,7 +524,7 @@ public class DWProtocolHandler implements Runnable
 			}
 			else
 			{
-				logger.info("DWINIT recieved, ignoring due to DW3Only setting");
+				logger.debug("DWINIT recieved, ignoring due to DW3Only setting");
 			}
 		} 
 		catch (DWCommTimeOutException e)
@@ -537,19 +537,28 @@ public class DWProtocolHandler implements Runnable
 	
 	private void DoOP_NOP() 
 	{
-		logger.info("DoOP_NOP");
+		if (DriveWireServer.config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_NOP");
+		}
 	}
 	
 	
 	
 	private void DoOP_TERM() 
 	{
-		logger.info("DoOP_TERM");
+		if (DriveWireServer.config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_TERM");
+		}
 	}
 	
 	private void DoOP_INIT() 
 	{
-		logger.info("DoOP_INIT");
+		if (DriveWireServer.config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_INIT");
+		}
 	}
 	
 	private static void DoOP_RESET() 
@@ -575,8 +584,11 @@ public class DWProtocolHandler implements Runnable
 		
 		// reset all ports?
 		DWVSerialPorts.resetAllPorts();
-		
-		logger.info("DoOP_RESET");
+	
+		if (DriveWireServer.config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_RESET");
+		}
 		
 	}
 	
@@ -679,11 +691,17 @@ public class DWProtocolHandler implements Runnable
 		if (opcode == OP_REWRITE)
 		{
 			writeRetries++;
-			logger.info("DoOP_REWRITE lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.info("DoOP_REWRITE lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+			}
 		}
 		else
 		{
-			logger.info("DoOP_WRITE lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.info("DoOP_WRITE lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+			}
 		}
 		
 		return;
@@ -790,11 +808,14 @@ public class DWProtocolHandler implements Runnable
 			if (opcode == OP_REREADEX)
 			{
 				readRetries++;
-				logger.info("DoOP_REREADEX lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+				logger.warn("DoOP_REREADEX lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 			}
 			else
 			{
-				// logger.info("DoOP_READEX lastDrive: " + (int) lastDrive + " LSN: " + long3(lastLSN));
+				if (DriveWireServer.config.getBoolean("LogOpCode", false))
+				{
+					logger.info("DoOP_READEX lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+				}
 			}
 		}
 		else
@@ -806,11 +827,11 @@ public class DWProtocolHandler implements Runnable
 			if (opcode == OP_REREADEX)
 			{
 				readRetries++;
-				logger.info("DoOP_REREADEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+				logger.warn("DoOP_REREADEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 			}
 			else
 			{
-				logger.info("DoOP_READEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+				logger.warn("DoOP_READEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
 			}
 			
 		}
@@ -841,12 +862,18 @@ public class DWProtocolHandler implements Runnable
 		if (opcode == OP_GETSTAT)
 		{
 			lastGetStat = responsebuf[1];
-			logger.info("DoOP_GETSTAT: " + prettySS(responsebuf[1]) + " lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.info("DoOP_GETSTAT: " + prettySS(responsebuf[1]) + " lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+			}
 		}
 		else
 		{
 			lastSetStat = responsebuf[1];
-			logger.info("DoOP_SETSTAT " + prettySS(responsebuf[1]) + " lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.info("DoOP_SETSTAT " + prettySS(responsebuf[1]) + " lastDrive: " + (int) lastDrive + " LSN: " + int3(lastLSN));
+			}
 		}
 	}
 	
@@ -863,7 +890,10 @@ public class DWProtocolHandler implements Runnable
 		comWrite1(c.get(Calendar.SECOND));
 		// comWrite1(c.get(Calendar.DAY_OF_WEEK));
 		
-		logger.info("DoOP_TIME");
+		if (DriveWireServer.config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_TIME");
+		}
 			
 		return;
 	}
@@ -884,7 +914,10 @@ public class DWProtocolHandler implements Runnable
 			responsebuf = comRead(2);
 			if (responsebuf[1] != 1)
 			{
-				logger.info("DoOP_SERGETSTAT: " + prettySS(responsebuf[1]) + " port: " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ")");
+				if (DriveWireServer.config.getBoolean("LogOpCode", false))
+				{
+					logger.info("DoOP_SERGETSTAT: " + prettySS(responsebuf[1]) + " port: " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ")");
+				}
 			}
 			
 		} 
@@ -904,7 +937,11 @@ public class DWProtocolHandler implements Runnable
 			// get packet args
 			// port # and stat
 			responsebuf = comRead(2);
-			logger.info("DoOP_SERSETSTAT: " + prettySS(responsebuf[1]) + " port: " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ")");
+			
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.info("DoOP_SERSETSTAT: " + prettySS(responsebuf[1]) + " port: " + responsebuf[0] + "(" + DWVSerialPorts.prettyPort(responsebuf[0]) + ")");
+			}
 			
 			if (!DWVSerialPorts.isValid(responsebuf[0]))
 			{
@@ -919,7 +956,7 @@ public class DWProtocolHandler implements Runnable
 					byte[] devdescr = new byte[26];
 					devdescr = comRead(26);
 					
-					logger.debug("COMST: " + byteArrayToHexString(devdescr));
+					// logger.debug("COMST: " + byteArrayToHexString(devdescr));
 					
 					// should move into DWVSerialPorts
 					
@@ -930,13 +967,13 @@ public class DWProtocolHandler implements Runnable
 					if (DWVSerialPorts.getPD_INT(responsebuf[0]) != devdescr[16])
 					{
 						DWVSerialPorts.setPD_INT(responsebuf[0], devdescr[16]);
-						logger.debug("Changed PD.INT to " + devdescr[16] + " on port " + DWVSerialPorts.prettyPort(responsebuf[0]));	
+						// logger.debug("Changed PD.INT to " + devdescr[16] + " on port " + DWVSerialPorts.prettyPort(responsebuf[0]));	
 					}
 					
 					if (DWVSerialPorts.getPD_QUT(responsebuf[0]) != devdescr[17])
 					{
 						DWVSerialPorts.setPD_QUT(responsebuf[0], devdescr[17]);
-						logger.debug("Changed PD.QUT to " + devdescr[17] + " on port " + DWVSerialPorts.prettyPort(responsebuf[0]));	
+						// logger.debug("Changed PD.QUT to " + devdescr[17] + " on port " + DWVSerialPorts.prettyPort(responsebuf[0]));	
 					}
 					
 					break;
@@ -974,7 +1011,10 @@ public class DWProtocolHandler implements Runnable
 			int portnum = responsebuf[0];
 			// int portmode = responsebuf[1];
 			
-			logger.info("DoOP_SERINIT for port " + DWVSerialPorts.prettyPort(portnum));
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.info("DoOP_SERINIT for port " + DWVSerialPorts.prettyPort(portnum));
+			}
 			
 			
 		} 
@@ -995,9 +1035,11 @@ public class DWProtocolHandler implements Runnable
 			// get packet args
 			// just port # 
 			portnum = comRead1(true);
-			
-			logger.info("DoOP_SERTERM for port " + portnum);
-			
+		
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.info("DoOP_SERTERM for port " + portnum);
+			}
 			
 		} 
 		catch (DWCommTimeOutException e) 
@@ -1018,7 +1060,10 @@ public class DWProtocolHandler implements Runnable
 		comWrite(result, 2);
 		
 		//if (result[0] != 0)
-		//logger.debug("DoOP_SERREAD response " + (int) (result[0] & 0xFF) + ":" + (int) (result[1] & 0xFF));
+		if (DriveWireServer.config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_SERREAD response " + (int) (result[0] & 0xFF) + ":" + (int) (result[1] & 0xFF));
+		}
 	}
 	
 	private void DoOP_SERWRITE() 
@@ -1029,8 +1074,11 @@ public class DWProtocolHandler implements Runnable
 			cmdpacket = comRead(2);
 			
 			DWVSerialPorts.serWrite(cmdpacket[0],cmdpacket[1]);
-				
-			//logger.debug("DoOP_SERWRITE to port " + cmdpacket[0]);
+			
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.debug("DoOP_SERWRITE to port " + cmdpacket[0]);
+			}
 			
 		} 
 		catch (DWCommTimeOutException e) 
@@ -1048,11 +1096,14 @@ public class DWProtocolHandler implements Runnable
 		try {
 			cmdpacket = comRead(2);
 			
-			try {
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				try {
 				logger.debug("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0] + " (" + DWVSerialPorts.getPortOutput(cmdpacket[0]).available() + " bytes in buffer)");
-			} catch (IOException e) {
+				} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				}
 			}
 			
 			data = DWVSerialPorts.serReadM((int) cmdpacket[0],(cmdpacket[1] & 0xFF));
@@ -1083,7 +1134,11 @@ public class DWProtocolHandler implements Runnable
 		try 
 		{
 			tmpint = comRead1(true);
-			//logger.info("DoOP_PRINT: byte "+ tmpint);
+			
+			if (DriveWireServer.config.getBoolean("LogOpCode", false))
+			{
+				logger.info("DoOP_PRINT: byte "+ tmpint);
+			}
 			
 			vprinter.addByte((byte) tmpint);
 		} 
@@ -1097,7 +1152,11 @@ public class DWProtocolHandler implements Runnable
 	
 	private void DoOP_PRINTFLUSH() 
 	{
-		logger.info("DoOP_PRINTFLUSH");
+		if (DriveWireServer.config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_PRINTFLUSH");
+		}
+		
 		vprinter.flush();
 	}
 	

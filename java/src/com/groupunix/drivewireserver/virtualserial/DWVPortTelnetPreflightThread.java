@@ -48,6 +48,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 
 	public void run()
 	{
+		Thread.currentThread().setName("tcppre-" + Thread.currentThread().getId());
+		Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+		
 		logger.info("preflight checks for new connection from " + skt.getInetAddress().getHostName());
 		
 		try

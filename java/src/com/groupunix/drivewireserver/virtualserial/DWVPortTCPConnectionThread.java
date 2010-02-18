@@ -29,6 +29,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 	public void run() 
 	{
 		Thread.currentThread().setName("tcpconn-" + Thread.currentThread().getId());
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
 		logger.debug("run");
 		

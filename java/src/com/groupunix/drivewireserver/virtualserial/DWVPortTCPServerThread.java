@@ -38,6 +38,7 @@ public class DWVPortTCPServerThread implements Runnable {
 	public void run() 
 	{
 		Thread.currentThread().setName("tcpserv-" + Thread.currentThread().getId());
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
 		// setup ties
 		DWVPortListenerPool.setConnPort(this.conno, this.vport);

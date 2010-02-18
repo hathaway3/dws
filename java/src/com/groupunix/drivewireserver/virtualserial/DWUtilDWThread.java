@@ -42,6 +42,7 @@ public class DWUtilDWThread implements Runnable
 	{
 		
 		Thread.currentThread().setName("dwutil-" + Thread.currentThread().getId());
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
 		logger.debug("run");
 		
@@ -265,7 +266,11 @@ public class DWUtilDWThread implements Runnable
 				
 				for (int i = 0;i<threads.length;i++)
 				{
-					text += String.format("%20s %3d %-8s %-14s %s",threads[i].getName(),threads[i].getPriority(),threads[i].getThreadGroup().getName(), threads[i].getState().toString(), threads[i].getClass().getCanonicalName()) + "\r\n";
+					if (threads[i] != null)
+					{
+						text += String.format("%20s %3d %-8s %-14s %s",threads[i].getName(),threads[i].getPriority(),threads[i].getThreadGroup().getName(), threads[i].getState().toString(), threads[i].getClass().getCanonicalName()) + "\r\n";
+
+					}
 				}
 			}
 			else

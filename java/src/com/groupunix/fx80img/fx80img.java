@@ -26,6 +26,20 @@ public class fx80img implements Runnable {
 	public static final double DEF_XSIZE = 300 * 8.5;
 	public static final double DEF_YSIZE = 300 * 11;
 	
+	private static final double SZ_PICA = DEF_XSIZE / 80;
+	private static final double SZ_ELITE = DEF_XSIZE / 96;
+	private static final double SZ_COMPRESSED = DEF_XSIZE / 132;
+
+	
+	private boolean m_expanded = false;
+	private boolean m_pica = true;
+	private boolean m_elite = false;
+	private boolean m_compressed = false;
+	private boolean m_doublestrike = false;
+	private boolean m_emphasized = false;
+	
+	private boolean m_escape = false;
+	
 	private double line_height;
 	private double char_width;
 	
@@ -47,7 +61,9 @@ public class fx80img implements Runnable {
 		this.printDir = dir;
 		this.printText = text;
 		this.line_height = DEF_YSIZE / DriveWireServer.config.getInt("PrinterLines", 66);
-		this.char_width = DEF_XSIZE / DriveWireServer.config.getInt("PrinterColumns", 80);
+		// this.char_width = DEF_XSIZE / DriveWireServer.config.getInt("PrinterColumns", 80);
+		
+		
 	}
 	
 	public void print(String printText, File printDir) throws NumberFormatException, IOException 
@@ -68,7 +84,8 @@ public class fx80img implements Runnable {
 		printFile = File.createTempFile("dw_print_",".png",printDir);
 				
 		// init img
-		
+
+				
         rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_USHORT_GRAY );
         rGraphic = rImage.getGraphics();
 
@@ -77,7 +94,8 @@ public class fx80img implements Runnable {
         rGraphic.fillRect(0, 0, (int) DEF_XSIZE, (int) DEF_YSIZE);
         
       
-
+        this.char_width = getCPI();
+        
 		
 		// process file
 		
@@ -87,25 +105,117 @@ public class fx80img implements Runnable {
 	    for (int i = 0;i<printText.length();i++)
 	    {
 	    	char c = printText.charAt(i);
-	    		
-	    	if ((int) c == 13)
+	    	
+	    	int cc = (int) c;
+	    	
+	    	// control codes
+	    	if (m_escape)
 	    	{
-	    		xpos = 0;
-//	    	}
-//	    	else if ((int) c == 10) 
-//	    	{
-	    		newline();
+	    		switch (cc)
+	    		{
+	    			case 64:
+	    			{
+	    				reset_printer();
+	    				break;
+	    				
+	    			}
+	    			case 'E':
+	    			{
+	    				m_emphasized = true;
+	    				break;
+	    			}
+	    			case 'F':
+	    			{
+	    				m_emphasized = false;
+	    			}
+	    			case 'G':
+	    			{
+	    				m_doublestrike = true;
+	    				break;
+	    			}
+	    			case 'H':
+	    			{
+	    				m_doublestrike = false;
+	    				break;
+	    			}
+	    			
+	    			case 'M':
+	    			{
+	    				m_elite = true;
+	    				break;
+	    			}
+	    			case 'P':
+	    			{
+	    				m_elite = false;
+	    				break;
+	    			}
+	    		}
 	    		
+	    		this.char_width = getCPI();
+	    		//logger.debug("character width: " + this.char_width);
+	    		this.m_escape = false;
 	    	}
-	    	else if ((int) c == 9)
+	    	
+	    	else if ( (cc<32) || (cc == 127) || ((cc > 127) && (cc < 160)) || (cc == 255))
 	    	{
-	    		xpos += (8 * char_width);
+	    		
+	    		switch (cc)
+	    		{
+	    			case 9:
+	    			{
+	    				xpos += (8 * char_width);
+	    				break;
+	    			}
+	    			case 13:
+	    			{
+	    				xpos = 0;
+	    		    	newline();
+	    		    	break;
+	    			}
+	    			case 14:
+	    			{
+	    				m_expanded = true;
+	    				break;
+	    			}
+	    			case 15:
+	    			{
+	    				m_compressed = true;
+	    				break;
+	    			}
+	    			case 18:
+	    			{
+	    				m_compressed = false;
+	    				break;
+	    			}
+	    			case 20:
+	    			{
+	    				m_expanded = false;
+	    				break;
+	    			}
+	    			case 27:
+	    			{
+	    				m_escape = true;
+	    				break;
+	    			}
+	    		}
+	    		
+	    		// apply
+	    		this.char_width = getCPI();
+	    		//logger.debug("character width: " + this.char_width);
 	    	}
-	    	else
+	     	else
 	    	{
 	    		drawCharacter(c,xpos,ypos);
 	    		// drawCharacter(c,xpos+2,ypos,2);
-	    		xpos += char_width;
+	    		
+	    		if (m_expanded)
+	    		{
+	    			xpos += (char_width * 2);
+	    		}
+	    		else
+	    		{
+	    			xpos += char_width;
+	    		}
 	    		
 	    		if (xpos >= DEF_XSIZE)
 	    		{
@@ -135,6 +245,38 @@ public class fx80img implements Runnable {
         
 	}
 
+	private void reset_printer()
+	{
+		this.m_expanded = false;
+		this.m_pica = true;
+		this.m_elite = false;
+		this.m_compressed = false;
+		this.m_doublestrike = false;
+		this.m_emphasized = false;
+	}
+
+	private double getCPI()
+	{
+		double sz;
+		
+		if (m_elite)
+		{
+			
+			sz = SZ_ELITE;
+		}
+		else if (m_compressed)
+		{
+			 sz = SZ_COMPRESSED;
+		}
+		else
+		{
+			sz = SZ_PICA;
+		}
+		
+		return(sz);
+	}
+
+	
 	private void newline()
 	{
 		ypos += line_height;
@@ -175,7 +317,38 @@ public class fx80img implements Runnable {
 			int lbits = charset.getCharacterCol(ch, i);
 		
 			drawCharCol(lbits,xpos, ypos);
-			xpos += (char_width/12);
+			
+			if (m_doublestrike)
+			{
+				drawCharCol(lbits,xpos, ypos + (DEF_YSIZE / 66 / 24));
+			}
+			
+			if (m_expanded)
+			{
+				xpos += (this.char_width / 6);
+				drawCharCol(lbits,xpos, ypos);
+				
+				if (m_doublestrike)
+				{
+					drawCharCol(lbits,xpos, ypos + (DEF_YSIZE / 66 / 24));
+				}
+				
+			}
+			else if (m_emphasized)
+			{
+				xpos += (this.char_width / 12);
+				drawCharCol(lbits,xpos, ypos);
+				
+				if (m_doublestrike)
+				{
+					drawCharCol(lbits,xpos, ypos + (DEF_YSIZE / 66 / 24));
+				}
+			}
+			else
+			{
+				xpos += (this.char_width / 12);
+			}
+			
 		}
 		
 	}
@@ -197,25 +370,53 @@ public class fx80img implements Runnable {
 				int[] pdx = new int[4];
 				int[] pdy = new int[4];
 				
+				int[] sdx = new int[8];
+				int[] sdy = new int[8];
+				
 				int ix = (int) xpos;
 				int iy = (int) ypos;
 				
 				pdx[0] = ix - 2;
 				pdy[0] = iy;
-				
 				pdx[1] = ix;
 				pdy[1] = iy - 2;
-				
 				pdx[2] = ix + 2;
 				pdy[2] = iy;
-				
 				pdx[3] = ix;
 				pdy[3] = iy + 2;
 				
-				rGraphic.setColor(Color.DARK_GRAY);
+				sdx[0] = ix - 2;
+				sdy[0] = iy - 1;
+				
+				sdx[1] = ix - 1;
+				sdy[1] = iy - 2;
+				
+				sdx[2] = ix + 1;
+				sdy[2] = iy - 2;
+				
+				sdx[3] = ix + 2;
+				sdy[3] = iy - 1;
+				
+				sdx[4] = ix + 2;
+				sdy[4] = iy + 1;
+				
+				sdx[5] = ix + 1;
+				sdy[5] = iy + 2;
+				
+				sdx[6] = ix - 1;
+				sdy[6] = iy + 2;
+			
+				sdx[7] = ix - 2;
+				sdy[7] = iy + 1;
+				
+				
+				rGraphic.setColor(Color.GRAY);
+				rGraphic.drawPolygon(sdx, sdy, 8);
+				
+				rGraphic.setColor(Color.BLACK);
 				rGraphic.fillPolygon(pdx, pdy, 4);
 				
-				rGraphic.setColor(Color.LIGHT_GRAY);
+				rGraphic.setColor(Color.DARK_GRAY);
 				rGraphic.drawPolygon(pdx, pdy, 4);
 				
 				//rGraphic.fillOval(x, y, 2, 2);
@@ -366,6 +567,9 @@ public class fx80img implements Runnable {
 	@Override
 	public void run()
 	{
+		
+		Thread.currentThread().setName("fx80img-" + Thread.currentThread().getId());
+		Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 		logger.debug("run");
 		
 		try

@@ -18,5 +18,10 @@ public class character
 		
 		return(bits[col]);
 	}
+
+	public int getLen()
+	{
+		return len;
+	}
 	
 }
