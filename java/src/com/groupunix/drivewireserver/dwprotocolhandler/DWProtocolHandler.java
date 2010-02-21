@@ -59,7 +59,7 @@ public class DWProtocolHandler implements Runnable
 	public static final byte OP_SERGETSTAT = 'D';
 	public static final byte OP_SERINIT = 'E';
 	public static final byte OP_SERTERM = (byte) ('E'+128);
-	
+	public static final byte OP_RFM = (byte) ('V'+128);
 	
 	// response codes
 	public static final byte DWERROR_WP = (byte) 0xF2;
@@ -464,6 +464,10 @@ public class DWProtocolHandler implements Runnable
 					case OP_NOP:
 						DoOP_NOP();
 						break;
+					
+					case OP_RFM:
+						DoOP_RFM();
+						break;
 						
 					default:
 						logger.info("UNKNOWN OPCODE: " + opcodeint);
@@ -543,6 +547,45 @@ public class DWProtocolHandler implements Runnable
 		}
 	}
 	
+	private void DoOP_RFM() 
+	{
+		int vfm_op;
+		byte[] responsebuf = new byte[107];
+		
+		
+		try
+		{
+			vfm_op = comRead1(true);
+			logger.info("DoOP_RFM call " + vfm_op );
+			
+			responsebuf = comRead(107);
+			
+			DWRFMPathDescriptor tmppd = new DWRFMPathDescriptor(responsebuf);
+			
+			logger.info("RFM PD: " + byteArrayToHexString(responsebuf));
+			
+			logger.info("RFM Path: " + tmppd.getPD() + "  Mode: " + tmppd.getMOD() + "  Dev Tbl Addr: " + byteArrayToHexString(tmppd.getDEV()) + "  RGS: " + byteArrayToHexString(tmppd.getRGS()));
+			
+			// read path 
+			//int nchar = comRead1(true);
+		//	String path = new String();
+			
+//			while (nchar != 13)
+	//		{
+		//		path += Character.toString((char) nchar);
+			//	nchar = comRead1(true);
+		//	}
+			
+		//	logger.info("VFM PATH: " + path);
+			
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
 	
 	
 	private void DoOP_TERM() 
