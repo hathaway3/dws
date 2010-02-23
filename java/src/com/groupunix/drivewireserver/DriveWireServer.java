@@ -87,17 +87,10 @@ public class DriveWireServer
     	
 		// set up protocol handler and autostart if defined in config
 		
-		if (config.containsKey("SerialDevice"))
+		if (config.getBoolean("AutoStart", true))
 		{
-			logger.info("setting protocol handler device to " + config.getString("SerialDevice"));
-			if (DWProtocolHandler.setPort(config.getString("SerialDevice")) == 1)
-			{
-				if (config.getBoolean("AutoStart", true))
-				{
-					logger.info("autostarting protocol handler");
-					protoHandlerT.start();
-				}
-			}
+			logger.info("autostarting protocol handler");
+			protoHandlerT.start();
 		}
 
 		if (config.getBoolean("UseGUI", false))
@@ -270,7 +263,7 @@ public class DriveWireServer
 	public static void setCocoModel(int model)
 	{
 		
-		if (config.getInt("CocoModel") != model)
+	/*	if (config.getInt("CocoModel") != model)
 		{
 			logger.debug("set coco model to " + model);
 			
@@ -286,7 +279,7 @@ public class DriveWireServer
 			}
 		}
 		
-		
+	 */	
 	}
 
 
