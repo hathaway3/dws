@@ -69,6 +69,8 @@ public class DWProtocolHandler implements Runnable
 	public static final byte DWERROR_NOTREADY = (byte) 0xF6;
 	public static final byte DWOK = (byte) 0;
 	
+
+	
 	// input buffer
 	public static final int INPUT_WAIT = 250;
 	
@@ -90,7 +92,8 @@ public class DWProtocolHandler implements Runnable
 	private static GregorianCalendar dwinitTime = new GregorianCalendar();
 	
 	// serial port instance
-	private static SerialPort serialPort;
+	
+	private static DWSerialDevice serdev;
 	
 	// printer
 	private static DWVPrinter vprinter;
@@ -102,6 +105,11 @@ public class DWProtocolHandler implements Runnable
 	private static int wanttodie = 0;
 	// private static Thread readerthread;
 
+	// RFM handler
+	private static DWRFMHandler rfmhandler;
+	
+	
+	
 	
 	
 	
@@ -113,222 +121,24 @@ public class DWProtocolHandler implements Runnable
 	
 	public static boolean connected()
 	{
-		// could check DTR/DCD/DSR something, but none of this seems to exist on my DW cable or the USB adapter doesn't pass it, something.. oh well this eems to work
-		if (serialPort != null)
-		{
-			return(true);
-		}
-		else
-		{
-			return(false);
-		}
+		return(serdev.connected());
 	}
+	
 	
 	public static int setPort( String portname ) 
 	{
 	
-		if (serialPort != null)
-		{
-			// close current port
-			logger.info("closing port " + serialPort.getName());
-			serialPort.close();
-		}
-
-		try 
-		{
-			connectSerial(portname);
-		} 
-		catch (IOException e1) 
-		{
-			logger.warn(e1.getMessage());
-			return(-1);
-		} 
-		catch (NoSuchPortException e2) 
-		{
-			logger.warn(e2.getMessage());
-			return(-1);
-		} 
-		catch (PortInUseException e3) 
-		{
-			logger.warn(e3.getMessage());
-			return(-1);
-		} 
-		catch (UnsupportedCommOperationException e4) 
-		{
-			logger.warn(e4.getMessage());
-			return(-1);
-		}
-		
-		return(1);
-
+		return(serdev.setPort(portname));
 	}
 	
 	public static void shutdown()
 	{
 		logger.info("protocol handler has been asked to shutdown");
 		
-		serialPort.close();
+		serdev.close();
 		wanttodie = 1;
 		
 	}
-	
-	private static void connectSerial ( String portName ) throws IOException, NoSuchPortException, PortInUseException, UnsupportedCommOperationException
-    {
-		logger.info("attempting to open device '" + portName + "'");
-        CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
-        if ( portIdentifier.isCurrentlyOwned() )
-        {
-            logger.error("Port is already in use");
-        }
-        else
-        {
-            CommPort commPort = portIdentifier.open("DWProtocolHandler",2000);
-            
-            if ( commPort instanceof SerialPort )
-            {
-            	
-                serialPort = (SerialPort) commPort;
-
-                // these settings seem to solve the lost bytes problems on my usb adapter
-                serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
-                serialPort.enableReceiveThreshold(1);
-                serialPort.enableReceiveTimeout(3000);
-                
-                setSerialParams(serialPort);               
-                  
-                // try this..
-                
-               /* readerthread = new Thread(new DWProtoReader(serialPort.getInputStream(), serialInputBuf.getOutputStream() ));
-                readerthread.start();
-                */
-                
-                logger.info("succesfully opened " + portName);
-                
-            }
-            else
-            {
-                logger.error("Only serial devices are allowed.");
-            }
-        }     
-    }
-	
-
-	private static void setSerialParams(SerialPort sport) throws UnsupportedCommOperationException 
-	{
-		switch(DriveWireServer.config.getInt("CocoModel", 3))
-		{
-			case 1:
-				sport.setSerialPortParams(38400,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-				break;
-			case 2:
-				sport.setSerialPortParams(57600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-				break;
-			default:
-				sport.setSerialPortParams(115200,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-				break;
-			
-		}
-	}
-
-	
-	private void comWrite(byte[] data, int len)
-	{	
-		try 
-		{
-			serialPort.getOutputStream().write(data, 0, len);
-			
-			// extreme cases only
-			
-			/*
-			for (int i = 0;i< data.length;i++)
-			{
-				logger.debug("WRITE: " + (int)(data[i] & 0xFF));
-			}
-			*/
-			
-		} 
-		catch (IOException e) 
-		{
-			// problem with comm port, bail out
-			logger.error(e.getMessage());
-			wanttodie = 1;
-		}
-	}	
-	
-	private void comWrite1(int data)
-	{
-		try 
-		{
-			serialPort.getOutputStream().write((byte) data);
-			
-			// extreme cases only
-			// logger.debug("WRITE1: " + data);
-			
-		} 
-		catch (IOException e) 
-		{
-			// problem with comm port, bail out
-			logger.error(e.getMessage());
-			wanttodie = 1;
-		}
-	}
-	
-	
-	
-	private byte[] comRead(int len) throws DWCommTimeOutException 
-	{
-	
-		byte[] buf = new byte[len];
-		
-		for (int i = 0;i<len;i++)
-		{
-			buf[i] = (byte) comRead1(true);
-		}
-		
-		return(buf);
-	}
-	
-	
-	
-	private int comRead1(boolean timeout) throws DWCommTimeOutException 
-	{
-		int retdata = -1;
-		
-		try {
-
-			while (retdata == -1)
-			{
-				retdata = serialPort.getInputStream().read();
-			}
-			
-			// extreme cases only
-			// logger.debug("READ1: " + retdata);
-			
-			return(retdata);
-		} 
-		catch (IOException e) 
-		{
-			logger.error("error reading byte: " + e.getMessage());
-			return(-1);
-		}
-		
-		
-		/* try {
-			retdata = serialInputBuf.getInputStream().read();
-			// logger.debug("Read byte: " + retdata);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		
-		return(retdata);
-		*/
-	}
-
-
-	
-	
-	
 	
 	
 	
@@ -340,11 +150,14 @@ public class DWProtocolHandler implements Runnable
 
 		Thread.currentThread().setName("dwproto-" + Thread.currentThread().getId());
 		
-		// this thread has got to run a LOT or we lose bytes on the serial port
+		// this thread has got to run a LOT or we might lose bytes on the serial port
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		
 		logger.info("DWProtocolHandler started");
 
+		// serial device
+		serdev = new DWSerialDevice();
+		
 		// setup drives
 		diskDrives = new DWDiskDrives();
 		
@@ -356,7 +169,12 @@ public class DWProtocolHandler implements Runnable
 		// setup ports
 		DWVSerialPorts.resetAllPorts();
 
+		// setup printer
 		vprinter = new DWVPrinter();
+		
+		// setup RFM handler
+		rfmhandler = new DWRFMHandler();
+		
 		
 		while(wanttodie == 0)
 		{ 
@@ -366,7 +184,7 @@ public class DWProtocolHandler implements Runnable
 			// try to get an opcode, use int to avoid signed bytes
 			try 
 			{
-				opcodeint = comRead1(false);
+				opcodeint = serdev.comRead1(false);
 			} 
 			catch (DWCommTimeOutException e) 
 			{
@@ -474,20 +292,14 @@ public class DWProtocolHandler implements Runnable
 						break;
 				}
 				
-				
-				
-				
+
 			}
 		
 		}
 			
 		logger.info("DWProtocolHandler exiting");
 		
-		if (serialPort != null)
-		{
-			serialPort.close();
-		}
-		
+		serdev.close();
 			
 	}
 
@@ -508,13 +320,13 @@ public class DWProtocolHandler implements Runnable
 		
 		try
 		{
-			drv_version = comRead1(true);
+			drv_version = serdev.comRead1(true);
 			
 			// are we limited to dw3?
 			if (!DriveWireServer.config.getBoolean("DW3Only", false))
 			{
 				// send response
-				comWrite1(DW_PROTOCOL_VERSION);
+				serdev.comWrite1(DW_PROTOCOL_VERSION);
 			
 				logger.debug("DWINIT sent proto ver " + DW_PROTOCOL_VERSION + ", got driver version " + drv_version);
 			
@@ -539,6 +351,7 @@ public class DWProtocolHandler implements Runnable
 
 	}
 	
+	
 	private void DoOP_NOP() 
 	{
 		if (DriveWireServer.config.getBoolean("LogOpCode", false))
@@ -547,36 +360,18 @@ public class DWProtocolHandler implements Runnable
 		}
 	}
 	
+	
 	private void DoOP_RFM() 
 	{
-		int vfm_op;
-		byte[] responsebuf = new byte[107];
+		int rfm_op;
 		
 		
 		try
 		{
-			vfm_op = comRead1(true);
-			logger.info("DoOP_RFM call " + vfm_op );
+			rfm_op = serdev.comRead1(true);
+			logger.info("DoOP_RFM call " + rfm_op );
 			
-			responsebuf = comRead(107);
-			
-			DWRFMPathDescriptor tmppd = new DWRFMPathDescriptor(responsebuf);
-			
-			logger.info("RFM PD: " + byteArrayToHexString(responsebuf));
-			
-			logger.info("RFM Path: " + tmppd.getPD() + "  Mode: " + tmppd.getMOD() + "  Dev Tbl Addr: " + byteArrayToHexString(tmppd.getDEV()) + "  RGS: " + byteArrayToHexString(tmppd.getRGS()));
-			
-			// read path 
-			//int nchar = comRead1(true);
-		//	String path = new String();
-			
-//			while (nchar != 13)
-	//		{
-		//		path += Character.toString((char) nchar);
-			//	nchar = comRead1(true);
-		//	}
-			
-		//	logger.info("VFM PATH: " + path);
+			rfmhandler.DoRFMOP(serdev,rfm_op);
 			
 		} catch (DWCommTimeOutException e)
 		{
@@ -584,10 +379,11 @@ public class DWProtocolHandler implements Runnable
 			e.printStackTrace();
 		}
 		
-		
 	}
 	
-	
+
+
+
 	private void DoOP_TERM() 
 	{
 		if (DriveWireServer.config.getBoolean("LogOpCode", false))
@@ -647,7 +443,7 @@ public class DWProtocolHandler implements Runnable
 		try 
 		{
 			// read rest of packet
-			responsebuf = comRead(262);
+			responsebuf = serdev.comRead(262);
 
 			lastDrive = responsebuf[0];
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
@@ -676,7 +472,7 @@ public class DWProtocolHandler implements Runnable
 		if (lastChecksum != int2(cocosum))
 		{
 			// checksums do not match, tell Coco
-			comWrite1(DWERROR_CRC);
+			serdev.comWrite1(DWERROR_CRC);
 			
 			logger.warn("DoOP_WRITE: Bad checksum, drive: " + lastDrive + " LSN: " + int3(lastLSN) + " CocoSum: " + int2(cocosum) + " ServerSum: " + lastChecksum);
 			
@@ -725,7 +521,7 @@ public class DWProtocolHandler implements Runnable
 			lastError = response;
 		
 		// send response
-		comWrite1(response);
+		serdev.comWrite1(response);
 		
 		// Increment sectorsWritten count
 		if (response == DWOK)
@@ -784,7 +580,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// read rest of packet
 			
-			responsebuf = comRead(4);
+			responsebuf = serdev.comRead(4);
 			
 			lastDrive = responsebuf[0];
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
@@ -822,12 +618,12 @@ public class DWProtocolHandler implements Runnable
 		}
 				
 		// write out response sector
-		comWrite(sector, 256);
+		serdev.comWrite(sector, 256);
 		
 		try 
 		{
 			// get cocosum
-			cocosum  = comRead(2);
+			cocosum  = serdev.comRead(2);
 		} 
 		catch (DWCommTimeOutException e) 
 		{
@@ -846,7 +642,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// Good checksum, all is well
 			sectorsRead++;
-			comWrite1(DWOK);
+			serdev.comWrite1(DWOK);
 		
 			if (opcode == OP_REREADEX)
 			{
@@ -865,7 +661,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// checksum mismatch
 			// sectorsRead++;  should we increment this?
-			comWrite1(DWERROR_CRC);
+			serdev.comWrite1(DWERROR_CRC);
 			
 			if (opcode == OP_REREADEX)
 			{
@@ -890,7 +686,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// drive # and stat
-			responsebuf = comRead(2);
+			responsebuf = serdev.comRead(2);
 			
 			lastDrive = responsebuf[0];
 			
@@ -925,12 +721,12 @@ public class DWProtocolHandler implements Runnable
 	{
 		GregorianCalendar c = (GregorianCalendar) Calendar.getInstance();
 		
-		comWrite1(c.get(Calendar.YEAR)-108);
-		comWrite1(c.get(Calendar.MONTH)+1);
-		comWrite1(c.get(Calendar.DAY_OF_MONTH));
-		comWrite1(c.get(Calendar.HOUR_OF_DAY));
-		comWrite1(c.get(Calendar.MINUTE));
-		comWrite1(c.get(Calendar.SECOND));
+		serdev.comWrite1(c.get(Calendar.YEAR)-108);
+		serdev.comWrite1(c.get(Calendar.MONTH)+1);
+		serdev.comWrite1(c.get(Calendar.DAY_OF_MONTH));
+		serdev.comWrite1(c.get(Calendar.HOUR_OF_DAY));
+		serdev.comWrite1(c.get(Calendar.MINUTE));
+		serdev.comWrite1(c.get(Calendar.SECOND));
 		// comWrite1(c.get(Calendar.DAY_OF_WEEK));
 		
 		if (DriveWireServer.config.getBoolean("LogOpCode", false))
@@ -954,7 +750,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// port # and stat
-			responsebuf = comRead(2);
+			responsebuf = serdev.comRead(2);
 			if (responsebuf[1] != 1)
 			{
 				if (DriveWireServer.config.getBoolean("LogOpCode", false))
@@ -979,7 +775,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// port # and stat
-			responsebuf = comRead(2);
+			responsebuf = serdev.comRead(2);
 			
 			if (DriveWireServer.config.getBoolean("LogOpCode", false))
 			{
@@ -997,7 +793,7 @@ public class DWProtocolHandler implements Runnable
 				// SS.ComSt
 				case 0x28:
 					byte[] devdescr = new byte[26];
-					devdescr = comRead(26);
+					devdescr = serdev.comRead(26);
 					
 					// logger.debug("COMST: " + byteArrayToHexString(devdescr));
 					
@@ -1049,7 +845,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// port # (mode no longer sent)
-			responsebuf = comRead(1);
+			responsebuf = serdev.comRead(1);
 			
 			int portnum = responsebuf[0];
 			// int portmode = responsebuf[1];
@@ -1077,7 +873,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// just port # 
-			portnum = comRead1(true);
+			portnum = serdev.comRead1(true);
 		
 			if (DriveWireServer.config.getBoolean("LogOpCode", false))
 			{
@@ -1100,7 +896,7 @@ public class DWProtocolHandler implements Runnable
 		
 		result = DWVSerialPorts.serRead();
 		
-		comWrite(result, 2);
+		serdev.comWrite(result, 2);
 		
 		//if (result[0] != 0)
 		if (DriveWireServer.config.getBoolean("LogOpCode", false))
@@ -1114,7 +910,7 @@ public class DWProtocolHandler implements Runnable
 		byte[] cmdpacket = new byte[2];
 				
 		try {
-			cmdpacket = comRead(2);
+			cmdpacket = serdev.comRead(2);
 			
 			DWVSerialPorts.serWrite(cmdpacket[0],cmdpacket[1]);
 			
@@ -1137,7 +933,7 @@ public class DWProtocolHandler implements Runnable
 		byte[] data = new byte[256];
 		
 		try {
-			cmdpacket = comRead(2);
+			cmdpacket = serdev.comRead(2);
 			
 			if (DriveWireServer.config.getBoolean("LogOpCode", false))
 			{
@@ -1153,7 +949,7 @@ public class DWProtocolHandler implements Runnable
 			
 			// logger.debug(new String(data));
 			
-			comWrite(data, (int) (cmdpacket[1] & 0xFF));
+			serdev.comWrite(data, (int) (cmdpacket[1] & 0xFF));
 			
 			
 			
@@ -1176,7 +972,7 @@ public class DWProtocolHandler implements Runnable
 
 		try 
 		{
-			tmpint = comRead1(true);
+			tmpint = serdev.comRead1(true);
 			
 			if (DriveWireServer.config.getBoolean("LogOpCode", false))
 			{
@@ -1297,9 +1093,9 @@ public class DWProtocolHandler implements Runnable
 	}
 
 
-	public static SerialPort getSerialPort() {
-		return serialPort;
-	}
+//	public static SerialPort getSerialPort() {
+//		return serialPort;
+//	}
 	
 		
 	
@@ -1632,11 +1428,11 @@ public class DWProtocolHandler implements Runnable
 	}
 
 
-	public static synchronized void resetCocoModel() throws UnsupportedCommOperationException
-	{
-		logger.debug("resetting serial port parameters to model " + DriveWireServer.config.getInt("CocoModel"));
-		setSerialParams(serialPort);
-	}
+	//public static synchronized void resetCocoModel() throws UnsupportedCommOperationException
+	//{
+	//	logger.debug("resetting serial port parameters to model " + DriveWireServer.config.getInt("CocoModel"));
+	//	setSerialParams(serialPort);
+	//}
 
 	
 }
