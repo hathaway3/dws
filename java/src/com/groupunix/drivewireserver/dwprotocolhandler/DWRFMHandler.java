@@ -37,7 +37,7 @@ public class DWRFMHandler
 		switch (rfm_op)
 		{
 			case RFM_OP_CREATE:
-				DoOP_RFM_CREATE();
+				DoOP_RFM_CREATE(serdev);
 				break;
 			case RFM_OP_OPEN:
 				DoOP_RFM_OPEN(serdev);
@@ -55,7 +55,7 @@ public class DWRFMHandler
 				DoOP_RFM_SEEK(serdev);
 				break;
 			case RFM_OP_READ:
-				DoOP_RFM_READ();
+				DoOP_RFM_READ(serdev);
 				break;
 			case RFM_OP_WRITE:
 				DoOP_RFM_WRITE();
@@ -91,6 +91,9 @@ public class DWRFMHandler
 			
 			this.paths[pathno].close();
 			this.paths[pathno] = null;
+			
+			// send response
+			serdev.comWrite1(0);
 			
 		} 
 		catch (DWCommTimeOutException e)
@@ -129,23 +132,42 @@ public class DWRFMHandler
 			int pathno = serdev.comRead1(true);
 			
 			// read max bytes
-			byte[] maxbytes = new byte[2];
+			byte[] maxbytesb = new byte[2];
 			
-			maxbytes = serdev.comRead(2);
+			maxbytesb= serdev.comRead(2);
 			
-			// send result
-			/*
-			serdev.comWrite1(5);
-			byte[] tmp = new byte[5];
-			tmp[0] = (byte) 'T';
-			tmp[1] = (byte) 'E';
-			tmp[2] = (byte) 'S';
-			tmp[3] = (byte) 'T';
-			tmp[4] = (byte) 13;
-			serdev.comWrite(tmp,5);
-			*/
-			serdev.comWrite1(0);
-			logger.debug("readln on path " + pathno );
+			int maxbytes = DWProtocolHandler.int2(maxbytesb);
+			
+			int availbytes = this.paths[pathno].getBytesAvail(maxbytes);
+
+			logger.debug("initial AB: " + availbytes);
+			
+			byte[] buf = new byte[availbytes];
+			
+			System.arraycopy(this.paths[pathno].getBytes(availbytes),0, buf, 0, availbytes);
+			
+			// find $0D or end
+			int x = 0;
+			while (x < availbytes)
+			{
+				if (buf[x] == (byte)13)
+				{
+					availbytes = x+1;
+				}
+				x++;
+			}
+			
+			logger.debug("adjusted AB: " + availbytes);
+			
+			serdev.comWrite1(availbytes);
+			
+			if (availbytes > 0)
+			{
+				serdev.comWrite(buf, availbytes);
+				this.paths[pathno].incSeekpos(availbytes);
+			}
+			
+			logger.debug("readln on path " + pathno + " maxbytes: " + maxbytes + " availbytes: " + availbytes );
 		} 
 		catch (DWCommTimeOutException e)
 		{
@@ -163,9 +185,46 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_READ()
+	private void DoOP_RFM_READ(DWSerialDevice serdev)
 	{
 		logger.debug("READ");
+		
+		// read path #
+		try
+		{
+			int pathno = serdev.comRead1(true);
+			
+			// read max bytes
+			byte[] maxbytesb = new byte[2];
+			
+			maxbytesb= serdev.comRead(2);
+			
+			int maxbytes = DWProtocolHandler.int2(maxbytesb);
+			
+			int availbytes = this.paths[pathno].getBytesAvail(maxbytes);
+			
+			byte[] buf = new byte[availbytes];
+			
+			System.arraycopy(this.paths[pathno].getBytes(availbytes),0, buf, 0, availbytes);
+			
+			serdev.comWrite1(availbytes);
+			
+			if (availbytes > 0)
+			{
+				serdev.comWrite(buf, availbytes);
+				this.paths[pathno].incSeekpos(availbytes);
+			}
+			
+			logger.debug("read on path " + pathno + " maxbytes: " + maxbytes + " availbytes: " + availbytes );
+		} 
+		catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		
+		
 	}
 
 
@@ -214,9 +273,43 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_CREATE()
+	private void DoOP_RFM_CREATE(DWSerialDevice serdev)
 	{
-		logger.debug("CREATE");	
+		logger.debug("CREATE");
+		
+		// read path #
+		try
+		{
+			int pathno = serdev.comRead1(true);
+			
+			// read path str
+			String pathstr = new String();
+		
+			int nchar = serdev.comRead1(true);
+			while (nchar != 13)
+			{
+				pathstr += Character.toString((char) nchar);
+				nchar = serdev.comRead1(true);
+			}
+
+			// send result
+			
+	
+			this.paths[pathno] = new DWRFMPath(pathno);
+			this.paths[pathno].setPathstr(pathstr);
+			
+			int result = this.paths[pathno].createFile();
+			
+			serdev.comWrite1(result);
+			
+			logger.debug("create path " + pathno + " to " + pathstr + ": result " + result);
+		} 
+		catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
 	}
 
 
@@ -246,9 +339,11 @@ public class DWRFMHandler
 			this.paths[pathno] = new DWRFMPath(pathno);
 			this.paths[pathno].setPathstr(pathstr);
 			
-			serdev.comWrite1(216);
+			int result = this.paths[pathno].openFile();
 			
-			logger.debug("opened path " + pathno + " to " + pathstr);
+			serdev.comWrite1(result);
+			
+			logger.debug("open path " + pathno + " to " + pathstr + ": result " + result);
 		} 
 		catch (DWCommTimeOutException e)
 		{
