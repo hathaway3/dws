@@ -52,7 +52,7 @@ public class DWRFMHandler
 				DoOP_RFM_DELETE();
 				break;
 			case RFM_OP_SEEK:
-				DoOP_RFM_SEEK();
+				DoOP_RFM_SEEK(serdev);
 				break;
 			case RFM_OP_READ:
 				DoOP_RFM_READ();
@@ -169,9 +169,30 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_SEEK()
+	private void DoOP_RFM_SEEK(DWSerialDevice serdev)
 	{
 		logger.debug("SEEK");
+		try
+		{
+			int pathno = serdev.comRead1(true);
+			
+			// read seek pos
+			byte[] seekpos = new byte[4];
+			
+			seekpos = serdev.comRead(4);
+			
+			this.paths[pathno].setSeekpos(DWProtocolHandler.int4(seekpos));
+			
+			// assume it worked, for now
+			serdev.comWrite1(0);
+			
+		}
+		catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+			
 	}
 
 
@@ -225,7 +246,7 @@ public class DWRFMHandler
 			this.paths[pathno] = new DWRFMPath(pathno);
 			this.paths[pathno].setPathstr(pathstr);
 			
-			serdev.comWrite1(0);
+			serdev.comWrite1(216);
 			
 			logger.debug("opened path " + pathno + " to " + pathstr);
 		} 
