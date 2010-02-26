@@ -4,9 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
 
 import org.apache.log4j.Logger;
+
+import com.groupunix.drivewireserver.DriveWireServer;
 
 public class DWRFMPath
 {
@@ -18,12 +19,15 @@ public class DWRFMPath
 	private int seekpos;
 	
 	
+
+	
+	
 	public DWRFMPath(int pathno)
 	{
 		this.setPathno(pathno);
 		this.setSeekpos(0);
 		logger.debug("new path " + pathno);
-		this.setLocalroot("E:/cocoroot");
+		this.setLocalroot(DriveWireServer.config.getString("RFMRoot","/"));
 		
 	}
 

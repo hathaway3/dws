@@ -3,8 +3,6 @@ package com.groupunix.drivewireserver;
 
 
 
-import gnu.io.UnsupportedCommOperationException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
