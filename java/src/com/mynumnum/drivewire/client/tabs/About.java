@@ -60,7 +60,6 @@ public class About extends Composite {
 		// TODO Auto-generated method stub
 		DriveWireGWT.driveWireService.getServerVersion(new AsyncCallback<VersionData>() {
 			
-			@Override
 			public void onSuccess(VersionData result) {
 				DWServerVersion = result.getVersion();
 				DWServerVersionDate = result.getDate();
@@ -78,7 +77,6 @@ public class About extends Composite {
 				
 			}
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				

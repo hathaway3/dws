@@ -64,7 +64,6 @@ public class Drives extends Composite {
 		// with a disk image
 		DriveWireGWT.driveWireService.getDrives(new AsyncCallback<ArrayList<Integer>>() {
 			
-			@Override
 			public void onSuccess(ArrayList<Integer> result) {
 				// Populate the drive list
 				for (Integer driveNumber : result) {
@@ -73,7 +72,6 @@ public class Drives extends Composite {
 				
 			}
 			
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
@@ -151,13 +149,11 @@ public class Drives extends Composite {
 		// Send to server for processing
 		DriveWireGWT.driveWireService.setDriveWriteProtect(driveNumber, writeProtect, new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				// After we update the disk image status we need to redraw the disk grid
 				updateFilesTable();
@@ -179,13 +175,11 @@ public class Drives extends Composite {
 		final Integer driveNumber = Integer.valueOf(drivesListBox.getValue(drivesListBox.getSelectedIndex()));
 		DriveWireGWT.driveWireService.loadDiskFromFile(driveNumber, selectedFile.getText(), new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				// If we receive an error message from the server then we will let the user know
 				if (!result.equals("none")) {
@@ -204,7 +198,6 @@ public class Drives extends Composite {
 	private static void updateFilesTable() {
 		DriveWireGWT.driveWireService.getDrivesList(new AsyncCallback<ArrayList<DriveListData>>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
@@ -307,7 +300,6 @@ public class Drives extends Composite {
 		db.setWidget(vp);
 		ok.addClickHandler(new ClickHandler() {
 			
-			@Override
 			public void onClick(ClickEvent event) {
 				saveDiskSet(fileTextBox.getText());
 				
@@ -315,7 +307,6 @@ public class Drives extends Composite {
 		});
 		cancel.addClickHandler(new ClickHandler() {
 			
-			@Override
 			public void onClick(ClickEvent event) {
 				// TODO Auto-generated method stub
 				db.hide();
@@ -338,13 +329,11 @@ public class Drives extends Composite {
 	public static void openDiskSet(String fileName) {
 		DriveWireGWT.driveWireService.openDiskSet(fileName, new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				updateFilesTable();
 				
@@ -356,13 +345,11 @@ public class Drives extends Composite {
 	public static void saveDiskSet(String fileName) {
 		DriveWireGWT.driveWireService.saveDiskSet(fileName, new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage();
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				db.hide();
 				
@@ -382,13 +369,11 @@ public class Drives extends Composite {
 	private static void ejectDisk(Integer driveNumber) {
 		DriveWireGWT.driveWireService.ejectDisk(driveNumber, new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				gridDriveNumber = 0;
 				updateFilesTable();

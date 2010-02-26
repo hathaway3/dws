@@ -206,7 +206,6 @@ public class Status extends Composite {
 	private static void updateDriveStatusTable() {
 		DriveWireGWT.driveWireService.getDrivesList(new AsyncCallback<ArrayList<DriveListData>>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				refreshTimer.cancel();

@@ -564,7 +564,6 @@ public class fx80img implements Runnable {
 		}*/	
 	}
 
-	@Override
 	public void run()
 	{
 		

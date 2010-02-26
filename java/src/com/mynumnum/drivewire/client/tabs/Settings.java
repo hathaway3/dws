@@ -81,13 +81,11 @@ public class Settings extends Composite {
 	private void getSettings() {
 		DriveWireGWT.driveWireService.getSettings(new AsyncCallback<com.mynumnum.drivewire.client.serializable.SettingsData>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(com.mynumnum.drivewire.client.serializable.SettingsData result) {
 				setSerialDevice(result.getPort());
 				setModel(result.getModel());
@@ -147,7 +145,6 @@ public class Settings extends Composite {
 		serialDeviceListBox.setTitle("Select the serial port you want to use");
 		DriveWireGWT.driveWireService.getPorts(new AsyncCallback<ArrayList<String>>() {
 			
-			@Override
 			public void onSuccess(ArrayList<String> result) {
 				for (String s : result) {
 					serialDeviceListBox.addItem(s);
@@ -163,7 +160,6 @@ public class Settings extends Composite {
 			}
 			
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
@@ -206,13 +202,11 @@ public class Settings extends Composite {
 	private void setWriteToFile(boolean logToFile) {
 		DriveWireGWT.driveWireService.setLogToFile(logToFile, new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				// Nothing to do here
 				
@@ -242,7 +236,6 @@ public class Settings extends Composite {
 		db.setWidget(vp);
 		ok.addClickHandler(new ClickHandler() {
 			
-			@Override
 			public void onClick(ClickEvent event) {
 				setServerLogFileName(fileTextBox.getText());
 				logFileNameLabel.setText(fileTextBox.getText());
@@ -252,7 +245,6 @@ public class Settings extends Composite {
 		});
 		cancel.addClickHandler(new ClickHandler() {
 			
-			@Override
 			public void onClick(ClickEvent event) {
 				db.hide();
 				
@@ -277,13 +269,11 @@ public class Settings extends Composite {
 		// TODO Auto-generated method stub
 		DriveWireGWT.driveWireService.setPort(port, new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				// Nothing to do here
 				
@@ -304,13 +294,11 @@ public class Settings extends Composite {
 	private void setServerModel(String value) {
 		DriveWireGWT.driveWireService.setModel(Integer.valueOf(value), new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				if (!result.equals("none")) {
 					Common.showErrorMessage(result);
@@ -327,13 +315,11 @@ public class Settings extends Composite {
 	private void setServerLogLevel(String itemText) {
 		DriveWireGWT.driveWireService.setLogLevel(itemText, new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				// Nothing to do here
 				
@@ -349,13 +335,11 @@ public class Settings extends Composite {
 		// Call the server to update the file name
 		DriveWireGWT.driveWireService.setLogFileName(text, new AsyncCallback<String>() {
 
-			@Override
 			public void onFailure(Throwable caught) {
 				Common.showErrorMessage(caught.toString());
 				
 			}
 
-			@Override
 			public void onSuccess(String result) {
 				
 			}

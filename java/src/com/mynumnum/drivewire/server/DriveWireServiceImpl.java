@@ -157,7 +157,6 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		return ("Success");
 		
 	}
-	@Override
 	public String loadDiskFromFile(Integer drive, String path) {
 		String error = "none";
 		// Call DWDiskDrives loadDiskFromFile
@@ -175,7 +174,6 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		}
 		return error;
 	}
-	@Override
 	public ArrayList<DriveListData> getDrivesList() {
 		// Get the list of drives, paths, and write protect, and disk sector information and return to the client
 		ArrayList<DriveListData> adld = new ArrayList<DriveListData>();
@@ -199,17 +197,14 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	public VersionData getServerVersion() {
 		return(new VersionData(DriveWireServer.DWServerVersion, DriveWireServer.DWServerVersionDate));
 	}
-	@Override
 	public String openDiskSet(String fileName) {
 		DWProtocolHandler.getDiskDrives().LoadDiskSet(fileName);
 		return null;
 	}
-	@Override
 	public String saveDiskSet(String fileName) {
 		DWProtocolHandler.getDiskDrives().saveDiskSet(fileName);
 		return null;
 	}
-	@Override
 	public String ejectDisk(Integer driveNumber) {
 		String errorMessage = "none";
 		try {
@@ -221,11 +216,9 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		}
 		return errorMessage;
 	}
-	@Override
 	public ArrayList<String> getPorts() {
 		return DWProtocolHandler.getPortNames();
 	}
-	@Override
 	public String setPort(String port) {
 		// should never call setPort like this, will do something better eventually
 		// DWProtocolHandler.setPort(port);
@@ -235,7 +228,6 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	/**
 	 * Return the current settings for the 'Settings' tab to the client
 	 */
-	@Override
 	public SettingsData getSettings() {
 
 		SettingsData settings = new SettingsData();
@@ -248,12 +240,10 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		return settings;
 	}
 
-	@Override
 	public String setLogLevel(String level) {
 		DriveWireServer.setLogLevel(level);
 		return "Success";
 	}
-	@Override
 	public String setModel(int model) {
 		String error = "none";
 		//try {
@@ -263,12 +253,10 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		//}
 		return error;
 	}
-	@Override
 	public String setLogFileName(String fileName) {
 		DriveWireServer.setLogFileName(fileName);
 		return "Success";
 	}
-	@Override
 	public String setLogToFile(boolean logToFile) {
 		DriveWireServer.logToFile(logToFile);
 		return "success";
