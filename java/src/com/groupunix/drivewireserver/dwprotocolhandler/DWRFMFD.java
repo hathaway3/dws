@@ -155,7 +155,7 @@ MINSEC         SET       16
 		}
 		else
 		{
-			logger.error("attempt to write FD for non existant file '" + this.pathstr + "'");
+			logger.error("attempt to write FD for non existent file '" + this.pathstr + "'");
 		}
 		
 	}

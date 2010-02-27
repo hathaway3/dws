@@ -17,11 +17,7 @@ public class DWRFMPath
 	private String pathstr;
 	private String localroot;
 	private int seekpos;
-	
-	private DWRFMFD fd;
-	
-
-	
+		
 	
 	public DWRFMPath(int pathno)
 	{
@@ -45,7 +41,6 @@ public class DWRFMPath
 	public void setPathstr(String pathstr)
 	{
 		this.pathstr = pathstr;
-		this.fd = new DWRFMFD(pathstr);
 	}
 
 	public String getPathstr()
@@ -224,12 +219,19 @@ public class DWRFMPath
 
 	public void setFd(DWRFMFD fd)
 	{
-		this.fd = fd;
+		// this.fd = fd;
 	}
 
-	public DWRFMFD getFd()
+	public byte[] getFd(int size)
 	{
-		return fd;
+		byte[] b = new byte[size];
+		
+		DWRFMFD fd = new DWRFMFD(DriveWireServer.config.getString("RFMRoot","/") + this.pathstr);
+		
+		fd.readFD();
+		
+		System.arraycopy(fd.getFD(), 0, b, 0, size);
+		return(b);
 	}
 	
 	

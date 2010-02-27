@@ -2,6 +2,7 @@ package com.groupunix.drivewireserver.dwprotocolhandler;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.OS9Defs;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWRFMHandler
@@ -148,6 +149,15 @@ public class DWRFMHandler
 			int call = serdev.comRead1(true);
 			
 			logger.debug("GETSTT path " + pathno + " call " + call);
+		
+			switch (call)
+			{
+				case OS9Defs.SS_FD:
+					getSTT_FD(serdev, pathno);
+					break;
+					
+			}
+			
 			
 		}
 		catch (DWCommTimeOutException e)
@@ -158,6 +168,29 @@ public class DWRFMHandler
 		
 	}
 
+
+	private void getSTT_FD(DWSerialDevice serdev, int pathno)
+	{
+		logger.debug("getstt_fd");
+		
+		// read # bytes wanted
+		
+		try
+		{
+			int size = DWProtocolHandler.int2(serdev.comRead(2));
+			
+			serdev.comWrite(this.paths[pathno].getFd(size),size);
+			
+			logger.debug("sent " + size +" bytes of FD for path " + pathno);
+		} 
+		catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
 
 	private void DoOP_RFM_WRITLN()
 	{
