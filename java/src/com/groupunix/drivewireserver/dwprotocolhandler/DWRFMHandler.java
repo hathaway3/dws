@@ -65,7 +65,7 @@ public class DWRFMHandler
 				DoOP_RFM_READLN(serdev);
 				break;
 			case RFM_OP_WRITLN:
-				DoOP_RFM_WRITLN();
+				DoOP_RFM_WRITLN(serdev);
 				break;
 			case RFM_OP_GETSTT:
 				DoOP_RFM_GETSTT(serdev);
@@ -192,9 +192,39 @@ public class DWRFMHandler
 		
 	}
 
-	private void DoOP_RFM_WRITLN()
+	private void DoOP_RFM_WRITLN(DWSerialDevice serdev)
 	{
 		logger.debug("WRITLN");	
+		
+		// read path #
+		try
+		{
+			int pathno = serdev.comRead1(true);
+			
+			// read sending bytes
+			byte[] maxbytesb = new byte[2];
+			
+			maxbytesb= serdev.comRead(2);
+			
+			int maxbytes = DWProtocolHandler.int2(maxbytesb);
+			
+			// read bytes
+			byte[] buf = new byte[maxbytes];
+			
+			buf = serdev.comRead(maxbytes);
+			
+			// write to file
+			this.paths[pathno].writeBytes(buf,maxbytes);
+			this.paths[pathno].incSeekpos(maxbytes);
+			
+			logger.debug("writln on path " + pathno + " bytes: " + maxbytes);
+		} 
+		catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
 	}
 
 

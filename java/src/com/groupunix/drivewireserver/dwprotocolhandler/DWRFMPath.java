@@ -233,6 +233,44 @@ public class DWRFMPath
 		System.arraycopy(fd.getFD(), 0, b, 0, size);
 		return(b);
 	}
+
+	public void writeBytes(byte[] buf, int maxbytes)
+	{
+		// write to file
+		RandomAccessFile inFile = null;
+		
+		File f = new File(this.localroot + this.pathstr);
+		if (f.exists())
+		{
+			try
+			{
+				inFile = new RandomAccessFile(f, "rw");
+			
+				inFile.seek(this.seekpos);
+				
+				//TODO what if we don't get buf.length??
+				//this.seekpos += 
+				inFile.write(buf);		
+			
+			} 
+			catch (FileNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+		}
+		else
+		{
+			logger.error("write to non existent file");
+		}
+	}
 	
 	
 	
