@@ -217,9 +217,20 @@ public class DWRFMPath
 		logger.debug("incSeekpos to " + this.seekpos);
 	}
 
-	public void setFd(DWRFMFD fd)
+	public void setFd(byte[] buf)
 	{
-		// this.fd = fd;
+		DWRFMFD fd = new DWRFMFD(DriveWireServer.config.getString("RFMRoot","/") + this.pathstr);
+		
+		fd.readFD();
+		
+		byte[] fdtmp = fd.getFD();
+		
+		System.arraycopy(buf, 0, fdtmp, 0, buf.length);
+		
+		fd.setFD(fdtmp);
+		
+		fd.writeFD();
+				
 	}
 
 	public byte[] getFd(int size)

@@ -126,6 +126,14 @@ public class DWRFMHandler
 			
 			logger.debug("SETSTT path " + pathno + " call " + call);
 			
+			switch (call)
+			{
+				case OS9Defs.SS_FD:
+					setSTT_FD(serdev, pathno);
+					break;
+					
+			}
+			
 		}
 		catch (DWCommTimeOutException e)
 		{
@@ -191,6 +199,34 @@ public class DWRFMHandler
 		
 		
 	}
+	
+	private void setSTT_FD(DWSerialDevice serdev, int pathno)
+	{
+		logger.debug("getstt_fd");
+		
+		// read # bytes coming
+		
+		try
+		{
+			int size = DWProtocolHandler.int2(serdev.comRead(2));
+			
+			byte[] buf = new byte[size];
+			
+			buf = serdev.comRead(size);
+			
+			this.paths[pathno].setFd(buf);
+			
+			logger.debug("read " + size +" bytes of FD for path " + pathno);
+		} 
+		catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
 
 	private void DoOP_RFM_WRITLN(DWSerialDevice serdev)
 	{
