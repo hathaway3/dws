@@ -18,6 +18,7 @@ public class DWRFMPath
 	private String localroot;
 	private int seekpos;
 	
+	private DWRFMFD fd;
 	
 
 	
@@ -44,6 +45,7 @@ public class DWRFMPath
 	public void setPathstr(String pathstr)
 	{
 		this.pathstr = pathstr;
+		this.fd = new DWRFMFD(pathstr);
 	}
 
 	public String getPathstr()
@@ -156,48 +158,60 @@ public class DWRFMPath
 		// TODO structure blindly assumes this will work.
 		// like above need to implement exceptions/error handling passed up to caller
 		
+		
 		byte[] buf = new byte[availbytes];
 		RandomAccessFile inFile = null;
 		
 		File f = new File(this.localroot + this.pathstr);
 		if (f.exists())
 		{
-			try
+			if (f.isDirectory())
 			{
-				inFile = new RandomAccessFile(f, "r");
-				
-				inFile.seek(seekpos);
-				
-				//TODO what if we don't get buf.length??
-				//this.seekpos += 
-				inFile.read(buf);
-				
-				
-				
-			} 
-			catch (FileNotFoundException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-			catch (IOException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// total hack
+				logger.debug("DIR: asked for "+ availbytes);
+				buf = "01234567890123456789012345670000".getBytes();
 			}
-			finally
+			else
 			{
+				logger.debug("FILE: asked for "+ availbytes);
+				
 				try
 				{
-					inFile.close();
-				} catch (IOException e)
+					inFile = new RandomAccessFile(f, "r");
+				
+					inFile.seek(seekpos);
+				
+					//TODO what if we don't get buf.length??
+					//this.seekpos += 
+					inFile.read(buf);
+				
+				
+				
+				} 
+				catch (FileNotFoundException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
+				catch (IOException e)
 				{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				finally
+				{
+					try
+					{
+						inFile.close();
+					} 
+					catch (IOException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}	
+			
 			}
-			
-			
 		}
 		return(buf);
 	}
@@ -206,6 +220,16 @@ public class DWRFMPath
 	{
 		this.seekpos += bytes;
 		logger.debug("incSeekpos to " + this.seekpos);
+	}
+
+	public void setFd(DWRFMFD fd)
+	{
+		this.fd = fd;
+	}
+
+	public DWRFMFD getFd()
+	{
+		return fd;
 	}
 	
 	

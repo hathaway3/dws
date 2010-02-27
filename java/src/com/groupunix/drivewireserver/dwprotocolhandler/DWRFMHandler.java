@@ -67,10 +67,10 @@ public class DWRFMHandler
 				DoOP_RFM_WRITLN();
 				break;
 			case RFM_OP_GETSTT:
-				DoOP_RFM_GETSTT();
+				DoOP_RFM_GETSTT(serdev);
 				break;
 			case RFM_OP_SETSTT:
-				DoOP_RFM_SETSTT();
+				DoOP_RFM_SETSTT(serdev);
 				break;
 			case RFM_OP_CLOSE:
 				DoOP_RFM_CLOSE(serdev);
@@ -89,8 +89,15 @@ public class DWRFMHandler
 		{
 			int pathno = serdev.comRead1(true);
 			
-			this.paths[pathno].close();
-			this.paths[pathno] = null;
+			if (this.paths[pathno] == null)
+			{
+				logger.error("close on null path: " + pathno);
+			}
+			else
+			{
+				this.paths[pathno].close();
+				this.paths[pathno] = null;
+			}
 			
 			// send response
 			serdev.comWrite1(0);
@@ -104,15 +111,51 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_SETSTT()
+	private void DoOP_RFM_SETSTT(DWSerialDevice serdev)
 	{
 		logger.debug("SETSTT");
+		
+		// read path #
+		try
+		{
+			int pathno = serdev.comRead1(true);
+			
+			// read call
+			int call = serdev.comRead1(true);
+			
+			logger.debug("SETSTT path " + pathno + " call " + call);
+			
+		}
+		catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
 	}
 
 
-	private void DoOP_RFM_GETSTT()
+	private void DoOP_RFM_GETSTT(DWSerialDevice serdev)
 	{
-		logger.debug("GETSTT");		
+		logger.debug("GETSTT");
+		
+		// read path #
+		try
+		{
+			int pathno = serdev.comRead1(true);
+			
+			// read call
+			int call = serdev.comRead1(true);
+			
+			logger.debug("GETSTT path " + pathno + " call " + call);
+			
+		}
+		catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
 	}
 
 
