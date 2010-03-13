@@ -78,19 +78,13 @@ public class DWDiskDrives
 		    		if ((parts.length == 3) && (!line.startsWith("#")))
 		    		{
 		    			
-		    			DWDisk tmpdisk = new DWDisk();
+		    			DWDisk tmpdisk = new DWDisk(parts[1]);
 		    			
-		    			try 
-		    			{
-							tmpdisk.setFilePath(parts[1]);
-							if (parts[2].equals("1"))
-			    				tmpdisk.setWriteProtect(true);
-			    			LoadDisk(Integer.parseInt(parts[0]), tmpdisk);
-						} 
-		    			catch (FileNotFoundException e) 
-		    			{
-		    				logger.warn("File not found attempting to load drive " + parts[0]);
-		    			}
+						if (parts[2].equals("1"))
+						{
+			    			tmpdisk.setWriteProtect(true);
+						}
+		    			LoadDisk(Integer.parseInt(parts[0]), tmpdisk);
 		    			
 		    		}
 		    	}	
@@ -172,11 +166,9 @@ public class DWDiskDrives
 	}
 	
 	
-	public  void LoadDiskFromFile(int driveno, String path) throws FileNotFoundException, DWDriveNotValidException, DWDriveAlreadyLoadedException
+	public  void LoadDiskFromFile(int driveno, String path) throws DWDriveNotValidException, DWDriveAlreadyLoadedException, IOException
 	{
-		DWDisk tmpdisk = new DWDisk();
-    	
-    	tmpdisk.setFilePath(path);
+		DWDisk tmpdisk = new DWDisk(path);
     	
     	LoadDisk(driveno, tmpdisk);
 	}
@@ -193,14 +185,12 @@ public class DWDiskDrives
 		else
 		{
 			diskDrives[driveno] = disk;
-			logger.info("loaded disk '" + disk.getFilePath() + "' in drive " + driveno + " with checksum " + disk.getChecksum());
-			
-			logger.debug(disk.diskInfo());
+			logger.info("loaded disk '" + disk.getFilePath() + "' in drive " + driveno);
 			
 		}
 	}
 	
-	public void ReLoadDisk(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, FileNotFoundException, DWDriveAlreadyLoadedException
+	public void ReLoadDisk(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDriveAlreadyLoadedException, IOException
 	{
 		if (diskDrives[driveno] == null)
 		{
@@ -375,26 +365,22 @@ public class DWDiskDrives
 		return(diskDrives[driveno]);
 	}
 
-
-	public String getChecksum(int driveno)
+	
+	public void writeDisk(int driveno) throws IOException
 	{
-		return(diskDrives[driveno].getChecksum());
+		diskDrives[driveno].writeDisk();
+	}
+
+	
+	public boolean isWriteable(int driveno)
+	{
+		return(diskDrives[driveno].isWriteable());
 	}
 	
-	public String getDiskChecksum(int driveno)
+	public boolean isRandomWriteable(int driveno)
 	{
-		return(diskDrives[driveno].getMD5Checksum(diskDrives[driveno].getFilePath()));
+		return(diskDrives[driveno].isRandomWriteable());
 	}
 	
-	public void syncDisk(int driveno)
-	{
-		diskDrives[driveno].syncDisk();
-	}
-
-
-	public void mergeMemWithDisk(int driveno)
-	{
-		diskDrives[driveno].mergeMemWithDisk();		
-	}
 	
 }

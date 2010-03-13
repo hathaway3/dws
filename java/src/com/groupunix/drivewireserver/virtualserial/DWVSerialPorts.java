@@ -411,6 +411,7 @@ public class DWVSerialPorts {
 	}
 
 
+
 	public static boolean hasOutput(int vport)
 	{
 		if (vserialPorts[vport] != null)

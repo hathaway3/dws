@@ -22,8 +22,8 @@ import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.1";
-	public static final String DWServerVersionDate = "1/27/2010";
+	public static final String DWServerVersion = "3.9.3";
+	public static final String DWServerVersionDate = "3/12/2010";
 	
 	
 	public static Logger logger = Logger.getLogger("DWServer");

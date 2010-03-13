@@ -213,9 +213,11 @@ MINSEC         SET       16
 	
 	private byte[] lengthToBytes(long length)
 	{
-		if (length > ((256 ^ 4)/2))
+		double maxlen = Math.pow( 256, 4) / 2;
+		
+		if (length > maxlen)
 		{
-			logger.error("File too big! '" + this.pathstr + "'");
+			logger.error("File too big: " + length + " bytes in '" + this.pathstr + "' (max " + maxlen + ")" );
 			return(new byte[] {0,0,0,0});
 		}
 		

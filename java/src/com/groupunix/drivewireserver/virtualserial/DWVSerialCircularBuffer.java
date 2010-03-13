@@ -321,7 +321,8 @@ public class DWVSerialCircularBuffer {
 			// is all in one piece.
 			
 			// scan from read to write, looking for control chars
-			
+		
+			/*
 			for (int i = readPosition;i<writePosition;i++)
 			{
 				if (((this.DW_PD_INT != 0) &&(buffer[i] == this.DW_PD_INT)) || ((this.DW_PD_QUT != 0) &&(buffer[i] == this.DW_PD_QUT)))
@@ -334,6 +335,7 @@ public class DWVSerialCircularBuffer {
 						return(1);
 				}
 			}
+			*/
 			
 			// no control chars */
 			return(writePosition - readPosition);
@@ -341,7 +343,7 @@ public class DWVSerialCircularBuffer {
 		else
 		{
 			// space at the beginning and end.
-			
+			/*
 			// scan from readPosition to end of buffer
 			for (int i = readPosition; i < buffer.length; i++)
 			{
@@ -368,7 +370,7 @@ public class DWVSerialCircularBuffer {
 				}
 			}
 			
-			
+			*/
 			
 			// no control chars
 			return(buffer.length - (readPosition - writePosition));

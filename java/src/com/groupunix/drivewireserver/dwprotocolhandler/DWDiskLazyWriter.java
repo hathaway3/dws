@@ -1,5 +1,7 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
+import java.io.IOException;
+
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -44,44 +46,29 @@ public class DWDiskLazyWriter implements Runnable {
 		{
 			if (DWProtocolHandler.getDiskDrives().diskLoaded(driveno))
 			{
-				boolean diskchanged = false;
-				boolean memchanged = false;
-			
-				if (!DWProtocolHandler.getDiskDrives().getChecksum(driveno).equals(DWProtocolHandler.getDiskDrives().getDiskChecksum(driveno)))
-				{
-					logger.debug("disk file for drive " + driveno + " has changed");
-					diskchanged = true;
-				}
+				if (DWProtocolHandler.getDiskDrives().isRandomWriteable(driveno))
+				{ 
 				
-				if (DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) > 0)
-				{
-					logger.debug("cache for drive " + driveno + " has changed, " + DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
-					
-					memchanged = true;
-				}
+					if (DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) > 0)
+					{
+						logger.debug("cache for drive " + driveno + " has changed, " + DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
+						
+						try
+						{
+							DWProtocolHandler.getDiskDrives().writeDisk(driveno);
+						} 
+						catch (IOException e)
+						{
+							logger.error("Lazy write failed: " + e.getMessage());
+						}
+					}
 				
-				if (memchanged && !diskchanged)
-				{
-					// mem copy changed, disk did not, just write it out
-					DWProtocolHandler.getDiskDrives().syncDisk(driveno);
-					
 				}
-				else if (diskchanged)
-				{
-					// merge disk with mem
-					DWProtocolHandler.getDiskDrives().mergeMemWithDisk(driveno);
-					
-				}
-				
 			}
 		}
 		
 	}
 
-
-
-	
-	
 
 	
 }

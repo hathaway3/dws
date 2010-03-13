@@ -118,21 +118,21 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 			// Loop through all files in the folder that match the appropriate filter
 			for (String s : fileList.list(fileFilter)) {
 				// See if we can determine the OS9 Disk Name
-				DWDisk disk = new DWDisk();
-				try {
-					disk.setFilePath(rootFolder + java.io.File.separator + s);
-				} catch (FileNotFoundException e) {
+				//DWDisk disk = new DWDisk();
+				//try {
+				//	disk.setFilePath(rootFolder + java.io.File.separator + s);
+				//} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
 					// e.printStackTrace();
-				}
+				//}
 				// Create a new file that will contain the disk name and file name
 				FileListData.FileDetails file = new FileListData.FileDetails();
-				try {
-					file.setDiskName(disk.getDiskName());
+				//try {
+				//	file.setDiskName(disk.getDiskName());
 					//System.out.println("the disk name is " + disk.getDiskName());
-				} catch (Exception e) {
-					file.setDiskName("unknown");
-				}
+				//} catch (Exception e) {
+				//	file.setDiskName("unknown");
+				//}
 				file.setFileName(s);
 				files.add(file);
 				
@@ -160,7 +160,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	public String loadDiskFromFile(Integer drive, String path) {
 		String error = "none";
 		// Call DWDiskDrives loadDiskFromFile
-		try {
+		/* try {
 			DWProtocolHandler.getDiskDrives().LoadDiskFromFile(drive, path);
 		} catch (FileNotFoundException e) {
 			error = "Could not find the specified file.";
@@ -171,7 +171,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		} catch (DWDriveAlreadyLoadedException e) {
 			error = "This drive already has a disk loaded.";
 			//e.printStackTrace();
-		}
+		} */
 		return error;
 	}
 	public ArrayList<DriveListData> getDrivesList() {

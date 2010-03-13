@@ -40,7 +40,7 @@ public class DWVSerialPort {
 	
 	public DWVSerialPort(int port)
 	{
-		logger.debug("New DWVSerialPort for port " + port);
+		// logger.debug("New DWVSerialPort for port " + port);
 		this.port = port;
 		if (port != DWVSerialPorts.TERM_PORT)
 		{
@@ -116,6 +116,11 @@ public class DWVSerialPort {
 			e.printStackTrace();
 		}
 	}
+	
+	
+
+	
+	
 	
 	public void writeToCoco(byte databyte)
 	{
@@ -255,7 +260,10 @@ public class DWVSerialPort {
 		}
 		else
 		{
-			logger.error("close port " + this.port + " with no opens?");
+			// this actually happens in normal operation, when both sides have code to
+			// close port on exit.. probably not worth an error message
+			
+			// logger.error("close port " + this.port + " with no opens?");
 		}
 		
 	}

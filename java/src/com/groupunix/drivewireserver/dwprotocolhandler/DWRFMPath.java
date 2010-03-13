@@ -131,6 +131,12 @@ public class DWRFMPath
 			// we only handle int sized files..
 			int tmpsize = (int)f.length() - this.seekpos;
 			
+			// only 256 per call
+			if (tmpsize > 127)
+			{
+				tmpsize = 127;
+			}
+			
 			if (tmpsize > maxbytes)
 			{
 				return(maxbytes);

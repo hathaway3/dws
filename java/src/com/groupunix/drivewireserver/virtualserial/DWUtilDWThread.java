@@ -5,12 +5,20 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.vfs.FileContent;
+import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.FileSystemOptions;
+import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 
@@ -30,6 +38,8 @@ public class DWUtilDWThread implements Runnable
 	private int vport = -1;
 	private String strargs = null;
 	
+	
+	
 	public DWUtilDWThread(int vport, String args)
 	{
 		this.vport = vport;
@@ -37,6 +47,8 @@ public class DWUtilDWThread implements Runnable
 
 		logger.debug("init dw util thread");	
 	}
+	
+	
 	
 	public void run() 
 	{
@@ -84,7 +96,7 @@ public class DWUtilDWThread implements Runnable
 		else
 		{
 			// unknown command/syntax
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: Unknown command '" + args[1] + "'");
+			sendSyntaxError(args[1]);
 		}
 	
 		// wait for output to flush
@@ -140,12 +152,19 @@ public class DWUtilDWThread implements Runnable
 		}
 		else
 		{
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[2] + "' is not a valid option.");
+			sendSyntaxError(args[2]);
 			return;
 		}
 	
 		DWVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
 		DWVSerialPorts.writeToCoco(this.vport, text);
+	}
+
+	
+	
+	private void sendSyntaxError(String txt)
+	{
+		DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + txt + "' is ambiguous or not a valid option.");
 	}
 
 	
@@ -191,7 +210,7 @@ public class DWUtilDWThread implements Runnable
 		}
 		else
 		{
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[2] + "' is not a valid option.");
+			sendSyntaxError(args[2]);
 			return;
 		}
 	
@@ -275,7 +294,7 @@ public class DWUtilDWThread implements Runnable
 			}
 			else
 			{
-				DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[3] + "' is not a valid option to dw server show.");
+				sendSyntaxError(args[3]);
 				return;
 			}
 			
@@ -315,13 +334,13 @@ public class DWUtilDWThread implements Runnable
 			}
 			else
 			{
-				DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw server mmakepass requires text as an argument.");
+				DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw server makepass requires text as an argument.");
 				return;
 			}
 		}
 		else
 		{
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[2] + "' is not a valid option.");
+			sendSyntaxError(args[2]);
 			return;
 		}
 	
@@ -401,7 +420,7 @@ public class DWUtilDWThread implements Runnable
 		}
 		else
 		{
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[2] + "' is not a valid option.");
+			sendSyntaxError(args[2]);
 			return;
 		}
 	
@@ -421,40 +440,53 @@ public class DWUtilDWThread implements Runnable
 			// help
 			text += "Help for 'dw disk':\r\n\n";
 			text += "  dw disk show                - Show current disks\r\n";
-			text += "  dw disk eject #             - Eject disk in drive #\r\n";
+			text += "  dw disk show #              - Show details for disk in drive #\r\n";
+			text += "  dw disk eject #             - Eject disk from drive #\r\n";
 			text += "  dw disk insert # [filepath] - Load disk in drive #\r\n";
+			text += "  dw disk reload #            - Reload disk in drive #\r\n";
+			text += "  dw disk write #             - Write disk image in drive #\r\n";
+			text += "  dw disk write # [filepath]  - Write disk image in drive # to path\r\n";
 			text += "  dw disk wp #                - Toggle write protect on drive #\r\n";
 			text += "  dw disk set show [filepath] - Show disks in diskset file\r\n";
 			text += "  dw disk set load [filepath] - Load disks in diskset file\r\n";
 			text += "  dw disk set save [filepath] - Save current disks to diskset file\r\n";
-			
+			text += "  dw disk dump disk# sector#  - Dump sector from disk\r\n";
 			
 		}
 		else if (args[2].toLowerCase().startsWith("sh"))
 		{
-			text = "\r\nCurrent DriveWire Disks:\r\n\n";
-			
-			text += "D#   DSK File Name (* = write protected)       Disk Name\r\n";
-			text += "---- ----------------------------------------- --------------------------------\r\n";
-			
-			for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
+			if (args.length == 3)
 			{
-				if (DWProtocolHandler.getDiskDrives().diskLoaded(i))
+			
+				text = "\r\nCurrent DriveWire Disks:\r\n\n";
+			
+				text += "D#   DSK File Name (* = write protected)       Disk Name\r\n";
+				text += "---- ----------------------------------------- --------------------------------\r\n";
+			
+				for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
 				{
-					String df = DWProtocolHandler.getDiskDrives().getDiskFile(i);
-					
-					if (DWProtocolHandler.getDiskDrives().getWriteProtect(i))
+					if (DWProtocolHandler.getDiskDrives().diskLoaded(i))
 					{
-						df = df + "*";
-					}
+						String df = DWProtocolHandler.getDiskDrives().getDiskFile(i);
+					
+						if (DWProtocolHandler.getDiskDrives().getWriteProtect(i))
+						{
+							df = df + "*";
+						}
 					 
-					text += "X"+ String.format("%-3d ",i);
-					text += String.format("%-42s",df);
-					text += String.format("%-32s", DWProtocolHandler.getDiskDrives().getDiskName(i));
-					text += "\r\n";
+						text += "X"+ String.format("%-3d ",i);
+						text += String.format("%-42s",df);
+						text += String.format("%-32s", DWProtocolHandler.getDiskDrives().getDiskName(i));
+						text += "\r\n";
+					}
+				
 				}
-				
-				
+			}
+			else
+			{
+				// detailed per disk
+				doDiskDetail(args[3]);
+				return;
 			}
 			
 		}
@@ -471,6 +503,19 @@ public class DWUtilDWThread implements Runnable
 				return;
 			}
 		}
+		else if (args[2].toLowerCase().startsWith("r"))
+		{
+			if (args.length == 4)
+			{
+				doDiskReload(args[3]);
+				return;
+			}
+			else
+			{
+				DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw disk reload requires a drive # as an argument.");
+				return;
+			}
+		}
 		else if (args[2].toLowerCase().startsWith("i"))
 		{
 			if (args.length == 5)
@@ -484,7 +529,27 @@ public class DWUtilDWThread implements Runnable
 				return;
 			}
 		}
-		else if (args[2].toLowerCase().startsWith("w"))
+		else if (args[2].toLowerCase().startsWith("wr"))
+		{
+			if (args.length == 4)
+			{
+				// write to current path
+				doDiskWrite(args[3]);
+				return;
+			}
+			else if (args.length == 5)
+			{
+				// write to alternate path
+				doDiskWrite(args[3],args[4]);
+				return;
+			}
+			else
+			{
+				DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw disk write requires a drive # and an optional file path as arguments.");
+				return;
+			}
+		}
+		else if (args[2].toLowerCase().startsWith("wp"))
 		{
 			if (args.length == 4)
 			{
@@ -519,7 +584,7 @@ public class DWUtilDWThread implements Runnable
 				}
 				else
 				{
-					DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[3] + "' is not a valid option to dw disk set.");
+					sendSyntaxError(args[3]);
 					return;
 				}
 			}
@@ -529,9 +594,17 @@ public class DWUtilDWThread implements Runnable
 				return;
 			}
 		}
+		else if (args[2].toLowerCase().startsWith("d"))
+		{
+			if (args.length == 5)
+			{
+				doDiskDump(args[3],args[4]);
+				return;
+			}
+		}
 		else
 		{
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[2] + "' is not a valid option.");
+			sendSyntaxError(args[2]);
 			return;
 		}
 	
@@ -539,6 +612,126 @@ public class DWUtilDWThread implements Runnable
 		DWVSerialPorts.writeToCoco(this.vport, text);
 	}
 
+	
+	private void doDiskReload(String drivestr)
+	{
+		try
+		{
+			int driveno = Integer.parseInt(drivestr);
+			
+			DWProtocolHandler.getDiskDrives().getDisk(driveno).reload();
+	
+			DWVSerialPorts.sendUtilityOKResponse(this.vport, "disk reloaded");
+			DWVSerialPorts.writeToCoco(this.vport, "Disk in drive #"+ driveno + " reloaded.");
+
+		}
+		catch (NumberFormatException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric drive #");
+		} 
+		catch (IOException e1)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 31,e1.getMessage());
+		} 
+	}
+
+
+
+	private void doDiskDetail(String drivestr)
+	{
+		String text;
+		
+		try
+		{
+			int driveno = Integer.parseInt(drivestr);
+			
+			text = "Details for disk in drive #" + driveno + ":\r\n\n";
+			
+			text += "Path: " + DWProtocolHandler.getDiskDrives().getDisk(driveno).getFilePath() + "\r\n";
+			text += "Name: " + DWProtocolHandler.getDiskDrives().getDisk(driveno).getDiskName() + "\r\n\n";
+			
+			text += "Sectors  LSN   WP       Reads  Writes  Dirty \r\n";
+			
+			text += String.format("%5d ", DWProtocolHandler.getDiskDrives().getDiskSectors(driveno));
+			text += String.format(" %5d ", DWProtocolHandler.getDiskDrives().getLSN(driveno));
+			text += String.format("  %5s  ", DWProtocolHandler.getDiskDrives().getWriteProtect(driveno));
+			text += String.format(" %6d ", DWProtocolHandler.getDiskDrives().getReads(driveno));
+			text += String.format(" %6d ", DWProtocolHandler.getDiskDrives().getWrites(driveno));
+			text += String.format(" %5d ", DWProtocolHandler.getDiskDrives().getDirtySectors(driveno));
+			text += "\r\n\n";
+			
+			text += "Filesystem supports write: " + DWProtocolHandler.getDiskDrives().getDisk(driveno).isFSWriteable() + "\r\n";
+		    text += " FS supports random write: " + DWProtocolHandler.getDiskDrives().getDisk(driveno).isRandomWriteable() + "\r\n";
+			text += "      File can be written: " + DWProtocolHandler.getDiskDrives().getDisk(driveno).isWriteable() + "\r\n";     
+			text += "  Disk is write protected: " + DWProtocolHandler.getDiskDrives().getDisk(driveno).getWriteProtect() + "\r\n";
+			
+			DWVSerialPorts.sendUtilityOKResponse(this.vport, "disk detail");
+			DWVSerialPorts.writeToCoco(this.vport, text);
+
+		}
+		catch (NumberFormatException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric drive #");
+			
+		} 
+	}
+
+	
+	private void doDiskWrite(String drivestr)
+	{
+		
+		try
+		{
+			int driveno = Integer.parseInt(drivestr);
+			
+			DWProtocolHandler.getDiskDrives().getDisk(driveno).writeDisk();
+					
+			DWVSerialPorts.sendUtilityOKResponse(this.vport, "wrote disk");
+			DWVSerialPorts.writeToCoco(this.vport, "Disk #" + driveno + " written.");
+
+		}
+		catch (NumberFormatException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric drive #");
+			
+		} 
+		catch (IOException e1)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 30, e1.getMessage());
+			
+		} 
+	}
+	
+	
+	private void doDiskWrite(String drivestr, String path)
+	{
+		path = convertStarToBang(path);
+		
+		try
+		{
+			int driveno = Integer.parseInt(drivestr);
+			
+			DWProtocolHandler.getDiskDrives().getDisk(driveno).writeDisk(path);
+					
+			DWVSerialPorts.sendUtilityOKResponse(this.vport, "wrote disk");
+			DWVSerialPorts.writeToCoco(this.vport, "Disk #" + driveno + " written.");
+
+		}
+		catch (NumberFormatException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric drive #");
+			
+		} 
+		catch (IOException e1)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 30, e1.getMessage());
+			
+		} 
+	}
+	
+	
+	
+	
 	
 	private void doDiskSetLoad(String filename)
 	{
@@ -595,18 +788,9 @@ public class DWUtilDWThread implements Runnable
 		    			if (parts[2].equals("1"))
 		    				text += " (WP)";
 		    			
-		    			DWDisk tmpdisk = new DWDisk();
-		    			
-		    			try 
-		    			{
-							tmpdisk.setFilePath(parts[1]);
-							text += " - " + tmpdisk.getDiskName();
-						} 
-		    			catch (FileNotFoundException e) 
-		    			{
-		    				text += " - File not found!";
-		    			}
-		    			
+		    			DWDisk tmpdisk = new DWDisk(parts[1]);
+		    			text += " - " + tmpdisk.getDiskName();
+						
 		    			text += "\r\n";
 		    				
 		    		}
@@ -731,7 +915,7 @@ public class DWUtilDWThread implements Runnable
 			
 		else
 		{
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: '" + args[2] + "' is not a valid option.");
+			sendSyntaxError(args[2]);
 			return;
 		}
 	
@@ -756,6 +940,9 @@ public class DWUtilDWThread implements Runnable
 
 	private void doDiskInsert(String drivestr, String path) 
 	{
+		
+		path = convertStarToBang(path);
+		
 		try
 		{
 			int driveno = Integer.parseInt(drivestr);
@@ -771,7 +958,7 @@ public class DWUtilDWThread implements Runnable
 			// load new disk
 			
 			DWProtocolHandler.getDiskDrives().LoadDiskFromFile(driveno, path);
-		
+			
 			DWVSerialPorts.sendUtilityOKResponse(this.vport, "Disk inserted in drive " + driveno);
 			DWVSerialPorts.writeToCoco(this.vport, "Disk loaded in drive " + driveno);
 
@@ -790,19 +977,50 @@ public class DWUtilDWThread implements Runnable
 			DWVSerialPorts.sendUtilityFailResponse(this.vport, 20,e.getMessage());
 				
 		} 
-		catch (FileNotFoundException e) 
+		catch (FileSystemException e) 
 		{
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 21,"File not found on server: '" + path + "'");
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 21,e.getMessage());
 		} 
 		catch (DWDriveAlreadyLoadedException e) 
 		{
 			DWVSerialPorts.sendUtilityFailResponse(this.vport, 22,e.getMessage());		
 			
+		} 
+		catch (FileNotFoundException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 23,e.getMessage());	
+		} 
+		catch (IOException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 24,e.getMessage());	
 		}
 		
 		
 	}
 
+	
+	private void doDiskDump(String drivestr, String sectorstr) 
+	{
+		
+		try
+		{
+			int driveno = Integer.parseInt(drivestr);
+			int sectorno = Integer.parseInt(sectorstr);
+			
+			
+			DWVSerialPorts.sendUtilityOKResponse(this.vport, "sector data");
+			DWVSerialPorts.writeToCoco(this.vport, new String(DWProtocolHandler.getDiskDrives().getDisk(driveno).getSector(sectorno).getData()));
+
+		}
+		catch (NumberFormatException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric drive or sector #");
+			
+		} 
+	}
+	
+	
+	
 	private void doDiskEject(String drivestr) 
 	{
 		
@@ -873,6 +1091,7 @@ public class DWUtilDWThread implements Runnable
 	{
 		String text = new String();
 	    
+		/*
 		try 
 		{
 		    StringBuffer fileData = new StringBuffer(1000);
@@ -899,33 +1118,108 @@ public class DWUtilDWThread implements Runnable
 		{
 			DWVSerialPorts.sendUtilityFailResponse(this.vport, 9,"IO Error on server: " + e1.getMessage());
 			return;
+		} */
+		
+		FileSystemManager fsManager;
+		InputStream ins = null;
+		FileObject fileobj = null;
+		FileContent fc = null;
+		
+		try
+		{
+			fsManager = VFS.getManager();
+		
+			path = convertStarToBang(path);
+			
+			fileobj = fsManager.resolveFile(path);
+		
+			fc = fileobj.getContent();
+			
+			ins = fc.getInputStream();
+			
+			DWVSerialPorts.sendUtilityOKResponse(this.vport, "file data follows");
+			
+			int data = ins.read();
+			
+			while (data != -1)
+			{
+				DWVSerialPorts.writeToCoco(this.vport, (byte)data);
+				
+				text += Character.toString((char) data);
+				data = ins.read();
+						
+			}
+			
+		} 
+		catch (FileSystemException e)
+		{
+			
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 8, e.getMessage());
+	    	
+		} catch (IOException e)
+		{
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 9, e.getMessage());
+	    }	
+		finally
+		{
+			try
+			{
+				if (ins != null)
+					ins.close();
+				
+				if (fc != null)
+					fc.close();
+				
+				if (fileobj != null)
+					fileobj.close();
+				
+			} 
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
-    
-		DWVSerialPorts.sendUtilityOKResponse(this.vport, "file data follows");
-	    DWVSerialPorts.writeToCoco(this.vport, text);
+		
 	}
 	
 	
+	private String convertStarToBang(String txt)
+	{
+	
+		txt = txt.replaceAll("\\*", "!");
+		
+		return txt;
+	}
+
+
+
 	private void doDir(String path) 
 	{
+		FileSystemManager fsManager;
+		
 		String text = new String();
-	
-		File dir = new File(path);
-	    
-	    String[] children = dir.list();
-	    if (children == null) 
-	    {
-	    	DWVSerialPorts.sendUtilityFailResponse(this.vport, 10, "Either '" + path + "' does not exist or it is not a directory");
-	    	return;
-	    }   
-	    else 
-	    {
-	    	int longest = 0;
+		
+		path = convertStarToBang(path);
+				
+		try
+		{
+			fsManager = VFS.getManager();
+		
+			FileObject dirobj = fsManager.resolveFile(path);
+			
+			FileObject[] children = dirobj.getChildren();
+
+			text += "Directory of " + dirobj.getName().getURI() + "\r\n\n";
+		
+			
+			int longest = 0;
 	    	
 	    	for (int i=0; i<children.length; i++) 
 	    	{
-	    		if (children[i].length() > longest)
-	    			longest = children[i].length();
+	    		if (children[i].getName().getBaseName().length() > longest)
+	    			longest = children[i].getName().getBaseName().length();
 	    	}
 	    	
 	    	longest++;
@@ -935,11 +1229,20 @@ public class DWUtilDWThread implements Runnable
 	    	
 	    	for (int i=0; i<children.length; i++) 
 	        {
-	        	text += String.format("%-" + longest + "s",children[i]);
+	        	text += String.format("%-" + longest + "s",children[i].getName().getBaseName());
 	        	if (((i+1) % cols) == 0)
 	        		text += "\r\n";
 	        }
-	    }
+			
+			
+			
+		} catch (FileSystemException e)
+		{
+			
+			DWVSerialPorts.sendUtilityFailResponse(this.vport, 10, e.getMessage());
+	    	return;
+			
+		}
 		
 	    DWVSerialPorts.sendUtilityOKResponse(this.vport, "directory follows");
 	    DWVSerialPorts.writeToCoco(this.vport, text);

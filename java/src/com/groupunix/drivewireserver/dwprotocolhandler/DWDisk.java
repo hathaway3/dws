@@ -1,24 +1,18 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
+import java.io.OutputStream;
 
+import org.apache.commons.vfs.Capability;
+import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.RandomAccessContent;
+import org.apache.commons.vfs.VFS;
+import org.apache.commons.vfs.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
-
-
 
 
 public class DWDisk {
@@ -26,14 +20,36 @@ public class DWDisk {
 	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 	
 	public static final int MAX_SECTORS = 32768; // what is coco's max?
-	private int LSN;
-	private String filePath;
+	private int LSN = 0;
 	private boolean	wrProt = false;
 	private DWDiskSector[] sectors = new DWDiskSector[MAX_SECTORS];
 	
 	private int reads = 0;
 	private int writes = 0;
-	private String checksum;
+	
+	private FileSystemManager fsManager;
+	private FileObject fileobj;
+	
+	
+	
+	public DWDisk(String path) throws IOException
+	{
+		this.fsManager = VFS.getManager();
+		fileobj = fsManager.resolveFile(path);
+
+		logger.info("New DWDisk for '" + path + "'");
+		
+		if (fileobj.isReadable())
+		{
+			loadSectors();
+		}
+		else
+		{
+			logger.error("Unreadable path '" + path + "'");
+			throw new IOException("Unreadable path");
+		}
+	}
+	
 	
 	
 	public int DD_TOT()
@@ -134,23 +150,16 @@ public class DWDisk {
 		System.arraycopy( sectors[0].getData(), 63, dd_opt, 0, 32 ); 
 		return(dd_opt);
 	}
+
 	
 	
-	public String diskInfo()
-	{
-		String ret = new String();
-		ret = "Disk name: '" + cocoString(DD_NAM()) + "'";
-		
-		ret += ", Total sectors: " + DD_TOT();
-		
-		ret += ", Root dir @ " + DD_DIR();
-		return(ret);
-	}
 	
 	public synchronized String getDiskName()
 	{
 		return(cocoString(DD_NAM()));
 	}
+
+	
 	
 	public synchronized int getDiskSectors()
 	{
@@ -167,6 +176,7 @@ public class DWDisk {
 		return(num);
 	}
 	
+
 	
 	private String cocoString(byte[] bytes) 
 	{
@@ -187,109 +197,107 @@ public class DWDisk {
 		return(ret);
 	}
 
+	
+	
 	public synchronized void seekSector(int newLSN)
 	{
 		// TODO should check that the sector exists..
-		this.LSN = newLSN;
-		// logger.debug("seek to sector " + newLSN + " for '" + this.filePath + "'");
+		if ((newLSN < 0) || (newLSN > MAX_SECTORS))
+		{
+			logger.error("Seek out of range: sector " + newLSN + " ?");
+		}
+		else if (this.sectors[newLSN] == null)
+		{
+			logger.debug("Seek to null sector: " + newLSN + " (seems this is OK...)");
+			this.LSN = newLSN;
+		}
+		else
+		{
+			this.LSN = newLSN;
+			// logger.debug("seek to sector " + newLSN + " for '" + this.filePath + "'");
+		}
 	}
 
+	
+	
 	public int getLSN()
 	{
 		return(this.LSN);
 	}
 	
+	
+	
 	public synchronized void setWriteProtect(boolean wp)
 	{
 		if (wp)
 		{
-			logger.debug("write protecting '" + this.filePath + "'");
+			logger.debug("write protecting '" + this.fileobj.getName() + "'");
 		}
 		else
 		{
-			logger.debug("write enabling '" + this.filePath + "'");
+			logger.debug("write enabling '" + this.fileobj.getName() + "'");
 		}
 		
 		this.wrProt = wp;
 	}
+	
+	
 	
 	public synchronized boolean getWriteProtect()
 	{
 		return(this.wrProt);
 	}
 	
-	public synchronized void setFilePath(String fp) throws FileNotFoundException
-	{
-		// check file exists, maybe should check read/write access too
-		File tmp = new File(fp);
-		if (tmp.exists())
-		{
-			this.filePath = fp;
-			logger.debug("set filepath to '" + fp + "'");
-			
-			loadSectors(tmp);
-			
-		}
-		else
-		{
-			throw new FileNotFoundException();
-		}	
-	}
 	
 	
-	private void loadSectors(File file) 
+	private void loadSectors() throws IOException 
 	{
 		// load file into sector array
-	    FileInputStream fis;
-		try 
+	    InputStream fis;
+			
+	    fis = this.fileobj.getContent().getInputStream();
+	
+	    int sector = 0;
+	    int bytesRead = 0;
+	    byte[] buffer = new byte[256];
+	   		    
+	    int databyte = fis.read();
+	    	    
+		while (databyte != -1)
 		{
-			fis = new FileInputStream(file);
-			BufferedInputStream bis = new BufferedInputStream(fis);
-	        DataInputStream dis = new DataInputStream(bis);
-
-	        int sector = 0;
-	        	        
-		    while (dis.available() != 0) 
-		    {
-		    	byte[] buffer = new byte[256];
-		    	int bytesRead = dis.read(buffer, 0, 256);
-		    	
-		    	this.sectors[sector] = new DWDiskSector(sector);
-		    	this.sectors[sector].setData(buffer, false);
-		    	
-		    	if (bytesRead != 256)
-		    	{
-		    		logger.error("did not get 256 bytes for sector " + sector + ", got " + bytesRead);
-		    	}
-		    	
-		    	sector++;
-		    }
-		     
-		    // dispose all the resources after using them.
-		    fis.close();
-		    bis.close();
-		    dis.close();
-		    
-		    updateChecksum();
-
-		} 
-		catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			buffer[bytesRead] = (byte)databyte;
+			bytesRead++;
+			
+		   	if (bytesRead == 256)
+		   	{
+		   		this.sectors[sector] = new DWDiskSector(sector);
+		   		
+		   		this.sectors[sector].setData(buffer, false);
+		   		sector++;
+		   		bytesRead = 0;
+		   	}	
+		   	
+		   	databyte = fis.read();
 		}
-        	
+		    
+		
+		logger.debug("read " + sector +" sectors from '" + this.fileobj.getName() + "'");
+			
+		logger.error("Encoding: " + this.fileobj.getContent().getContentInfo().getContentEncoding() + "  Type: " + this.fileobj.getContent().getContentInfo().getContentType());
+		
+		fis.close();
+			
 	}
 
 	
 	
 	public String getFilePath()
 	{
-		return(this.filePath);
+		return(this.fileobj.getName().toString());
 	}
 	
+
 	
 	public synchronized byte[] readSector() throws IOException
 	{
@@ -304,6 +312,8 @@ public class DWDisk {
 		
 		return(this.sectors[this.LSN].getData());	
 	}
+	
+	
 	
 	public synchronized void writeSector(byte[] data) throws DWDriveWriteProtectedException, IOException
 	{
@@ -357,6 +367,8 @@ public class DWDisk {
 		return(drt);
 	}
 	
+	
+	
 	public synchronized DWDiskSector getSector(int no)
 	{
 		return(this.sectors[no]);
@@ -364,15 +376,78 @@ public class DWDisk {
 
 	
 	
+	public synchronized void writeDisk() throws IOException
+	{
+		// write in memory image to file
+		// using most efficient method available
+		
+		if (this.fileobj.isWriteable())
+		{
+			if (this.fileobj.getFileSystem().hasCapability(Capability.RANDOM_ACCESS_WRITE))
+			{
+				// we can sync individual sectors
+				syncSectors();
+			}
+			else if (this.fileobj.getFileSystem().hasCapability(Capability.WRITE_CONTENT))
+			{
+				// we must rewrite the entire object
+				writeSectors(this.fileobj);
+			}
+			else
+			{
+				// no way to write to this filesystem
+				logger.warn("Filesystem is unwritable for path '"+ this.fileobj.getName() + "'");
+				throw new FileSystemException("Filesystem is unwriteable");
+			}
+		}
+		else
+		{
+			logger.warn("File is unwriteable for path '" + this.fileobj.getName() + "'");
+			throw new IOException("File is unwriteable");
+		}
+	}
 	
 	
-	public synchronized void syncDisk() 
+	
+	public synchronized void writeDisk(String path) throws IOException
+	{
+		// write in memory image to specified path
+		// using most efficient method available
+		
+		FileObject altobj = fsManager.resolveFile(path);
+
+		
+		if (altobj.isWriteable())
+		{
+			if (altobj.getFileSystem().hasCapability(Capability.WRITE_CONTENT))
+			{
+				// we always rewrite the entire object
+				writeSectors(altobj);
+			}
+			else
+			{
+				// no way to write to this filesystem
+				logger.warn("Filesystem is unwritable for path '"+ altobj.getName() + "'");
+				throw new FileSystemException("Filesystem is unwriteable");
+			}
+		}
+		else
+		{
+			logger.warn("File is unwriteable for path '" + altobj.getName() + "'");
+			throw new IOException("File is unwriteable");
+		}
+	}
+	
+	
+	
+	
+	public synchronized void syncSectors() 
 	{
 		
 		try 
 		{
-			RandomAccessFile raf = new RandomAccessFile(this.filePath, "rw");
-			
+			RandomAccessContent raf = fileobj.getContent().getRandomAccessContent(RandomAccessMode.READWRITE);
+		
 			for (int i = 0;i<DWDisk.MAX_SECTORS;i++)
 			{
 				if (getSector(i) != null)
@@ -390,14 +465,11 @@ public class DWDisk {
 			
 		
 			raf.close();
-			
-			updateChecksum();
+			fileobj.close();
+	
 		} 
-		catch (FileNotFoundException e) 
+		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -406,243 +478,87 @@ public class DWDisk {
 	}
 	
 	
-	public void updateChecksum()
-	{
-		this.checksum = getMD5Checksum(this.filePath);
-	}
-	
-	public byte[] createChecksum(String filename)
-	
-	{
-		InputStream fis;
-		try
-		{
-			fis = new FileInputStream(filename);
-			
-			byte[] buffer = new byte[1024];
-			MessageDigest complete = MessageDigest.getInstance("MD5");
-			int numRead;
-			do 
-			{
-				numRead = fis.read(buffer);
-				if (numRead > 0) 
-				{
-					complete.update(buffer, 0, numRead);
-				}
-			} 
-			while (numRead != -1);
-			
-			fis.close();
-			return complete.digest();
-			
-			
-			
-		} 
-		catch (FileNotFoundException e)
-		{
-			logger.warn("File not found for checksum: " + filename);
-		} 
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		catch (NoSuchAlgorithmException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
-		return(null);
-   }
-
- 
-   public String getMD5Checksum(String filename) 
-   {
-     byte[] b = createChecksum(filename);
-     
-     if (b == null)
-     {
-    	 // we couldn't get a checksum, probably file error
-    	 return(null);
-     }
-     
-     String result = "";
-     for (int i=0; i < b.length; i++) {
-       result +=
-          Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
-      }
-     return result;
-   }
-
-
-   public String getChecksum()
-   {
-	   return checksum;
-   }
-
-   public void mergeMemWithDisk()
-   {
-	   // merge
-	// load file into sector array
-	    
-		try 
-		{
-			FileInputStream fis = new FileInputStream(this.filePath);
-			BufferedInputStream bis = new BufferedInputStream(fis);
-	        DataInputStream dis = new DataInputStream(bis);
-
-	        int sector = 0;
-	        
-	        boolean conflict = false;
-	        
-	        // first look for conflicts
-	        
-		    while (dis.available() != 0) 
-		    {
-		    	byte[] buffer = new byte[256];
-		    	int bytesRead = dis.read(buffer, 0, 256);
-		    	
-		    	if (bytesRead < 256)
-		    		logger.warn("Read less than 256 bytes for sector " + sector + " of " + this.filePath);
-		    	
-		    	if (this.sectors[sector] != null)
-		    	{
-		    		if (!Arrays.equals(this.sectors[sector].getCleanData(), buffer))
-		    		{
-		    			if (this.sectors[sector].isDirty())
-		    			{
-		    				// changes to both disk and memory.. not good
-		    				logger.error("Sector " + sector + " in " + this.filePath + " has changed on disk and in memory!");
-		    				conflict = true;
-		    			}
-		    		}
-		    	}
-		    	
-		    	sector++;
-		    }
-		    
-		    fis.close();
-		    bis.close();
-		    dis.close();
-		    
-		    if (conflict)
-		    {
-		    	logger.error("Overwriting entire disk image with version in memory");
-		    	writeSectors();
-		    	
-		    }
-		    else
-		    {
-		    	// one more pass to merge changes
-		    
-		    	fis = new FileInputStream(this.filePath);
-				bis = new BufferedInputStream(fis);
-		        dis = new DataInputStream(bis);
-
-		        sector = 0;
-	        
-		        while (dis.available() != 0) 
-		        {
-		        	byte[] buffer = new byte[256];
-		        	int bytesRead = dis.read(buffer, 0, 256);
-		    	
-		        	if (bytesRead < 256)
-			    		logger.warn("Read less than 256 bytes for sector " + sector + " of " + this.filePath);
-			    	
-		        	
-		        	if (this.sectors[sector] == null)
-		        	{
-		        		logger.debug("Sector " + sector + " in disk file does not exist in memory.. Creating");
-		        		this.sectors[sector] = new DWDiskSector(sector);
-		        		this.sectors[sector].setData(buffer, false);
-		        	}
-		        	else if (!Arrays.equals(this.sectors[sector].getCleanData(), buffer))
-		        	{
-		        		logger.debug("Sector " + sector + " in " + this.filePath + " has changed, loading new version into memory");
-		    			this.sectors[sector].setData(buffer, false);
-		    		}
-		        	
-		        	sector++;
-		    	}
-		        
-		        // clean out leftover sectors
-		        while (sector < MAX_SECTORS)
-		        {
-		        	if (this.sectors[sector] != null)
-		        	{
-		        		this.sectors[sector] = null;
-		        		logger.debug("clearing sector " + sector + " because it no longer exists in " + this.filePath);
-		        	}
-		        	
-		        	sector++;
-		        }
-		        
-
-			    fis.close();
-			    bis.close();
-			    dis.close();
-			    
-		    }
-		     
-		    
-		    updateChecksum();
-
-		} 
-		catch (FileNotFoundException e) 
-		{
-			logger.warn("File not found for merge: " + this.filePath);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	   
-   }
-
-   private void writeSectors()
+   
+   public void writeSectors(FileObject fobj) throws IOException
    {
 	   // write out all sectors
-	   FileOutputStream fos;
 	
-	   logger.debug("Writing out all sectors in " + this.filePath + " from cache");
 	   
-	   try
-	   {
-		   fos = new FileOutputStream(this.filePath);
-		   BufferedOutputStream bos = new BufferedOutputStream(fos);
-		   DataOutputStream dos = new DataOutputStream(bos);
+	   OutputStream fos;
+	   
+	   logger.debug("Writing out all sectors from cache to " + fobj.getName());
+	   
+	   fos = fobj.getContent().getOutputStream();
 
-		   int sector = 0;
+	   int sector = 0;
        
-		   while ((this.sectors[sector] != null) && (sector < MAX_SECTORS)) 
-		   {
+	   while ((this.sectors[sector] != null) && (sector < MAX_SECTORS)) 
+	   {
 	    
-			   dos.write(this.sectors[sector].getData(), 0, 256);
-			   this.sectors[sector].makeClean();
-			   sector++;
-		   }
-		   
-		   dos.close();
-		   bos.close();
-		   fos.close();
-		   
-	   } 
-	   catch (FileNotFoundException e)
-	   {
-			logger.warn("File not found for writing sectors: " + this.filePath);
-		} 
-	   catch (IOException e1)
-	   {
-		   // TODO Auto-generated catch block
-		   e1.printStackTrace();
+		   fos.write(this.sectors[sector].getData(), 0, 256);
+		   this.sectors[sector].makeClean();
+		   sector++;
 	   }
+		   
+	   fos.close();
 		
-  
    }
 
+   
+   
+   public boolean isWriteable()
+   {
+
+	   if (this.fileobj.getFileSystem().hasCapability(Capability.WRITE_CONTENT) == false)
+	   {
+		   return(false);
+	   }
+	   else
+	   {
+		   boolean isw = false;
+	   
+		   try
+		   {
+			   isw = this.fileobj.isWriteable();
+		   } 
+		   catch (FileSystemException e)
+		   {
+			   // TODO Auto-generated catch block
+			   e.printStackTrace();
+		   }
+		   
+		   return(isw);
+	   }
 	
+   }
+
+   public boolean isFSWriteable()
+   {
+	   return(this.fileobj.getFileSystem().hasCapability(Capability.WRITE_CONTENT));
+   }
+   
+   public boolean isRandomWriteable()
+   {
+	  return(this.fileobj.getFileSystem().hasCapability(Capability.RANDOM_ACCESS_WRITE));
+   }
+
+
+
+public FileObject getFileObject()
+{
+	return(this.fileobj);
+}
+
+
+
+public void reload() throws IOException
+{
+	logger.debug("reloading sectors from path");
+	this.sectors = new DWDiskSector[MAX_SECTORS];
+	// load from path 
+	loadSectors();
+}
 	
 	
 }

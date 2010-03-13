@@ -26,7 +26,7 @@ public class DWDiskSector
 	{
 
 		this.dirty = true;
-		this.dirtydata = newdata;
+		System.arraycopy(newdata, 0, this.dirtydata, 0, 256);
 	}
 
 	public synchronized void setData(byte[] newdata, boolean dirty) 
@@ -36,11 +36,11 @@ public class DWDiskSector
 		
 		if (dirty == true)
 		{
-			this.dirtydata = newdata;
+			System.arraycopy(newdata, 0, this.dirtydata, 0, 256);
 		}
 		else
 		{
-			this.data = newdata;
+			System.arraycopy(newdata, 0, this.data, 0, 256);
 		}
 	}
 	
