@@ -23,15 +23,11 @@ public class DWDiskDrives
 	
 	private DWDisk[] diskDrives = new DWDisk[MAX_DRIVES];
 	private static final Logger logger = Logger.getLogger("DWServer.DWDiskDrives");
-	private Thread lazyWriterThread;
+
 	
 	public DWDiskDrives()
 	{
 		logger.debug("disk drives init");
-		
-		// start lazy writer
-		lazyWriterThread = new Thread(new DWDiskLazyWriter());
-		lazyWriterThread.start();
 		
 	}
 	

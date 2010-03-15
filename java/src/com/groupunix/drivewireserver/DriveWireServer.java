@@ -16,6 +16,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 
@@ -29,17 +30,15 @@ public class DriveWireServer
 	private static ConsoleAppender consoleAppender;
 	private static DWLogAppender dwAppender;
 	private static FileAppender fileAppender;
+	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
 	
 	public static PropertiesConfiguration serverconfig;
 	
 	private static Thread[] dwProtoHandlerThreads;
-	
 	private static DWProtocolHandler[] dwProtoHandlers;
-	
-	private static int handlers = -1;
+	private static int numHandlers;
 
-	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
-	
+	private static Thread lazyWriterT;
 		
 	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	public static void main(String[] args) throws ConfigurationException
@@ -63,9 +62,19 @@ public class DriveWireServer
 		}
     	
     	// apply configuration
+    	if (serverconfig.containsKey("HandlerInstance"))
+    	{
+    		numHandlers = serverconfig.getStringArray("HandlerInstance").length;
+    	}
+    	else
+    	{
+    		System.out.println("Fatal - server config contains no handlers.  Please consult the documentation.");
+    		System.exit(-1);
+    	}
     	
-    	dwProtoHandlers = new DWProtocolHandler[serverconfig.getInt("MaxProtocolHandlers",5)];
-    	dwProtoHandlerThreads = new Thread[serverconfig.getInt("MaxProtocolHandlers",5)];
+    	
+    	dwProtoHandlers = new DWProtocolHandler[numHandlers];
+    	dwProtoHandlerThreads = new Thread[numHandlers];
     	
     	// logging
     	if (serverconfig.containsKey("LogFormat"))
@@ -103,23 +112,21 @@ public class DriveWireServer
     	
     	
     	// start protocol handler instances
-    	if (serverconfig.containsKey("HandlerInstance"))
-    	{
-    		String[] hi = serverconfig.getStringArray("HandlerInstance");
+    	String[] hi = serverconfig.getStringArray("HandlerInstance");
     		
-    		for (int i=0;i<hi.length;i++)
-    		{
-    			startProtohandler(hi[i]); 
-    		}	
-    		
-    	} 
-    	else
+    	for (int i=0;i<hi.length;i++)
     	{
-    		logger.error("Server config contains no handler instances");
-    	}
+    		logger.info("Starting protocol handler #" + i + " using config file '" + hi[i] + "'");
+    		
+    		dwProtoHandlers[i] = new DWProtocolHandler(i, hi[i]);
+    		dwProtoHandlerThreads[i] = new Thread(dwProtoHandlers[i]);
+    		dwProtoHandlerThreads[i].start();	
+    	}	
+    		
     	
     	// start lazy writer
-    	
+    	lazyWriterT = new Thread(new DWDiskLazyWriter());
+		lazyWriterT.start();
     	
     	// wait for all my children to die
     	
@@ -139,7 +146,7 @@ public class DriveWireServer
 
     		activehandlers = 0;
     		
-    		for (int i = 0;i<=handlers;i++)
+    		for (int i = 0;i<numHandlers;i++)
     		{
     			if (dwProtoHandlerThreads[i].isAlive())
     			{
@@ -154,16 +161,6 @@ public class DriveWireServer
 	}
 
 
-	private static void startProtohandler(String propfile)
-	{
-		handlers++;
-		
-		logger.info("Starting protocol handler #" + handlers + " using " + propfile);
-		
-		dwProtoHandlers[handlers] = new DWProtocolHandler(handlers, propfile);
-		dwProtoHandlerThreads[handlers] = new Thread(dwProtoHandlers[handlers]);
-		dwProtoHandlerThreads[handlers].start();		
-	}
 
 
 	public static DWProtocolHandler getHandler(int handlerno)
@@ -182,6 +179,14 @@ public class DriveWireServer
 	public static int getLogEventsSize()
 	{
 		return(dwAppender.getEventsSize());
+	}
+
+
+
+
+	public static int getNumHandlers()
+	{
+		return numHandlers;
 	}
 	
 	

@@ -1,8 +1,11 @@
 package com.groupunix.drivewireserver.virtualserial;
 
+import java.util.ArrayList;
+
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 
 // this replaces the seperate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
@@ -113,6 +116,7 @@ public class DWVPortHandler
 				{
 					doTCPListen(cmdparts);
 				}
+				// old
 				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("listentelnet"))) 
 				{
 					doTCPListen(cmdparts[2],1);
@@ -145,6 +149,21 @@ public class DWVPortHandler
 					respondFail(2,"Syntax error in URL command");
 				}
 			}
+			else if (cmdparts[0].equalsIgnoreCase("serial"))
+			{
+				if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("con"))) 
+				{
+					doSerialCon(cmdparts[2]);
+				}
+				else if ((cmdparts.length == 2) && (cmdparts[1].equalsIgnoreCase("list"))) 
+				{
+					doSerialList();
+				}
+				else
+				{
+					respondFail(2,"Syntax error in serial command");
+				}
+			}
 			else if (cmdparts[0].equalsIgnoreCase("dw"))
 			{
 				// start DWcmd thread
@@ -166,6 +185,29 @@ public class DWVPortHandler
 			
 	}
 
+
+	private void doSerialList()
+	{
+		// list available serial ports
+		ArrayList<String> ports = DWUtils.getPortNames();
+		
+		String txt = new String();
+		
+		for (int i = 0;i<ports.size();i++)
+		{
+			txt += ports.get(i) + " ";
+		}
+		
+		respondOk(txt);
+		
+	}
+
+	private void doSerialCon(String args)
+	{
+		// attempt to bridge vport with serial port
+		Thread serconT = new Thread(new DWVPortSerialBridgeThread(this.handlerno, this.vport, args));
+		serconT.start();
+	}
 
 	private void doTCPJoin(String constr) 
 	{

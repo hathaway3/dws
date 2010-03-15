@@ -39,10 +39,10 @@ public class DWDiskLazyWriter implements Runnable {
 
 	
 	private void syncDisks()
-	{
+	{ 
 
 		// scan all handlers
-		for (int h = 0;h<DriveWireServer.serverconfig.getInt("MaxProtocolHandlers",5);h++)
+		for (int h = 0;h<DriveWireServer.getNumHandlers();h++)
 		{
 			
 			if (DriveWireServer.getHandler(h) != null)

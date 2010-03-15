@@ -301,7 +301,7 @@ public class DWUtilDWThread implements Runnable
 			{
 				text += "\r\nDriveWire protocol handler instances:\r\n\n";
 				
-				for (int i = 0;i<DriveWireServer.serverconfig.getInt("MaxProtocolHandlers",5);i++)
+				for (int i = 0;i<DriveWireServer.getNumHandlers();i++)
 				{
 					if (DriveWireServer.getHandler(i) != null)
 					{
