@@ -40,11 +40,15 @@ public class DWVModem {
 	private static final int REG_GUARDTIME = 12;
 	
 	private Thread tcpthread;
+	private int handlerno;
+	private DWVSerialPorts dwVSerialPorts;
 	
-	public DWVModem(int port) 
+	
+	public DWVModem(int handlerno, int port) 
 	{
 		this.vport = port;
-		
+		this.handlerno = handlerno;
+		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
 		// logger.debug("new vmodem for port " + port);
 		
 		doCommandReset();
@@ -317,14 +321,14 @@ public class DWVModem {
 				switch(val)
 				{
 					case 0:
-						write("\n\rDWVM " + DWVSerialPorts.prettyPort(this.vport) + "\r\n");
+						write("\n\rDWVM " +dwVSerialPorts.prettyPort(this.vport) + "\r\n");
 						break;
 					case 1:
 					case 3:
-						write("\n\rDriveWire " + DriveWireServer.DWServerVersion + " Virtual Modem on port " + DWVSerialPorts.prettyPort(this.vport) + "\r\n");
+						write("\n\rDriveWire " + DriveWireServer.DWServerVersion + " Virtual Modem on port " + dwVSerialPorts.prettyPort(this.vport) + "\r\n");
 						break;
 					case 2:
-						write("\n\rConnected to " + DWVSerialPorts.getHostIP(this.vport) + ":" + DWVSerialPorts.getHostPort(this.vport) + "\n\r");
+						write("\n\rConnected to " + dwVSerialPorts.getHostIP(this.vport) + ":" + dwVSerialPorts.getHostPort(this.vport) + "\n\r");
 						break;
 					case 4:
 						doCommandShowProfile();
@@ -439,7 +443,7 @@ public class DWVModem {
 		}
 		
 		// start TCP thread
-		this.tcpthread = new Thread(new DWVPortTCPConnectionThread(this.vport, tcphost, tcpport));
+		this.tcpthread = new Thread(new DWVPortTCPConnectionThread(this.handlerno, this.vport, tcphost, tcpport));
 		this.tcpthread.start();
 
 		return 1;
@@ -557,7 +561,7 @@ public class DWVModem {
 	
 	private void write(String str)
 	{
-		DWVSerialPorts.writeToCoco(this.vport, str);
+		dwVSerialPorts.writeToCoco(this.vport, str);
 	}
 
 

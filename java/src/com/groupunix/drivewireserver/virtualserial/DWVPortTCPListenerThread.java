@@ -16,6 +16,9 @@ public class DWVPortTCPListenerThread implements Runnable
 	
 	private int vport;
 	private int tcpport;
+	private int handlerno;
+	private DWVSerialPorts dwVSerialPorts;
+	
 	private int mode = 0;
 	private boolean do_auth = false;
 	private boolean do_protect = false;
@@ -26,13 +29,19 @@ public class DWVPortTCPListenerThread implements Runnable
 	private static int BACKLOG = 20;
 	private static int HTTP_TIMEOUT = 200;
 	
-	public DWVPortTCPListenerThread(int vport, int tcpport)
+	
+	
+	public DWVPortTCPListenerThread(int handlerno, int vport, int tcpport)
 	{
 		logger.debug("init tcp listener thread on port "+ tcpport);	
 		this.vport = vport;
 		this.tcpport = tcpport;
+		this.handlerno = handlerno;
+		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
 		
 	}
+	
+	
 	
 	public void run() 
 	{
@@ -49,9 +58,9 @@ public class DWVPortTCPListenerThread implements Runnable
 		{
 			// check for listen address
 			
-			if (DriveWireServer.config.containsKey("ListenAddress"))
+			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("ListenAddress"))
 			{
-				srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(DriveWireServer.config.getString("ListenAddress")) );
+				srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(DriveWireServer.getHandler(this.handlerno).config.getString("ListenAddress")) );
 			}
 			else
 			{
@@ -62,18 +71,18 @@ public class DWVPortTCPListenerThread implements Runnable
 		catch (IOException e2) 
 		{
 			logger.error("Error opening socket on port " + this.tcpport +": " + e2.getMessage());
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 12, e2.getMessage());
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 12, e2.getMessage());
 			wanttodie = true;
 			return;
 		}
 		
-		DWVSerialPorts.sendUtilityOKResponse(this.vport, "listening on port " + this.tcpport + (char) 0);
+		dwVSerialPorts.sendUtilityOKResponse(this.vport, "listening on port " + this.tcpport + (char) 0);
 		
 		// DWVSerialPorts.setSocket(this.vport, srvr);
 		DWVPortListenerPool.addListener(this.vport, srvr);
 		
 		
-		while ((wanttodie == false) && DWVSerialPorts.isOpen(this.vport) && (srvr.isClosed() == false))
+		while ((wanttodie == false) && dwVSerialPorts.isOpen(this.vport) && (srvr.isClosed() == false))
 		{
 			logger.debug("waiting for connection");
 			Socket skt = null;
@@ -100,7 +109,7 @@ public class DWVPortTCPListenerThread implements Runnable
 			else
 			{
 				// run telnet preflight, let it add the connection to the pool if things work out
-				Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.vport, skt, this.do_telnet, this.do_auth, this.do_protect, this.do_banner));
+				Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.handlerno, this.vport, skt, this.do_telnet, this.do_auth, this.do_protect, this.do_banner));
 				pfthread.start();
 			}
 			
@@ -136,11 +145,11 @@ public class DWVPortTCPListenerThread implements Runnable
 		String thisline = new String();
 	
 		// mark port connected
-		DWVSerialPorts.markConnected(this.vport);
+		dwVSerialPorts.markConnected(this.vport);
 		// set port's output to our buffer
-		DWVSerialPorts.setPortOutput(this.vport, input.getOutputStream());
+		dwVSerialPorts.setPortOutput(this.vport, input.getOutputStream());
 		
-		while ((skt.isClosed() == false) && (inreq == true) && (DWVSerialPorts.isOpen(this.vport)))
+		while ((skt.isClosed() == false) && (inreq == true) && (dwVSerialPorts.isOpen(this.vport)))
 		{
 				
 			int inbyte = 0;
@@ -209,7 +218,7 @@ public class DWVPortTCPListenerThread implements Runnable
 		
 		int reqbytes = 0;
 			
-		if ((skt.isClosed() == false) && DWVSerialPorts.isOpen(this.vport)) 
+		if ((skt.isClosed() == false) && dwVSerialPorts.isOpen(this.vport)) 
 		{
 			// read coco response
 			int cocobyte = -1;
@@ -312,9 +321,9 @@ public class DWVPortTCPListenerThread implements Runnable
 		}
 		
 		// set port disconnected
-		DWVSerialPorts.markDisconnected(this.vport);
+		dwVSerialPorts.markDisconnected(this.vport);
 		// set port output to null
-		DWVSerialPorts.setPortOutput(this.vport,null);
+		dwVSerialPorts.setPortOutput(this.vport,null);
 		
 		
 	}
@@ -337,9 +346,9 @@ public class DWVPortTCPListenerThread implements Runnable
 		// logger.debug("reqline: " + req.length() + " '" + req + "'");
 		
 			
-		DWVSerialPorts.writeToCoco(this.vport, (byte) connid);
-		DWVSerialPorts.writeToCoco(this.vport, (byte) ctl);
-		DWVSerialPorts.writeToCoco(this.vport, req);
+		dwVSerialPorts.writeToCoco(this.vport, (byte) connid);
+		dwVSerialPorts.writeToCoco(this.vport, (byte) ctl);
+		dwVSerialPorts.writeToCoco(this.vport, req);
 	
 	}
 

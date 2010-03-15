@@ -15,11 +15,13 @@ public class DWVPrinter {
 	private DWVSerialCircularBuffer printBuffer = new DWVSerialCircularBuffer(-1, true);
 	
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPrinter");
+	private int handlerno;
 	
-	public DWVPrinter()
+	
+	public DWVPrinter(int handlerno)
 	{
-		logger.debug("initialized");
-		
+		logger.debug("initialized by handler #" + handlerno);
+		this.handlerno = handlerno;
 	}
 	
 	public void addByte(byte data)
@@ -48,15 +50,15 @@ public class DWVPrinter {
 				tmp += Character.toString((char) databyte);
 			}
 			
-			if (DriveWireServer.config.containsKey("PrinterDir"))
+			if (DriveWireServer.getHandler(handlerno).config.containsKey("PrinterDir"))
 			{
-				if (DirExistsOrCreate(DriveWireServer.config.getString("PrinterDir")))
+				if (DirExistsOrCreate(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir")))
 				{
 					// create printer output
 					
-					if (DriveWireServer.config.getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
+					if (DriveWireServer.getHandler(handlerno).config.getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
 					{
-						File theDir = new File(DriveWireServer.config.getString("PrinterDir"));
+						File theDir = new File(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir"));
 						File theFile = File.createTempFile("dw_print_",".txt",theDir);
 						
 						FileOutputStream theOS = new FileOutputStream(theFile);
@@ -66,19 +68,19 @@ public class DWVPrinter {
 						
 						logger.info("Flushed print buffer to text file: '" + theFile.getAbsolutePath() +"'");
 					}
-					else if (DriveWireServer.config.getString("PrinterType","TEXT").equalsIgnoreCase("FX80"))
+					else if (DriveWireServer.getHandler(handlerno).config.getString("PrinterType","TEXT").equalsIgnoreCase("FX80"))
 					{
 						// FX80 simulator output
-						File theDir = new File(DriveWireServer.config.getString("PrinterDir"));
+						File theDir = new File(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir"));
 						
-						Thread fx80thread = new Thread(new fx80img(tmp, theDir));
+						Thread fx80thread = new Thread(new fx80img(handlerno, tmp, theDir));
 						fx80thread.start();
 						
 					}
 				}
 				else
 				{
-					logger.error("Could not open or create PrinterDir '" + DriveWireServer.config.getString("PrinterDir") + "'");
+					logger.error("Could not open or create PrinterDir '" + DriveWireServer.getHandler(handlerno).config.getString("PrinterDir") + "'");
 				}
 			}
 			else

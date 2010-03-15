@@ -7,6 +7,8 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
+
 public class DWVPortTCPServerThread implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPortTCPServerThread");
@@ -16,6 +18,9 @@ public class DWVPortTCPServerThread implements Runnable {
 	private int conno;
 	private boolean wanttodie = false;
 	private int mode = 0;
+	private int handlerno;
+	private DWVSerialPorts dwVSerialPorts;
+	
 	
 	private static final int MODE_TELNET = 1;
 	private static final int MODE_TERM = 3;
@@ -24,13 +29,15 @@ public class DWVPortTCPServerThread implements Runnable {
 
 	
 	
-	public DWVPortTCPServerThread(int vport, int conno)
+	public DWVPortTCPServerThread(int handlerno, int vport, int conno)
 	{
 		logger.debug("init tcp server thread for conn " + conno);	
 		this.vport = vport;
 		this.conno = conno;
 		this.mode = DWVPortListenerPool.getMode(conno);
 		this.skt = DWVPortListenerPool.getConn(conno);
+		this.handlerno = handlerno;
+		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
 		
 	}
 	
@@ -42,7 +49,7 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 		// setup ties
 		DWVPortListenerPool.setConnPort(this.conno, this.vport);
-		DWVSerialPorts.setConn(this.vport,this.conno);
+		dwVSerialPorts.setConn(this.vport,this.conno);
 		
 		
 		logger.debug("run for conn " + this.conno);
@@ -54,9 +61,9 @@ public class DWVPortTCPServerThread implements Runnable {
 		}
 		
 		// set pass through mode
-		DWVSerialPorts.markConnected(vport);	
+		dwVSerialPorts.markConnected(vport);	
 		try {
-			DWVSerialPorts.setPortOutput(vport, skt.getOutputStream());
+			dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -64,7 +71,7 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 		int lastbyte = -1;
 		
-		while ((wanttodie == false) && (skt.isClosed() == false) && (DWVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
+		while ((wanttodie == false) && (skt.isClosed() == false) && (dwVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
 		{
 			
 			try 
@@ -77,7 +84,7 @@ public class DWVPortTCPServerThread implements Runnable {
 				else
 				{
 					// filter CR,NULL if in telnet or term mode unless PD.INT and PD.QUT = 0
-					if (((mode == MODE_TELNET) || (mode == MODE_TERM)) && ((DWVSerialPorts.getPD_INT(this.vport) != 0) || (DWVSerialPorts.getPD_QUT(this.vport) != 0)))
+					if (((mode == MODE_TELNET) || (mode == MODE_TERM)) && ((dwVSerialPorts.getPD_INT(this.vport) != 0) || (dwVSerialPorts.getPD_QUT(this.vport) != 0)))
 					{
 						// logger.debug("telnet in : " + databyte);
 						// TODO filter CR/LF.. should do this better
@@ -85,7 +92,7 @@ public class DWVPortTCPServerThread implements Runnable {
 						{
 							// write it to the serial port
 							// logger.debug("passing : " + databyte);
-							DWVSerialPorts.writeToCoco(this.vport,(byte)databyte);
+							dwVSerialPorts.writeToCoco(this.vport,(byte)databyte);
 							lastbyte = databyte;
 						}
 						
@@ -93,7 +100,7 @@ public class DWVPortTCPServerThread implements Runnable {
 					else
 					{
 						
-						DWVSerialPorts.writeToCoco(this.vport,(byte)databyte);
+						dwVSerialPorts.writeToCoco(this.vport,(byte)databyte);
 					}
 				}
 				
@@ -106,8 +113,8 @@ public class DWVPortTCPServerThread implements Runnable {
 				
 		}
 			
-		DWVSerialPorts.markDisconnected(this.vport);
-		DWVSerialPorts.setPortOutput(vport, null);
+		dwVSerialPorts.markDisconnected(this.vport);
+		dwVSerialPorts.setPortOutput(vport, null);
 			
 		if (skt.isClosed() == false)
 		{
@@ -133,7 +140,7 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 				// 	flush buffer, term port
 				try {
-					while ((DWVSerialPorts.bytesWaiting(this.vport) > 0) && (DWVSerialPorts.isOpen(this.vport)))
+					while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
 					{
 						Thread.sleep(100);
 					}
@@ -146,7 +153,7 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 				logger.debug("exit stage 2, send peer signal");
 		
-				DWVSerialPorts.closePort(this.vport);
+				dwVSerialPorts.closePort(this.vport);
 			}
 			
 			DWVPortListenerPool.clearConn(this.conno);	

@@ -6,6 +6,8 @@ import java.net.UnknownHostException;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
+
 public class DWVPortTCPConnectionThread implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPortTCPConnectionThread");
@@ -15,13 +17,18 @@ public class DWVPortTCPConnectionThread implements Runnable {
 	private String tcphost = null;
 	private Socket skt; 
 	private boolean wanttodie = false;
+	private int handlerno;
+	private DWVSerialPorts dwVSerialPorts;
 	
-	public DWVPortTCPConnectionThread(int vport, String tcphostin, int tcpportin)
+	
+	public DWVPortTCPConnectionThread(int handlerno, int vport, String tcphostin, int tcpportin)
 	{
 		logger.debug("init tcp connection thread");	
 		this.vport = vport;
 		this.tcpport = tcpportin;
 		this.tcphost = tcphostin;
+		this.handlerno = handlerno;
+		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
 		
 	}
 	
@@ -42,34 +49,34 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		catch (UnknownHostException e) 
 		{
 			logger.debug("unknown host " + tcphost );
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 4,"Unknown host '" + this.tcphost + "'");
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 4,"Unknown host '" + this.tcphost + "'");
 			this.wanttodie = true;
 		} 
 		catch (IOException e1) 
 		{
 			logger.debug("IO error: " + e1.getMessage());
-			DWVSerialPorts.sendUtilityFailResponse(this.vport, 5, e1.getMessage());
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 5, e1.getMessage());
 			this.wanttodie = true;
 		}
 		
 		if (wanttodie == false)
 		{
 			logger.debug("Connected to " + this.tcphost + ":" + this.tcpport);
-			DWVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
+			dwVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
 			
 			//DWVSerialPorts.setSocket(this.vport, skt);
 
-			DWVSerialPorts.markConnected(vport);	
+			dwVSerialPorts.markConnected(vport);	
 			try 
 			{
-				DWVSerialPorts.setPortOutput(vport, skt.getOutputStream());
+				dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
 			} 
 			catch (IOException e1) 
 			{
 				logger.error("IO Error setting output: " + e1.getMessage());
 			}
 			
-			while ((wanttodie == false) && (skt.isClosed() == false) && (DWVSerialPorts.isOpen(this.vport)))
+			while ((wanttodie == false) && (skt.isClosed() == false) && (dwVSerialPorts.isOpen(this.vport)))
 			{
 							
 				try 
@@ -82,7 +89,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 					}
 					else
 					{
-						DWVSerialPorts.writeToCoco(this.vport,(byte)databyte);
+						dwVSerialPorts.writeToCoco(this.vport,(byte)databyte);
 					}
 					
 				} 
@@ -101,11 +108,11 @@ public class DWVPortTCPConnectionThread implements Runnable {
 			if (skt.isClosed())
 				logger.debug("exit because skt isClosed");
 			
-			if (!DWVSerialPorts.isOpen(this.vport))
+			if (!dwVSerialPorts.isOpen(this.vport))
 				logger.debug("exit because port is not open");			
 			
-			DWVSerialPorts.markDisconnected(this.vport);
-			DWVSerialPorts.setPortOutput(vport, null);
+			dwVSerialPorts.markDisconnected(this.vport);
+			dwVSerialPorts.setPortOutput(vport, null);
 			
 			if (skt.isClosed() == false)
 			{
@@ -135,7 +142,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		
 				// 	flush buffer, term port
 				try {
-					while ((DWVSerialPorts.bytesWaiting(this.vport) > 0) && (DWVSerialPorts.isOpen(this.vport)))
+					while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
 					{
 						Thread.sleep(100);
 					}
@@ -148,7 +155,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		
 				logger.debug("exit stage 2, send peer signal");
 		
-				DWVSerialPorts.closePort(this.vport);
+				dwVSerialPorts.closePort(this.vport);
 			}
 			
 			logger.debug("thread exiting");

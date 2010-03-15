@@ -17,14 +17,14 @@ public class DWRFMPath
 	private String pathstr;
 	private String localroot;
 	private int seekpos;
-		
+	private int handlerno;
 	
-	public DWRFMPath(int pathno)
+	public DWRFMPath(int handlerno, int pathno)
 	{
 		this.setPathno(pathno);
 		this.setSeekpos(0);
 		logger.debug("new path " + pathno);
-		this.setLocalroot(DriveWireServer.config.getString("RFMRoot","/"));
+		this.setLocalroot(DriveWireServer.getHandler(this.handlerno).config.getString("RFMRoot","/"));
 		
 	}
 
@@ -225,7 +225,7 @@ public class DWRFMPath
 
 	public void setFd(byte[] buf)
 	{
-		DWRFMFD fd = new DWRFMFD(DriveWireServer.config.getString("RFMRoot","/") + this.pathstr);
+		DWRFMFD fd = new DWRFMFD(DriveWireServer.getHandler(this.handlerno).config.getString("RFMRoot","/") + this.pathstr);
 		
 		fd.readFD();
 		
@@ -243,7 +243,7 @@ public class DWRFMPath
 	{
 		byte[] b = new byte[size];
 		
-		DWRFMFD fd = new DWRFMFD(DriveWireServer.config.getString("RFMRoot","/") + this.pathstr);
+		DWRFMFD fd = new DWRFMFD(DriveWireServer.getHandler(this.handlerno).config.getString("RFMRoot","/") + this.pathstr);
 		
 		fd.readFD();
 		

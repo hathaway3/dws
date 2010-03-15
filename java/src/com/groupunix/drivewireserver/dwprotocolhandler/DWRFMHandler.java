@@ -27,10 +27,12 @@ public class DWRFMHandler
 	
 	private DWRFMPath[] paths = new DWRFMPath[256];
 	
-	public DWRFMHandler()
+	private int handlerno;
+	
+	public DWRFMHandler(int handlerno)
 	{
-		logger.debug("init");
-		
+		logger.debug("init for handler #" + handlerno);
+		this.handlerno = handlerno;
 	}
 	
 	public void DoRFMOP(DWSerialDevice serdev, int rfm_op)
@@ -185,7 +187,7 @@ public class DWRFMHandler
 		
 		try
 		{
-			int size = DWProtocolHandler.int2(serdev.comRead(2));
+			int size = DWUtils.int2(serdev.comRead(2));
 			
 			serdev.comWrite(this.paths[pathno].getFd(size),size);
 			
@@ -208,7 +210,7 @@ public class DWRFMHandler
 		
 		try
 		{
-			int size = DWProtocolHandler.int2(serdev.comRead(2));
+			int size = DWUtils.int2(serdev.comRead(2));
 			
 			byte[] buf = new byte[size];
 			
@@ -242,7 +244,7 @@ public class DWRFMHandler
 			
 			maxbytesb= serdev.comRead(2);
 			
-			int maxbytes = DWProtocolHandler.int2(maxbytesb);
+			int maxbytes = DWUtils.int2(maxbytesb);
 			
 			// read bytes
 			byte[] buf = new byte[maxbytes];
@@ -278,7 +280,7 @@ public class DWRFMHandler
 			
 			maxbytesb= serdev.comRead(2);
 			
-			int maxbytes = DWProtocolHandler.int2(maxbytesb);
+			int maxbytes = DWUtils.int2(maxbytesb);
 			
 			int availbytes = this.paths[pathno].getBytesAvail(maxbytes);
 
@@ -341,7 +343,7 @@ public class DWRFMHandler
 			
 			maxbytesb= serdev.comRead(2);
 			
-			int maxbytes = DWProtocolHandler.int2(maxbytesb);
+			int maxbytes = DWUtils.int2(maxbytesb);
 			
 			int availbytes = this.paths[pathno].getBytesAvail(maxbytes);
 			
@@ -382,7 +384,7 @@ public class DWRFMHandler
 			
 			seekpos = serdev.comRead(4);
 			
-			this.paths[pathno].setSeekpos(DWProtocolHandler.int4(seekpos));
+			this.paths[pathno].setSeekpos(DWUtils.int4(seekpos));
 			
 			// assume it worked, for now
 			serdev.comWrite1(0);
@@ -437,7 +439,7 @@ public class DWRFMHandler
 			// send result
 			
 	
-			this.paths[pathno] = new DWRFMPath(pathno);
+			this.paths[pathno] = new DWRFMPath(this.handlerno, pathno);
 			this.paths[pathno].setPathstr(pathstr);
 			
 			int result = this.paths[pathno].createFile();
@@ -478,7 +480,7 @@ public class DWRFMHandler
 			
 			// anything needed for dealing with multiple opens..
 			
-			this.paths[pathno] = new DWRFMPath(pathno);
+			this.paths[pathno] = new DWRFMPath(this.handlerno, pathno);
 			this.paths[pathno].setPathstr(pathstr);
 			
 			int result = this.paths[pathno].openFile();

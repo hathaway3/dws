@@ -23,7 +23,7 @@ public class DWDiskFileDescriptor {
 		byte[] fd_own = new byte[2];
 		FD.position(1);
 		FD.get(fd_own, 0, 2);
-		return(DWProtocolHandler.int2(fd_own));
+		return(DWUtils.int2(fd_own));
 	}
 	
 	public byte[] FD_DAT()
@@ -44,7 +44,7 @@ public class DWDiskFileDescriptor {
 		byte[] fd_siz = new byte[4];
 		FD.position(9);
 		FD.get(fd_siz, 0, 4);
-		return(DWProtocolHandler.int4(fd_siz));
+		return(DWUtils.int4(fd_siz));
 	}
 	
 	public byte[] FD_CREAT()

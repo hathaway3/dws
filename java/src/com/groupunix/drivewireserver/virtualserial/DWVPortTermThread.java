@@ -24,11 +24,17 @@ public class DWVPortTermThread implements Runnable
 	
 	private Thread connthread;
 	private int conno;
+	private int handlerno;
+	private DWVSerialPorts dwVSerialPorts;
 	
-	public DWVPortTermThread(int tcpport)
+	
+	
+	public DWVPortTermThread(int handlerno, int tcpport)
 	{
 		logger.debug("init term device thread on port "+ tcpport);	
 		this.tcpport = tcpport;
+		this.handlerno = handlerno;
+		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
 		
 	}
 	
@@ -40,8 +46,8 @@ public class DWVPortTermThread implements Runnable
 		logger.debug("run");
 		
 		// setup port
-		DWVSerialPorts.resetPort(TERM_PORT);
-		DWVSerialPorts.openPort(TERM_PORT);
+		dwVSerialPorts.resetPort(TERM_PORT);
+		dwVSerialPorts.openPort(TERM_PORT);
 		// startup server 
 		ServerSocket srvr = null;
 		
@@ -49,9 +55,9 @@ public class DWVPortTermThread implements Runnable
 		{
 			// check for listen address
 			
-			if (DriveWireServer.config.containsKey("ListenAddress"))
+			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("ListenAddress"))
 			{
-				srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(DriveWireServer.config.getString("ListenAddress")) );
+				srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(DriveWireServer.getHandler(this.handlerno).config.getString("ListenAddress")) );
 			}
 			else
 			{
@@ -160,7 +166,7 @@ public class DWVPortTermThread implements Runnable
 		
 		// pass through till connection is lost
 		conno = DWVPortListenerPool.addConn(this.vport, skt,MODE_TERM);
-		connthread = new Thread(new DWVPortTCPServerThread(TERM_PORT, conno));
+		connthread = new Thread(new DWVPortTCPServerThread(this.handlerno,TERM_PORT, conno));
 		connthread.start();
 	
 		

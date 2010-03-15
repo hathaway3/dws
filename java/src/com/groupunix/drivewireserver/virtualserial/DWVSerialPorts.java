@@ -16,14 +16,21 @@ public class DWVSerialPorts {
 	public static final int MODE_TERM = 3;
 	public static final int MAX_PORTS = 15;
 	
+	private int handlerno;
 	
 	
-	private static DWVSerialPort[] vserialPorts = new DWVSerialPort[MAX_PORTS];
+	private DWVSerialPort[] vserialPorts = new DWVSerialPort[MAX_PORTS];
 	
-	private static int[] dataWait = new int[MAX_PORTS];
+	private int[] dataWait = new int[MAX_PORTS];
 	
 	
-	public static void openPort(int port)
+	public DWVSerialPorts(int handlerno)
+	{
+		this.handlerno = handlerno;
+	}
+
+
+	public void openPort(int port)
 	{
 		if (vserialPorts[port] == null)
 		{
@@ -35,7 +42,7 @@ public class DWVSerialPorts {
 	}
 
 
-	public static String prettyPort(int port) 
+	public String prettyPort(int port) 
 	{
 		if (port == TERM_PORT)
 		{
@@ -45,13 +52,13 @@ public class DWVSerialPorts {
 	}
 
 
-	public static void closePort(int port)
+	public void closePort(int port)
 	{
 		vserialPorts[port].close();	
 	}
 	
 
-	public static byte[] serRead() 
+	public byte[] serRead() 
 	{
 		byte[] response = new byte[2];
 		
@@ -69,7 +76,7 @@ public class DWVSerialPorts {
 					
 					logger.info("sending terminated status to coco for port " + i);
 					
-					vserialPorts[i] = new DWVSerialPort(i);
+					vserialPorts[i] = new DWVSerialPort(this.handlerno, i);
 					
 					return(response);
 				}
@@ -154,7 +161,7 @@ public class DWVSerialPorts {
 	}
 
 
-	public static void serWriteM(int port, String str)
+	public void serWriteM(int port, String str)
 	{
 		for (int i = 0;i<str.length();i++)
 		{
@@ -163,7 +170,7 @@ public class DWVSerialPorts {
 	}
 	
 
-	public static void serWrite(int port, int databyte) 
+	public void serWrite(int port, int databyte) 
 	{
 		// logger.debug("write to port " + port + ": " + databyte);
 		
@@ -188,7 +195,7 @@ public class DWVSerialPorts {
 
 
 
-	public static byte[] serReadM(int tmpport, int tmplen) 
+	public byte[] serReadM(int tmpport, int tmplen) 
 	{
 		byte[] data = new byte[tmplen];
 		
@@ -200,17 +207,17 @@ public class DWVSerialPorts {
 	
 	
 	
-	public static OutputStream getPortInput(int vport) 
+	public OutputStream getPortInput(int vport) 
 	{
 		return (vserialPorts[vport].getPortInput());
 	}
 
-	public static InputStream getPortOutput(int vport) 
+	public InputStream getPortOutput(int vport) 
 	{
 		return (vserialPorts[vport].getPortOutput());
 	}
 	
-	public static void setPortOutput(int vport, OutputStream output)
+	public void setPortOutput(int vport, OutputStream output)
 	{
 		if (isNull(vport))
 		{
@@ -223,7 +230,7 @@ public class DWVSerialPorts {
 	}
 
 
-	public static void markConnected(int vport) 
+	public void markConnected(int vport) 
 	{
 		if (vserialPorts[vport] == null)
 		{
@@ -236,13 +243,13 @@ public class DWVSerialPorts {
 	}
 
 
-	public static void markDisconnected(int vport) 
+	public void markDisconnected(int vport) 
 	{
 		vserialPorts[vport].setConnected(false);
 	}
 
 
-	public static boolean isConnected(int port)
+	public boolean isConnected(int port)
 	{
 		if (vserialPorts[port] != null)
 		{
@@ -253,7 +260,7 @@ public class DWVSerialPorts {
 
 	
 
-	public static void setUtilMode(int port, int mode)
+	public void setUtilMode(int port, int mode)
 	{
 		vserialPorts[port].setUtilMode(mode);
 	}
@@ -261,7 +268,7 @@ public class DWVSerialPorts {
 		
 	
 	
-	public static void write1(int port, byte data)
+	public void write1(int port, byte data)
 	{
 
 		try 
@@ -274,7 +281,7 @@ public class DWVSerialPorts {
 		}
 	}
 
-	public static void write(int port, String str)
+	public void write(int port, String str)
 	{
 		
 			vserialPorts[port].writeM(str);
@@ -283,28 +290,28 @@ public class DWVSerialPorts {
 
 	
 	
-	public static void setPD_INT(int port, byte pD_INT) 
+	public void setPD_INT(int port, byte pD_INT) 
 	{
 		vserialPorts[port].setPD_INT(pD_INT);
 	}
 
 
 
-	public static byte getPD_INT(int port) 
+	public byte getPD_INT(int port) 
 	{
 		return(vserialPorts[port].getPD_INT());
 	}
 
 
 
-	public static void setPD_QUT(int port, byte pD_QUT) 
+	public void setPD_QUT(int port, byte pD_QUT) 
 	{
 		vserialPorts[port].setPD_QUT(pD_QUT);
 	}
 
 
 
-	public static byte getPD_QUT(int port) 
+	public byte getPD_QUT(int port) 
 	{
 		return(vserialPorts[port].getPD_QUT());
 	}
@@ -314,34 +321,34 @@ public class DWVSerialPorts {
 
 
 
-	public static void sendUtilityFailResponse(int vport, int code, String txt) 
+	public void sendUtilityFailResponse(int vport, int code, String txt) 
 	{
 		logger.debug("API FAIL: port " + vport + " code " + code + ": " + txt);
 		vserialPorts[vport].sendUtilityFailResponse(code, txt);
 	}
 
 
-	public static void sendUtilityOKResponse(int vport, String txt) 
+	public void sendUtilityOKResponse(int vport, String txt) 
 	{
 		logger.debug("API OK: port " + vport + ": " + txt);
 		vserialPorts[vport].sendUtilityOKResponse(txt);
 	}
 
 
-	public static int bytesWaiting(int vport) 
+	public int bytesWaiting(int vport) 
 	{
 		return(vserialPorts[vport].bytesWaiting());
 	}
 
 	
 
-	public static void setDD(byte vport, byte[] devdescr)
+	public void setDD(byte vport, byte[] devdescr)
 	{
 		vserialPorts[vport].setDD(devdescr);
 	}
 
 
-	public static void resetAllPorts() 
+	public void resetAllPorts() 
 	{
 		logger.debug("Resetting all virtual serial ports - part 1, close all sockets");
 		
@@ -363,12 +370,12 @@ public class DWVSerialPorts {
 		}
 	}
 
-	public static void resetPort(int i)
+	public void resetPort(int i)
 	{
-		vserialPorts[i] = new DWVSerialPort(i);
+		vserialPorts[i] = new DWVSerialPort(this.handlerno, i);
 	}
 	
-	public static boolean isOpen(int vport) 
+	public boolean isOpen(int vport) 
 	{
 		if (vserialPorts[vport] != null)
 			return(vserialPorts[vport].isOpen());
@@ -377,13 +384,13 @@ public class DWVSerialPorts {
 	}
 
 
-	public static int getOpen(int i) 
+	public int getOpen(int i) 
 	{
 		return(vserialPorts[i].getOpen());
 	}
 
 
-	public static byte[] getDD(int i)
+	public byte[] getDD(int i)
 	{
 		if (vserialPorts[i] != null)
 		{
@@ -400,19 +407,19 @@ public class DWVSerialPorts {
 	//}
 
 
-	public static void writeToCoco(int vport, byte databyte) 
+	public void writeToCoco(int vport, byte databyte) 
 	{
 		vserialPorts[vport].writeToCoco(databyte);
 	}
 	
-	public static void writeToCoco(int vport, String str) 
+	public void writeToCoco(int vport, String str) 
 	{
 		vserialPorts[vport].writeToCoco(str);
 	}
 
 
 
-	public static boolean hasOutput(int vport)
+	public boolean hasOutput(int vport)
 	{
 		if (vserialPorts[vport] != null)
 		{
@@ -422,7 +429,7 @@ public class DWVSerialPorts {
 		return false;
 	}
 	
-	public static boolean isNull(int vport)
+	public boolean isNull(int vport)
 	{
 		if (vserialPorts[vport] == null)
 			return(true);
@@ -431,7 +438,7 @@ public class DWVSerialPorts {
 	}
 
 
-	public static boolean isValid(byte b)
+	public boolean isValid(byte b)
 	{
 	  if ((b >= 0) && (b < MAX_PORTS))
 		  return(true);
@@ -441,25 +448,25 @@ public class DWVSerialPorts {
 	}
 
 
-	public static void sendConnectionAnnouncement(int vport, int conno, int localport, String hostaddr)
+	public void sendConnectionAnnouncement(int vport, int conno, int localport, String hostaddr)
 	{
 		vserialPorts[vport].sendConnectionAnnouncement(conno, localport, hostaddr);
 	}
 
 
-	public static void setConn(int vport, int conno)
+	public void setConn(int vport, int conno)
 	{
 		vserialPorts[vport].setConn(conno);
 		
 	}
 	
-	public static int getConn(int vport)
+	public int getConn(int vport)
 	{
 		return(vserialPorts[vport].getConn());
 	}
 
 
-	public static String getHostIP(int vport)
+	public String getHostIP(int vport)
 	{
 		if (vserialPorts[vport] != null)
 		{
@@ -469,7 +476,7 @@ public class DWVSerialPorts {
 	}
 
 
-	public static int getHostPort(int vport)
+	public int getHostPort(int vport)
 	{
 		if (vserialPorts[vport] != null)
 		{

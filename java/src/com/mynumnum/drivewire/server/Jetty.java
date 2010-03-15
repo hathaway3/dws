@@ -10,7 +10,7 @@ import org.mortbay.jetty.servlet.ServletHolder;
  *
  */
 public class Jetty {
-	private static final String PACKAGE_BASE ="com/mynumnum";
+/*	private static final String PACKAGE_BASE ="com/mynumnum";
 	private static final int DEFAULT_PORT = 8080;
 	public Jetty() {
 		startWebInterface(DEFAULT_PORT);
@@ -55,5 +55,5 @@ public class Jetty {
 		}
 		
 	}
-	
+*/	
 }

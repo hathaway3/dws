@@ -54,13 +54,15 @@ public class fx80img implements Runnable {
 	private double ypos;
 	
 	private BufferedImage rImage;
+	private int handlerno;
 	
 	
-	public fx80img(String text, File dir)
+	public fx80img(int handlerno, String text, File dir)
 	{
 		this.printDir = dir;
 		this.printText = text;
-		this.line_height = DEF_YSIZE / DriveWireServer.config.getInt("PrinterLines", 66);
+		this.handlerno = handlerno;
+		this.line_height = DEF_YSIZE / DriveWireServer.getHandler(this.handlerno).config.getInt("PrinterLines", 66);
 		// this.char_width = DEF_XSIZE / DriveWireServer.config.getInt("PrinterColumns", 80);
 		
 		
@@ -73,7 +75,7 @@ public class fx80img implements Runnable {
 		
 		// load characters
 		
-		loadCharacter(DriveWireServer.config.getString("PrinterCharacterFile","default.chars"));
+		loadCharacter(DriveWireServer.getHandler(this.handlerno).config.getString("PrinterCharacterFile","default.chars"));
 
 		//System.out.println("DEF_XSIZE: " + DEF_XSIZE);
 		//System.out.println("DEF_YSIZE: " + DEF_YSIZE);

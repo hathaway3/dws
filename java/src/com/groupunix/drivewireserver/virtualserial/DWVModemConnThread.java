@@ -5,6 +5,8 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
+
 public class DWVModemConnThread implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVModemConnThread");
@@ -13,6 +15,8 @@ public class DWVModemConnThread implements Runnable {
 	private String clientHost = "none";
 	private int clientPort = -1;
 	private int vport = -1;
+	private int handlerno;
+	private DWVSerialPorts dwVSerialPorts;
 	
 	 /**
 	    * The Telnet command code IAC (255)
@@ -112,11 +116,14 @@ public class DWVModemConnThread implements Runnable {
 	
 	
 	
-	public DWVModemConnThread(int vport, String host, int tcpport) 
+	public DWVModemConnThread(int handlerno, int vport, String host, int tcpport) 
 	{
 		this.vport = vport;
  		this.clientHost = host;
 		this.clientPort = tcpport;
+		this.handlerno = handlerno;
+		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+		
 	}
 
 	public void run() 
@@ -129,8 +136,8 @@ public class DWVModemConnThread implements Runnable {
 			
 			skt = new Socket(clientHost,clientPort);
 			
-			DWVSerialPorts.markConnected(vport);
-			DWVSerialPorts.setPortOutput(vport, skt.getOutputStream());
+			dwVSerialPorts.markConnected(vport);
+			dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
 				
 			//int lastbyte = 0;
 				
@@ -192,7 +199,7 @@ public class DWVModemConnThread implements Runnable {
 						
 						default:
 							// write it to the serial port
-							DWVSerialPorts.getPortInput(vport).write((byte) data);
+							dwVSerialPorts.getPortInput(vport).write((byte) data);
 			         
 			        	   
 					}
@@ -221,10 +228,10 @@ public class DWVModemConnThread implements Runnable {
 		{
 			if (this.vport > -1)
 			{
-				DWVSerialPorts.markDisconnected(this.vport);
+				dwVSerialPorts.markDisconnected(this.vport);
 				// TODO: this is all wrong
 				try {
-					DWVSerialPorts.getPortInput(vport).write("\r\n\r\nNO CARRIER\r\n".getBytes());
+					dwVSerialPorts.getPortInput(vport).write("\r\n\r\nNO CARRIER\r\n".getBytes());
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

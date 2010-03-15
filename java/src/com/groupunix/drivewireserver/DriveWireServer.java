@@ -4,12 +4,12 @@ package com.groupunix.drivewireserver;
 
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
-import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
 
 
 public class DriveWireServer 
@@ -26,321 +25,152 @@ public class DriveWireServer
 	public static final String DWServerVersionDate = "3/12/2010";
 	
 	
-	public static Logger logger = Logger.getLogger("DWServer");
-	private static FileAppender fileAppender = null;
-	private static ConsoleAppender consoleAppender = null;
-	private static DWLogAppender dwAppender = null;
+	private static Logger logger = Logger.getLogger("DWServer");
+	private static ConsoleAppender consoleAppender;
+	private static DWLogAppender dwAppender;
+	private static FileAppender fileAppender;
 	
-	public static PropertiesConfiguration config = new PropertiesConfiguration();
+	public static PropertiesConfiguration serverconfig;
 	
-	private static Thread protoHandlerT = new Thread(new DWProtocolHandler());
+	private static Thread[] dwProtoHandlerThreads;
 	
-	private static Thread termT;
-	private static Thread jettyT;
+	private static DWProtocolHandler[] dwProtoHandlers;
 	
+	private static int handlers = -1;
 
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
 	
 		
 	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
-	public static void main(String[] args)
+	public static void main(String[] args) throws ConfigurationException
 	{
 		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
-		
-		BasicConfigurator.configure();
-		
-		// load settings
-    	
-    	loadConfig();
-
-    	// set up logging
-    	
-    	Logger.getRootLogger().removeAllAppenders();
-    	
-    	if (config.containsKey("LogFormat"))
+	
+		// 	set up initial logging - server stuff goes to console
+		consoleAppender = new ConsoleAppender(logLayout);
+		Logger.getRootLogger().addAppender(consoleAppender);
+		logger.info("DriveWire Server " + DWServerVersion + " (" + DWServerVersionDate + ") starting up");
+    			
+		// load server settings
+		try 
     	{
-    		logLayout = new PatternLayout(config.getString("LogFormat"));
+			serverconfig = new PropertiesConfiguration("DriveWireServer.properties");
+		} 
+    	catch (ConfigurationException e1) 
+    	{
+    		System.out.println("Fatal - Could not process config file 'DriveWireServer.properties'.  Please consult the documentation.");
+    		System.exit(-1);
+		}
+    	
+    	// apply configuration
+    	
+    	dwProtoHandlers = new DWProtocolHandler[serverconfig.getInt("MaxProtocolHandlers",5)];
+    	dwProtoHandlerThreads = new Thread[serverconfig.getInt("MaxProtocolHandlers",5)];
+    	
+    	// logging
+    	if (serverconfig.containsKey("LogFormat"))
+    	{
+    		logLayout = new PatternLayout(serverconfig.getString("LogFormat"));
     	}
     	
+    	Logger.getRootLogger().removeAllAppenders();
+		
     	dwAppender = new DWLogAppender(logLayout);
     	Logger.getRootLogger().addAppender(dwAppender);
     	
-    	if (config.getBoolean("LogToConsole", true))
+    	if (serverconfig.getBoolean("LogToConsole", true))
     	{
     		consoleAppender = new ConsoleAppender(logLayout);
     		Logger.getRootLogger().addAppender(consoleAppender);
     	}
     	
     	
-    	if ((config.getBoolean("LogToFile", false)) && !(config.getString("LogFile","").equals("")))
+    	if ((serverconfig.getBoolean("LogToFile", false)) && (serverconfig.containsKey("LogFile")))
     	{
-    		attachFileAppender(config.getString("LogFile"));
+    		try 
+    		{
+    			fileAppender = new FileAppender(logLayout,serverconfig.getString("LogFile"),true,true,4096);
+    			Logger.getRootLogger().addAppender(fileAppender);
+    		} 
+    		catch (IOException e) 
+    		{
+    			logger.error("Cannot log to file '" + serverconfig.getString("LogFile") +"': " + e.getMessage());
+    		}
     	 		
     	}
     	
-    	Logger.getRootLogger().setLevel(Level.toLevel(config.getString("LogLevel", "WARN")));
-    	
-    	logger.info("DriveWire Server " + DWServerVersion + " (" + DWServerVersionDate + ") starting up");
+    	Logger.getRootLogger().setLevel(Level.toLevel(serverconfig.getString("LogLevel", "WARN")));
     	
     	
-		// set up protocol handler and autostart if defined in config
-		
-		if (config.getBoolean("AutoStart", true))
-		{
-			logger.info("autostarting protocol handler");
-			protoHandlerT.start();
-		}
-
-		if (config.getBoolean("UseGUI", false))
-		{
-			// Start up the web interface.
-			jettyT = new Thread(new DWJettyThread(config.getInt("GUIPort",8080)));
-			jettyT.start();
-			
-		}
-		else
-		{
-			logger.debug("Running in headless mode (no web GUI)");
-		}
-		
-		
-		if (config.containsKey("TermPort"))
-		{
-			logger.info("Starting Term device listener thread");
-			termT = new Thread(new DWVPortTermThread(config.getInt("TermPort")));
-			termT.start();
-		}
-		else
-		{
-			logger.debug("not starting term listener");
-		}
-	
-		
-		//  wait for protohandler to die
-		try {
-			protoHandlerT.join();
-		} catch (InterruptedException e) {
-			logger.info("we've been interrupted? rude");
-		}
-		
-	}
-	
-	
-	
-	public static void connectSerialPort()
-	{
-		// stop PH if we have one running
-		if (protoHandlerT.isAlive())
-		{
-			
-			logger.debug("interrupting/killing protocol handler");
-			DWProtocolHandler.shutdown();
-			protoHandlerT.interrupt();	
-			try 
-			{
-				// wait for it to die
-				protoHandlerT.join();
-			} 
-			catch (InterruptedException e) 
-			{
-				logger.debug("interrupted while waiting for handler to exit");
-			}
-			
-		}
-		
-		logger.debug("setting protocol handler's device to '" + config.getString("SerialDevice") + "'");
-		if (DWProtocolHandler.setPort(config.getString("SerialDevice")) == 1)
-		{
-			protoHandlerT = new Thread(new DWProtocolHandler());
-			protoHandlerT.start();
-		}
-		else
-		{
-			logger.error("Failed to set port");
-		}
-		
-	}
+    	// start protocol handler instances
+    	if (serverconfig.containsKey("HandlerInstance"))
+    	{
+    		String[] hi = serverconfig.getStringArray("HandlerInstance");
+    		
+    		for (int i=0;i<hi.length;i++)
+    		{
+    			startProtohandler(hi[i]); 
+    		}	
+    		
+    	} 
+    	else
+    	{
+    		logger.error("Server config contains no handler instances");
+    	}
     	
+    	// start lazy writer
+    	
+    	
+    	// wait for all my children to die
+    	
+    	int activehandlers = 0;
+    	
+    	do
+    	{
+    	
+    		try
+    		{
+    			Thread.sleep(2000);
+    		} 
+    		catch (InterruptedException e)
+    		{
+    			logger.warn("Server thread interrupted");
+    		}
 
-	public static String getLogLevel()
-	{
-		return(config.getString("LogLevel","INFO"));
+    		activehandlers = 0;
+    		
+    		for (int i = 0;i<=handlers;i++)
+    		{
+    			if (dwProtoHandlerThreads[i].isAlive())
+    			{
+    				activehandlers++;
+    			}
+    		}
+    	}
+    	while (activehandlers > 0);
+    		
+    	logger.info("Server exiting");	
+    	
 	}
 
 
-
-	public static boolean isWriteToFileEnabled()
+	private static void startProtohandler(String propfile)
 	{
-		return(config.getBoolean("LogToFile",false));
+		handlers++;
+		
+		logger.info("Starting protocol handler #" + handlers + " using " + propfile);
+		
+		dwProtoHandlers[handlers] = new DWProtocolHandler(handlers, propfile);
+		dwProtoHandlerThreads[handlers] = new Thread(dwProtoHandlers[handlers]);
+		dwProtoHandlerThreads[handlers].start();		
+	}
+
+
+	public static DWProtocolHandler getHandler(int handlerno)
+	{
+		return(dwProtoHandlers[handlerno]);
 	}
 	
-	public static int getCocoModel()
-	{
-		return(config.getInt("CocoModel",3));
-	}
-
-
-
-	public static String getLogFileName()
-	{
-		return(config.getString("LogFile",null));
-	}
-
-
-
-	public static void setLogLevel(String level)
-	{
-		logger.debug("setting log level to " + level);
-		
-		config.setProperty("LogLevel", level);
-		logger.setLevel(Level.toLevel(level));
-		
-	}
-
-
-
-	public static void setLogFileName(String fileName)
-	{
-		logger.debug("setting log file name to '" + fileName + "'");
-		
-		config.setProperty("LogFile", fileName);
-		
-		if (config.getBoolean("LogToFile",false))
-		{
-			
-			// are we already logging to file?
-			if (Logger.getRootLogger().isAttached(fileAppender))
-			{
-				Logger.getRootLogger().removeAppender(fileAppender);
-			}
-			
-			attachFileAppender(fileName);
-		}
-		
-	}
-
-
-
-	private static void attachFileAppender(String fileName)
-	{
-		try 
-		{
-			fileAppender = new FileAppender(logLayout,fileName,true,true,4096);
-			Logger.getRootLogger().addAppender(fileAppender);
-		} 
-		catch (IOException e) 
-		{
-			logger.error("Cannot log to file '" + fileName +"': " + e.getMessage());
-		}
-		
-	}
-
-
-
-	public static void logToFile(boolean logToFile)
-	{
-		logger.debug("set log to file: " + logToFile);
-		
-		config.setProperty("LogToFile", logToFile);
-		
-		if ((logToFile) && (!logger.isAttached(fileAppender)))
-		{
-			attachFileAppender(config.getString("LogFile"));
-				
-		}
-		else if ((!logToFile) && (logger.isAttached(fileAppender)))
-		{
-			Logger.getRootLogger().removeAppender(fileAppender);
-
-		}
-		
-	}
-
-
-
-	public static void setCocoModel(int model)
-	{
-		
-	/*	if (config.getInt("CocoModel") != model)
-		{
-			logger.debug("set coco model to " + model);
-			
-			config.setProperty("CocoModel", model);
-			
-			try
-			{
-				DWProtocolHandler.resetCocoModel();
-			} 
-			catch (UnsupportedCommOperationException e)
-			{
-				e.printStackTrace();
-			}
-		}
-		
-	 */	
-	}
-
-
-
-	public static String getPortName()
-	{
-		return(config.getString("SerialDevice","unknown"));
-	}
-
-
-
-	public static void resetLogFile()
-	{
-		logger.debug("WebUI sent log reset request");
-		
-		if (Logger.getRootLogger().isAttached(fileAppender))
-		{
-			// stop logging to the file
-			Logger.getRootLogger().removeAppender(fileAppender);
-			
-			// delete file
-			File f = new File(config.getString("LogFile"));
-
-			if (f.exists())
-			{
-			    if (f.canWrite())
-			    { 
-			    	if (!f.isDirectory()) 
-			    	{
-			    		if (f.delete())
-			    		{
-			    			logger.info("deleted log file '" + config.getString("LogFile") + "'");
-			    		}
-			    		else
-			    		{
-			    			logger.warn("log file '" + config.getString("LogFile") + "' could not be deleted for reset");
-			    			return;
-			    		}
-			    	}
-			    	else
-			    	{
-			    		logger.warn("log file '" + config.getString("LogFile") + "' is a directory!");
-			    		return;
-			    	}
-			    }
-			    else
-			    {
-			    	logger.warn("log file '" + config.getString("LogFile") + "' is not writeable while trying to reset it");
-			    	return;
-			    }
-			}
-			else
-			{
-				logger.warn("log file '" + config.getString("LogFile") + "' does not exist while trying to reset it");
-			}
-			
-					
-		}
-		
-		// replace appender
-		attachFileAppender(config.getString("LogFile") );
-		
-	}
 	
 	public static ArrayList<String> getLogEvents(int num)
 	{
@@ -354,35 +184,6 @@ public class DriveWireServer
 		return(dwAppender.getEventsSize());
 	}
 	
-	public static void saveConfig()
-	{
-		try
-		{
-			config.save();
-		} catch (ConfigurationException e)
-		{
-			logger.error("ConfigurationException while saving config: " + e.getMessage());
-		}
-	}
 	
-	public static void loadConfig()
-	{
-		try 
-    	{
-			config = new PropertiesConfiguration("DriveWireServer.properties");
-		} 
-    	catch (ConfigurationException e1) 
-    	{
-    		System.out.println("Fatal - Could not process config file 'DriveWireServer.properties'.  Please consult the documentation.");
-    		System.exit(-1);
-		}
-	}
-
-
-
-	public static void reloadConfig()
-	{
-		config.reload();
-	}
 	
 }

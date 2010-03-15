@@ -2,8 +2,6 @@ package com.groupunix.drivewireserver;
 
 import org.apache.log4j.Logger;
 
-import com.mynumnum.drivewire.server.Jetty;
-
 public class DWJettyThread implements Runnable 
 {
 	private int port;
@@ -20,7 +18,7 @@ public class DWJettyThread implements Runnable
 		Thread.currentThread().setName("jetty-" + Thread.currentThread().getId());
 		
 		logger.debug("Starting Jetty thread, port " + port);
-		new Jetty(port);
+		//new Jetty(port);
 		logger.debug("Jetty thread exits");
 	}
 

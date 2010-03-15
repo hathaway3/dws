@@ -56,7 +56,7 @@ public class DWDisk {
 	{
 		byte[] dd_tot = new byte[3];
 		System.arraycopy( sectors[0].getData(), 0, dd_tot, 0, 3 ); 
-		return(DWProtocolHandler.int3(dd_tot));
+		return(DWUtils.int3(dd_tot));
 	}
 	
 	public int DD_TKS()
@@ -68,28 +68,28 @@ public class DWDisk {
 	{
 		byte[] dd_map = new byte[2];
 		System.arraycopy( sectors[0].getData(), 4, dd_map, 0, 2 ); 
-		return(DWProtocolHandler.int2(dd_map));
+		return(DWUtils.int2(dd_map));
 	}
 	
 	public int DD_BIT()
 	{
 		byte[] dd_bit = new byte[2];
 		System.arraycopy( sectors[0].getData(), 6, dd_bit, 0, 2 ); 
-		return(DWProtocolHandler.int2(dd_bit));
+		return(DWUtils.int2(dd_bit));
 	}
 	
 	public int DD_DIR()
 	{
 		byte[] dd_dir = new byte[3];
 		System.arraycopy( sectors[0].getData(), 8, dd_dir, 0, 3 ); 
-		return(DWProtocolHandler.int3(dd_dir));
+		return(DWUtils.int3(dd_dir));
 	}
 	
 	public int DD_OWN()
 	{
 		byte[] dd_own = new byte[2];
 		System.arraycopy( sectors[0].getData(), 11, dd_own, 0, 2 ); 
-		return(DWProtocolHandler.int2(dd_own));
+		return(DWUtils.int2(dd_own));
 	}
 	
 	public byte DD_ATT()
@@ -101,7 +101,7 @@ public class DWDisk {
 	{
 		byte[] dd_dsk = new byte[2];
 		System.arraycopy( sectors[0].getData(), 14, dd_dsk, 0, 2 ); 
-		return(DWProtocolHandler.int2(dd_dsk));
+		return(DWUtils.int2(dd_dsk));
 	}
 	
 	public byte DD_FMT()
@@ -113,21 +113,21 @@ public class DWDisk {
 	{
 		byte[] dd_spt = new byte[2];
 		System.arraycopy( sectors[0].getData(), 17, dd_spt, 0, 2 ); 
-		return(DWProtocolHandler.int2(dd_spt));
+		return(DWUtils.int2(dd_spt));
 	}
 	
 	public long DD_BT()
 	{
 		byte[] dd_bt = new byte[3];
 		System.arraycopy( sectors[0].getData(), 21, dd_bt, 0, 3 ); 
-		return(DWProtocolHandler.int3(dd_bt));
+		return(DWUtils.int3(dd_bt));
 	}
 	
 	public long DD_BSZ()
 	{
 		byte[] dd_bsz = new byte[2];
 		System.arraycopy( sectors[0].getData(), 24, dd_bsz, 0, 2 ); 
-		return(DWProtocolHandler.int2(dd_bsz));
+		return(DWUtils.int2(dd_bsz));
 	}
 	
 	public byte[] DD_DAT()

@@ -26,6 +26,8 @@ import com.mynumnum.drivewire.client.serializable.VersionData;
 /**
  * The server side implementation of the RPC service.
  */
+
+/*
 @SuppressWarnings("serial")
 public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		DriveWireService {
@@ -171,7 +173,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 		} catch (DWDriveAlreadyLoadedException e) {
 			error = "This drive already has a disk loaded.";
 			//e.printStackTrace();
-		} */
+		} 
 		return error;
 	}
 	public ArrayList<DriveListData> getDrivesList() {
@@ -227,7 +229,7 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 
 	/**
 	 * Return the current settings for the 'Settings' tab to the client
-	 */
+	
 	public SettingsData getSettings() {
 
 		SettingsData settings = new SettingsData();
@@ -264,3 +266,5 @@ public class DriveWireServiceImpl extends RemoteServiceServlet implements
 	
 	
 }
+
+*/

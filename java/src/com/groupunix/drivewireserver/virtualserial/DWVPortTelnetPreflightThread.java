@@ -35,8 +35,11 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	private boolean banner = false;
 	private boolean telnet = false;
 	
+	private int handlerno;
+	private DWVSerialPorts dwVSerialPorts;
 	
-	public DWVPortTelnetPreflightThread(int vport, Socket skt, boolean doTelnet, boolean doAuth, boolean doProtect, boolean doBanner)
+	
+	public DWVPortTelnetPreflightThread(int handlerno, int vport, Socket skt, boolean doTelnet, boolean doAuth, boolean doProtect, boolean doBanner)
 	{
 		this.vport = vport;
 		this.skt = skt;
@@ -44,6 +47,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		this.protect = doProtect;
 		this.banner = doBanner;
 		this.telnet = doTelnet;
+		this.handlerno = handlerno;
+		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+		
 	}
 
 	public void run()
@@ -60,7 +66,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 
 			// GeoIP
 			
-			if (DriveWireServer.config.getBoolean("GeoIPLookup",false))
+			if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("GeoIPLookup",false))
 			{
 				if (geoIPBanned(skt.getInetAddress().getHostAddress()) == true)
 				{
@@ -77,9 +83,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			
 			
 			// check banned
-			if ((DriveWireServer.config.containsKey("TelnetBanned")) && (this.protect == true))
+			if ((DriveWireServer.getHandler(this.handlerno).config.containsKey("TelnetBanned")) && (this.protect == true))
 			{
-				String[] thebanned = DriveWireServer.config.getStringArray("TelnetBanned");
+				String[] thebanned = DriveWireServer.getHandler(this.handlerno).config.getStringArray("TelnetBanned");
 			
 				for (int i = 0;i<thebanned.length ;i++)
 				{
@@ -135,9 +141,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				this.loginOK = false;
 				
 				// display preauth
-				if (DriveWireServer.config.containsKey("TelnetPreAuthFile"))
+				if (DriveWireServer.getHandler(this.handlerno).config.containsKey("TelnetPreAuthFile"))
 				{
-					displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetPreAuthFile"));
+					displayFile(skt.getOutputStream(), DriveWireServer.getHandler(this.handlerno).config.getString("TelnetPreAuthFile"));
 				}
 			
 				// username
@@ -183,9 +189,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			}
 			
 			
-			if ((DriveWireServer.config.containsKey("TelnetBannerFile")) && (banner == true))
+			if ((DriveWireServer.getHandler(this.handlerno).config.containsKey("TelnetBannerFile")) && (banner == true))
 			{
-				displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannerFile"));
+				displayFile(skt.getOutputStream(), DriveWireServer.getHandler(this.handlerno).config.getString("TelnetBannerFile"));
 			}
 			
 		} 
@@ -220,7 +226,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 
 			
 			// announce new connection to listener
-			DWVSerialPorts.sendConnectionAnnouncement(this.vport, conno, skt.getLocalPort(), skt.getInetAddress().getHostAddress());
+			dwVSerialPorts.sendConnectionAnnouncement(this.vport, conno, skt.getLocalPort(), skt.getInetAddress().getHostAddress());
 					
 		}
 		
@@ -239,9 +245,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		try
 		{
 				
-			if (DriveWireServer.config.containsKey("TelnetBannedFile"))
+			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("TelnetBannedFile"))
 			{
-				displayFile(skt.getOutputStream(), DriveWireServer.config.getString("TelnetBannedFile"));
+				displayFile(skt.getOutputStream(), DriveWireServer.getHandler(this.handlerno).config.getString("TelnetBannedFile"));
 			}
 			else
 			{
@@ -282,9 +288,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			logger.info("GeoIP: cc='" + loc.countryCode + "' country='" + loc.countryName + "' region='" + regionName.regionNameByCode(loc.countryCode, loc.region) + "' city='" + loc.city + "'  lat: " + loc.latitude + " lng: " + loc.longitude );
 			
 			// do country, regionName, city
-			if (DriveWireServer.config.containsKey("GeoIPBannedCountries"))
+			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("GeoIPBannedCountries"))
 			{
-				String[] thebanned = DriveWireServer.config.getStringArray("GeoIPBannedCountries");
+				String[] thebanned = DriveWireServer.getHandler(this.handlerno).config.getStringArray("GeoIPBannedCountries");
 				
 				for (int i = 0;i<thebanned.length ;i++)
 				{
@@ -305,9 +311,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				}	
 			}
 			
-			if (DriveWireServer.config.containsKey("GeoIPBannedRegions"))
+			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("GeoIPBannedRegions"))
 			{
-				String[] thebanned = DriveWireServer.config.getStringArray("GeoIPBannedRegions");
+				String[] thebanned = DriveWireServer.getHandler(this.handlerno).config.getStringArray("GeoIPBannedRegions");
 				
 				for (int i = 0;i<thebanned.length ;i++)
 				{
@@ -326,9 +332,9 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				}	
 			}
 			
-			if (DriveWireServer.config.containsKey("GeoIPBannedCities"))
+			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("GeoIPBannedCities"))
 			{
-				String[] thebanned = DriveWireServer.config.getStringArray("GeoIPBannedCities");
+				String[] thebanned = DriveWireServer.getHandler(this.handlerno).config.getStringArray("GeoIPBannedCities");
 				
 				for (int i = 0;i<thebanned.length ;i++)
 				{
@@ -357,7 +363,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	{
 		boolean result = false;
 		
-		if (DriveWireServer.config.containsKey("TelnetPasswdFile"))
+		if (DriveWireServer.getHandler(this.handlerno).config.containsKey("TelnetPasswdFile"))
 		{
 			// look for username in passwd file
 			FileInputStream fstream;
@@ -366,7 +372,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			
 			try 
 			{
-				fstream = new FileInputStream(DriveWireServer.config.getString("TelnetPasswdFile"));
+				fstream = new FileInputStream(DriveWireServer.getHandler(this.handlerno).config.getString("TelnetPasswdFile"));
 			
 				DataInputStream in = new DataInputStream(fstream);
 					
@@ -552,7 +558,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	private Location lookupGeoIP(String ip)
 	{
 		try {
-		    LookupService cl = new LookupService(DriveWireServer.config.getString("GeoIPDatabaseFile"), LookupService.GEOIP_MEMORY_CACHE );
+		    LookupService cl = new LookupService(DriveWireServer.getHandler(this.handlerno).config.getString("GeoIPDatabaseFile"), LookupService.GEOIP_MEMORY_CACHE );
 	      
 		    
 		    Location l2 = cl.getLocation(ip);

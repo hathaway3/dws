@@ -2,6 +2,8 @@ package com.groupunix.drivewireserver.virtualserial;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
+
 
 // this replaces the seperate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
 
@@ -13,12 +15,16 @@ public class DWVPortHandler
 	private int vport;
 	private DWVModem vModem;
 	private Thread utilthread;
+	private int handlerno;
+	private DWVSerialPorts dwVSerialPorts;
 	
 	
-	public DWVPortHandler(int port) 
+	public DWVPortHandler(int handlerno, int port) 
 	{
 		this.vport = port;	
-		this.vModem = new DWVModem(port);
+		this.vModem = new DWVModem(handlerno, port);
+		this.handlerno = handlerno;
+		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
 		
 		//logger.debug("init handler for port " + port);
 	}
@@ -29,12 +35,12 @@ public class DWVPortHandler
 		// echo character if modem echo is on
 		if (this.vModem.isEcho())
 		{
-			DWVSerialPorts.write1(this.vport, (byte) databyte);
+			dwVSerialPorts.write1(this.vport, (byte) databyte);
 					
 			// send extra lf on cr, not sure if this is right
 			if (databyte == this.vModem.getCR())
 			{
-				DWVSerialPorts.write1(this.vport,(byte) this.vModem.getLF());
+				dwVSerialPorts.write1(this.vport,(byte) this.vModem.getLF());
 			} 
 
 		}
@@ -143,7 +149,7 @@ public class DWVPortHandler
 			{
 				// start DWcmd thread
 				
-				this.utilthread = new Thread(new DWUtilDWThread(this.vport, cmd));
+				this.utilthread = new Thread(new DWUtilDWThread(this.handlerno, this.vport, cmd));
 				this.utilthread.start();
 			}
 			else if (cmdparts[0].equalsIgnoreCase("log"))
@@ -184,7 +190,7 @@ public class DWVPortHandler
 		respondOk("attaching to connection " + conno);
 		
 		// start TCP thread
-		this.utilthread = new Thread(new DWVPortTCPServerThread(this.vport, conno));
+		this.utilthread = new Thread(new DWVPortTCPServerThread(this.handlerno, this.vport, conno));
 		this.utilthread.start();
 		
 	}
@@ -222,7 +228,7 @@ public class DWVPortHandler
 
 	private void doURL(String action,String url) 
 	{
-		this.utilthread = new Thread(new DWUtilURLThread(this.vport, url, action));
+		this.utilthread = new Thread(new DWUtilURLThread(this.handlerno, this.vport, url, action));
 		this.utilthread.start();
 	}
 
@@ -244,7 +250,7 @@ public class DWVPortHandler
 		// respondOk("connecting");
 		
 		// start TCP thread
-		this.utilthread = new Thread(new DWVPortTCPConnectionThread(this.vport, tcphost, tcpport));
+		this.utilthread = new Thread(new DWVPortTCPConnectionThread(this.handlerno, this.vport, tcphost, tcpport));
 		this.utilthread.start();
 		
 	}
@@ -263,7 +269,7 @@ public class DWVPortHandler
 			respondFail(2,"non-numeric port in tcp listen command");
 			return;
 		}
-		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.vport, tcpport);
+		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.handlerno, this.vport, tcpport);
 		
 		
 		// simulate old behavior
@@ -293,7 +299,7 @@ public class DWVPortHandler
 			respondFail(2,"non-numeric port in tcp listen command");
 			return;
 		}
-		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.vport, tcpport);
+		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.handlerno, this.vport, tcpport);
 				
 		// parse options
 		if (cmdparts.length > 3)
@@ -335,7 +341,7 @@ public class DWVPortHandler
 	public void respondOk(String txt) 
 	{
 		logger.debug("command ok: " + txt);
-		DWVSerialPorts.writeToCoco(this.vport, "OK " + txt + (char) 13);
+		dwVSerialPorts.writeToCoco(this.vport, "OK " + txt + (char) 13);
 	}
 	
 	
@@ -343,12 +349,12 @@ public class DWVPortHandler
 	{
 		String perrno = String.format("%03d", errno);
 		logger.debug("command failed: " + perrno + " " + txt);
-		DWVSerialPorts.writeToCoco(this.vport, "FAIL " + perrno + " " + txt + (char) 13);
+		dwVSerialPorts.writeToCoco(this.vport, "FAIL " + perrno + " " + txt + (char) 13);
 	}
 	
 	public synchronized void announceConnection(int conno, int localport, String hostaddr)
 	{
-		DWVSerialPorts.writeToCoco(this.vport, conno + " " + localport + " " +  hostaddr + (char) 13);		
+		dwVSerialPorts.writeToCoco(this.vport, conno + " " + localport + " " +  hostaddr + (char) 13);		
 	}
 	
 }

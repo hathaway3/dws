@@ -16,14 +16,14 @@ public class DWDiskLazyWriter implements Runnable {
 		Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 		Thread.currentThread().setName("dskwriter-" + Thread.currentThread().getId());
 	
-		logger.debug("started, write interval is " + DriveWireServer.config.getLong("DiskLazyWriteInterval",15000) );
+		logger.debug("started, write interval is " + DriveWireServer.serverconfig.getLong("DiskLazyWriteInterval",15000) );
 		
 		while (wanttodie == false)
 		{
 
 			try 
 			{
-				Thread.sleep(DriveWireServer.config.getLong("DiskLazyWriteInterval",15000));
+				Thread.sleep(DriveWireServer.serverconfig.getLong("DiskLazyWriteInterval",15000));
 				syncDisks();
 			}	 
 			catch (InterruptedException e) 
@@ -41,28 +41,38 @@ public class DWDiskLazyWriter implements Runnable {
 	private void syncDisks()
 	{
 
-		// scan all loaded drives
-		for (int driveno = 0;driveno<DWDiskDrives.MAX_DRIVES;driveno++)
+		// scan all handlers
+		for (int h = 0;h<DriveWireServer.serverconfig.getInt("MaxProtocolHandlers",5);h++)
 		{
-			if (DWProtocolHandler.getDiskDrives().diskLoaded(driveno))
+			
+			if (DriveWireServer.getHandler(h) != null)
 			{
-				if (DWProtocolHandler.getDiskDrives().isRandomWriteable(driveno))
-				{ 
-				
-					if (DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) > 0)
+				// scan all loaded drives
+				for (int driveno = 0;driveno<DWDiskDrives.MAX_DRIVES;driveno++)
+				{
+			
+					if (DriveWireServer.getHandler(h).getDiskDrives().diskLoaded(driveno))
 					{
-						logger.debug("cache for drive " + driveno + " has changed, " + DWProtocolHandler.getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
+						if (DriveWireServer.getHandler(h).getDiskDrives().isRandomWriteable(driveno))
+						{	 
+				
+							if (DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) > 0)
+							{
+								logger.debug("cache for drive " + driveno + " in handler " + h + " has changed, " + DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
 						
-						try
-						{
-							DWProtocolHandler.getDiskDrives().writeDisk(driveno);
-						} 
-						catch (IOException e)
-						{
-							logger.error("Lazy write failed: " + e.getMessage());
+								try
+								{
+									DriveWireServer.getHandler(h).getDiskDrives().writeDisk(driveno);
+								} 
+								catch (IOException e)
+								{
+									logger.error("Lazy write failed: " + e.getMessage());
+								}
+							}
+				
 						}
 					}
-				
+			
 				}
 			}
 		}

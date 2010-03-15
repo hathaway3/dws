@@ -38,13 +38,13 @@ public class DWVSerialPort {
 	
 	private int conno = -1;
 	
-	public DWVSerialPort(int port)
+	public DWVSerialPort(int handlerno, int port)
 	{
-		// logger.debug("New DWVSerialPort for port " + port);
+		logger.debug("New DWVSerialPort for port " + port + " in handler #" + handlerno);
 		this.port = port;
 		if (port != DWVSerialPorts.TERM_PORT)
 		{
-			this.porthandler = new DWVPortHandler(port);
+			this.porthandler = new DWVPortHandler(handlerno, port);
 		}
 	}
 	
@@ -75,7 +75,7 @@ public class DWVSerialPort {
 		{
 			if (output == null)
 			{
-				logger.debug("write to null stream on port " + this.port);
+				// logger.debug("write to null stream on port " + this.port);
 			}
 			else
 			{

@@ -1,18 +1,17 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
-import java.io.IOException;
-
-import org.apache.log4j.Logger;
-
-import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
-
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
+
+import java.io.IOException;
+
+import org.apache.log4j.Logger;
+
+import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWSerialDevice
 {
@@ -21,14 +20,19 @@ public class DWSerialDevice
 	private SerialPort serialPort;
 
 	
-	DWSerialDevice()
+	public DWSerialDevice(String device, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
-		logger.debug("init");
+		logger.debug("init on " + device);
 		
-		if (DriveWireServer.config.containsKey("SerialDevice"))
+		if (serialPort != null)
 		{
-			setPort(DriveWireServer.config.getString("SerialDevice"));
+			// close current port
+			logger.info("closing port " + serialPort.getName());
+			serialPort.close();
 		}
+
+		connect(device, cocomodel);
+				
 	}
 	
 	public boolean connected()
@@ -44,43 +48,6 @@ public class DWSerialDevice
 	}
 
 	
-	public int setPort(String portname)
-	{
-		if (serialPort != null)
-		{
-			// close current port
-			logger.info("closing port " + serialPort.getName());
-			serialPort.close();
-		}
-
-		try 
-		{
-			connect(portname);
-		} 
-		//catch (IOException e1) 
-		//{
-		//	logger.warn(e1.getMessage());
-		//	return(-1);
-		//} 
-		catch (NoSuchPortException e2) 
-		{
-			logger.warn(e2.getMessage());
-			return(-1);
-		} 
-		catch (PortInUseException e3) 
-		{
-			logger.warn(e3.getMessage());
-			return(-1);
-		} 
-		catch (UnsupportedCommOperationException e4) 
-		{
-			logger.warn(e4.getMessage());
-			return(-1);
-		}
-		
-		return(1);
-	}
-
 
 	public void close()
 	{
@@ -89,7 +56,7 @@ public class DWSerialDevice
 	}
 
 
-	public void connect(String portName) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
+	private void connect(String portName, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
 		logger.info("attempting to open device '" + portName + "'");
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
@@ -111,7 +78,7 @@ public class DWSerialDevice
                 serialPort.enableReceiveThreshold(1);
                 serialPort.enableReceiveTimeout(3000);
                 
-                setSerialParams(serialPort);               
+                setSerialParams(serialPort, cocomodel);               
                   
                 // try this..
                 
@@ -130,9 +97,9 @@ public class DWSerialDevice
 	}
 	
 	
-	private static void setSerialParams(SerialPort sport) throws UnsupportedCommOperationException 
+	private static void setSerialParams(SerialPort sport, int cocomodel) throws UnsupportedCommOperationException 
 	{
-		switch(DriveWireServer.config.getInt("CocoModel", 3))
+		switch(cocomodel)
 		{
 			case 1:
 				sport.setSerialPortParams(38400,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
