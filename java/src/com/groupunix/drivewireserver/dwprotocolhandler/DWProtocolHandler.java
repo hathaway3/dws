@@ -55,8 +55,7 @@ public class DWProtocolHandler implements Runnable
 	// disk drives
 	private DWDiskDrives diskDrives;
 	
-	//internal
-	private int wanttodie = 0;
+	private boolean wanttodie = false;
 	// private static Thread readerthread;
 
 	// RFM handler
@@ -67,7 +66,7 @@ public class DWProtocolHandler implements Runnable
 	public PropertiesConfiguration config;
 	private Thread termT;
 	private DWVSerialPorts dwVSerialPorts;
-	
+	private DWVPortTermThread termHandler;
 	
 	
 	
@@ -114,20 +113,18 @@ public class DWProtocolHandler implements Runnable
 	
 	public void shutdown()
 	{
-		logger.info("protocol handler has been asked to shutdown");
+		logger.info("handler #" + handlerno + ": shutdown requested");
 		
-		serdev.close();
-		wanttodie = 1;
-
+		this.wanttodie = true;
+		this.serdev.shutdown();
 	}
 	
 	
 	public void run()
 	{
 		int opcodeint = -1;
-		wanttodie = 0;
-
-		Thread.currentThread().setName("dwproto-" + Thread.currentThread().getId());
+		
+		Thread.currentThread().setName("dwproto-" + handlerno + "-" +  Thread.currentThread().getId());
 		
 		// this thread has got to run a LOT or we might lose bytes on the serial port
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
@@ -170,12 +167,13 @@ public class DWProtocolHandler implements Runnable
 					if (config.containsKey("TermPort"))
 					{
 						logger.info("handler #" + handlerno + ": starting term device listener thread");
-						this.termT = new Thread(new DWVPortTermThread(this.handlerno, config.getInt("TermPort")));
+						this.termHandler = new DWVPortTermThread(this.handlerno, config.getInt("TermPort"));
+						this.termT = new Thread(termHandler);
 						this.termT.start();
 					}
 					
 					
-					while(wanttodie == 0)
+					while(!wanttodie)
 					{ 
 						//if (DWVSerialPorts.isNull(0) == true)
 						//	logger.debug("NULL TERM OUT");
@@ -324,9 +322,20 @@ public class DWProtocolHandler implements Runnable
 					
 		logger.info("handler #"+ handlerno+ ": exiting");
 		
+		
+		this.dwVSerialPorts.shutdown();
+		
+		this.diskDrives.shutdown();
+		
+		if (this.termT != null)
+		{
+			termHandler.shutdown();
+			termT.interrupt();
+		}
+		
 		if (serdev != null)
 		{
-			serdev.close();
+			serdev.shutdown();
 		}
 			
 	}
@@ -1141,6 +1150,13 @@ public class DWProtocolHandler implements Runnable
 	public void reloadConfig()
 	{
 		config.reload();
+	}
+
+
+
+	public boolean isDying()
+	{
+		return this.wanttodie;
 	}
 	
 	

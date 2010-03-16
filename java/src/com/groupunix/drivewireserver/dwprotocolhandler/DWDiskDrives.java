@@ -377,6 +377,22 @@ public class DWDiskDrives
 	{
 		return(diskDrives[driveno].isRandomWriteable());
 	}
+
+
+	public void shutdown()
+	{
+		logger.debug("shutting down");
+		
+		// sync all disks
+		for (int i = 0;i<this.diskDrives.length;i++)
+		{
+			if (this.diskDrives[i] != null)
+			{
+				this.diskDrives[i].shutdown();
+			}
+		}
+		
+	}
 	
 	
 }

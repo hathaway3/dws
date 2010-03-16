@@ -3,8 +3,6 @@ package com.groupunix.drivewireserver;
 
 
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -154,7 +152,7 @@ public class DriveWireServer
     			}
     		}
     	}
-    	while (activehandlers > 0);
+    	while (activehandlers >= 0);
     		
     	logger.info("Server exiting");	
     	
@@ -187,6 +185,69 @@ public class DriveWireServer
 	public static int getNumHandlers()
 	{
 		return numHandlers;
+	}
+
+
+
+
+	public static boolean isValidHandlerNo(int handler)
+	{
+		if ((handler < numHandlers) && (handler >= 0))
+		{
+			if (dwProtoHandlers[handler] != null)
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+
+
+
+	public static void restartHandler(int handler)
+	{
+		String configfile = dwProtoHandlers[handler].config.getPath();
+		
+		logger.info("Restarting handler #" + handler);
+		
+		// signal shutdown
+		dwProtoHandlers[handler].shutdown();
+		dwProtoHandlerThreads[handler].interrupt();
+		
+		// join thread to wait for death to finish
+		try
+		{
+			dwProtoHandlerThreads[handler].join();
+		} 
+		catch (InterruptedException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// start handler
+		dwProtoHandlers[handler] = new DWProtocolHandler(handler, configfile);
+		dwProtoHandlerThreads[handler] = new Thread(dwProtoHandlers[handler]);
+		dwProtoHandlerThreads[handler].start();	
+		
+	}
+
+
+
+
+	public static boolean handlerIsAlive(int h)
+	{
+		if (dwProtoHandlers[h] != null)
+		{
+			if ((!dwProtoHandlers[h].isDying()) && (dwProtoHandlerThreads[h].isAlive() ))
+			{
+				return(true);
+			}
+		}
+		
+		return false;
 	}
 	
 	

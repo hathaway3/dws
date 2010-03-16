@@ -233,6 +233,7 @@ public class DWUtilDWThread implements Runnable
 			text += "  dw server show threads      - Show server threads\r\n";
 			text += "  dw server show handlers     - Show server handler instances\r\n";
 			text += "  dw server show config       - Show server level configuration\r\n";
+			text += "  dw server restart #         - Restart handler #\r\n";
 			text += "  dw server dir [filepath]    - Show directory on server\r\n";
 			text += "  dw server list [filepath]   - List file on server\r\n";
 			text += "  dw server makepass [text]   - Return encrypted form of text (use with auth)\r\n";
@@ -299,13 +300,13 @@ public class DWUtilDWThread implements Runnable
 			}
 			else if (args[3].toLowerCase().startsWith("h"))
 			{
-				text += "\r\nDriveWire protocol handler instances:\r\n\n";
+				text += "\r\nDriveWire protocol handler instances:\r\n";
 				
 				for (int i = 0;i<DriveWireServer.getNumHandlers();i++)
 				{
 					if (DriveWireServer.getHandler(i) != null)
 					{
-						text += "Handler #" + i + ": Device " + DriveWireServer.getHandler(i).config.getString("SerialDevice") + " CocoModel " + DriveWireServer.getHandler(i).config.getString("CocoModel") + "\r\n"; 
+						text += "\r\nHandler #" + i + ": Device " + DriveWireServer.getHandler(i).config.getString("SerialDevice") + " CocoModel " + DriveWireServer.getHandler(i).config.getString("CocoModel") + "\r\n    Config: " + DriveWireServer.getHandler(i).config.getPath() + "\r\n"; 
 					}
 				}
 				
@@ -330,6 +331,19 @@ public class DWUtilDWThread implements Runnable
 				return;
 			}
 			
+		}
+		else if (args[2].toLowerCase().startsWith("r"))
+		{
+			if (args.length == 4)
+			{
+				doRestart(args[3]);
+				return;
+			}
+			else
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw server restart requires a handler # as an argument.");
+				return;
+			}
 		}
 		else if (args[2].toLowerCase().startsWith("d"))
 		{
@@ -379,6 +393,49 @@ public class DWUtilDWThread implements Runnable
 		dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
 		dwVSerialPorts.writeToCoco(this.vport, text);
 	}
+
+	
+	
+	private void doRestart(String hno)
+	{
+		try
+		{
+			int handler = Integer.parseInt(hno);
+			
+			// validate
+			if (DriveWireServer.isValidHandlerNo(handler))
+			{
+				
+				dwVSerialPorts.sendUtilityOKResponse(this.vport, "restarting handler");
+				dwVSerialPorts.writeToCoco(this.vport, "Restarting handler #" + handler + ".");
+				
+				// sync output
+				try {
+					while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
+					{
+						Thread.sleep(100);
+					}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				DriveWireServer.restartHandler(handler);
+			}
+			else
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 60,"Invalid handler #"); 
+			}
+
+		}
+		catch (NumberFormatException e)
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric handler #");
+		} 
+	
+	}
+
+
 
 	private void doPort(String[] args)
 	{

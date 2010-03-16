@@ -18,7 +18,8 @@ public class DWSerialDevice
 	private static final Logger logger = Logger.getLogger("DWServer.DWSerialDevice");
 	
 	private SerialPort serialPort;
-
+	private boolean wanttodie = false;
+	
 	
 	public DWSerialDevice(String device, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
@@ -55,6 +56,24 @@ public class DWSerialDevice
 		this.serialPort.close();
 	}
 
+	
+	public void shutdown()
+	{
+		logger.debug("shutting down");
+		this.wanttodie = true;
+		
+		try
+		{
+			this.serialPort.getInputStream().close();
+		} 
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.serialPort.close();
+		
+	}
 
 	private void connect(String portName, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
@@ -182,13 +201,19 @@ public class DWSerialDevice
 		
 		try {
 
-			while (retdata == -1)
+			while ((retdata == -1) && (!this.wanttodie))
 			{
 				retdata = serialPort.getInputStream().read();
 			}
 			
 			// extreme cases only
 			// logger.debug("READ1: " + retdata);
+			
+			if (wanttodie)
+			{
+				logger.debug("died while in read1");
+				return(-1);
+			}
 			
 			return(retdata);
 		} 
@@ -198,17 +223,7 @@ public class DWSerialDevice
 			return(-1);
 		}
 		
-		
-		/* try {
-			retdata = serialInputBuf.getInputStream().read();
-			// logger.debug("Read byte: " + retdata);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		
-		return(retdata);
-		*/
+
 	}
 	
 }

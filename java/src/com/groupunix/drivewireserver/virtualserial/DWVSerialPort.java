@@ -430,6 +430,18 @@ public class DWVSerialPort {
 	{
 		return(this.conno);
 	}
+
+	public void shutdown()
+	{
+		// close this port
+		this.connected = false;
+		this.opens = 0;
+		this.output = null;
+		this.porthandler = null;
+		this.wanttodie = true;
+		
+		
+	}
 	
 
 	

@@ -23,10 +23,11 @@ public class DWVPortTermThread implements Runnable
 	private static final int BACKLOG = 0;
 	
 	private Thread connthread;
+	private DWVPortTCPServerThread connobj;
 	private int conno;
 	private int handlerno;
 	private DWVSerialPorts dwVSerialPorts;
-	
+	private ServerSocket srvr;
 	
 	
 	public DWVPortTermThread(int handlerno, int tcpport)
@@ -49,7 +50,7 @@ public class DWVPortTermThread implements Runnable
 		dwVSerialPorts.resetPort(TERM_PORT);
 		dwVSerialPorts.openPort(TERM_PORT);
 		// startup server 
-		ServerSocket srvr = null;
+		srvr = null;
 		
 		try 
 		{
@@ -75,7 +76,8 @@ public class DWVPortTermThread implements Runnable
 		while ((wanttodie == false) && (srvr.isClosed() == false))
 		{
 			logger.debug("waiting for connection");
-			Socket skt = null;
+			Socket skt = new Socket();
+			
 			try 
 			{
 				skt = srvr.accept();
@@ -166,12 +168,37 @@ public class DWVPortTermThread implements Runnable
 		
 		// pass through till connection is lost
 		conno = DWVPortListenerPool.addConn(this.vport, skt,MODE_TERM);
-		connthread = new Thread(new DWVPortTCPServerThread(this.handlerno,TERM_PORT, conno));
+		connobj = new DWVPortTCPServerThread(this.handlerno,TERM_PORT, conno);
+		connthread = new Thread(connobj);
 		connthread.start();
 	
 		
 	}
+	
+	
+	public void shutdown()
+	{
+		logger.debug("shutting down");
+		wanttodie = true;
 		
+		if (connobj != null)
+		{
+			connobj.shutdown();
+			connthread.interrupt();
+		}
+		
+		try
+		{
+			srvr.close();
+			
+		} 
+		catch (IOException e)
+		{
+			logger.warn("IOException closing server socket: " + e.getMessage());
+		}
+		
+	}
+	
 }
 
 

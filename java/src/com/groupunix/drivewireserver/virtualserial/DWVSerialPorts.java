@@ -484,5 +484,26 @@ public class DWVSerialPorts {
 		}
 		return(-1);
 	}
+
+
+	public void shutdown()
+	{
+		logger.debug("shutting down");
+		
+		for (int i = 0;i<MAX_PORTS;i++)
+		{
+			DWVPortListenerPool.closePortConnectionSockets(i);
+			DWVPortListenerPool.closePortServerSockets(i);
+			if (this.vserialPorts[i] != null)
+			{
+				this.vserialPorts[i].shutdown();
+			}
+		}
+		
+		
+		
+		
+		
+	}
 	
 }

@@ -160,6 +160,21 @@ public class DWVPortTCPServerThread implements Runnable {
 		}
 		
 		logger.debug("thread exiting");
+	}
+
+
+	public void shutdown()
+	{
+		logger.debug("shutting down");
+		this.wanttodie = true;
+		try
+		{
+			this.skt.close();
+		} 
+		catch (IOException e)
+		{
+			logger.warn("IOException while closing socket: " + e.getMessage());
+		}
 	}	
 	
 	

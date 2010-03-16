@@ -45,7 +45,7 @@ public class DWDiskLazyWriter implements Runnable {
 		for (int h = 0;h<DriveWireServer.getNumHandlers();h++)
 		{
 			
-			if (DriveWireServer.getHandler(h) != null)
+			if (DriveWireServer.handlerIsAlive(h))
 			{
 				// scan all loaded drives
 				for (int driveno = 0;driveno<DWDiskDrives.MAX_DRIVES;driveno++)

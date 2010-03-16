@@ -284,7 +284,7 @@ public class DWDisk {
 		
 		logger.debug("read " + sector +" sectors from '" + this.fileobj.getName() + "'");
 			
-		logger.error("Encoding: " + this.fileobj.getContent().getContentInfo().getContentEncoding() + "  Type: " + this.fileobj.getContent().getContentInfo().getContentType());
+		//logger.error("Encoding: " + this.fileobj.getContent().getContentInfo().getContentEncoding() + "  Type: " + this.fileobj.getContent().getContentInfo().getContentType());
 		
 		fis.close();
 			
@@ -381,6 +381,9 @@ public class DWDisk {
 		// write in memory image to file
 		// using most efficient method available
 		
+		if (getDirtySectors() > 0)
+		{	
+		
 		if (this.fileobj.isWriteable())
 		{
 			if (this.fileobj.getFileSystem().hasCapability(Capability.RANDOM_ACCESS_WRITE))
@@ -404,6 +407,8 @@ public class DWDisk {
 		{
 			logger.warn("File is unwriteable for path '" + this.fileobj.getName() + "'");
 			throw new IOException("File is unwriteable");
+		}
+		
 		}
 	}
 	
@@ -558,6 +563,24 @@ public void reload() throws IOException
 	this.sectors = new DWDiskSector[MAX_SECTORS];
 	// load from path 
 	loadSectors();
+}
+
+
+
+public void shutdown()
+{
+	try
+	{
+		writeDisk();
+		this.fileobj.close();
+		this.fileobj = null;
+		this.fsManager = null;
+	} 
+	catch (IOException e)
+	{
+		logger.warn("While shutting down: " + e.getMessage());
+	}
+	
 }
 	
 	
