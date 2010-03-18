@@ -149,7 +149,7 @@ public class DWVPortHandler
 					respondFail(2,"Syntax error in URL command");
 				}
 			}
-			else if (cmdparts[0].equalsIgnoreCase("serial"))
+			/* else if (cmdparts[0].equalsIgnoreCase("serial"))
 			{
 				if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("con"))) 
 				{
@@ -163,7 +163,7 @@ public class DWVPortHandler
 				{
 					respondFail(2,"Syntax error in serial command");
 				}
-			}
+			} */
 			else if (cmdparts[0].equalsIgnoreCase("dw"))
 			{
 				// start DWcmd thread
@@ -186,7 +186,7 @@ public class DWVPortHandler
 	}
 
 
-	private void doSerialList()
+/*	private void doSerialList()
 	{
 		// list available serial ports
 		ArrayList<String> ports = DWUtils.getPortNames();
@@ -208,7 +208,8 @@ public class DWVPortHandler
 		Thread serconT = new Thread(new DWVPortSerialBridgeThread(this.handlerno, this.vport, args));
 		serconT.start();
 	}
-
+*/
+	
 	private void doTCPJoin(String constr) 
 	{
 		int conno;
