@@ -84,6 +84,11 @@
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-lang-2.4.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-logging-1.1.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-net-2.0.jar"/>
+        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-codec-1.4.jar"/>
+        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-vfs-1.0.jar"/>
+        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-net-2.0.jar"/>
+        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-httpclient-3.1.jar"/>
+        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jsch-0.1.42.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jasypt-1.6.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/log4j-1.2.15.jar"/>
 			<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jetty-6.1H.22.jar"/>
