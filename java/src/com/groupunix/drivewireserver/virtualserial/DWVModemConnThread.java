@@ -147,6 +147,8 @@ public class DWVModemConnThread implements Runnable {
 			{
 				int data = skt.getInputStream().read();
 				
+				//logger.debug("INDATA: " + data);
+				
 				if (data >= 0)
 				{
 					// telnet stuff

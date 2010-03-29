@@ -254,7 +254,8 @@ public class DWDisk {
 	{
 		// load file into sector array
 	    InputStream fis;
-			
+	
+
 	    fis = this.fileobj.getContent().getInputStream();
 	
 	    int sector = 0;
@@ -280,7 +281,7 @@ public class DWDisk {
 		   	
 		   	databyte = fis.read();
 		}
-		    
+		   
 		
 		logger.debug("read " + sector +" sectors from '" + this.fileobj.getName() + "'");
 			

@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs.FileSystemManager;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -18,6 +21,9 @@ public class DWRFMPath
 	private String localroot;
 	private int seekpos;
 	private int handlerno;
+	
+	private FileSystemManager fsManager;
+	private FileObject fileobj;
 	
 	public DWRFMPath(int handlerno, int pathno)
 	{
@@ -51,6 +57,13 @@ public class DWRFMPath
 	public void close()
 	{
 		logger.debug("closing path " + this.pathno + " to " + this.pathstr);
+		try
+		{
+			fileobj.close();
+		} catch (FileSystemException e)
+		{
+			logger.warn("error closing file: " + e.getMessage());
+		}
 	}
 
 	public void setSeekpos(int seekpos)
@@ -67,15 +80,25 @@ public class DWRFMPath
 	public int openFile()
 	{
 		// attempt to open local file
-		 File f = new File(this.localroot + this.pathstr);
-		 if (f.exists())
-		 {
-			 return(0);
-		 }
-		 else
-		 {
-			 return(216);
-		 }
+		
+		try
+		{
+			fileobj = fsManager.resolveFile(this.localroot + this.pathstr);
+			
+			if (fileobj.isReadable())		
+			 {
+				 return(0);
+			 }
+			 else
+			 {
+				 fileobj.close();
+				 return(216);
+			 }
+		} catch (FileSystemException e)
+		{
+			logger.warn("open failed: " + e.getMessage());
+			return(216);
+		}
 	}
 
 	public void setLocalroot(String localroot)
@@ -90,41 +113,38 @@ public class DWRFMPath
 
 	public int createFile()
 	{
-		// attempt to open local file
-		 File f = new File(this.localroot + this.pathstr);
-		 if (f.exists())
-		 {
-			 // file already exists
-			 return(218);
-		 }
-		 else
-		 {
-			 try
-			{
-				if (f.createNewFile())
-				{
-					return(0);
-				}
-				else
-				{
-					// write error?
-					return(245);
-				}
-			} 
-			catch (IOException e)
-			{
-				logger.error("IOException creating file: " + e.getMessage());
-				// write error
-				return(245);
-				
-			}
-		 }
+		
+		try
+		{
+			// attempt to open local file
+			fileobj = fsManager.resolveFile(this.localroot + this.pathstr);
+			
+			
+			if (fileobj.exists())
+			 {
+				 // file already exists
+				fileobj.close();
+				return(218);
+				 
+			 }
+			 else
+			 {
+				 fileobj.createFile();
+				 return(0);
+			 }
+		} catch (FileSystemException e)
+		{
+			logger.warn("create failed: " + e.getMessage());
+			return(245);
+		}
 	}
 
 	public int getBytesAvail(int maxbytes)
 	{
 		// return # bytes left in file from current seek pos, up to maxbytes
 
+
+		
 		File f = new File(this.localroot + this.pathstr);
 		if (f.exists())
 		{
@@ -223,7 +243,7 @@ public class DWRFMPath
 		logger.debug("incSeekpos to " + this.seekpos);
 	}
 
-	public void setFd(byte[] buf)
+	public void setFd(byte[] buf) throws FileSystemException
 	{
 		DWRFMFD fd = new DWRFMFD(DriveWireServer.getHandler(this.handlerno).config.getString("RFMRoot","/") + this.pathstr);
 		
@@ -239,7 +259,7 @@ public class DWRFMPath
 				
 	}
 
-	public byte[] getFd(int size)
+	public byte[] getFd(int size) throws FileSystemException
 	{
 		byte[] b = new byte[size];
 		

@@ -1,5 +1,6 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
+import org.apache.commons.vfs.FileSystemException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.OS9Defs;
@@ -189,7 +190,18 @@ public class DWRFMHandler
 		{
 			int size = DWUtils.int2(serdev.comRead(2));
 			
-			serdev.comWrite(this.paths[pathno].getFd(size),size);
+			byte[] buf = new byte[size];
+			
+			try
+			{
+				buf = this.paths[pathno].getFd(size);
+			} catch (FileSystemException e)
+			{
+				logger.error("Failed to get FD for path " + pathno);
+			}
+			
+			
+			serdev.comWrite(buf,size);
 			
 			logger.debug("sent " + size +" bytes of FD for path " + pathno);
 		} 
@@ -216,7 +228,13 @@ public class DWRFMHandler
 			
 			buf = serdev.comRead(size);
 			
-			this.paths[pathno].setFd(buf);
+			try
+			{
+				this.paths[pathno].setFd(buf);
+			} catch (FileSystemException e)
+			{
+				logger.error("Failed to set FD on path " + pathno);
+			}
 			
 			logger.debug("read " + size +" bytes of FD for path " + pathno);
 		} 

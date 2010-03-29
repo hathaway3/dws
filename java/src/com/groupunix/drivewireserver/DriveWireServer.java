@@ -20,8 +20,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.3";
-	public static final String DWServerVersionDate = "3/12/2010";
+	public static final String DWServerVersion = "3.9.4";
+	public static final String DWServerVersionDate = "3/26/2010";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");

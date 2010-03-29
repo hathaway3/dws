@@ -221,7 +221,7 @@ public class DWVSerialPort {
 		if (this.opens > 0)
 		{
 			this.opens--;
-			logger.debug("close port " + this.port + ", total opens: " + this.opens);
+			logger.debug("close port " + this.port + ", total opens: " + this.opens + " data in buffer: " + this.inputBuffer.getAvailable());
 			
 			// send term if last open
 			if (this.opens == 0)

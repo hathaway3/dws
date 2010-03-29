@@ -1192,35 +1192,6 @@ public class DWUtilDWThread implements Runnable
 	private void doList(String path) 
 	{
 		String text = new String();
-	    
-		
-		try 
-		{
-		    StringBuffer fileData = new StringBuffer(1000);
-	        BufferedReader reader;
-			
-				reader = new BufferedReader(
-				        new FileReader(path));
-		    char[] buf = new char[1024];
-	        int numRead=0;
-	        while((numRead=reader.read(buf)) != -1){
-	            String readData = String.valueOf(buf, 0, numRead);
-	            fileData.append(readData);
-	            buf = new char[1024];
-	        }
-	        reader.close();
-	        text = fileData.toString();
-		} 
-		catch (FileNotFoundException e) 
-		{
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, 8,"File not found on server.");
-			return;
-		} 
-		catch (IOException e1) 
-		{
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, 9,"IO Error on server: " + e1.getMessage());
-			return;
-		} 
 		
 		FileSystemManager fsManager;
 		InputStream ins = null;
@@ -1252,6 +1223,7 @@ public class DWUtilDWThread implements Runnable
 						
 			}
 			
+			logger.debug("text size: " + text.length());
 		} 
 		catch (FileSystemException e)
 		{

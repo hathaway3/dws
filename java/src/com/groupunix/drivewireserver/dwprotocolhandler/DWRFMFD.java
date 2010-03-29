@@ -5,6 +5,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.OS9Defs;
@@ -49,16 +53,20 @@ MINSEC         SET       16
 
 	private String pathstr;
 	
+	private FileSystemManager fsManager;
+	private FileObject fileobj;
+	
 	private static final Logger logger = Logger.getLogger("DWServer.DWRFMFD");
 	
 	
-	public DWRFMFD(String pathstr)
+	public DWRFMFD(String pathstr) throws FileSystemException
 	{
-		// init element values to reflect local file as much as possible
-		
-		logger.debug("new FD for '" + pathstr + "'");
-		
 		this.pathstr = pathstr;
+		
+		this.fsManager = VFS.getManager();
+		this.fileobj = this.fsManager.resolveFile(pathstr);
+
+		logger.info("New FD for '" + pathstr + "'");
 		
 	}
 
@@ -109,19 +117,20 @@ MINSEC         SET       16
 	public void writeFD()
 	{
 		
-		// file info
-		File f = new File(this.pathstr);
 		
-		if (f.exists())
+	/*	if (this.fileobj.exists())
 		{
-			
-			// we only write attributes + mod time
-			
-			
-			// for now.. user = public.. if either is set, we set on file 
-			
-			if ( ((getATT() & OS9Defs.MODE_R) == OS9Defs.MODE_R) || ((getATT() & OS9Defs.MODE_PR) == OS9Defs.MODE_PR))
+			if (this.fileobj.isWriteable())
 			{
+				// we only write attributes + mod time
+			
+			
+				// for now.. user = public.. if either is set, we set on file 
+			
+				if ( ((getATT() & OS9Defs.MODE_R) == OS9Defs.MODE_R) || ((getATT() & OS9Defs.MODE_PR) == OS9Defs.MODE_PR))
+				{
+					fileobj.getContent().setAttribute(arg0, arg1)
+				}
 				f.setReadable(true);
 			}
 			else
@@ -157,14 +166,14 @@ MINSEC         SET       16
 		{
 			logger.error("attempt to write FD for non existent file '" + this.pathstr + "'");
 		}
-		
+		*/
 	}
 	
 
 
 	public void readFD()
 	{
-		setOWN( new byte[] {0,0} );
+	/*	setOWN( new byte[] {0,0} );
 		setLNK((byte)1);
 		
 		// file info
@@ -207,6 +216,7 @@ MINSEC         SET       16
 		{
 			logger.error("attempt to read FD for non existant file '" + this.pathstr + "'");
 		}
+		*/
 	}
 
 	
