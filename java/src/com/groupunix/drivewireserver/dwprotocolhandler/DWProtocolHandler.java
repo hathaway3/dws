@@ -9,6 +9,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 
@@ -62,8 +63,7 @@ public class DWProtocolHandler implements Runnable
 	private DWRFMHandler rfmhandler;
 	
 	private int handlerno;
-	private String configfile;
-	public PropertiesConfiguration config;
+	public HierarchicalConfiguration config;
 	private Thread termT;
 	private DWVSerialPorts dwVSerialPorts;
 	private DWVPortTermThread termHandler;
@@ -71,31 +71,12 @@ public class DWProtocolHandler implements Runnable
 	
 	
 	
-	public DWProtocolHandler(int handlerno, String configfile)
+	public DWProtocolHandler(int handlerno, HierarchicalConfiguration hconf)
 	{
 		this.handlerno = handlerno;
-		this.configfile = configfile;
-		
+		this.config = hconf;
 	}
 
-	
-	
-	private boolean loadConfig(String configfile)
-	{
-		try 
-    	{
-			logger.debug("Loading config from '" + configfile + "'");
-			config = new PropertiesConfiguration(configfile);
-			return(true);
-		} 
-    	catch (ConfigurationException e1) 
-    	{
-    		logger.error(e1.getMessage());
-    		return(false);
-		}
-    	
-	}
-	
 	
 
 	public void reset()
@@ -132,7 +113,7 @@ public class DWProtocolHandler implements Runnable
 		logger.info("handler #" + handlerno + ": starting...");
 
 		// load config
-		if (loadConfig(configfile))
+		if (true)
 		{
 		
 			// check vital portion of config
@@ -145,7 +126,7 @@ public class DWProtocolHandler implements Runnable
 					serdev = new DWSerialDevice(config.getString("SerialDevice"), config.getInt("CocoModel"));
 					
 					// setup drives
-					diskDrives = new DWDiskDrives();
+					diskDrives = new DWDiskDrives(this.handlerno);
 				
 					if (config.containsKey("DefaultDiskSet"))
 					{
@@ -315,17 +296,20 @@ public class DWProtocolHandler implements Runnable
 			}
 		
 		}
-		else
-		{
-			logger.error("Unable to process config file '" + configfile + "'");
-		}
+
 					
 		logger.info("handler #"+ handlerno+ ": exiting");
 		
 		
-		this.dwVSerialPorts.shutdown();
+		if (this.dwVSerialPorts != null)
+		{
+			this.dwVSerialPorts.shutdown();
+		}
 		
-		this.diskDrives.shutdown();
+		if (this.diskDrives != null)
+		{
+			this.diskDrives.shutdown();
+		}
 		
 		if (this.termT != null)
 		{
@@ -1131,26 +1115,6 @@ public class DWProtocolHandler implements Runnable
 		return this.dwVSerialPorts;
 	}
 
-
-	
-	public void saveConfig()
-	{
-		try
-		{
-			config.save();
-		} catch (ConfigurationException e)
-		{
-			logger.error("ConfigurationException while saving config: " + e.getMessage());
-		}
-	}
-
-
-
-
-	public void reloadConfig()
-	{
-		config.reload();
-	}
 
 
 

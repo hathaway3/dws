@@ -7,9 +7,13 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
@@ -24,96 +28,70 @@ public class DWDiskDrives
 	private DWDisk[] diskDrives = new DWDisk[MAX_DRIVES];
 	private static final Logger logger = Logger.getLogger("DWServer.DWDiskDrives");
 
+	private int handlerno;
+	private int hdbdrive;
 	
-	public DWDiskDrives()
+	public DWDiskDrives(int hno)
 	{
-		logger.debug("disk drives init");
-		
+		logger.debug("disk drives init for handler #" + hno);
+		this.handlerno = hno;
 	}
 	
 	
-	public void LoadDiskSet(String filename)
+	public void LoadDiskSet(String setname)
 	{
-		if (filename == null)
+		if (DriveWireServer.hasDiskset(setname))
 		{
-			return;
-		}
 		
-		EjectAllDisks();
+			EjectAllDisks();
 		
-		logger.info("loading diskset '" + filename + "'");
+			logger.info("loading diskset '" + setname + "'");
 		
-		File f = new File(filename);
-		
-	    FileReader fr;
-		try 
-		{
-			fr = new FileReader(f);
-		} 
-		catch (FileNotFoundException e) 
-		{
-			logger.warn("Diskset file '" + filename + "' not found.");
-			return;
-		}
-		
-	    BufferedReader br = new BufferedReader(fr);
-
-	    String line;
-	    
-		try 
-		{
-		    
-			while ((line = br.readLine()) != null)
-		    {
-				
-		    	String[] parts = new String[3];
-		    	parts = line.split(",", 3);
-		    	
-		    	if (parts != null)
-		    	{
-		    		if ((parts.length == 3) && (!line.startsWith("#")))
-		    		{
-		    			
-		    			DWDisk tmpdisk = new DWDisk(parts[1]);
-		    			
-						if (parts[2].equals("1"))
-						{
-			    			tmpdisk.setWriteProtect(true);
-						}
-		    			LoadDisk(Integer.parseInt(parts[0]), tmpdisk);
-		    			
-		    		}
-		    	}	
-			}
-		} 
-		catch (NumberFormatException e2) 
-		{
-			logger.error("NumberFormat: " + e2.getMessage());
-		} 
-		catch (DWDriveNotValidException e3) 
-		{
-			logger.error("DriveNotValid: " + e3.getMessage());
-		} 
-		catch (DWDriveAlreadyLoadedException e4) 
-		{
-			logger.error("DriveAlreadyLoaded: " + e4.getMessage());
-		} 
-		catch (IOException e) 
-		{
-			logger.error("IO error: " + e.getMessage());
-		}
-		finally
-		{
 			try 
 			{
-				br.close();
-				fr.close();
+				HierarchicalConfiguration dset = DriveWireServer.getDiskset(setname);
+				
+				List disks = dset.configurationsAt("disk");
+		    	
+				for(Iterator it = disks.iterator(); it.hasNext();)
+				{
+				    HierarchicalConfiguration disk = (HierarchicalConfiguration) it.next();
+				    
+				    String filepath = new String();
+				    
+				    if (disk.getBoolean("relativepath",false))
+				    {
+			    	   File curdir = new File(".");
+
+			    	   filepath = curdir.getCanonicalPath() + "/" + disk.getString("path");
+				    }
+				    else
+				    {
+				    	filepath = disk.getString("path"); 
+				    }
+				    
+				    LoadDiskFromFile(disk.getInt("drive"),filepath);
+				}
+				
+			}
+			catch (DWDriveNotValidException e3) 
+			{
+				logger.error("DriveNotValid: " + e3.getMessage());
+			} 
+			catch (DWDriveAlreadyLoadedException e4) 
+			{
+				logger.error("DriveAlreadyLoaded: " + e4.getMessage());
 			} 
 			catch (IOException e) 
 			{
-				logger.warn(e.getMessage());
+				logger.error("IO error: " + e.getMessage());
 			}
 		}
+		else
+		{
+			logger.warn("asked to load nonexistent diskset '" + setname + "'");
+		}
+		
 	}
 	
 	
@@ -236,13 +214,34 @@ public class DWDiskDrives
 	
 	public void seekSector(int driveno, int lsn) throws DWDriveNotLoadedException, DWDriveNotValidException
 	{
+		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("HDBDOSMode",false))
+		{
+			// every 630 sectors is drive + 1, lsn to remainder
+			
+			driveno = lsn / 630;
+			
+			lsn = lsn - (driveno * 630);
+			
+			logger.debug("HDB seek: mapped to drive " + driveno + " sector " + lsn);
+			
+			this.hdbdrive = driveno;
+		}
+		
 		checkLoadedDriveNo(driveno);
 
 		diskDrives[driveno].seekSector(lsn);
+
 	}
 	
 	public void writeSector(int driveno, byte[] data) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDriveWriteProtectedException, IOException
 	{
+		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("HDBDOSMode",false))
+		{
+			driveno = this.hdbdrive;
+			logger.debug("HDB write: mapped to drive " + driveno );
+			
+		}
+		
 		checkLoadedDriveNo(driveno);
 		
 		diskDrives[driveno].writeSector(data);
@@ -250,6 +249,13 @@ public class DWDiskDrives
 	
 	public byte[] readSector(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException
 	{
+		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("HDBDOSMode",false))
+		{
+			driveno = this.hdbdrive;
+			logger.debug("HDB read: mapped to drive " + driveno );
+			
+		}
+		
 		checkLoadedDriveNo(driveno);
 		
 		return(diskDrives[driveno].readSector());

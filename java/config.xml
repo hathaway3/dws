@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+
+<!-- DriveWire 4 configuration.  See below for settings that must be adjusted -->
+
+<drivewire-config>
+	<DiskLazyWriteInterval default="15000">15000</DiskLazyWriteInterval>
+	
+	<LogLevel default="INFO">INFO</LogLevel>
+	<LogToFile default="false">false</LogToFile>
+	<LogFile default="drivewire.log">drivewire.log</LogFile>
+	<LogToConsole default="true">true</LogToConsole>
+	<LogFormat default="%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n">%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n</LogFormat>
+	<LogOpCode default="false">false</LogOpCode>
+	
+	<UIEnabled>true</UIEnabled>
+	<UIPort>6800</UIPort>
+
+		<!-- if you would like to drive multiple cocos with one server -->
+		<!-- you may specify as many instance sections as you have serial ports (and CoCos) -->
+	
+		<instance>
+    		<Name>My CoCo</Name>
+
+
+			<!-- These settings need to be adjusted for your system -->
+
+			<!-- device name, like COM1 on windows or /dev/ttyS0 on linux -->		    		
+    		<SerialDevice>COM4</SerialDevice>
+		
+			<!-- CocoModel is 1, 2 or 3 for Coco 1 2 or 3 -->
+    		<CocoModel>3</CocoModel>
+
+			<!-- This is the disk set that is loaded when the server is started.  -->
+			<!-- Use dw4boot-6309 to boot with DW4 utils, 6309 (or dw4boot-6809 for 6809) --> 
+			<!-- Set to nos9-6309l2 for NitrOS9 6309 boot from CVS nightly builds via HTTP, nos9-6809l2 for a 6809 -->
+			<!-- or look below in the diskset section for many other options -->
+			<DefaultDiskSet>dw4boot-6309</DefaultDiskSet>
+
+
+			<!-- End of settings that must be adjusted -->
+
+    		
+    		<!-- Set DW3Only to true to cause server to disable DW4 extensions -->			
+			<DW3Only>false</DW3Only>
+			
+			<!-- Use term port in headless mode -->
+			<!-- <TermPort>6801</TermPort> -->
+			
+			<!-- Set ListenAddress to bind this instance to a particular network interface -->
+			<!-- <ListenAddress>192.168.128.50</ListenAddress> -->
+			
+			<TelnetBannerFile>banner.txt</TelnetBannerFile>
+			<!-- <TelnetNoPortsBannerFile>npbanner.txt</TelnetNoPortsBannerFile> -->
+			<TelnetBanned>24.178.184.40</TelnetBanned>
+			<TelnetBanned>199.248.173.248</TelnetBanned>
+			<TelnetBanned>166.137</TelnetBanned>
+			<TelnetBanned>71.91</TelnetBanned>
+			<TelnetBanned>72.147</TelnetBanned>
+			<TelnetBanned>65.4.</TelnetBanned>
+			<TelnetBanned>125.65</TelnetBanned>
+			<TelnetBanned>61.</TelnetBanned>
+			<TelnetBanned>208.61</TelnetBanned>
+			<!-- <TelnetPreAuthFile>preauth.txt</TelnetPreAuthFile> -->
+			<!-- <TelnetPasswdFile>passwd.txt</TelnetPasswdFile> -->
+			<GeoIPLookup>false</GeoIPLookup>
+			<GeoIPDatabaseFile>E:\GeoLiteCity.dat</GeoIPDatabaseFile>
+			<GeoIPBannedCountries>China</GeoIPBannedCountries>
+			<GeoIPBannedCities>Birmingham</GeoIPBannedCities>
+			<GeoIPBannedCities>Alabaster</GeoIPBannedCities>
+			
+			<!-- Where do we put printer output -->
+			<PrinterDir>E:\cocoprints</PrinterDir>
+			
+			<!-- PrinterType can be TEXT or FX80 -->
+			<PrinterType>FX80</PrinterType>
+			
+			<!-- for FX80 mode, this is the font definition -->
+			<PrinterCharacterFile>default.chars</PrinterCharacterFile>
+			
+			<PrinterColumns>80</PrinterColumns>
+			<PrinterLines>66</PrinterLines>
+			
+		</instance>
+    	
+    	
+    	<!-- Disk set definitions are shared between all instances, but each instance gets it's own in ram copy of any given disk when you load it -->
+
+
+    	<!-- Local disk sets -->
+    	<diskset>
+   			<Name>dw4boot-6309</Name>
+   			<Description>Bootable NitrOS-9 L2 boot disk for 6309 with DriveWire 4 utils</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_server_l2_6309.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   			<disk>
+   				<drive>1</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_extras.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   			
+   		</diskset>
+
+    	<diskset>
+   			<Name>dw4boot-6809</Name>
+   			<Description>Bootable NitrOS-9 L2 boot disk for 6809 with DriveWire 4 utils</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_server_l2_6809.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   			<disk>
+   				<drive>1</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_extras.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   			
+   		</diskset>
+
+
+
+
+		<!-- NitrOS9 nightly builds via HTTP -->
+   		<diskset>
+   			<Name>nos9-6309l2</Name>
+   			<Description>Bootable NitrOS-9 L2 boot disk for 6309</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/nos96309l2v030209coco3_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   		</diskset>
+
+   		<diskset>
+   			<Name>nos9-6309l2-headless</Name>
+   			<Description>Bootable NitrOS-9 L2 boot disk for 6309 (headless)</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/nos96309l2v030209coco3_dw3_headless.dsk</path>
+   				<bootable>true</bootable>
+   				<writeprotect>false</writeprotect>
+   			</disk>
+   			
+   		</diskset>
+
+
+	<diskset>
+   			<Name>nos9-6809l2</Name>
+   			<Description>Bootable NitrOS-9 L2 boot disk for 6809</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/nos96809l2v030209coco3_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   		</diskset>
+
+   		<diskset>
+   			<Name>nos9-6809l2-headless</Name>
+   			<Description>Bootable NitrOS-9 L2 boot disk for 6809 (headless)</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/nos96809l2v030209coco3_dw3_headless.dsk</path>
+   				<bootable>true</bootable>
+   				<writeprotect>false</writeprotect>
+   			</disk>
+   			
+   		</diskset>
+
+
+		<diskset>
+   			<Name>nos9-6809l1-coco1</Name>
+   			<Description>Bootable NitrOS-9 L1 boot disk for 6809/CoCo 1</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/nos96809l1v030209coco1_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   		</diskset>
+
+		<diskset>
+   			<Name>nos9-6809l1-coco2</Name>
+   			<Description>Bootable NitrOS-9 L1 boot disk for 6809/CoCo 2</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/nos96809l1v030209coco2_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   		</diskset>
+
+
+	
+		<diskset>
+   			<Name>mv-6309</Name>
+   			<Description>Bootable MultiVue boot disk for 6309</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/multivue_6309_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   		</diskset>
+	
+		<diskset>
+   			<Name>mv-6809</Name>
+   			<Description>Bootable MultiVue boot disk for 6809</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/multivue_6809_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   		</diskset>		
+
+
+
+
+		<!-- Games from the NitrOS-9 nightly builds -->
+   		<diskset>
+   			<Name>blackcauldron</Name>
+   			<Description>Sierra Black Cauldron</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/blackcauldron_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+
+
+   		<diskset>
+   			<Name>xmas86</Name>
+   			<Description>Sierra Christmas 86 demo</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/christmas86_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+
+
+   		<diskset>
+   			<Name>flightsim2</Name>
+   			<Description>Flight Simulator 2</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/fsim2_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+
+
+   		<diskset>
+   			<Name>goldrush</Name>
+   			<Description>Sierra Goldrush</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/goldrush_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+
+
+   		<diskset>
+   			<Name>kingq1</Name>
+   			<Description>Sierra Kings Quest 1</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/kingsquest1_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		<diskset>
+   			<Name>kingq2</Name>
+   			<Description>Sierra Kings Quest 2</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/kingsquest2_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		   		
+   		<diskset>
+   			<Name>kingq3</Name>
+   			<Description>Sierra Kings Quest 3</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/kingsquest3_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		<diskset>
+   			<Name>kingq4</Name>
+   			<Description>Sierra Kings Quest 4</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/kingsquest3_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		   		<diskset>
+   			<Name>koronis</Name>
+   			<Description>Koronis Rift</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/koronis_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		<diskset>
+   			<Name>kyumgai</Name>
+   			<Description>Kyum-Gai: To Be Ninja</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/kyumgai_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		
+   		
+  		<diskset>
+   			<Name>lslarry</Name>
+   			<Description>Leisure Suit Larry</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/leisuresuitlarry_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		<diskset>
+   			<Name>manhunt1</Name>
+   			<Description>Manhunter 1</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/manhunter1_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+
+   		<diskset>
+   			<Name>manhunt2</Name>
+   			<Description>Manhunter 2</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/manhunter2_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		
+   		<diskset>
+   			<Name>microm</Name>
+   			<Description>Microscopic Mission</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/mm_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		
+   		<diskset>
+   			<Name>policeq</Name>
+   			<Description>Sierra Police Quest 1</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/policequest1_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		<diskset>
+   			<Name>rof</Name>
+   			<Description>Rescue on Fractalus</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/rof_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		<diskset>
+   			<Name>spaceq0</Name>
+   			<Description>Sierra Space Quest 0</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/spacequest0_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+   		
+   		<diskset>
+   			<Name>spaceq1</Name>
+   			<Description>Sierra Space Quest 1</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/spacequest1_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+
+   		<diskset>
+   			<Name>spaceq2</Name>
+   			<Description>Sierra Space Quest 2</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<note>why is this disk labeled as sq 3?</note>
+   				<path>http://www.nitros9.org/latest/spacequest3_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+
+  
+
+		<!-- dev/temp stuff -->
+		
+		<diskset>
+   			<Name>aaw-dev</Name>
+   			<Description>dw4 dev set</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_server_l2_6809.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   			<disk>
+   				<drive>1</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_extras.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   			<disk>
+   				<drive>2</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_server_l2_6309.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   			<disk>
+   				<drive>3</drive>
+   				<path>E:\cocodisks\scratch1.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   		</diskset>
+
+
+</drivewire-config>

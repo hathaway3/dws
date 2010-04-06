@@ -1,14 +1,11 @@
 package com.groupunix.drivewireserver.virtualserial;
 
-import java.util.ArrayList;
-
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 
-// this replaces the seperate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
+// this replaces the separate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
 
 public class DWVPortHandler 
 {

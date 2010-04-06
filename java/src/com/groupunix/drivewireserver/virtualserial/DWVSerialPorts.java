@@ -14,7 +14,9 @@ public class DWVSerialPorts {
 	public static final int MULTIREAD_LIMIT = 3;
 	public static final int TERM_PORT = 0;
 	public static final int MODE_TERM = 3;
-	public static final int MAX_PORTS = 15;
+	public static final int MAX_COCO_PORTS = 15;
+	public static final int MAX_UI_PORTS = 15;
+	public static final int MAX_PORTS = MAX_COCO_PORTS + MAX_UI_PORTS;
 	
 	private int handlerno;
 	
@@ -34,7 +36,8 @@ public class DWVSerialPorts {
 	{
 		if (vserialPorts[port] == null)
 		{
-			logger.error("WHY IS THIS PORT NULL? RESETING IT.");
+			//this happens in UI and on TERM/headless mode.. guess it doesn't matter
+			//logger.error("WHY IS THIS PORT NULL? RESETING IT.");
 			resetPort(port);
 		}
 		
@@ -48,7 +51,14 @@ public class DWVSerialPorts {
 		{
 			return("Term");
 		}
-		return("/N" + port);
+		else if (port < MAX_COCO_PORTS)
+		{
+			return("/N" + port);
+		}
+		else
+		{
+			return("UI:" + port);
+		}
 	}
 
 
@@ -65,7 +75,7 @@ public class DWVSerialPorts {
 		// redesigned to avoid bandwidth hogging
 		
 		// first look for termed ports
-		for (int i = 0;i<MAX_PORTS;i++)
+		for (int i = 0;i<MAX_COCO_PORTS;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -87,7 +97,7 @@ public class DWVSerialPorts {
 		
 		// first data pass, increment data waiters
 		
-		for (int i = 0;i<MAX_PORTS;i++)
+		for (int i = 0;i<MAX_COCO_PORTS;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -106,7 +116,7 @@ public class DWVSerialPorts {
 		int oldestM = 0;
 		int oldestMport = -1;
 		
-		for (int i = 0;i<MAX_PORTS;i++)
+		for (int i = 0;i<MAX_COCO_PORTS;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -174,7 +184,7 @@ public class DWVSerialPorts {
 	{
 		// logger.debug("write to port " + port + ": " + databyte);
 		
-		if (port < MAX_PORTS)
+		if (port < MAX_COCO_PORTS)
 		{
 			if (vserialPorts[port].isOpen())
 			{
@@ -353,7 +363,7 @@ public class DWVSerialPorts {
 		logger.debug("Resetting all virtual serial ports - part 1, close all sockets");
 		
 		
-		for (int i = 0;i<MAX_PORTS;i++)
+		for (int i = 0;i<MAX_COCO_PORTS;i++)
 		{
 			DWVPortListenerPool.closePortConnectionSockets(i);
 			DWVPortListenerPool.closePortServerSockets(i);
@@ -362,7 +372,7 @@ public class DWVSerialPorts {
 		logger.debug("Resetting all virtual serial ports - part 2, init all ports");
 		
 		//vserialPorts = new DWVSerialPort[MAX_PORTS];
-		for (int i = 0;i<MAX_PORTS;i++)
+		for (int i = 0;i<MAX_COCO_PORTS;i++)
 		{
 			// dont reset term
 			if (i != TERM_PORT)
@@ -504,6 +514,25 @@ public class DWVSerialPorts {
 		
 		
 		
+	}
+
+
+	public synchronized int openUIPort() 
+	{
+		// find first available UI port
+		
+		int uiport = MAX_COCO_PORTS;
+		
+		while (uiport < MAX_PORTS)
+		{
+			if (this.vserialPorts[uiport] == null)
+			{
+				openPort(uiport);
+				return(uiport);
+			}
+		}
+		
+		return(-1);
 	}
 	
 }

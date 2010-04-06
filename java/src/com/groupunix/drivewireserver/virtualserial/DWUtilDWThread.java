@@ -10,7 +10,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.vfs.FileContent;
 import org.apache.commons.vfs.FileObject;
@@ -26,6 +28,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDisk;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWUtilDWThread implements Runnable 
@@ -306,7 +309,7 @@ public class DWUtilDWThread implements Runnable
 				{
 					if (DriveWireServer.getHandler(i) != null)
 					{
-						text += "\r\nHandler #" + i + ": Device " + DriveWireServer.getHandler(i).config.getString("SerialDevice") + " CocoModel " + DriveWireServer.getHandler(i).config.getString("CocoModel") + "\r\n    Config: " + DriveWireServer.getHandler(i).config.getPath() + "\r\n"; 
+						text += "\r\nHandler #" + i + ": Device " + DriveWireServer.getHandler(i).config.getString("SerialDevice") + " CocoModel " + DriveWireServer.getHandler(i).config.getString("CocoModel") + "\r\n"; 
 					}
 				}
 				
@@ -536,9 +539,8 @@ public class DWUtilDWThread implements Runnable
 			text += "  dw disk write #             - Write disk image in drive #\r\n";
 			text += "  dw disk write # [filepath]  - Write disk image in drive # to path\r\n";
 			text += "  dw disk wp #                - Toggle write protect on drive #\r\n";
-			text += "  dw disk set show [filepath] - Show disks in diskset file\r\n";
-			text += "  dw disk set load [filepath] - Load disks in diskset file\r\n";
-			text += "  dw disk set save [filepath] - Save current disks to diskset file\r\n";
+			text += "  dw disk set show            - Show available disk sets\r\n";
+			text += "  dw disk set load [setname]  - Load disks in diskset file\r\n";
 			text += "  dw disk dump disk# sector#  - Dump sector from disk\r\n";
 			
 		}
@@ -657,7 +659,15 @@ public class DWUtilDWThread implements Runnable
 		else if (args[2].toLowerCase().startsWith("se"))
 		{
 			// disk sets
-			if (args.length == 5)
+			if (args.length == 4)
+			{
+				if (args[3].toLowerCase().startsWith("sh"))
+				{
+					doDiskSetShow();
+					return;
+				}
+			}
+			else if (args.length == 5)
 			{
 				if (args[3].toLowerCase().startsWith("sh"))
 				{
@@ -832,95 +842,120 @@ public class DWUtilDWThread implements Runnable
 	
 	
 	
-	private void doDiskSetLoad(String filename)
+	private void doDiskSetLoad(String setname)
 	{
-		DriveWireServer.getHandler(handlerno).getDiskDrives().LoadDiskSet(filename);
-		dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
-		dwVSerialPorts.writeToCoco(this.vport, "Loaded disk set '" + filename +"'.  Check log for errors.");
+		if (DriveWireServer.hasDiskset(setname))
+		{
+			DriveWireServer.getHandler(handlerno).getDiskDrives().LoadDiskSet(setname);
+			dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
+			dwVSerialPorts.writeToCoco(this.vport, "Loaded disk set '" + setname +"'.  Check log for errors.\r\n");
+		}
+		else
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "Disk set not found.");
+		}
 
 	}
 
 	private void doDiskSetSave(String filename)
 	{
+		/* TODO
 		DriveWireServer.getHandler(handlerno).getDiskDrives().saveDiskSet(filename);
 		dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
 		dwVSerialPorts.writeToCoco(this.vport, "Wrote current drive settings to disk set '" + filename +"'.  Check log for errors.");
+		
+		 */
+		
+		dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "Not implemented");
 	}
 
-	private void doDiskSetShow(String filename)
+	
+	private void doDiskSetShow()
 	{
 		String text = new String();
 		
-		File f = new File(filename);
+		text = "Available disk sets:\r\n\n";
 		
-	    FileReader fr;
-		try 
-		{
-			fr = new FileReader(f);
-		} 
-		catch (FileNotFoundException e) 
-		{
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Error: '" + filename + "' not found on server.");
-			return;
-		}
+		List disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
+    	
+		String[] setnames = new String[disksets.size()];
+		int tmp = 0;
 		
-		text = "Contents of disk set file '" + filename + "':\r\n\n";
-		
-	    BufferedReader br = new BufferedReader(fr);
-
-	    String line;
-	    
-		try 
+		for(Iterator it = disksets.iterator(); it.hasNext();)
 		{
+		    HierarchicalConfiguration dset = (HierarchicalConfiguration) it.next();
 		    
-			while ((line = br.readLine()) != null)
-		    {
-				
-		    	String[] parts = new String[3];
-		    	parts = line.split(",", 3);
-		    	
-		    	if (parts != null)
-		    	{
-		    		if ((parts.length == 3) && (!line.startsWith("#")))
-		    		{
-		    			
-		    			text += "Drive " + parts[0] + ": " + parts[1];
-		    			if (parts[2].equals("1"))
-		    				text += " (WP)";
-		    			
-		    			DWDisk tmpdisk = new DWDisk(parts[1]);
-		    			text += " - " + tmpdisk.getDiskName();
-						
-		    			text += "\r\n";
-		    				
-		    		}
-		    	}	
-			}
-		} 
-		catch (NumberFormatException e2) 
-		{
-			logger.error("NumberFormat: " + e2.getMessage());
-		} 
-		catch (IOException e) 
-		{
-			logger.error("IO error: " + e.getMessage());
-		}
-		finally
-		{
-			try 
-			{
-				br.close();
-				fr.close();
-			} 
-			catch (IOException e) 
-			{
-				logger.warn(e.getMessage());
-			}
+		    setnames[tmp]=dset.getString("Name","unnamed-" + tmp); 
+		    tmp++;
 		}
 		
+		int longest = 0;
+    	
+    	for (int i=0; i<setnames.length; i++) 
+    	{
+    		if (setnames[i].length() > longest)
+    			longest = setnames[i].length();
+    	}
+    	
+    	longest++;
+    	longest++;
+    	
+    	int cols = (80 / longest);
+    	
+    	for (int i=0; i<setnames.length; i++) 
+        {
+        	text += String.format("%-" + longest + "s",setnames[i]);
+        	if (((i+1) % cols) == 0)
+        		text += "\r\n";
+        }
 		
+		text += "\r\n";
+    	
 		dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
 		dwVSerialPorts.writeToCoco(this.vport, text);
+	}
+	
+	private void doDiskSetShow(String setname)
+	{
+		String text = new String();
+		
+		if (DriveWireServer.hasDiskset(setname))
+		{
+			HierarchicalConfiguration theset = DriveWireServer.getDiskset(setname);
+			
+			text = "Details for disk set '" + setname + "':\r\n\n";
+			
+			text += "Description: " + theset.getString("Description","none") + "\r\n\n";
+			
+			// disks
+			List disks = theset.configurationsAt("disk");
+	    	
+			for(Iterator it = disks.iterator(); it.hasNext();)
+			{
+			    HierarchicalConfiguration disk = (HierarchicalConfiguration) it.next();
+			    text += "X" + disk.getInt("drive") + ": " + disk.getString("path");
+			    if (disk.getBoolean("writeprotect",false))
+			    {
+			    	text += " (WP)";
+			    }
+			    
+			    if (disk.getBoolean("bootable",false))
+			    {
+			    	text += " (boot)";
+			    }
+			    
+			    
+			    text +="\r\n";
+			}
+		
+		
+			dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
+			dwVSerialPorts.writeToCoco(this.vport, text);
+		}
+		else
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "No such disk set.");
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -975,14 +1010,14 @@ public class DWUtilDWThread implements Runnable
 		else if (args[2].toLowerCase().startsWith("l"))
 		{
 			// reload
-			DriveWireServer.getHandler(handlerno).reloadConfig();
-			text = "Loaded configuration from disk.";
+			//DriveWireServer.getHandler(handlerno).reloadConfig();
+			text = "TBD! Loaded configuration from disk.";
 		}
 		else if (args[2].toLowerCase().startsWith("sa"))
 		{
 			// reload
-			DriveWireServer.getHandler(handlerno).saveConfig();
-			text = "Saved configuration to disk.";
+			// DriveWireServer.getHandler(handlerno).saveConfig();
+			text = "TBD! Saved configuration to disk.";
 		}
 		else if (args[2].toLowerCase().startsWith("se"))
 		{

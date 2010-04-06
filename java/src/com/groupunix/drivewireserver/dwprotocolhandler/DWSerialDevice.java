@@ -78,6 +78,9 @@ public class DWSerialDevice
 	private void connect(String portName, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
 		logger.info("attempting to open device '" + portName + "'");
+		
+		logger.info("Note: RXTX Version mismatch here is not a problem...");
+		
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
         if ( portIdentifier.isCurrentlyOwned() )
         {

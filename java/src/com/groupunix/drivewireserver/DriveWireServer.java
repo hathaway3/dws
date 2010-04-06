@@ -5,9 +5,13 @@ package com.groupunix.drivewireserver;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -20,8 +24,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.4";
-	public static final String DWServerVersionDate = "3/26/2010";
+	public static final String DWServerVersion = "3.9.51";
+	public static final String DWServerVersionDate = "4/5/2010";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -30,14 +34,15 @@ public class DriveWireServer
 	private static FileAppender fileAppender;
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
 	
-	public static PropertiesConfiguration serverconfig;
+	public static XMLConfiguration serverconfig;
 	
 	private static Thread[] dwProtoHandlerThreads;
 	private static DWProtocolHandler[] dwProtoHandlers;
 	private static int numHandlers;
 
 	private static Thread lazyWriterT;
-		
+	private static Thread uiT;	
+	
 	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	public static void main(String[] args) throws ConfigurationException
 	{
@@ -51,25 +56,18 @@ public class DriveWireServer
 		// load server settings
 		try 
     	{
-			serverconfig = new PropertiesConfiguration("DriveWireServer.properties");
+			serverconfig = new XMLConfiguration("config.xml");
 		} 
     	catch (ConfigurationException e1) 
     	{
-    		System.out.println("Fatal - Could not process config file 'DriveWireServer.properties'.  Please consult the documentation.");
+    		System.out.println("Fatal - Could not process config file 'config.xml'.  Please consult the documentation.");
     		System.exit(-1);
 		}
     	
     	// apply configuration
-    	if (serverconfig.containsKey("HandlerInstance"))
-    	{
-    		numHandlers = serverconfig.getStringArray("HandlerInstance").length;
-    	}
-    	else
-    	{
-    		System.out.println("Fatal - server config contains no handlers.  Please consult the documentation.");
-    		System.exit(-1);
-    	}
+    	List handlerconfs = serverconfig.configurationsAt("instance");
     	
+    	numHandlers = handlerconfs.size();
     	
     	dwProtoHandlers = new DWProtocolHandler[numHandlers];
     	dwProtoHandlerThreads = new Thread[numHandlers];
@@ -110,22 +108,38 @@ public class DriveWireServer
     	
     	
     	// start protocol handler instances
-    	String[] hi = serverconfig.getStringArray("HandlerInstance");
-    		
-    	for (int i=0;i<hi.length;i++)
-    	{
-    		logger.info("Starting protocol handler #" + i + " using config file '" + hi[i] + "'");
-    		
-    		dwProtoHandlers[i] = new DWProtocolHandler(i, hi[i]);
-    		dwProtoHandlerThreads[i] = new Thread(dwProtoHandlers[i]);
-    		dwProtoHandlerThreads[i].start();	
-    	}	
-    		
+    	int hno = 0;
+    	
+		for(Iterator it = handlerconfs.iterator(); it.hasNext();)
+		{
+		    HierarchicalConfiguration hconf = (HierarchicalConfiguration) it.next();
+		    
+		    // sub contains now all data about a single instance
+		    
+		    logger.info("Starting protocol handler #" + hno + ": " + hconf.getString("Name","unnamed"));
+			dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+    		dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
+    		dwProtoHandlerThreads[hno].start();	
+    	    
+		    
+    		hno++;
+		    
+		}
+    	
+    	
     	
     	// start lazy writer
     	lazyWriterT = new Thread(new DWDiskLazyWriter());
 		lazyWriterT.start();
     	
+		// start UI server
+		if (serverconfig.getBoolean("UIEnabled",false))
+		{
+		
+			uiT = new Thread(new DWUIThread(serverconfig.getInt("UIPort",6800)));
+			uiT.start();
+		}
+		
     	// wait for all my children to die
     	
     	int activehandlers = 0;
@@ -208,7 +222,7 @@ public class DriveWireServer
 
 	public static void restartHandler(int handler)
 	{
-		String configfile = dwProtoHandlers[handler].config.getPath();
+	/*	String configfile = dwProtoHandlers[handler].config.getPath();
 		
 		logger.info("Restarting handler #" + handler);
 		
@@ -232,6 +246,10 @@ public class DriveWireServer
 		dwProtoHandlerThreads[handler] = new Thread(dwProtoHandlers[handler]);
 		dwProtoHandlerThreads[handler].start();	
 		
+		*/
+		
+		logger.error("instance restart not implemented!");
+		
 	}
 
 
@@ -251,5 +269,43 @@ public class DriveWireServer
 	}
 	
 	
+	public static boolean hasDiskset(String setname)
+	{
+		List disksets = serverconfig.configurationsAt("diskset");
+    	
+		boolean setexists = false;
+		
+		for(Iterator it = disksets.iterator(); it.hasNext();)
+		{
+		    HierarchicalConfiguration dset = (HierarchicalConfiguration) it.next();
+		    
+		    if ( dset.getString("Name","").equalsIgnoreCase(setname) )
+		    {
+		    	setexists = true;
+		    }
+		 
+		}
+		
+		return(setexists);
+	}
+	
+	public static HierarchicalConfiguration getDiskset(String setname)
+	{
+		List disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
+	
+
+		for(Iterator it = disksets.iterator(); it.hasNext();)
+		{
+			HierarchicalConfiguration dset = (HierarchicalConfiguration) it.next();
+	    
+			if ( dset.getString("Name","").equalsIgnoreCase(setname) )
+			{
+				return(dset);
+			}
+	    
+		}
+	
+		return(null);
+	}
 	
 }
