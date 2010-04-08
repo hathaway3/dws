@@ -230,7 +230,9 @@ public class DWDiskDrives
 		checkLoadedDriveNo(driveno);
 
 		diskDrives[driveno].seekSector(lsn);
-
+		
+		DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("seek",driveno+","+lsn);
+		
 	}
 	
 	public void writeSector(int driveno, byte[] data) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDriveWriteProtectedException, IOException
@@ -245,6 +247,9 @@ public class DWDiskDrives
 		checkLoadedDriveNo(driveno);
 		
 		diskDrives[driveno].writeSector(data);
+		
+		DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("write", driveno +"");
+		
 	}
 	
 	public byte[] readSector(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException
@@ -257,6 +262,8 @@ public class DWDiskDrives
 		}
 		
 		checkLoadedDriveNo(driveno);
+		
+		DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("read",driveno +"");
 		
 		return(diskDrives[driveno].readSector());
 	

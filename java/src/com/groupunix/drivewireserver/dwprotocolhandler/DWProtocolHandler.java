@@ -68,13 +68,15 @@ public class DWProtocolHandler implements Runnable
 	private DWVSerialPorts dwVSerialPorts;
 	private DWVPortTermThread termHandler;
 	
-	
+	// Event handler
+	private DWProtocolEventHandler protocolEventHandler;
 	
 	
 	public DWProtocolHandler(int handlerno, HierarchicalConfiguration hconf)
 	{
 		this.handlerno = handlerno;
 		this.config = hconf;
+		this.protocolEventHandler = new DWProtocolEventHandler(handlerno);
 	}
 
 	
@@ -1121,6 +1123,13 @@ public class DWProtocolHandler implements Runnable
 	public boolean isDying()
 	{
 		return this.wanttodie;
+	}
+
+
+
+	public DWProtocolEventHandler getEventHandler() {
+		// TODO Auto-generated method stub
+		return this.protocolEventHandler;
 	}
 	
 	

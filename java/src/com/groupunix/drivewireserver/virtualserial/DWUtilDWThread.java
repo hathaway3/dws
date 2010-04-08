@@ -95,7 +95,10 @@ public class DWUtilDWThread implements Runnable
 		{
 			doNet(args);
 		}
-		
+		else if (args[1].toLowerCase().startsWith("r"))
+		{
+			doReg(args);
+		}
 		
 		else
 		{
@@ -119,6 +122,18 @@ public class DWUtilDWThread implements Runnable
 		logger.debug("exiting");
 	}
 
+	
+	private void doReg(String[] args)
+	{
+		
+		if (args.length == 3)
+		{
+			DriveWireServer.getHandler(this.handlerno).getEventHandler().registerEvent(args[2].toLowerCase(),this.vport);
+			dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
+			dwVSerialPorts.writeToCoco(this.vport, "registered for " + args[2]);
+		}
+	}
+	
 	
 	
 	private void doNet(String[] args)
@@ -318,9 +333,9 @@ public class DWUtilDWThread implements Runnable
 			{
 				text += "\r\nDriveWire server configuration:\r\n\n";
 				
-				for (Iterator i = DriveWireServer.serverconfig.getKeys(); i.hasNext();)
+				for (Iterator<String> i = DriveWireServer.serverconfig.getKeys(); i.hasNext();)
 				{
-					String key = (String) i.next();
+					String key = i.next();
 					String value = StringUtils.join(DriveWireServer.serverconfig.getStringArray(key), ", ");
 				
 					text += key + " = " + value + "\r\n";
@@ -876,12 +891,12 @@ public class DWUtilDWThread implements Runnable
 		
 		text = "Available disk sets:\r\n\n";
 		
-		List disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
+		List<HierarchicalConfiguration> disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
     	
 		String[] setnames = new String[disksets.size()];
 		int tmp = 0;
 		
-		for(Iterator it = disksets.iterator(); it.hasNext();)
+		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
 		{
 		    HierarchicalConfiguration dset = (HierarchicalConfiguration) it.next();
 		    
@@ -928,9 +943,9 @@ public class DWUtilDWThread implements Runnable
 			text += "Description: " + theset.getString("Description","none") + "\r\n\n";
 			
 			// disks
-			List disks = theset.configurationsAt("disk");
+			List<HierarchicalConfiguration> disks = theset.configurationsAt("disk");
 	    	
-			for(Iterator it = disks.iterator(); it.hasNext();)
+			for(Iterator<HierarchicalConfiguration> it = disks.iterator(); it.hasNext();)
 			{
 			    HierarchicalConfiguration disk = (HierarchicalConfiguration) it.next();
 			    text += "X" + disk.getInt("drive") + ": " + disk.getString("path");

@@ -530,6 +530,14 @@ public class DWVSerialPorts {
 				openPort(uiport);
 				return(uiport);
 			}
+			
+			if (this.vserialPorts[uiport].isOpen() == false)
+			{
+				openPort(uiport);
+				return(uiport);
+			}
+			
+			uiport++;
 		}
 		
 		return(-1);
