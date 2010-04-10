@@ -5,12 +5,12 @@
 <drivewire-config>
 	<DiskLazyWriteInterval default="15000">15000</DiskLazyWriteInterval>
 	
-	<LogLevel default="INFO">INFO</LogLevel>
-	<LogToFile default="false">false</LogToFile>
+	<LogLevel default="INFO">ALL</LogLevel>
+	<LogToFile default="false">true</LogToFile>
 	<LogFile default="drivewire.log">drivewire.log</LogFile>
 	<LogToConsole default="true">true</LogToConsole>
 	<LogFormat default="%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n">%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n</LogFormat>
-	<LogOpCode default="false">false</LogOpCode>
+
 	
 	<UIEnabled>true</UIEnabled>
 	<UIPort>6800</UIPort>
@@ -34,7 +34,7 @@
 			<!-- Use dw4boot-6309 to boot with DW4 utils, 6309 (or dw4boot-6809 for 6809) --> 
 			<!-- Set to nos9-6309l2 for NitrOS9 6309 boot from CVS nightly builds via HTTP, nos9-6809l2 for a 6809 -->
 			<!-- or look below in the diskset section for many other options -->
-			<DefaultDiskSet>dw4boot-6309</DefaultDiskSet>
+			<DefaultDiskSet>thelda</DefaultDiskSet>
 
 
 			<!-- End of settings that must be adjusted -->
@@ -80,6 +80,7 @@
 			<PrinterColumns>80</PrinterColumns>
 			<PrinterLines>66</PrinterLines>
 			
+			<LogOpCode>true</LogOpCode>
 		</instance>
     	
     	
@@ -497,6 +498,20 @@
    		</diskset>
 
   
+  
+  			<diskset>
+   			<Name>thelda</Name>
+   			<Description>Thelda from lorddragon</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>E:\cocodisks/thelda1.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   		</diskset>
+  		
+  
 
 		<!-- dev/temp stuff -->
 		
@@ -506,34 +521,32 @@
 
 			<disk>
    				<drive>0</drive>
-   				<relativepath>true</relativepath>
-   				<path>disks/dw4_server_l2_6809.dsk</path>
+   				<path>E:\cocodisks/beta/dw4_server_l2_6809.dsk</path>
    				<writeprotect>false</writeprotect>
    				<bootable>true</bootable>
    			</disk>
    			
-   			<disk>
+   						<disk>
    				<drive>1</drive>
-   				<relativepath>true</relativepath>
-   				<path>disks/dw4_extras.dsk</path>
+   				<path>E:\cocodisks/scratch1.dsk</path>
    				<writeprotect>false</writeprotect>
-   				<bootable>false</bootable>
+   				<bootable>true</bootable>
    			</disk>
    			
-   			<disk>
+   						<disk>
    				<drive>2</drive>
-   				<relativepath>true</relativepath>
-   				<path>disks/dw4_server_l2_6309.dsk</path>
+   				<path>E:\cocodisks/scratch2.dsk</path>
    				<writeprotect>false</writeprotect>
-   				<bootable>false</bootable>
+   				<bootable>true</bootable>
    			</disk>
    			
-   			<disk>
+   						<disk>
    				<drive>3</drive>
-   				<path>E:\cocodisks\scratch1.dsk</path>
+   				<path>E:\cocodisks/scratch3.dsk</path>
    				<writeprotect>false</writeprotect>
-   				<bootable>false</bootable>
+   				<bootable>true</bootable>
    			</disk>
+   			
    			
    		</diskset>
 

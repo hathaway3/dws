@@ -65,7 +65,7 @@ public class DriveWireServer
 		}
     	
     	// apply configuration
-    	List handlerconfs = serverconfig.configurationsAt("instance");
+    	List<HierarchicalConfiguration> handlerconfs = serverconfig.configurationsAt("instance");
     	
     	numHandlers = handlerconfs.size();
     	
@@ -92,9 +92,10 @@ public class DriveWireServer
     	
     	if ((serverconfig.getBoolean("LogToFile", false)) && (serverconfig.containsKey("LogFile")))
     	{
+    		
     		try 
     		{
-    			fileAppender = new FileAppender(logLayout,serverconfig.getString("LogFile"),true,true,4096);
+    			fileAppender = new FileAppender(logLayout,serverconfig.getString("LogFile"),true,false,128);
     			Logger.getRootLogger().addAppender(fileAppender);
     		} 
     		catch (IOException e) 
@@ -110,9 +111,9 @@ public class DriveWireServer
     	// start protocol handler instances
     	int hno = 0;
     	
-		for(Iterator it = handlerconfs.iterator(); it.hasNext();)
+		for(Iterator<HierarchicalConfiguration> it = handlerconfs.iterator(); it.hasNext();)
 		{
-		    HierarchicalConfiguration hconf = (HierarchicalConfiguration) it.next();
+		    HierarchicalConfiguration hconf = it.next();
 		    
 		    // sub contains now all data about a single instance
 		    
@@ -271,13 +272,13 @@ public class DriveWireServer
 	
 	public static boolean hasDiskset(String setname)
 	{
-		List disksets = serverconfig.configurationsAt("diskset");
+		List<HierarchicalConfiguration> disksets = serverconfig.configurationsAt("diskset");
     	
 		boolean setexists = false;
 		
-		for(Iterator it = disksets.iterator(); it.hasNext();)
+		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
 		{
-		    HierarchicalConfiguration dset = (HierarchicalConfiguration) it.next();
+		    HierarchicalConfiguration dset = it.next();
 		    
 		    if ( dset.getString("Name","").equalsIgnoreCase(setname) )
 		    {
@@ -291,12 +292,12 @@ public class DriveWireServer
 	
 	public static HierarchicalConfiguration getDiskset(String setname)
 	{
-		List disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
+		List<HierarchicalConfiguration> disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
 	
 
-		for(Iterator it = disksets.iterator(); it.hasNext();)
+		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
 		{
-			HierarchicalConfiguration dset = (HierarchicalConfiguration) it.next();
+			HierarchicalConfiguration dset = it.next();
 	    
 			if ( dset.getString("Name","").equalsIgnoreCase(setname) )
 			{
