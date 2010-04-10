@@ -50,31 +50,39 @@ public class DWDiskLazyWriter implements Runnable {
 				// scan all loaded drives
 				for (int driveno = 0;driveno<DWDiskDrives.MAX_DRIVES;driveno++)
 				{
-			
-					if (DriveWireServer.getHandler(h).getDiskDrives().diskLoaded(driveno))
+					if (DriveWireServer.getHandler(h).getDiskDrives() != null)
 					{
-						if (DriveWireServer.getHandler(h).getDiskDrives().isRandomWriteable(driveno))
-						{	 
+					
+						if (DriveWireServer.getHandler(h).getDiskDrives().diskLoaded(driveno))
+						{
+							if (DriveWireServer.getHandler(h).getDiskDrives().isRandomWriteable(driveno))
+							{	 
 				
-							if (DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) > 0)
-							{
-								logger.debug("cache for drive " + driveno + " in handler " + h + " has changed, " + DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
+								if (DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) > 0)
+								{
+									logger.debug("cache for drive " + driveno + " in handler " + h + " has changed, " + DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
 						
-								try
-								{
-									DriveWireServer.getHandler(h).getDiskDrives().writeDisk(driveno);
-								} 
-								catch (IOException e)
-								{
-									logger.error("Lazy write failed: " + e.getMessage());
+									try
+									{
+										DriveWireServer.getHandler(h).getDiskDrives().writeDisk(driveno);
+									} 
+									catch (IOException e)
+									{
+										logger.error("Lazy write failed: " + e.getMessage());
+									}
 								}
-							}
 				
+							}
 						}
-					}
 			
+					}
+					else
+					{
+						logger.debug("handler is alive, but disk drive object is null, skipping");
+					}
 				}
 			}
+			
 		}
 		
 	}
