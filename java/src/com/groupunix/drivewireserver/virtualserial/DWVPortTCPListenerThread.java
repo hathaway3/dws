@@ -132,9 +132,68 @@ public class DWVPortTCPListenerThread implements Runnable
 	}
 
 	
+	private void processHTTPReq(Socket skt)
+	{
+		
+		logger.debug("new http connection from " + skt.getInetAddress().getHostAddress());
+		
+		int inbyte = 0;
+		int timeout = 0;
+		
+		// mark port connected
+		dwVSerialPorts.markConnected(this.vport);
+		
+		while ((skt.isClosed() == false) && (dwVSerialPorts.isOpen(this.vport)))
+		{
+			
+			
+			try 
+			{
+				while ((skt.getInputStream().available() == 0) && (timeout < HTTP_TIMEOUT))
+				{
+					Thread.sleep(50);
+					timeout++;
+				}
+			
+				if (timeout >= HTTP_TIMEOUT)
+				{
+					logger.info("HTTPD: reading request timed out");
+					skt.close();
+				}
+			
+				timeout = 0;
+				inbyte = skt.getInputStream().read();
+				
+				dwVSerialPorts.writeToCoco(this.vport, (byte)inbyte);
+				
+			}
+			catch (IOException e) 
+			{
+				logger.debug("socket error: " + e.getMessage());
+			
+				try 
+				{
+					skt.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			} catch (InterruptedException e2)
+			{
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+			
+			
+		}
+		
+		logger.debug("finished http connection for " + skt.getInetAddress().getHostAddress());
+		
+	}
+	
 	
 
-	private void processHTTPReq(Socket skt) 
+	private void processHTTPReqOld(Socket skt) 
 	{
 		
 		// get request

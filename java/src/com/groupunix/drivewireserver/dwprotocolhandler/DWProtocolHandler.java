@@ -380,7 +380,7 @@ public class DWProtocolHandler implements Runnable
 	{
 		if (config.getBoolean("LogOpCode", false))
 		{
-			logger.info("DoOP_NOP");
+			//logger.info("DoOP_NOP");
 		}
 	}
 	
@@ -641,6 +641,20 @@ public class DWProtocolHandler implements Runnable
 			return;
 		}
 				
+		// artificial delay test
+		if (config.containsKey("ReadDelay"))
+		{
+			try 
+			{
+				logger.debug("read delay " + config.getLong("ReadDelay") + " ms...");
+				Thread.sleep(config.getLong("ReadDelay"));
+			} 
+			catch (InterruptedException e) 
+			{
+				logger.warn("Interrupted during read delay");	
+			}
+		}
+		
 		// write out response sector
 		serdev.comWrite(sector, 256);
 		

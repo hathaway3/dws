@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
@@ -114,17 +113,17 @@ public class DriveWireServer
 		for(Iterator<HierarchicalConfiguration> it = handlerconfs.iterator(); it.hasNext();)
 		{
 		    HierarchicalConfiguration hconf = it.next();
+		      
+		    dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
 		    
-		    // sub contains now all data about a single instance
+		    if (hconf.getBoolean("AutoStart", true))
+		    {
+		    	logger.info("Starting protocol handler #" + hno + ": " + hconf.getString("Name","unnamed"));
+		    	dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
+		    	dwProtoHandlerThreads[hno].start();	
+    	    }
 		    
-		    logger.info("Starting protocol handler #" + hno + ": " + hconf.getString("Name","unnamed"));
-			dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
-    		dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
-    		dwProtoHandlerThreads[hno].start();	
-    	    
-		    
-    		hno++;
-		    
+		    hno++;
 		}
     	
     	

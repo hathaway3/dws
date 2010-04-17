@@ -78,7 +78,7 @@ public class DWDiskLazyWriter implements Runnable {
 					}
 					else
 					{
-						logger.debug("handler is alive, but disk drive object is null, skipping");
+						logger.debug("handler is alive, but disk drive object is null, probably startup taking a while.. skipping");
 					}
 				}
 			}
