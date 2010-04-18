@@ -19,22 +19,22 @@
 		<!-- you may specify as many instance sections as you have serial ports (and CoCos) -->
 	
 		<instance>
-    		<Name>My CoCo</Name>
+    		<Name>Boisy's CoCo 3</Name>
 
 
 			<!-- These settings need to be adjusted for your system -->
 
 			<!-- device name, like COM1 on windows or /dev/ttyS0 on linux -->		    		
-    		<SerialDevice>COM4</SerialDevice>
+    		<SerialDevice>/dev/tty.usbserial-USAKMYZM</SerialDevice>
 		
 			<!-- CocoModel is 1, 2 or 3 for Coco 1 2 or 3 -->
     		<CocoModel>3</CocoModel>
 
 			<!-- This is the disk set that is loaded when the server is started.  -->
-			<!-- Use dw4boot-6309 to boot with DW4 utils, 6309 (or dw4boot-6809 for 6809) --> 
+			<!-- Use dw4boot-6309l2 to boot with DW4 utils, 6309 (or dw4boot-6809l2 for 6809) --> 
 			<!-- Set to nos9-6309l2 for NitrOS9 6309 boot from CVS nightly builds via HTTP, nos9-6809l2 for a 6809 -->
 			<!-- or look below in the diskset section for many other options -->
-			<DefaultDiskSet>thelda</DefaultDiskSet>
+			<DefaultDiskSet>dw4boot-6309l2</DefaultDiskSet>
 
 
 			<!-- End of settings that must be adjusted -->
@@ -47,7 +47,7 @@
 			<!-- <TermPort>6801</TermPort> -->
 			
 			<!-- Set ListenAddress to bind this instance to a particular network interface -->
-			<!-- <ListenAddress>192.168.128.50</ListenAddress> -->
+			<!-- <ListenAddress>192.168.0.80</ListenAddress> -->
 			
 			<TelnetBannerFile>banner.txt</TelnetBannerFile>
 			<!-- <TelnetNoPortsBannerFile>npbanner.txt</TelnetNoPortsBannerFile> -->
@@ -69,7 +69,72 @@
 			<GeoIPBannedCities>Alabaster</GeoIPBannedCities>
 			
 			<!-- Where do we put printer output -->
-			<PrinterDir>E:\cocoprints</PrinterDir>
+			<PrinterDir>cocoprints</PrinterDir>
+			
+			<!-- PrinterType can be TEXT or FX80 -->
+			<PrinterType>FX80</PrinterType>
+			
+			<!-- for FX80 mode, this is the font definition -->
+			<PrinterCharacterFile>default.chars</PrinterCharacterFile>
+			
+			<PrinterColumns>80</PrinterColumns>
+			<PrinterLines>66</PrinterLines>
+			
+			<LogOpCode>true</LogOpCode>
+		</instance>
+
+		<instance>
+    		<Name>Boisy's CoCo 2</Name>
+
+
+			<!-- These settings need to be adjusted for your system -->
+
+			<!-- device name, like COM1 on windows or /dev/ttyS0 on linux -->		    		
+    		<SerialDevice>/dev/tty.PL2303-5B25</SerialDevice>
+		
+			<!-- CocoModel is 1, 2 or 3 for Coco 1 2 or 3 -->
+    		<CocoModel>2</CocoModel>
+
+			<!-- This is the disk set that is loaded when the server is started.  -->
+			<!-- Use dw4boot-6309l2 to boot with DW4 utils, 6309 (or dw4boot-6809 for 6809) --> 
+			<!-- Set to nos9-6309l2 for NitrOS9 6309 boot from CVS nightly builds via HTTP, nos9-6809l2 for a 6809 -->
+			<!-- or look below in the diskset section for many other options -->
+			<DefaultDiskSet>dw4boot-6809l1</DefaultDiskSet>
+
+
+			<!-- End of settings that must be adjusted -->
+
+    		
+    		<!-- Set DW3Only to true to cause server to disable DW4 extensions -->			
+			<DW3Only>false</DW3Only>
+			
+			<!-- Use term port in headless mode -->
+			<!-- <TermPort>6801</TermPort> -->
+			
+			<!-- Set ListenAddress to bind this instance to a particular network interface -->
+			<!-- <ListenAddress>192.168.0.80</ListenAddress> -->
+			
+			<TelnetBannerFile>banner.txt</TelnetBannerFile>
+			<!-- <TelnetNoPortsBannerFile>npbanner.txt</TelnetNoPortsBannerFile> -->
+			<TelnetBanned>24.178.184.40</TelnetBanned>
+			<TelnetBanned>199.248.173.248</TelnetBanned>
+			<TelnetBanned>166.137</TelnetBanned>
+			<TelnetBanned>71.91</TelnetBanned>
+			<TelnetBanned>72.147</TelnetBanned>
+			<TelnetBanned>65.4.</TelnetBanned>
+			<TelnetBanned>125.65</TelnetBanned>
+			<TelnetBanned>61.</TelnetBanned>
+			<TelnetBanned>208.61</TelnetBanned>
+			<!-- <TelnetPreAuthFile>preauth.txt</TelnetPreAuthFile> -->
+			<!-- <TelnetPasswdFile>passwd.txt</TelnetPasswdFile> -->
+			<GeoIPLookup>false</GeoIPLookup>
+			<GeoIPDatabaseFile>E:\GeoLiteCity.dat</GeoIPDatabaseFile>
+			<GeoIPBannedCountries>China</GeoIPBannedCountries>
+			<GeoIPBannedCities>Birmingham</GeoIPBannedCities>
+			<GeoIPBannedCities>Alabaster</GeoIPBannedCities>
+			
+			<!-- Where do we put printer output -->
+			<PrinterDir>cocoprints</PrinterDir>
 			
 			<!-- PrinterType can be TEXT or FX80 -->
 			<PrinterType>FX80</PrinterType>
@@ -89,7 +154,7 @@
 
     	<!-- Local disk sets -->
     	<diskset>
-   			<Name>dw4boot-6309</Name>
+   			<Name>dw4boot-6309l2</Name>
    			<Description>Bootable NitrOS-9 L2 boot disk for 6309 with DriveWire 4 utils</Description> 
 
 			<disk>
@@ -112,13 +177,36 @@
    		</diskset>
 
     	<diskset>
-   			<Name>dw4boot-6809</Name>
+   			<Name>dw4boot-6809l2</Name>
    			<Description>Bootable NitrOS-9 L2 boot disk for 6809 with DriveWire 4 utils</Description> 
 
 			<disk>
    				<drive>0</drive>
    				<relativepath>true</relativepath>
    				<path>disks/dw4_server_l2_6809.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   			<disk>
+   				<drive>1</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_extras.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   			
+   		</diskset>
+
+    	<diskset>
+   			<Name>dw4boot-6809l1</Name>
+   			<Description>Bootable NitrOS-9 L1 boot disk for 6809 with DriveWire 4 utils</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_server_l1_6809.dsk</path>
    				<writeprotect>false</writeprotect>
    				<bootable>true</bootable>
    			</disk>
