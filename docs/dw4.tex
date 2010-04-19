@@ -29,7 +29,7 @@ Aaron Wolfe\\
 % Change to the current month of the series
 \reportmonth{May}
 % Change to the current year of the series
-\reportyear{2010}
+\reportyear{2010} 
 % Change to the TR number that you obtained from the
 % UWEETR web pages when you initially created a new
 % TR number. Only provide the last 4 digits here, the year
@@ -52,7 +52,7 @@ DriveWire has evolved as a first-class environment for connecting the TRS-80/Tan
 
 \section{Introduction} 
 
-The DriveWire Protocol Specification defines a set of communication messages that allow the Tandy/Radio Shack Color Computer (CoCo) to utilize the storage capacity of a modern personal computer (Server). This storage model gives the CoCo the appearance that it is directly connected to a large storage device, when in fact, connectivity is achieved using a serial cable connected from the Server to the CoCoÕs built-in ÒSerial I/OÓ port.
+The DriveWire Protocol Specification defines a set of communication messages that allow the Tandy/Radio Shack Color Computer (CoCo) to utilize the storage capacity of a modern personal computer (Server). This storage model gives the CoCo the appearance that it is directly connected to a large storage device, when in fact, connectivity is achieved using a serial cable connected from the Server to the CoCoï¿½s built-in ï¿½Serial I/Oï¿½ port.
 
 There are distinct advantages in utilizing DriveWire as a storage medium:
 
@@ -82,7 +82,7 @@ The physical cable connecting the CoCo to the Server is recommended to be no lon
 \item RD (Read Data)
 \item WD (Write Data)
 \end{enumerate}
-A 4 pin DIN connector shall be on one end of the cable which will mate to the jack on the back of the CoCo marked ÒSerial I/OÓ.	The other end of the cable shall be either a DB-9 or DB-25 female connector which will mate to an appropriate serial port on the Server.
+A 4 pin DIN connector shall be on one end of the cable which will mate to the jack on the back of the CoCo marked ï¿½Serial I/Oï¿½.	The other end of the cable shall be either a DB-9 or DB-25 female connector which will mate to an appropriate serial port on the Server.
 
 
 The following table shows the connections between the CoCo 4 pin DIN connector to either a 9-pin DB-9 serial connector or a 25-pin DB-25 serial connector.
@@ -107,8 +107,8 @@ The communication protocol shall follow the RS-232 standard of 8-N-1 (1 start bi
 
 \section{Transactions}
 
-The transaction is the basis for exchanging information between CoCo and Server.	All transactions consist of one or more packets of information, and are generally initiated from the CoCo.
-Some transactions are uni-directional: from the CoCo to the Server.	Other transactions are bi-directional. In a bi-directional transaction, both the CoCo and the Server shall send their respective responses within 250 milliseconds (1/4 of a second) of receiving the last packet from its peer, or else each shall presume a timeout condition and abort the transaction.
+The transaction is the basis for exchanging information between CoCo and Server.	 All transactions consist of one or more packets of information, and are generally initiated from the CoCo.
+Some transactions are uni-directional: from the CoCo to the Server.	Other transactions are bi-directional. In a bi-directional transaction, both the CoCo and the Server shall send their respective responses within 250 milliseconds (1/4 of a second) of receiving the last packet from its peer, or else each shall presume a timeout condition and abort the transaction.  Drivewire 4 introduces a variable rate CoCo initiated poll operation when used with NitrOS-9.   This poll is primarily used to retrieve incoming data for the virtual serial ports.  However, the server response to the poll request can effectively be used as a mechanism for limited server initiated communications.
 
 
 With few exceptions, all CoCo initiated packets have the following common header:
@@ -416,7 +416,7 @@ Upon receipt of the packet, the Server should:
 
 \subsection{The Reset Transaction}
 
-When the CoCoÕs reset button is pressed, the state of the serial port changes such that byte \$FE (OP\_RESET1) or \$FF (OP\_RESET2) will be present on the serial line. This condition is therefore considered a uni-directional transaction to the Server to indicate a global reset:
+When the CoCoï¿½s reset button is pressed, the state of the serial port changes such that byte \$FE (OP\_RESET1) or \$FF (OP\_RESET2) will be present on the serial line. This condition is therefore considered a uni-directional transaction to the Server to indicate a global reset:
 
 \begin{table}[ht]
 \caption{Reset Packet}
@@ -483,7 +483,7 @@ Byte & Value \\ \hline
 0 & Hour (0-23) \\
 0 & Minute (0-59) \\
 0 & Second (0-59) \\
-0 & Day of week (0-6; 0 = Sunday) \\
+0 & ??? Day of week (0-6; 0 = Sunday) \\
 \hline
 \end{tabular}
 \end{center}
@@ -528,6 +528,35 @@ Byte & Value \\ \hline
 \end{table}
 
 Upon receiving the flush command, the Server shall prompt the user for a printer to print the buffer to.
+
+
+\section{Virtual Serial}
+
+DriveWire 4 introduces a special set of transactions to support up to 15 virtual serial devices.  These devices are presented by the NitrOS-9 drivers as more or less standard serial ports which can be used by standard terminal software or BBS systems.  The DriveWire server software can emulate a standard Hayes modem that accepts Internet hostnames or IP addresses in place of phone numbers in the ATD command.  The server also provides an API that can be used to establish incoming or outgoing TCP connections with a variety of server side processing options.  Additional API commands can be used to query server status information or modify the server's operating parameters.
+
+Because the CoCo does not listen for server initiated communications while in standard operating mode, the CoCo must poll the server for incoming serial data.  In order to provide acceptable latency in interactive applications without burdening the system, these polls are designed to use as few bytes as possible.  The rate at which these polls are performed is dynamically adjusted to meet current traffic requirements with the slowest possible polling frequency.
+
+\subsection{SerPoll transaction}
+Using this bi-directional transaction, the CoCo queries the Server for queued incoming serial data.  The server responds with 2 bytes which can indicate a range of conditions and may contain one byte of data.
+
+\subsection{SerReadM transaction}
+Using this bi-directional transaction, the CoCo requests a fixed number of bytes from the input queue of a specific port.
+
+\subsection{SerWrite transaction}
+Using this uni-directional transaction, the CoCo sends one byte to the output queue of a specific port.
+
+\subsection{SerInit transaction}
+Using this uni-directional transaction, the CoCo notifies the server that a specific port has been initialized by NitrOS-9.
+
+\subsection{SerTerm transaction}
+Using this uni-directional transaction, the CoCo notifies the server that a specific port has been terminated by NitrOS-9.
+
+\subsection{SerSetStat transaction}
+Using this uni-directional transaction, the CoCo sends various status information about a specific port to the Server.
+
+\subsection{SerGetStat transaction}
+Using this uni-directional transaction, the CoCo notifies the server that various GetStat calls have been issued to a specific port's driver.
+
 
 \section{Wirebug}
 DriveWire 3 introduces a special set of transactions to facilitate remote debugging between a CoCo and the Server that it is connected to. This feature, known as WireBug, allows the transfer of register information and memory from the CoCo to the Server.	Once the CoCo has entered WireBug mode, it can receive messages initiated by the server.
@@ -624,7 +653,7 @@ Byte & Value \\ \hline
 \end{center}
 \end{table}
 
-Upon receipt of the packet, the Server shall compute the checksum of bytes 0-22 and compare its computed value against byte 23. If a match occurs, the Server shall accept the packetÕs payload.	If a match does not occur, then the Server may elect to restart the transaction.
+Upon receipt of the packet, the Server shall compute the checksum of bytes 0-22 and compare its computed value against byte 23. If a match occurs, the Server shall accept the packetï¿½s payload.	If a match does not occur, then the Server may elect to restart the transaction.
 
 \subsection{Write Registers Transaction (Server Initiated)}
 Using this bi-directional transaction, the Server requests that the contents of the packet passed to the CoCo be written to its registers.
@@ -664,7 +693,7 @@ Byte & Value \\ \hline
 \end{center}
 \end{table}
 
-Upon receipt of the packet, the CoCo shall compute the checksum of bytes 0-22 and compare its computed value against byte 23.	If a match occurs, the CoCo shall accept the packetÕs payload, update its registers and send the following response packet:
+Upon receipt of the packet, the CoCo shall compute the checksum of bytes 0-22 and compare its computed value against byte 23.	If a match occurs, the CoCo shall accept the packetï¿½s payload, update its registers and send the following response packet:
 
 \begin{table}[ht]
 \caption{No Error Packet}
@@ -747,7 +776,7 @@ Byte & Value \\ \hline
 \end{center}
 \end{table}
 
-If the byte count is between 1 and 22, then the CoCo shall accept the packetÕs payload and send the following response packet:
+If the byte count is between 1 and 22, then the CoCo shall accept the packetï¿½s payload and send the following response packet:
 
 \begin{table}[ht]
 \caption{Read Memory Response Packet}
@@ -764,10 +793,10 @@ n+1..22 & Don't care \\
 \end{center}
 \end{table}
 
-Upon receipt of the packet, the Server shall compute the checksum of bytes 0 to 22 and compare its computed value against byte 23.	If a match occurs, the Server shall accept the packetÕs payload.	If a match does not occur, then the Server may elect to restart the transaction.
+Upon receipt of the packet, the Server shall compute the checksum of bytes 0 to 22 and compare its computed value against byte 23.	If a match occurs, the Server shall accept the packetï¿½s payload.	If a match does not occur, then the Server may elect to restart the transaction.
 
 \subsection{Write Memory Transaction}
-This bi-directional transaction is sent from the Server to the CoCo. uses this transaction to modify the contents of the CoCoÕs memory.
+This bi-directional transaction is sent from the Server to the CoCo. uses this transaction to modify the contents of the CoCoï¿½s memory.
 The following packet is sent from the Server:
 
 \begin{table}[ht]
@@ -815,7 +844,7 @@ Byte & Value \\ \hline
 \end{center}
 \end{table}
 
-If the byte count is between 1 and 19, then the CoCo shall accept the packetÕs payload, update its memory with the contents from the Server, and send the following response packet:
+If the byte count is between 1 and 19, then the CoCo shall accept the packetï¿½s payload, update its memory with the contents from the Server, and send the following response packet:
 
 \begin{table}[ht]
 \caption{No Error Packet}
@@ -853,7 +882,7 @@ Upon receiving this packet, the CoCo shall exit WireBug Mode and commence execut
 The error codes used by the Server to indicate an error condition mirror the same codes used in OS-9.	Here is a list of codes that should be used and the conditions that will trigger them:
 
 \begin{enumerate}
-\item \$F3 - CRC Error (if the ServerÕs computed checksum doesnÕt match a write request from the CoCo)
+\item \$F3 - CRC Error (if the Serverï¿½s computed checksum doesnï¿½t match a write request from the CoCo)
 \item \$F4 - Read Error (if the Server encounters an error when reading a sector from a virtual drive)
 \item \$F5 - Write Error (if the Server encounters an error when writing a sector
 \item \$F6	- Not Ready Error (if the a command requests accesses a non- existent virtual drive)
