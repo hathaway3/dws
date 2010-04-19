@@ -220,7 +220,7 @@ int main(void)
 	if (loadPreferences(&datapack) != 0)
 	{
 #if defined(__APPLE__)
-		strcpy(device, "tty.usbserial-USAKMYZM");
+		strcpy(device, "ttysc");
 #elif defined(__sun)
 		strcpy(device, "ttya");
 #else
