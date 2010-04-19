@@ -7,7 +7,7 @@
 
 
 \documentclass{article}
-\usepackage{times,bgp}
+\usepackage{times,bgp,listings}
 
 
 \title{DriveWire 4 Specification}
@@ -87,6 +87,9 @@ A 4 pin DIN connector shall be on one end of the cable which will mate to the ja
 
 The following table shows the connections between the CoCo 4 pin DIN connector to either a 9-pin DB-9 serial connector or a 25-pin DB-25 serial connector.
 
+\begin{table}[ht]
+\caption{Pin-out}
+\begin{center}
 \begin{tabular}{|lll|}
 \hline
 CoCo 4-pin DIN & DB-9 & DB-25 \\ \hline
@@ -95,6 +98,8 @@ Pin 3 (GND) & Pin 5 (GND) & Pin 7 (GND) \\
 Pin 4 (TD) & Pin 2 (RD) & Pin 3 (RD) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 \section{Communication Protocol}
 
@@ -108,12 +113,17 @@ Some transactions are uni-directional: from the CoCo to the Server.	Other transa
 
 With few exceptions, all CoCo initiated packets have the following common header:
 
+\begin{table}[ht]
+\caption{CoCo Initiated Packet Header}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Command Code \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 The command code is a byte value that communicates to the Server the desired command to be executed.
 
@@ -121,12 +131,17 @@ The command code is a byte value that communicates to the Server the desired com
 
 This is a uni-directional transaction, and is performed by the CoCo as a notification to the Server when its driver software is initialized. The following Initialization packet is sent to the Server:
 
+\begin{table}[ht]
+\caption{Initialization Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & OP\_INIT (\$49) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the Server shall perform the following steps:
 
@@ -138,6 +153,9 @@ Upon receipt of the packet, the Server shall perform the following steps:
 
 This bi-directional transaction is initiated by the CoCo to request one 256 byte sector of data from the Server. When the CoCo desires to request a sector, it will send the following Read Extended Request packet:
 
+\begin{table}[ht]
+\caption{Read Extended Request Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -148,6 +166,8 @@ Byte & Value \\ \hline
 4 & Bits 7-0 of LSN \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 The drive number is a value between 0-255, and represents the disk image where the desired sector is located. The LSN is the Logical Sector Number, and is a 24 bit value.
 
@@ -155,21 +175,31 @@ The drive number is a value between 0-255, and represents the disk image where t
 
 Upon receipt of the packet, the Server shall consult the appropriate disk image for the provided LSN and read that 256 byte sector. If an error occurs and the Server cannot read the specified sector, it shall return the Read Failure packet:
 
+\begin{table}[ht]
+\caption{Read Failure Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0-255 & 256 bytes of zeroed sector data \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 If no error occurred on reading the sector from the Server file system, the Server shall return the following packet:
 
+\begin{table}[ht]
+\caption{Read Success Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0-255 & 256 bytes of valid sector data \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of either the Read Success or the Read Failure packet, the CoCo shall:
 
@@ -177,6 +207,9 @@ Upon receipt of either the Read Success or the Read Failure packet, the CoCo sha
 \item Compute the 16 bit checksum on the 256 bytes of sector data received from the Server.
 \item Send the computed checksum to the Server as follows:
 
+\begin{table}[ht]
+\caption{Computed Checksum Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -184,6 +217,9 @@ Byte & Value \\ \hline
 1 & Bits 7-0 of the checksum (computed by CoCo) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
+
 \end{enumerate}
 
 Upon receipt of the checksum packet, the Server shall take one of two actions:
@@ -194,21 +230,31 @@ If the server acquired the requested sector without error, then it shall compute
 
 If the compare yields a match occurs, then Server shall send the following packet to the CoCo:
 
+\begin{table}[ht]
+\caption{No Error Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & No error code (0) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 If the compare does not yield a match, then Server shall send the following packet to the CoCo:
 
+\begin{table}[ht]
+\caption{Checksum Mismatch Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Checksum mismatch (243) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Once either of these packets is received by the CoCo, the Read transaction is considered terminated.
 
@@ -216,12 +262,17 @@ Once either of these packets is received by the CoCo, the Read transaction is co
 
 If the Server was unable to acquire the requested sector due to an error, then the Server shall return an appropriate read error code:
 
+\begin{table}[ht]
+\caption{Read Error Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Read error code (1-242 or 244-255) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Once the Read Error packet is received by the CoCo, the Read transaction is considered terminated.
 
@@ -230,6 +281,9 @@ See Appendix A for a list of supported error codes, and Appendix B for the check
 \subsection{ReRead Extended Packet}
 In the event that the CoCo receives a Checksum Mismatch packet during the Read Transaction, the CoCo MAY send the following packet to the Server:
 
+\begin{table}[ht]
+\caption{ReRead Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -240,6 +294,8 @@ Byte & Value \\ \hline
 4 & Bits 7-0 of LSN \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receiving this packet, the Server will attempt a retransmission of the requested sector.
 
@@ -248,6 +304,9 @@ At any time, the CoCo may suspend the re-reading of a sector if errors continue 
 \section{The Write Transaction}
 This bi-directional transaction allows the CoCo to send one 256 byte sector of data to the Server in order for it to be written to a specific virtual drive.
 
+\begin{table}[ht]
+\caption{Write Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -261,6 +320,8 @@ Byte & Value \\ \hline
 262 & Bits 7-0 of checksum (computed by CoCo) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 The Server shall implement a timeout of 250 milliseconds (1/4 second), in the event that the CoCo stops sending data. This allows the Server to recover from the Write Transaction state and return to processing other packets.
 
@@ -272,12 +333,17 @@ Once the Server receives this packet, it shall:
 
 Once the checksums have been compared, the Server shall acknowledge the transmission as follows:
 
+\begin{table}[ht]
+\caption{Checksum OK Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & 0 (checksum OK) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 The CoCo, upon receipt of the packet, will do one the following:
 
@@ -285,6 +351,9 @@ The CoCo, upon receipt of the packet, will do one the following:
 \item If the error code received is 0 (\$00), the CoCo will assume the transfer of the sector was a success and terminate the transmission.
 \item If the error code received is 243 (E\$CRC), the CoCo MAY send the following packet:
 
+\begin{table}[ht]
+\caption{ReWrite Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -298,6 +367,8 @@ Byte & Value \\ \hline
 262 & Bits 7-0 of checksum (computed by CoCo) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 \end{enumerate}
 
@@ -308,6 +379,9 @@ This uni-directional transaction is for informational purposes only and may not 
 
 In such a driver, all GetStats/SetStats are passed to the Server via the OP\_GETSTAT or OP\_SETSTAT code, followed by a byte representing the GetStat/ SetStat code. The Server may wish to log this information, but does not act upon the packet itself.
 
+\begin{table}[ht]
+\caption{GetStat/SetStat Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -316,16 +390,23 @@ Byte & Value \\ \hline
 2 & GetStat or SetStat code \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 \subsection{Termination Transaction}
 Upon termination of the DriveWire client on the CoCo, this uni-directional transaction shall be sent to the Server:
 
+\begin{table}[ht]
+\caption{Terminate Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & OP\_TERM (\$54) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the Server should:
 
@@ -337,12 +418,17 @@ Upon receipt of the packet, the Server should:
 
 When the CoCo’s reset button is pressed, the state of the serial port changes such that byte \$FE (OP\_RESET1) or \$FF (OP\_RESET2) will be present on the serial line. This condition is therefore considered a uni-directional transaction to the Server to indicate a global reset:
 
+\begin{table}[ht]
+\caption{Reset Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & OP\_RESET1 (\$FE) or OP\_RESET2 (\$FF) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the Server shall:
 
@@ -355,26 +441,39 @@ Upon receipt of the packet, the Server shall:
 
 This is a uni-directional transaction that can be ignored by the Server.
 
+\begin{table}[ht]
+\caption{No-Op Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & OP\_NOP (\$00) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 \subsection{Time Transaction}
 
 This bi-directional transaction allows the CoCo to request time and date information from the Server:
 
+\begin{table}[ht]
+\caption{Time Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & OP\_TIME (\$23) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the Server shall return the following packet to the CoCo:
 
+\begin{table}[ht]
+\caption{Time Response Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -387,6 +486,8 @@ Byte & Value \\ \hline
 0 & Day of week (0-6; 0 = Sunday) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 \section{Printing}
 
@@ -395,6 +496,9 @@ DriveWire 3 introduces a special set of transactions to allow printing to the Se
 \subsection{Print Transaction}
 Using this uni-directional transaction, the CoCo notifies the Server that it has a single byte of data to add to the print queue.
 
+\begin{table}[ht]
+\caption{Print Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -402,6 +506,8 @@ Byte & Value \\ \hline
 1 & Byte of data to add to the queue \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receiving this packet, the Server shall add the passed byte to its internal print buffer.
 
@@ -409,12 +515,17 @@ Upon receiving this packet, the Server shall add the passed byte to its internal
 
 Using this uni-directional transaction, the CoCo notifies the Server that it has completed sending printer data and that the Server should send its print buffer to the printer.
 
+\begin{table}[ht]
+\caption{Print Flush Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & OP\_PRINTFLUSH (\$46) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receiving the flush command, the Server shall prompt the user for a printer to print the buffer to.
 
@@ -426,6 +537,9 @@ Because of the nature of the protocol and to increase accuracy and efficiency, W
 \subsection{Enter WireBug Mode Transaction}
 Using this uni-directional transaction, the CoCo notifies the Server that it has entered WireBug remote debugging mode.
 
+\begin{table}[ht]
+\caption{WireBug Mode Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -435,6 +549,8 @@ Byte & Value \\ \hline
 3-23 & Reserved for future definition \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Once the CoCo has sent this packet, it shall go into WireBug Mode where it will wait for commands from the Server.
 
@@ -443,6 +559,9 @@ Along with notifying the Server that the CoCo is in WireBug mode, the packet als
 \subsection{Read Registers Transaction (Server Initiated)}
 Using this bi-directional transaction, the Server requests the contents of the registers from the CoCo.
 
+\begin{table}[ht]
+\caption{Read Registers Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -451,20 +570,30 @@ Byte & Value \\ \hline
 23 & Checksum \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the CoCo shall compute the checksum of bytes 0-22 and compare its computed value against byte 23. If a checksum match does not occur, then the CoCo shall disregard the packet and send the following response packet:
 
+\begin{table}[ht]
+\caption{Checksum Mismatch Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Checksum mismatch (243) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of this packet, the Server may elect to restart the transaction.
 
 If a match occurs, the CoCo shall respond with the following packet:
 
+\begin{table}[ht]
+\caption{Read Registers Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -492,6 +621,8 @@ Byte & Value \\ \hline
 23 & Checksum \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the Server shall compute the checksum of bytes 0-22 and compare its computed value against byte 23. If a match occurs, the Server shall accept the packet’s payload.	If a match does not occur, then the Server may elect to restart the transaction.
 
@@ -500,6 +631,9 @@ Using this bi-directional transaction, the Server requests that the contents of 
 
 The following packet shall be sent to the CoCo:
 
+\begin{table}[ht]
+\caption{Write Registers Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -527,33 +661,48 @@ Byte & Value \\ \hline
 23 & Checksum \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the CoCo shall compute the checksum of bytes 0-22 and compare its computed value against byte 23.	If a match occurs, the CoCo shall accept the packet’s payload, update its registers and send the following response packet:
 
+\begin{table}[ht]
+\caption{No Error Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & No error code (0) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 If a checksum match does not occur, then the CoCo shall disregard the packet and send the following response packet:
 
+\begin{table}[ht]
+\caption{Checksum Mismatch Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Checksum mismatch (243) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of this packet, the Server may elect to restart the transaction.
 
+\clearpage
 \subsection{Read Memory Transaction}
 This bi-directional transaction is sent from the Server to the CoCo. uses this transaction to obtain memory values from the CoCo.
 
 The following packet is sent from the Server:
 
-
+\begin{table}[ht]
+\caption{Read Memory Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -565,29 +714,44 @@ Byte & Value \\ \hline
 23 & Checksum \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the CoCo shall compute the checksum of bytes 0-22 and compare its computed value against byte 23. If a checksum match does not occur, then the CoCo shall disregard the packet and send the following response packet:
 
+\begin{table}[ht]
+\caption{Checksum Mismatch Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Checksum mismatch (243) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the Checksum Mismatch Packet, the Server may elect to restart the transaction.
 
 If a match occurs, the CoCo shall validate the memory request. If byte 3 (count) is not between 1 and 22, then the CoCo shall send the following response packet:
 
+\begin{table}[ht]
+\caption{Illegal Response Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Illegal number (16) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 If the byte count is between 1 and 22, then the CoCo shall accept the packet’s payload and send the following response packet:
 
+\begin{table}[ht]
+\caption{Read Memory Response Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -597,6 +761,8 @@ n+1..22 & Don't care \\
 23 & Checksum \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the Server shall compute the checksum of bytes 0 to 22 and compare its computed value against byte 23.	If a match occurs, the Server shall accept the packet’s payload.	If a match does not occur, then the Server may elect to restart the transaction.
 
@@ -604,6 +770,9 @@ Upon receipt of the packet, the Server shall compute the checksum of bytes 0 to 
 This bi-directional transaction is sent from the Server to the CoCo. uses this transaction to modify the contents of the CoCo’s memory.
 The following packet is sent from the Server:
 
+\begin{table}[ht]
+\caption{Write Memory Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
@@ -615,33 +784,50 @@ Byte & Value \\ \hline
 23 & Checksum \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receipt of the packet, the CoCo shall compute the checksum of bytes 0-22 and compare its computed value against byte 23. If a checksum match does not occur, then the CoCo shall disregard the packet and send the following response packet:
 
+\begin{table}[ht]
+\caption{Checksum Mismatch Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Checksum mismatch (243) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 If a match occurs, the CoCo shall validate the memory request. If byte 3 (count) is not between 1 and 19, then the CoCo shall send the following response packet:
 
+\begin{table}[ht]
+\caption{Illegal Response Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & Illegal number (16) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 If the byte count is between 1 and 19, then the CoCo shall accept the packet’s payload, update its memory with the contents from the Server, and send the following response packet:
 
+\begin{table}[ht]
+\caption{No Error Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & No error code (0) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 
 \subsection{Continue Execution Transaction}
@@ -649,12 +835,17 @@ This uni-directional transaction is sent from the Server to the CoCo. The Server
 
 The following packet is sent from the Server:
 
+\begin{table}[ht]
+\caption{Continue Execution Packet}
+\begin{center}
 \begin{tabular}{|ll|}
 \hline
 Byte & Value \\ \hline
 0 & OP\_WIREBUG\_GO (\$47) \\
 \hline
 \end{tabular}
+\end{center}
+\end{table}
 
 Upon receiving this packet, the CoCo shall exit WireBug Mode and commence execution.	The Server shall commence responding to CoCo-initiated DriveWire transactions.
 
@@ -674,11 +865,17 @@ Even though DriveWire has been shown to provide very stable and reliable communi
 This new checksum algorithm is simpler and significantly better at tracking bit errors than the CRC algorithm employed in DriveWire Version 1, which used a fast but weak CRC method.
 Designers of DriveWire Server software should implement the following checksum algorithm (presented in C source code) for computing a checksum for all sectors read and written to/from the CoCo.
 
-
-int calChecksum(unsigned char *ptr, int count) {
-short Checksum = 0;
-while(--count) {
-Checksum += *(ptr++); return (Checksum);
+\begin{lstlisting}
+int calChecksum(unsigned char *ptr, int count)
+{
+	short Checksum = 0;
+	while(--count)
+	{
+		Checksum += *(ptr++);
+	}
+	return (Checksum);
 }
+\end{lstlisting}
+
 Note that WireBug uses an 8-bit checksum instead of a 16 bit one.
 \end{document}
