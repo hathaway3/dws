@@ -8,6 +8,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -23,8 +29,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.51";
-	public static final String DWServerVersionDate = "4/5/2010";
+	public static final String DWServerVersion = "3.9.54";
+	public static final String DWServerVersionDate = "4/20/2010";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -42,24 +48,60 @@ public class DriveWireServer
 	private static Thread lazyWriterT;
 	private static Thread uiT;	
 	
+	
 	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	public static void main(String[] args) throws ConfigurationException
 	{
+		String configfile = "config.xml";
+		
 		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
 	
+		// command line arguments
+		Options cmdoptions = new Options();
+		
+		cmdoptions.addOption("config", true, "configuration file (defaults to config.xml)");
+		cmdoptions.addOption("help", false, "display command line argument help");
+		
+		CommandLineParser parser = new GnuParser();
+		try 
+		{
+			CommandLine line = parser.parse( cmdoptions, args );
+		    
+			// help
+			if (line.hasOption("help"))
+			{
+				HelpFormatter formatter = new HelpFormatter();
+				formatter.printHelp( "java -jar DriveWire.jar [OPTIONS]", cmdoptions );
+				System.exit(0);
+			}
+			
+			if( line.hasOption( "config" ) ) 
+			{
+			    configfile = line.getOptionValue( "config" );
+			}
+		}
+		catch( ParseException exp ) 
+		{
+		    System.err.println( "Could not parse command line: " + exp.getMessage() );
+		    System.exit(-1);
+		}
+		
+		
 		// 	set up initial logging - server stuff goes to console
 		consoleAppender = new ConsoleAppender(logLayout);
 		Logger.getRootLogger().addAppender(consoleAppender);
 		logger.info("DriveWire Server " + DWServerVersion + " (" + DWServerVersionDate + ") starting up");
     			
+		
 		// load server settings
+		logger.info("reading config from '" + configfile + "'");
 		try 
     	{
-			serverconfig = new XMLConfiguration("config.xml");
+			serverconfig = new XMLConfiguration(configfile);
 		} 
     	catch (ConfigurationException e1) 
     	{
-    		System.out.println("Fatal - Could not process config file 'config.xml'.  Please consult the documentation.");
+    		System.out.println("Fatal - Could not process config file '" + configfile + "'.  Please consult the documentation.");
     		System.exit(-1);
 		}
     	
