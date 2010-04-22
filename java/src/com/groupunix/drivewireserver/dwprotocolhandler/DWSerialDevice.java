@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWSerialDevice
@@ -19,22 +20,20 @@ public class DWSerialDevice
 	
 	private SerialPort serialPort;
 	private boolean wanttodie = false;
+	private int handlerno;
+	private String device;
 	
-	
-	public DWSerialDevice(String device, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
+	public DWSerialDevice(int handlerno, String device, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
-		logger.debug("init on " + device);
+		this.device = device;
+		this.handlerno = handlerno;
 		
-		if (serialPort != null)
-		{
-			// close current port
-			logger.info("closing port " + serialPort.getName());
-			serialPort.close();
-		}
-
+		logger.debug("init " + device + " for handler #" + handlerno);
+		
 		connect(device, cocomodel);
 				
 	}
+	
 	
 	public boolean connected()
 	{
@@ -52,7 +51,7 @@ public class DWSerialDevice
 
 	public void close()
 	{
-		logger.info("closing serial device");
+		logger.info("closing serial device " +  this.device + " in handler #" + this.handlerno);
 		this.serialPort.close();
 	}
 
@@ -119,24 +118,36 @@ public class DWSerialDevice
 	}
 	
 	
-	private static void setSerialParams(SerialPort sport, int cocomodel) throws UnsupportedCommOperationException 
+	private void setSerialParams(SerialPort sport, int cocomodel) throws UnsupportedCommOperationException 
 	{
-		switch(cocomodel)
+		int rate;
+		
+		if (DriveWireServer.getHandler(this.handlerno).config.containsKey("RateOverride"))
 		{
-			case 1:
-				sport.setSerialPortParams(38400,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-				break;
-			case 2:
-				sport.setSerialPortParams(57600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-				break;
-			default:
-				sport.setSerialPortParams(115200,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-				break;
-			
+			rate = DriveWireServer.getHandler(this.handlerno).config.getInt("RateOverride");
 		}
+		else
+		{
+			switch(cocomodel)
+			{
+				case 1:
+					rate = 38400;
+					break;
+				case 2:
+					rate = 57600;
+					break;
+				default:
+					rate = 115200;
+			}
+		}
+		
+		logger.debug("setting port params to " + rate +" 8N1" );
+		sport.setSerialPortParams(rate,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
+		
+		
 	}
 	
-	
+
 	
 	public void comWrite(byte[] data, int len)
 	{	

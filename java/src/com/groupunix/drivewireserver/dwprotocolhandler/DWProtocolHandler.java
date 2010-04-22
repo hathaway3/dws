@@ -125,7 +125,7 @@ public class DWProtocolHandler implements Runnable
 				// serial device
 				try
 				{
-					serdev = new DWSerialDevice(config.getString("SerialDevice"), config.getInt("CocoModel"));
+					serdev = new DWSerialDevice(this.handlerno, config.getString("SerialDevice"), config.getInt("CocoModel"));
 					
 					// setup drives
 					diskDrives = new DWDiskDrives(this.handlerno);
@@ -765,7 +765,12 @@ public class DWProtocolHandler implements Runnable
 		serdev.comWrite1(c.get(Calendar.HOUR_OF_DAY));
 		serdev.comWrite1(c.get(Calendar.MINUTE));
 		serdev.comWrite1(c.get(Calendar.SECOND));
-		// comWrite1(c.get(Calendar.DAY_OF_WEEK));
+		
+		if (config.getBoolean("OpTimeSendsDOW", false))
+		{
+			serdev.comWrite1(c.get(Calendar.DAY_OF_WEEK));
+		}
+		
 		
 		if (config.getBoolean("LogOpCode", false))
 		{
