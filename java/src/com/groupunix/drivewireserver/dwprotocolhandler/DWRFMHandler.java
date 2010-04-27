@@ -36,15 +36,15 @@ public class DWRFMHandler
 		this.handlerno = handlerno;
 	}
 	
-	public void DoRFMOP(DWSerialDevice serdev, int rfm_op)
+	public void DoRFMOP(DWProtocolDevice protodev, int rfm_op)
 	{
 		switch (rfm_op)
 		{
 			case RFM_OP_CREATE:
-				DoOP_RFM_CREATE(serdev);
+				DoOP_RFM_CREATE(protodev);
 				break;
 			case RFM_OP_OPEN:
-				DoOP_RFM_OPEN(serdev);
+				DoOP_RFM_OPEN(protodev);
 				break;
 			case RFM_OP_MAKDIR:
 				DoOP_RFM_MAKDIR();
@@ -56,42 +56,42 @@ public class DWRFMHandler
 				DoOP_RFM_DELETE();
 				break;
 			case RFM_OP_SEEK:
-				DoOP_RFM_SEEK(serdev);
+				DoOP_RFM_SEEK(protodev);
 				break;
 			case RFM_OP_READ:
-				DoOP_RFM_READ(serdev);
+				DoOP_RFM_READ(protodev);
 				break;
 			case RFM_OP_WRITE:
 				DoOP_RFM_WRITE();
 				break;
 			case RFM_OP_READLN:
-				DoOP_RFM_READLN(serdev);
+				DoOP_RFM_READLN(protodev);
 				break;
 			case RFM_OP_WRITLN:
-				DoOP_RFM_WRITLN(serdev);
+				DoOP_RFM_WRITLN(protodev);
 				break;
 			case RFM_OP_GETSTT:
-				DoOP_RFM_GETSTT(serdev);
+				DoOP_RFM_GETSTT(protodev);
 				break;
 			case RFM_OP_SETSTT:
-				DoOP_RFM_SETSTT(serdev);
+				DoOP_RFM_SETSTT(protodev);
 				break;
 			case RFM_OP_CLOSE:
-				DoOP_RFM_CLOSE(serdev);
+				DoOP_RFM_CLOSE(protodev);
 				break;
 			
 		}
 	}
 	
 	
-	private void DoOP_RFM_CLOSE(DWSerialDevice serdev)
+	private void DoOP_RFM_CLOSE(DWProtocolDevice protodev)
 	{
 		logger.debug("CLOSE");
 		
 		// read path #
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			if (this.paths[pathno] == null)
 			{
@@ -104,7 +104,7 @@ public class DWRFMHandler
 			}
 			
 			// send response
-			serdev.comWrite1(0);
+			protodev.comWrite1(0);
 			
 		} 
 		catch (DWCommTimeOutException e)
@@ -115,24 +115,24 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_SETSTT(DWSerialDevice serdev)
+	private void DoOP_RFM_SETSTT(DWProtocolDevice protodev)
 	{
 		logger.debug("SETSTT");
 		
 		// read path #
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			// read call
-			int call = serdev.comRead1(true);
+			int call = protodev.comRead1(true);
 			
 			logger.debug("SETSTT path " + pathno + " call " + call);
 			
 			switch (call)
 			{
 				case OS9Defs.SS_FD:
-					setSTT_FD(serdev, pathno);
+					setSTT_FD(protodev, pathno);
 					break;
 					
 			}
@@ -147,24 +147,24 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_GETSTT(DWSerialDevice serdev)
+	private void DoOP_RFM_GETSTT(DWProtocolDevice protodev)
 	{
 		logger.debug("GETSTT");
 		
 		// read path #
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			// read call
-			int call = serdev.comRead1(true);
+			int call = protodev.comRead1(true);
 			
 			logger.debug("GETSTT path " + pathno + " call " + call);
 		
 			switch (call)
 			{
 				case OS9Defs.SS_FD:
-					getSTT_FD(serdev, pathno);
+					getSTT_FD(protodev, pathno);
 					break;
 					
 			}
@@ -180,7 +180,7 @@ public class DWRFMHandler
 	}
 
 
-	private void getSTT_FD(DWSerialDevice serdev, int pathno)
+	private void getSTT_FD(DWProtocolDevice protodev, int pathno)
 	{
 		logger.debug("getstt_fd");
 		
@@ -188,7 +188,7 @@ public class DWRFMHandler
 		
 		try
 		{
-			int size = DWUtils.int2(serdev.comRead(2));
+			int size = DWUtils.int2(protodev.comRead(2));
 			
 			byte[] buf = new byte[size];
 			
@@ -201,7 +201,7 @@ public class DWRFMHandler
 			}
 			
 			
-			serdev.comWrite(buf,size);
+			protodev.comWrite(buf,size);
 			
 			logger.debug("sent " + size +" bytes of FD for path " + pathno);
 		} 
@@ -214,7 +214,7 @@ public class DWRFMHandler
 		
 	}
 	
-	private void setSTT_FD(DWSerialDevice serdev, int pathno)
+	private void setSTT_FD(DWProtocolDevice protodev, int pathno)
 	{
 		logger.debug("getstt_fd");
 		
@@ -222,11 +222,11 @@ public class DWRFMHandler
 		
 		try
 		{
-			int size = DWUtils.int2(serdev.comRead(2));
+			int size = DWUtils.int2(protodev.comRead(2));
 			
 			byte[] buf = new byte[size];
 			
-			buf = serdev.comRead(size);
+			buf = protodev.comRead(size);
 			
 			try
 			{
@@ -248,26 +248,26 @@ public class DWRFMHandler
 	}
 	
 
-	private void DoOP_RFM_WRITLN(DWSerialDevice serdev)
+	private void DoOP_RFM_WRITLN(DWProtocolDevice protodev)
 	{
 		logger.debug("WRITLN");	
 		
 		// read path #
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			// read sending bytes
 			byte[] maxbytesb = new byte[2];
 			
-			maxbytesb= serdev.comRead(2);
+			maxbytesb= protodev.comRead(2);
 			
 			int maxbytes = DWUtils.int2(maxbytesb);
 			
 			// read bytes
 			byte[] buf = new byte[maxbytes];
 			
-			buf = serdev.comRead(maxbytes);
+			buf = protodev.comRead(maxbytes);
 			
 			// write to file
 			this.paths[pathno].writeBytes(buf,maxbytes);
@@ -284,19 +284,19 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_READLN(DWSerialDevice serdev)
+	private void DoOP_RFM_READLN(DWProtocolDevice protodev)
 	{
 		logger.debug("READLN");
 		
 		// read path #
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			// read max bytes
 			byte[] maxbytesb = new byte[2];
 			
-			maxbytesb= serdev.comRead(2);
+			maxbytesb= protodev.comRead(2);
 			
 			int maxbytes = DWUtils.int2(maxbytesb);
 			
@@ -321,11 +321,11 @@ public class DWRFMHandler
 			
 			logger.debug("adjusted AB: " + availbytes);
 			
-			serdev.comWrite1(availbytes);
+			protodev.comWrite1(availbytes);
 			
 			if (availbytes > 0)
 			{
-				serdev.comWrite(buf, availbytes);
+				protodev.comWrite(buf, availbytes);
 				this.paths[pathno].incSeekpos(availbytes);
 			}
 			
@@ -347,19 +347,19 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_READ(DWSerialDevice serdev)
+	private void DoOP_RFM_READ(DWProtocolDevice protodev)
 	{
 		logger.debug("READ");
 		
 		// read path #
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			// read max bytes
 			byte[] maxbytesb = new byte[2];
 			
-			maxbytesb= serdev.comRead(2);
+			maxbytesb= protodev.comRead(2);
 			
 			int maxbytes = DWUtils.int2(maxbytesb);
 			
@@ -369,11 +369,11 @@ public class DWRFMHandler
 			
 			System.arraycopy(this.paths[pathno].getBytes(availbytes),0, buf, 0, availbytes);
 			
-			serdev.comWrite1(availbytes);
+			protodev.comWrite1(availbytes);
 			
 			if (availbytes > 0)
 			{
-				serdev.comWrite(buf, availbytes);
+				protodev.comWrite(buf, availbytes);
 				this.paths[pathno].incSeekpos(availbytes);
 			}
 			
@@ -390,22 +390,22 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_SEEK(DWSerialDevice serdev)
+	private void DoOP_RFM_SEEK(DWProtocolDevice protodev)
 	{
 		logger.debug("SEEK");
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			// read seek pos
 			byte[] seekpos = new byte[4];
 			
-			seekpos = serdev.comRead(4);
+			seekpos = protodev.comRead(4);
 			
 			this.paths[pathno].setSeekpos(DWUtils.int4(seekpos));
 			
 			// assume it worked, for now
-			serdev.comWrite1(0);
+			protodev.comWrite1(0);
 			
 		}
 		catch (DWCommTimeOutException e)
@@ -435,23 +435,23 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_CREATE(DWSerialDevice serdev)
+	private void DoOP_RFM_CREATE(DWProtocolDevice protodev)
 	{
 		logger.debug("CREATE");
 		
 		// read path #
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			// read path str
 			String pathstr = new String();
 		
-			int nchar = serdev.comRead1(true);
+			int nchar = protodev.comRead1(true);
 			while (nchar != 13)
 			{
 				pathstr += Character.toString((char) nchar);
-				nchar = serdev.comRead1(true);
+				nchar = protodev.comRead1(true);
 			}
 
 			// send result
@@ -462,7 +462,7 @@ public class DWRFMHandler
 			
 			int result = this.paths[pathno].createFile();
 			
-			serdev.comWrite1(result);
+			protodev.comWrite1(result);
 			
 			logger.debug("create path " + pathno + " to " + pathstr + ": result " + result);
 		} 
@@ -475,23 +475,23 @@ public class DWRFMHandler
 	}
 
 
-	private void DoOP_RFM_OPEN(DWSerialDevice serdev)
+	private void DoOP_RFM_OPEN(DWProtocolDevice protodev)
 	{
 		logger.debug("OPEN");
 		
 		// read path #
 		try
 		{
-			int pathno = serdev.comRead1(true);
+			int pathno = protodev.comRead1(true);
 			
 			// read path str
 			String pathstr = new String();
 		
-			int nchar = serdev.comRead1(true);
+			int nchar = protodev.comRead1(true);
 			while (nchar != 13)
 			{
 				pathstr += Character.toString((char) nchar);
-				nchar = serdev.comRead1(true);
+				nchar = protodev.comRead1(true);
 			}
 
 			// send result
@@ -503,7 +503,7 @@ public class DWRFMHandler
 			
 			int result = this.paths[pathno].openFile();
 			
-			serdev.comWrite1(result);
+			protodev.comWrite1(result);
 			
 			logger.debug("open path " + pathno + " to " + pathstr + ": result " + result);
 		} 

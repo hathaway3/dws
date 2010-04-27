@@ -1,6 +1,5 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
-import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -10,8 +9,6 @@ import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
-
-import com.groupunix.drivewireserver.OS9Defs;
 
 public class DWRFMFD
 {

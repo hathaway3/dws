@@ -8,9 +8,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -24,7 +22,7 @@ import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 
 
-public class DWProtocolHandler implements Runnable 
+public class DWProtocolHandler implements Runnable
 {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWProtocolHandler");
@@ -48,7 +46,7 @@ public class DWProtocolHandler implements Runnable
 	
 	// serial port instance
 	
-	private DWSerialDevice serdev;
+	private DWProtocolDevice protodev;
 	
 	// printer
 	private DWVPrinter vprinter;
@@ -89,7 +87,7 @@ public class DWProtocolHandler implements Runnable
 	
 	public boolean connected()
 	{
-		return(serdev.connected());
+		return(protodev.connected());
 	}
 	
 	
@@ -99,7 +97,7 @@ public class DWProtocolHandler implements Runnable
 		logger.info("handler #" + handlerno + ": shutdown requested");
 		
 		this.wanttodie = true;
-		this.serdev.shutdown();
+		this.protodev.shutdown();
 	}
 	
 	
@@ -114,189 +112,217 @@ public class DWProtocolHandler implements Runnable
 		
 		logger.info("handler #" + handlerno + ": starting...");
 
-		// load config
-		if (true)
+		
+		// setup protocol device
+		
+		if (config.getString("DeviceType","serial").equalsIgnoreCase("serial") )
 		{
 		
-			// check vital portion of config
+			// create serial device
 			if ((config.containsKey("SerialDevice") && config.containsKey("CocoModel")))		
 			{
-		
-				// serial device
-				try
+				try 
 				{
-					serdev = new DWSerialDevice(this.handlerno, config.getString("SerialDevice"), config.getInt("CocoModel"));
-					
-					// setup drives
-					diskDrives = new DWDiskDrives(this.handlerno);
-				
-					if (config.containsKey("DefaultDiskSet"))
-					{
-						diskDrives.LoadDiskSet(config.getString("DefaultDiskSet"));
-					}
-				
-					// setup ports
-					this.dwVSerialPorts = new DWVSerialPorts(this.handlerno);	
-					
-					dwVSerialPorts.resetAllPorts();
-
-					// setup printer
-					vprinter = new DWVPrinter(handlerno);
-				
-					// setup RFM handler
-					rfmhandler = new DWRFMHandler(handlerno);
-
-					// setup term device
-					if (config.containsKey("TermPort"))
-					{
-						logger.info("handler #" + handlerno + ": starting term device listener thread");
-						this.termHandler = new DWVPortTermThread(this.handlerno, config.getInt("TermPort"));
-						this.termT = new Thread(termHandler);
-						this.termT.start();
-					}
-					
-					
-					while(!wanttodie)
-					{ 
-						//if (DWVSerialPorts.isNull(0) == true)
-						//	logger.debug("NULL TERM OUT");
-						
-						// try to get an opcode, use int to avoid signed bytes
-						try 
-						{
-							opcodeint = serdev.comRead1(false);
-						} 
-						catch (DWCommTimeOutException e) 
-						{
-							// this should not actually ever get thrown, since we call comRead1 with timeout = false..
-							logger.error(e.getMessage());
-						}
-						
-					
-						if (opcodeint > -1)
-						{
-							
-							lastOpcode = (byte) opcodeint;
-							
-							switch(lastOpcode)
-							{
-								case DWDefs.OP_RESET1:
-								case DWDefs.OP_RESET2:
-								case DWDefs.OP_RESET3:
-									DoOP_RESET();
-									break;
-
-								case DWDefs.OP_DWINIT:
-									DoOP_DWINIT();
-									break;
-									
-								case DWDefs.OP_INIT:
-									DoOP_INIT();
-									break;
-
-								case DWDefs.OP_TERM:
-									DoOP_TERM();	
-									break;
-
-								case DWDefs.OP_REREAD:
-								case DWDefs.OP_READ:
-									DoOP_READ(lastOpcode);
-									break;
-
-								case DWDefs.OP_REREADEX:
-								case DWDefs.OP_READEX:
-									DoOP_READEX(lastOpcode);
-									break;
-
-								case DWDefs.OP_WRITE:
-								case DWDefs.OP_REWRITE:
-									DoOP_WRITE(lastOpcode);
-									break;
-
-
-								case DWDefs.OP_GETSTAT:
-								case DWDefs.OP_SETSTAT:
-									DoOP_STAT(lastOpcode);
-									break;
-
-								case DWDefs.OP_TIME:
-									DoOP_TIME();
-									break;
-
-								case DWDefs.OP_PRINT:
-									DoOP_PRINT();
-									break;
-
-								case DWDefs.OP_PRINTFLUSH:
-									DoOP_PRINTFLUSH();
-									break;
-							
-								case DWDefs.OP_SERREADM:
-									DoOP_SERREADM();
-									break;
-
-								case DWDefs.OP_SERREAD:
-									DoOP_SERREAD();
-									break;
-
-								case DWDefs.OP_SERWRITE:
-									DoOP_SERWRITE();
-									break;
-
-								case DWDefs.OP_SERSETSTAT:
-									DoOP_SERSETSTAT();
-									break;
-							      
-								case DWDefs.OP_SERGETSTAT:
-									DoOP_SERGETSTAT();
-									break;
-			    
-								case DWDefs.OP_SERINIT:
-									DoOP_SERINIT();
-									break;
-							      
-								case DWDefs.OP_SERTERM:
-									DoOP_SERTERM();
-									break;	
-									
-								case DWDefs.OP_NOP:
-									DoOP_NOP();
-									break;
-								
-								case DWDefs.OP_RFM:
-									DoOP_RFM();
-									break;
-									
-								default:
-									logger.info("UNKNOWN OPCODE: " + opcodeint);
-									break;
-							}
-
-						}
-					
-					}
-					
-				}	 
+					protodev = new DWSerialDevice(this.handlerno, config.getString("SerialDevice"), config.getInt("CocoModel"));
+				}
 				catch (NoSuchPortException e1)
 				{
+					wanttodie = true;
 					logger.error("handler #"+handlerno+": Serial device '" + config.getString("SerialDevice") + "' not found");
 				} 
 				catch (PortInUseException e2)
 				{
+					wanttodie = true;
 					logger.error("handler #"+handlerno+": Serial device '" + config.getString("SerialDevice") + "' in use");
-				
 				}
 				catch (UnsupportedCommOperationException e3)
 				{
+					wanttodie = true;
 					logger.error("handler #"+handlerno+": Unsupported comm operation while opening serial port '"+config.getString("SerialDevice")+"'");
-				
 				}
+			}	
+			else
+			{
+				logger.error("Serial mode requires both SerialDevice and CocoModel to be set");
+				wanttodie = true;
+			}
+		}
+		else if (config.getString("DeviceType").equalsIgnoreCase("tcp"))
+		{
+			// create TCP device
+			if (config.containsKey("TCPDevicePort"))		
+			{
+				try 
+				{
+					protodev = new DWTCPDevice(this.handlerno, config.getInt("TCPDevicePort"));
+				} 
+				catch (IOException e) 
+				{
+					wanttodie = true;
+					logger.error("handler #"+handlerno+": " + e.getMessage());
+				}
+			}	
+			else
+			{
+				logger.error("TCP mode requires TCPDevicePort to be set");
+				wanttodie = true;
+			}
+			
+		}
+		
+		// if we've got a device, setup environment
+		if (!wanttodie)
+		{
+			// setup drives
+			diskDrives = new DWDiskDrives(this.handlerno);
+				
+			if (config.containsKey("DefaultDiskSet"))
+			{
+				diskDrives.LoadDiskSet(config.getString("DefaultDiskSet"));
+			}
+				
+			// setup virtual ports
+			this.dwVSerialPorts = new DWVSerialPorts(this.handlerno);	
+			dwVSerialPorts.resetAllPorts();
+
+			// setup printer
+			vprinter = new DWVPrinter(handlerno);
+				
+			// setup RFM handler
+			rfmhandler = new DWRFMHandler(handlerno);
+
+			// setup term device
+			if (config.containsKey("TermPort"))
+			{
+				logger.info("handler #" + handlerno + ": starting term device listener thread");
+				this.termHandler = new DWVPortTermThread(this.handlerno, config.getInt("TermPort"));
+				this.termT = new Thread(termHandler);
+				this.termT.start();
+			}
+		}			
+
+		// protocol loop
+		while(!wanttodie)
+		{ 
+						
+			// try to get an opcode
+			try 
+			{
+					opcodeint = protodev.comRead1(false);
+			} 
+			catch (DWCommTimeOutException e) 
+			{
+				// this should not actually ever get thrown, since we call comRead1 with timeout = false..
+				logger.error(e.getMessage());
+				opcodeint = -1;
+			}
+						
+					
+			if (opcodeint > -1)
+			{
+				lastOpcode = (byte) opcodeint;
+							
+				switch(lastOpcode)
+				{
+					case DWDefs.OP_RESET1:
+					case DWDefs.OP_RESET2:
+					case DWDefs.OP_RESET3:
+						DoOP_RESET();
+						break;
+
+					case DWDefs.OP_DWINIT:
+						DoOP_DWINIT();
+						break;
+									
+					case DWDefs.OP_INIT:
+						DoOP_INIT();
+						break;
+
+					case DWDefs.OP_TERM:
+						DoOP_TERM();	
+						break;
+
+					case DWDefs.OP_REREAD:
+					case DWDefs.OP_READ:
+						DoOP_READ(lastOpcode);
+						break;
+
+					case DWDefs.OP_REREADEX:
+					case DWDefs.OP_READEX:
+						DoOP_READEX(lastOpcode);
+						break;
+
+					case DWDefs.OP_WRITE:
+					case DWDefs.OP_REWRITE:
+						DoOP_WRITE(lastOpcode);
+						break;
+
+
+					case DWDefs.OP_GETSTAT:
+					case DWDefs.OP_SETSTAT:
+						DoOP_STAT(lastOpcode);
+						break;
+
+					case DWDefs.OP_TIME:
+						DoOP_TIME();
+						break;
+
+					case DWDefs.OP_PRINT:
+						DoOP_PRINT();
+						break;
+
+					case DWDefs.OP_PRINTFLUSH:
+						DoOP_PRINTFLUSH();
+						break;
+							
+					case DWDefs.OP_SERREADM:
+						DoOP_SERREADM();
+						break;
+
+					case DWDefs.OP_SERREAD:
+						DoOP_SERREAD();
+						break;
+
+					case DWDefs.OP_SERWRITE:
+						DoOP_SERWRITE();
+						break;
+
+					case DWDefs.OP_SERSETSTAT:
+						DoOP_SERSETSTAT();
+						break;
+							      
+					case DWDefs.OP_SERGETSTAT:
+						DoOP_SERGETSTAT();
+						break;
+			    
+					case DWDefs.OP_SERINIT:
+						DoOP_SERINIT();
+						break;
+							      
+					case DWDefs.OP_SERTERM:
+						DoOP_SERTERM();
+						break;	
+									
+					case DWDefs.OP_NOP:
+						DoOP_NOP();
+						break;
+								
+					case DWDefs.OP_RFM:
+						DoOP_RFM();
+						break;
+									
+					default:
+						logger.info("UNKNOWN OPCODE: " + opcodeint);
+						break;
+					
+				}
+				
 			}
 			else
 			{
-				logger.error("handler #"+handlerno+": Config file is missing required settings");
+				logger.debug("neg opcode");
 			}
-		
+			
 		}
 
 					
@@ -319,9 +345,9 @@ public class DWProtocolHandler implements Runnable
 			termT.interrupt();
 		}
 		
-		if (serdev != null)
+		if (protodev != null)
 		{
-			serdev.shutdown();
+			protodev.shutdown();
 		}
 			
 	}
@@ -344,13 +370,13 @@ public class DWProtocolHandler implements Runnable
 		
 		try
 		{
-			drv_version = serdev.comRead1(true);
+			drv_version = protodev.comRead1(true);
 			
 			// are we limited to dw3?
 			if (!config.getBoolean("DW3Only", false))
 			{
 				// send response
-				serdev.comWrite1(DWDefs.DW_PROTOCOL_VERSION);
+				protodev.comWrite1(DWDefs.DW_PROTOCOL_VERSION);
 			
 				logger.debug("DWINIT sent proto ver " + DWDefs.DW_PROTOCOL_VERSION + ", got driver version " + drv_version);
 			
@@ -392,10 +418,10 @@ public class DWProtocolHandler implements Runnable
 		
 		try
 		{
-			rfm_op = serdev.comRead1(true);
+			rfm_op = protodev.comRead1(true);
 			logger.info("DoOP_RFM call " + rfm_op );
 			
-			rfmhandler.DoRFMOP(serdev,rfm_op);
+			rfmhandler.DoRFMOP(protodev,rfm_op);
 			
 		} catch (DWCommTimeOutException e)
 		{
@@ -467,7 +493,7 @@ public class DWProtocolHandler implements Runnable
 		try 
 		{
 			// read rest of packet
-			responsebuf = serdev.comRead(262);
+			responsebuf = protodev.comRead(262);
 
 			lastDrive = responsebuf[0];
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
@@ -496,7 +522,7 @@ public class DWProtocolHandler implements Runnable
 		if (lastChecksum != DWUtils.int2(cocosum))
 		{
 			// checksums do not match, tell Coco
-			serdev.comWrite1(DWDefs.DWERROR_CRC);
+			protodev.comWrite1(DWDefs.DWERROR_CRC);
 			
 			logger.warn("DoOP_WRITE: Bad checksum, drive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN) + " CocoSum: " + DWUtils.int2(cocosum) + " ServerSum: " + lastChecksum);
 			
@@ -545,7 +571,7 @@ public class DWProtocolHandler implements Runnable
 			lastError = response;
 		
 		// send response
-		serdev.comWrite1(response);
+		protodev.comWrite1(response);
 		
 		// Increment sectorsWritten count
 		if (response == DWDefs.DWOK)
@@ -604,7 +630,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// read rest of packet
 			
-			responsebuf = serdev.comRead(4);
+			responsebuf = protodev.comRead(4);
 			
 			lastDrive = responsebuf[0];
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
@@ -656,12 +682,12 @@ public class DWProtocolHandler implements Runnable
 		}
 		
 		// write out response sector
-		serdev.comWrite(sector, 256);
+		protodev.comWrite(sector, 256);
 		
 		try 
 		{
 			// get cocosum
-			cocosum  = serdev.comRead(2);
+			cocosum  = protodev.comRead(2);
 		} 
 		catch (DWCommTimeOutException e) 
 		{
@@ -680,7 +706,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// Good checksum, all is well
 			sectorsRead++;
-			serdev.comWrite1(DWDefs.DWOK);
+			protodev.comWrite1(DWDefs.DWOK);
 		
 			if (opcode == DWDefs.OP_REREADEX)
 			{
@@ -699,7 +725,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// checksum mismatch
 			// sectorsRead++;  should we increment this?
-			serdev.comWrite1(DWDefs.DWERROR_CRC);
+			protodev.comWrite1(DWDefs.DWERROR_CRC);
 			
 			if (opcode == DWDefs.OP_REREADEX)
 			{
@@ -724,7 +750,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// drive # and stat
-			responsebuf = serdev.comRead(2);
+			responsebuf = protodev.comRead(2);
 			
 			lastDrive = responsebuf[0];
 			
@@ -759,16 +785,16 @@ public class DWProtocolHandler implements Runnable
 	{
 		GregorianCalendar c = (GregorianCalendar) Calendar.getInstance();
 		
-		serdev.comWrite1(c.get(Calendar.YEAR)-108);
-		serdev.comWrite1(c.get(Calendar.MONTH)+1);
-		serdev.comWrite1(c.get(Calendar.DAY_OF_MONTH));
-		serdev.comWrite1(c.get(Calendar.HOUR_OF_DAY));
-		serdev.comWrite1(c.get(Calendar.MINUTE));
-		serdev.comWrite1(c.get(Calendar.SECOND));
+		protodev.comWrite1(c.get(Calendar.YEAR)-108);
+		protodev.comWrite1(c.get(Calendar.MONTH)+1);
+		protodev.comWrite1(c.get(Calendar.DAY_OF_MONTH));
+		protodev.comWrite1(c.get(Calendar.HOUR_OF_DAY));
+		protodev.comWrite1(c.get(Calendar.MINUTE));
+		protodev.comWrite1(c.get(Calendar.SECOND));
 		
 		if (config.getBoolean("OpTimeSendsDOW", false))
 		{
-			serdev.comWrite1(c.get(Calendar.DAY_OF_WEEK));
+			protodev.comWrite1(c.get(Calendar.DAY_OF_WEEK));
 		}
 		
 		
@@ -793,7 +819,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// port # and stat
-			responsebuf = serdev.comRead(2);
+			responsebuf = protodev.comRead(2);
 			if (responsebuf[1] != 1)
 			{
 				if (config.getBoolean("LogOpCode", false))
@@ -818,7 +844,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// port # and stat
-			responsebuf = serdev.comRead(2);
+			responsebuf = protodev.comRead(2);
 			
 			if (config.getBoolean("LogOpCode", false))
 			{
@@ -836,7 +862,7 @@ public class DWProtocolHandler implements Runnable
 				// SS.ComSt
 				case 0x28:
 					byte[] devdescr = new byte[26];
-					devdescr = serdev.comRead(26);
+					devdescr = protodev.comRead(26);
 					
 					// logger.debug("COMST: " + byteArrayToHexString(devdescr));
 					
@@ -888,7 +914,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// port # (mode no longer sent)
-			responsebuf = serdev.comRead(1);
+			responsebuf = protodev.comRead(1);
 			
 			int portnum = responsebuf[0];
 			// int portmode = responsebuf[1];
@@ -916,7 +942,7 @@ public class DWProtocolHandler implements Runnable
 		{
 			// get packet args
 			// just port # 
-			portnum = serdev.comRead1(true);
+			portnum = protodev.comRead1(true);
 		
 			if (config.getBoolean("LogOpCode", false))
 			{
@@ -939,7 +965,7 @@ public class DWProtocolHandler implements Runnable
 		
 		result = dwVSerialPorts.serRead();
 		
-		serdev.comWrite(result, 2);
+		protodev.comWrite(result, 2);
 		
 		//if (result[0] != 0)
 		if (config.getBoolean("LogOpCode", false))
@@ -953,7 +979,7 @@ public class DWProtocolHandler implements Runnable
 		byte[] cmdpacket = new byte[2];
 				
 		try {
-			cmdpacket = serdev.comRead(2);
+			cmdpacket = protodev.comRead(2);
 			
 			dwVSerialPorts.serWrite(cmdpacket[0],cmdpacket[1]);
 			
@@ -976,7 +1002,7 @@ public class DWProtocolHandler implements Runnable
 		byte[] data = new byte[256];
 		
 		try {
-			cmdpacket = serdev.comRead(2);
+			cmdpacket = protodev.comRead(2);
 			
 			if (config.getBoolean("LogOpCode", false))
 			{
@@ -992,7 +1018,7 @@ public class DWProtocolHandler implements Runnable
 			
 			// logger.debug(new String(data));
 			
-			serdev.comWrite(data, (int) (cmdpacket[1] & 0xFF));
+			protodev.comWrite(data, (int) (cmdpacket[1] & 0xFF));
 			
 			
 			
@@ -1015,7 +1041,7 @@ public class DWProtocolHandler implements Runnable
 
 		try 
 		{
-			tmpint = serdev.comRead1(true);
+			tmpint = protodev.comRead1(true);
 			
 			if (config.getBoolean("LogOpCode", false))
 			{

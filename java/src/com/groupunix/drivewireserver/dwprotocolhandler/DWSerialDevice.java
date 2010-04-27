@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
-public class DWSerialDevice
+public class DWSerialDevice implements DWProtocolDevice
 {
 	private static final Logger logger = Logger.getLogger("DWServer.DWSerialDevice");
 	
