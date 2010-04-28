@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 import org.apache.log4j.Logger;
 
@@ -127,6 +128,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 			return comRead1(timeout);
 		}
 			
+		// logger.debug("TCPREAD: " + data);
 		return data;
 	}
 
@@ -140,12 +142,10 @@ public class DWTCPDevice implements DWProtocolDevice {
 			
 			// extreme cases only
 			
-			/*
-			for (int i = 0;i< data.length;i++)
+			/*for (int i = 0;i< data.length;i++)
 			{
-				logger.debug("WRITE: " + (int)(data[i] & 0xFF));
-			}
-			*/
+				logger.debug("TCPWRITE: " + (int)(data[i] & 0xFF));
+			} */
 			
 		} 
 		catch (IOException e) 
@@ -164,7 +164,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 			skt.getOutputStream().write((byte) data);
 			
 			// extreme cases only
-			// logger.debug("WRITE1: " + data);
+			// logger.debug("TCPWRITE1: " + data);
 			
 		} 
 		catch (IOException e) 
@@ -205,7 +205,15 @@ public class DWTCPDevice implements DWProtocolDevice {
 		}
 		
 		logger.info("new client connect from " + skt.getInetAddress().getCanonicalHostName());
-		
+		try 
+		{
+			skt.setTcpNoDelay(true);
+		} 
+		catch (SocketException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 }

@@ -406,7 +406,7 @@ public class DWProtocolHandler implements Runnable
 	{
 		if (config.getBoolean("LogOpCode", false))
 		{
-			//logger.info("DoOP_NOP");
+			logger.info("DoOP_NOP");
 		}
 	}
 	
@@ -684,6 +684,14 @@ public class DWProtocolHandler implements Runnable
 		// write out response sector
 		protodev.comWrite(sector, 256);
 		
+		// calc checksum
+		lastChecksum = computeChecksum(sector, 256);
+
+		mysum[0] = (byte) ((lastChecksum >> 8) & 0xFF);
+		mysum[1] = (byte) ((lastChecksum << 0) & 0xFF);
+		
+		// logger.debug("looking for checksum " + mysum[0] + ":" + mysum[1]);
+		
 		try 
 		{
 			// get cocosum
@@ -697,10 +705,7 @@ public class DWProtocolHandler implements Runnable
 			return;
 		}
 
-		lastChecksum = computeChecksum(sector, 256);
-
-		mysum[0] = (byte) ((lastChecksum >> 8) & 0xFF);
-		mysum[1] = (byte) ((lastChecksum << 0) & 0xFF);
+		
 
 		if ((mysum[0] == cocosum[0]) && (mysum[1] == cocosum[1]))
 		{

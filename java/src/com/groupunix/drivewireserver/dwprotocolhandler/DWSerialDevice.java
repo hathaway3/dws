@@ -221,7 +221,7 @@ public class DWSerialDevice implements DWProtocolDevice
 			}
 			
 			// extreme cases only
-			// logger.debug("READ1: " + retdata);
+			logger.debug("READ1: " + retdata);
 			
 			if (wanttodie)
 			{
