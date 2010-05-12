@@ -18,12 +18,16 @@ public class DWTCPDevice implements DWProtocolDevice {
 	private int handlerno;
 	private ServerSocket srvr;
 	private Socket skt = null;
+	private boolean bytelog = false;
 	
 	public DWTCPDevice(int handlerno, int tcpport) throws IOException 
 	{
 		this.handlerno = handlerno;
 		this.tcpport = tcpport;
-		logger.debug("init tcp device server on port " + tcpport + " for handler #" + handlerno);
+		
+		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogDeviceBytes",false);
+		
+		logger.debug("init tcp device server on port " + tcpport + " for handler #" + handlerno + " (logging bytes: " + bytelog + ")");
 		
 		// check for listen address
 			
@@ -128,7 +132,9 @@ public class DWTCPDevice implements DWProtocolDevice {
 			return comRead1(timeout);
 		}
 			
-		// logger.debug("TCPREAD: " + data);
+		if (bytelog)
+			logger.debug("TCPREAD: " + data);
+		
 		return data;
 	}
 
@@ -140,13 +146,17 @@ public class DWTCPDevice implements DWProtocolDevice {
 		{
 			skt.getOutputStream().write(data, 0, len);
 			
-			// extreme cases only
-			
-			/*for (int i = 0;i< data.length;i++)
+			if (bytelog)
 			{
-				logger.debug("TCPWRITE: " + (int)(data[i] & 0xFF));
-			} */
+				String tmps = new String();
 			
+				for (int i = 0;i< data.length;i++)
+				{
+					tmps += " " + (int)(data[i] & 0xFF);
+				}
+			
+				logger.debug("WRITE " + data.length + ":" + tmps);
+			}
 		} 
 		catch (IOException e) 
 		{
@@ -163,8 +173,8 @@ public class DWTCPDevice implements DWProtocolDevice {
 		{
 			skt.getOutputStream().write((byte) data);
 			
-			// extreme cases only
-			// logger.debug("TCPWRITE1: " + data);
+			if (bytelog)
+				logger.debug("TCPWRITE1: " + data);
 			
 		} 
 		catch (IOException e) 

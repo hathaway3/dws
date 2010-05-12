@@ -21,6 +21,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	private SerialPort serialPort;
 	private boolean wanttodie = false;
 	private int handlerno;
+	private boolean bytelog = false;
 	private String device;
 	
 	public DWSerialDevice(int handlerno, String device, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
@@ -28,7 +29,9 @@ public class DWSerialDevice implements DWProtocolDevice
 		this.device = device;
 		this.handlerno = handlerno;
 		
-		logger.debug("init " + device + " for handler #" + handlerno);
+		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogDeviceBytes", false);
+		
+		logger.debug("init " + device + " for handler #" + handlerno + " (logging bytes: " + bytelog + ")");
 		
 		connect(device, cocomodel);
 				
@@ -157,12 +160,18 @@ public class DWSerialDevice implements DWProtocolDevice
 			
 			// extreme cases only
 			
-			/*
-			for (int i = 0;i< data.length;i++)
+			if (bytelog)
 			{
-				logger.debug("WRITE: " + (int)(data[i] & 0xFF));
+				String tmps = new String();
+				
+				for (int i = 0;i< data.length;i++)
+				{
+					tmps += " " + (int)(data[i] & 0xFF);
+				}
+				
+				logger.debug("WRITE " + data.length + ":" + tmps);
+				
 			}
-			*/
 			
 		} 
 		catch (IOException e) 
@@ -180,8 +189,8 @@ public class DWSerialDevice implements DWProtocolDevice
 		{
 			serialPort.getOutputStream().write((byte) data);
 			
-			// extreme cases only
-			// logger.debug("WRITE1: " + data);
+			if (bytelog)
+				logger.debug("WRITE1: " + data);
 			
 		} 
 		catch (IOException e) 
@@ -220,8 +229,8 @@ public class DWSerialDevice implements DWProtocolDevice
 				retdata = serialPort.getInputStream().read();
 			}
 			
-			// extreme cases only
-			logger.debug("READ1: " + retdata);
+			if (bytelog)
+				logger.debug("READ1: " + retdata);
 			
 			if (wanttodie)
 			{

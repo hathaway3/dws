@@ -19,7 +19,7 @@ public class DWDisk {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 	
-	public static final int MAX_SECTORS = 32768; // what is coco's max?
+	public static final int MAX_SECTORS = 122880; // what is coco's max? 24 bits?
 	private int LSN = 0;
 	private boolean	wrProt = false;
 	private DWDiskSector[] sectors = new DWDiskSector[MAX_SECTORS];
@@ -208,7 +208,7 @@ public class DWDisk {
 		}
 		else if (this.sectors[newLSN] == null)
 		{
-			logger.debug("Seek to null sector: " + newLSN + " (seems this is OK...)");
+			// logger.debug("Seek to null sector: " + newLSN + " (seems this is OK...)");
 			this.LSN = newLSN;
 		}
 		else
@@ -307,7 +307,7 @@ public class DWDisk {
 		
 		if (this.sectors[this.LSN] == null)
 		{
-			logger.debug("request for undefined sector " + this.LSN);
+			// logger.debug("request for undefined sector " + this.LSN);
 			this.sectors[this.LSN] = new DWDiskSector(this.LSN);
 		}
 		
