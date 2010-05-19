@@ -140,7 +140,15 @@ public class DWDisk {
 	public byte[] DD_NAM()
 	{
 		byte[] dd_nam = new byte[32];
-		System.arraycopy( sectors[0].getData(), 31, dd_nam, 0, 32 ); 
+		
+		if (sectors[0] != null)
+		{
+			System.arraycopy( sectors[0].getData(), 31, dd_nam, 0, 32 );
+		}
+		else
+		{
+			dd_nam = "  **** DISK HAS NO LSN 0 ****   ".getBytes();
+		}
 		return(dd_nam);
 	}
 	
@@ -583,6 +591,9 @@ public void shutdown()
 	}
 	
 }
+
+
+
 	
 	
 }

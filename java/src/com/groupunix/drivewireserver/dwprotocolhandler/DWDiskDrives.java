@@ -140,7 +140,7 @@ public class DWDiskDrives
 	}
 	
 	
-	public  void LoadDiskFromFile(int driveno, String path) throws DWDriveNotValidException, DWDriveAlreadyLoadedException, IOException
+	public void LoadDiskFromFile(int driveno, String path) throws DWDriveNotValidException, DWDriveAlreadyLoadedException, IOException
 	{
 		DWDisk tmpdisk = new DWDisk(path);
     	

@@ -553,6 +553,7 @@ public class DWUtilDWThread implements Runnable
 			text += "  dw disk reload #            - Reload disk in drive #\r\n";
 			text += "  dw disk write #             - Write disk image in drive #\r\n";
 			text += "  dw disk write # [filepath]  - Write disk image in drive # to path\r\n";
+			text += "  dw disk create # [filepath] - Create new disk image\r\n";
 			text += "  dw disk wp #                - Toggle write protect on drive #\r\n";
 			text += "  dw disk set show            - Show available disk sets\r\n";
 			text += "  dw disk set load [setname]  - Load disks in diskset file\r\n";
@@ -655,6 +656,20 @@ public class DWUtilDWThread implements Runnable
 			else
 			{
 				dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw disk write requires a drive # and an optional file path as arguments.");
+				return;
+			}
+		}
+		else if (args[2].toLowerCase().startsWith("c"))
+		{
+			if (args.length == 5)
+			{
+				// create disk
+				doDiskCreate(args[3],args[4]);
+				return;
+			}
+			else
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw disk create requires a drive # and file path as arguments.");
 				return;
 			}
 		}
@@ -821,6 +836,54 @@ public class DWUtilDWThread implements Runnable
 			
 		}
 		
+		
+	}
+	
+	private void doDiskCreate(String drivestr, String filepath)
+	{
+		FileSystemManager fsManager;
+		FileObject fileobj;
+		
+		try
+		{
+			int driveno = Integer.parseInt(drivestr);
+			
+			// create file
+			fsManager = VFS.getManager();
+			fileobj = fsManager.resolveFile(filepath);
+			
+			if (fileobj.exists())
+			{
+				fileobj.close();
+				throw new IOException("File already exists");
+			}
+		
+			fileobj.createFile();
+			
+			DriveWireServer.getHandler(handlerno).getDiskDrives().LoadDiskFromFile(driveno, filepath);
+					
+			dwVSerialPorts.sendUtilityOKResponse(this.vport, "created disk");
+			dwVSerialPorts.writeToCoco(this.vport, "Disk #" + driveno + " created.");
+
+		}
+		catch (NumberFormatException e)
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric drive #");
+			
+		} 
+		catch (IOException e1)
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 30, e1.getMessage());
+			
+		} 
+		catch (DWDriveNotValidException e) 
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 31, "Invalid drive number");
+		} 
+		catch (DWDriveAlreadyLoadedException e) 
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 32, "There is already a disk in drive " + drivestr);
+		}
 		
 	}
 	
