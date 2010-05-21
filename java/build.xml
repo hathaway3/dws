@@ -88,6 +88,7 @@
         	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-vfs-1.0.jar"/>
         	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-net-2.0.jar"/>
         	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-httpclient-3.1.jar"/>
+        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-cli-1.2.jar"/>
         	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jsch-0.1.42.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jasypt-1.6.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/log4j-1.2.15.jar"/>
@@ -99,6 +100,13 @@
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/RXTXcomm.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/slf4j-api-1.5.10.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/slf4j-log4j12-1.5.10.jar"/>
+<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/httpclient-4.0.1.jar"/>
+<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/httpmime-4.0.1.jar"/>
+<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/httpcore-4.0.1.jar"/>
+<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/apache-mime4j-0.6.jar"/>
+        
+        
+                        
         </jar>
     </target>
 </project>
