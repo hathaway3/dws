@@ -5,6 +5,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Synthesizer;
+
 import org.apache.log4j.Logger;
 
 public class DWVSerialPort {
@@ -38,6 +45,19 @@ public class DWVSerialPort {
 	
 	private int conno = -1;
 	
+	private Synthesizer synth;
+	private Receiver synthReceiver;
+
+
+	private ShortMessage mmsg;
+	private int mmsg_pos = 0;
+	private int mmsg_data1;
+	private int mmsg_status;
+
+	
+	private boolean midi_seen = false;
+	
+	
 	public DWVSerialPort(int handlerno, int port)
 	{
 		logger.debug("New DWVSerialPort for port " + port + " in handler #" + handlerno);
@@ -46,6 +66,28 @@ public class DWVSerialPort {
 		{
 			this.porthandler = new DWVPortHandler(handlerno, port);
 		}
+		
+		if (port == DWVSerialPorts.MIDI_PORT)
+		{
+			// setup synth
+			
+			logger.debug("initialize midi synth for port " + this.port);
+			
+			try 
+			{
+				synth = MidiSystem.getSynthesizer();
+				synth.open();
+				synthReceiver = synth.getReceiver();
+				
+			} 
+			catch (MidiUnavailableException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+		}
+		
 	}
 	
 	public int bytesWaiting() 
@@ -70,30 +112,78 @@ public class DWVSerialPort {
 	
 	public void write(int databyte) 
 	{
-		// if we are connected, pass the data
-		if ((this.connected) || (this.port == DWVSerialPorts.TERM_PORT))
+		
+		if (this.port == DWVSerialPorts.MIDI_PORT)
 		{
-			if (output == null)
+			if (!midi_seen)
 			{
-				// logger.debug("write to null stream on port " + this.port);
+				logger.debug("MIDI data on port " + this.port);
+				midi_seen = true;
+			}
+				
+			if (databyte < 0)
+			{
+				// status byte
+				mmsg_status = databyte;
+				// logger.debug("MIDI status byte: " + (databyte & 0xFF));
+
+				mmsg_pos = 0;
 			}
 			else
 			{
-				try 
+				if (mmsg_pos == 0)
 				{
-					output.write((byte) databyte);
-					// logger.debug("wrote byte to output buffer, size now " + output.getAvailable());
-				} 
-				catch (IOException e) 
+					//data1
+					
+					mmsg_data1 = databyte;
+					mmsg_pos = 1;
+				}
+				else
 				{
-					logger.error("in write: " + e.getMessage());
+					//data2
+					try {
+						mmsg = new ShortMessage();
+						mmsg.setMessage(mmsg_status, mmsg_data1, databyte);
+					} 
+					catch (InvalidMidiDataException e) 
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					this.synthReceiver.send(mmsg, -1);
+					
+					mmsg_pos = 0;
 				}
 			}
+			
 		}
-		// otherwise process as command
 		else
-		{
-			this.porthandler.takeInput(databyte);
+		{	
+			// if we are connected, pass the data
+			if ((this.connected) || (this.port == DWVSerialPorts.TERM_PORT))
+			{
+				if (output == null)
+				{
+					// logger.debug("write to null stream on port " + this.port);
+				}
+				else
+				{
+					try 
+					{
+						output.write((byte) databyte);
+						// logger.debug("wrote byte to output buffer, size now " + output.getAvailable());
+					} 
+					catch (IOException e) 
+					{
+						logger.error("in write: " + e.getMessage());
+					}
+				}
+			}
+			// otherwise process as command
+			else
+			{
+				this.porthandler.takeInput(databyte);
+			}
 		}
 		
 	}

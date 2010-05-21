@@ -6,6 +6,8 @@ import java.io.OutputStream;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
+
 public class DWVSerialPorts {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialPorts");
@@ -17,8 +19,11 @@ public class DWVSerialPorts {
 	public static final int MAX_COCO_PORTS = 15;
 	public static final int MAX_UI_PORTS = 15;
 	public static final int MAX_PORTS = MAX_COCO_PORTS + MAX_UI_PORTS;
+	public static final int MIDI_PORT = 14;
+	
 	
 	private int handlerno;
+	private boolean bytelog = false;
 	
 	
 	private DWVSerialPort[] vserialPorts = new DWVSerialPort[MAX_PORTS];
@@ -29,6 +34,8 @@ public class DWVSerialPorts {
 	public DWVSerialPorts(int handlerno)
 	{
 		this.handlerno = handlerno;
+		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogVPortBytes", false);
+		
 	}
 
 
@@ -182,7 +189,10 @@ public class DWVSerialPorts {
 
 	public void serWrite(int port, int databyte) 
 	{
-		// logger.debug("write to port " + port + ": " + databyte);
+		if (bytelog)
+		{
+			logger.debug("write to port " + port + ": " + databyte);
+		}
 		
 		if ((port < MAX_COCO_PORTS) && (port > 0))
 		{
