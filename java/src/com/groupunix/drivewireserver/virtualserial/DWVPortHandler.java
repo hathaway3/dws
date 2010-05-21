@@ -1,5 +1,7 @@
 package com.groupunix.drivewireserver.virtualserial;
 
+import java.io.IOException;
+
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -17,6 +19,7 @@ public class DWVPortHandler
 	private Thread utilthread;
 	private int handlerno;
 	private DWVSerialPorts dwVSerialPorts;
+	private	DWVSerialCircularBuffer inputBuffer = new DWVSerialCircularBuffer(1024, true);
 	
 	
 	public DWVPortHandler(int handlerno, int port) 
@@ -47,7 +50,7 @@ public class DWVPortHandler
 			
 		// process command if enter
 		
-		//logger.debug("takeinput: " + databyte);
+		// logger.debug("takeinput: " + databyte);
 		
 		if (databyte == this.vModem.getCR())
 		{
@@ -69,6 +72,31 @@ public class DWVPortHandler
 			{
 				// is this really the easiest way to append a character to a string??  
 				this.port_command += Character.toString((char) databyte);
+				
+				// check for MIDI header
+				if (this.port_command.equals("MThd"))
+				{
+					// seems we have a MIDI file headed our way
+					
+					// immediately capture to buffer
+					try 
+					{
+						this.inputBuffer.getOutputStream().write("MThd".getBytes());
+					} 
+					catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					DriveWireServer.getHandler(handlerno).getVPorts().setPortOutput(vport, this.inputBuffer.getOutputStream());
+					DriveWireServer.getHandler(handlerno).getVPorts().markConnected(vport);
+					
+					logger.info("MIDI file detected on handler # " + this.handlerno + " port " + this.vport);
+					
+					this.utilthread = new Thread(new DWVPortMIDIPlayerThread(this.handlerno, this.vport, this.inputBuffer));
+					this.utilthread.start();
+					
+					this.port_command = new String();
+				}
 			}
 				
 		}
