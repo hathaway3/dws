@@ -11,6 +11,11 @@ import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
+
+import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang.StringUtils;
@@ -99,7 +104,10 @@ public class DWUtilDWThread implements Runnable
 		{
 			doReg(args);
 		}
-		
+		else if (args[1].toLowerCase().startsWith("m"))
+		{
+			doMidi(args);
+		}
 		else
 		{
 			// unknown command/syntax
@@ -133,6 +141,131 @@ public class DWUtilDWThread implements Runnable
 			dwVSerialPorts.writeToCoco(this.vport, "registered for " + args[2]);
 		}
 	}
+	
+	
+	
+	private void doMidi(String[] args)
+	{
+		String text = new String();
+		
+		if (args.length == 2)
+		{
+			// help
+			text += "Help for 'dw midi':\r\n\n";
+			text += "  dw midi show                  - Show midi status\r\n";
+			text += "  dw midi output #              - Set midi output to device #\r\n";
+			
+			
+		}
+		else if (args[2].toLowerCase().startsWith("o"))
+		{
+			if (args.length == 4)
+			{
+				int devno;
+				
+				try
+				{
+					devno = Integer.parseInt(args[3]);
+				}
+				catch (NumberFormatException e)
+				{
+					dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: non numeric device number in dw midi output.");
+					return;
+				}
+				
+				MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+				
+				if ((devno < 0) || (devno > infos.length))
+				{
+					dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Invalid device number for dw midi output.");
+					return;
+				}
+				
+				try 
+				{
+					dwVSerialPorts.setMIDIDevice(MidiSystem.getMidiDevice(infos[devno]));
+				} 
+				catch (MidiUnavailableException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					
+					dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Failed to access device for dw midi output.");
+					return;
+				}
+				
+				try 
+				{
+					text += "Set MIDI output device: " + MidiSystem.getMidiDevice(infos[devno]).getDeviceInfo().getName() + "\r\n";
+				} 
+				catch (MidiUnavailableException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					text += "Strange error, please tell Aaron";
+				}
+				
+			}
+			else
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw midi output requires a device number as an argument.");
+				return;
+			}
+		}
+		else if (args[2].toLowerCase().startsWith("s"))
+		{
+			text += "\r\nDriveWire MIDI status:\r\n\n";
+
+			text +="Devices:\r\n";
+			
+			MidiDevice device;
+			MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+			
+			for (int i = 0; i < infos.length; i++) {
+			    try {
+			        device = MidiSystem.getMidiDevice(infos[i]);
+			        text += "[" + i + "] ";
+			        text += device.getDeviceInfo().getName() + " (" + device.getClass().getSimpleName()  + ")\r\n";
+			        text += "    " + device.getDeviceInfo().getDescription() + ", ";
+			        text += device.getDeviceInfo().getVendor() + " ";
+			        text += device.getDeviceInfo().getVersion() + "\r\n";
+
+			       
+			        
+			    } 
+			    catch (MidiUnavailableException e) 
+			    {
+			    	logger.error(e.getMessage());
+			    }
+			    
+			  
+			    
+			}
+
+			 text += "\r\nCurrent MIDI output device: ";
+		        
+		     if (dwVSerialPorts.getMidiDeviceInfo() == null)
+		     {
+		        	
+		    	 text += "none\r\n";
+		     }
+		     else
+		     {
+		    	 text += dwVSerialPorts.getMidiDeviceInfo().getName() + "\r\n";  
+		     }
+		    
+		}
+		else
+		{
+			sendSyntaxError(args[2]);
+			return;
+		}
+	
+		dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
+		dwVSerialPorts.writeToCoco(this.vport, text);
+	}
+	
+	
 	
 	
 	
@@ -1454,6 +1587,7 @@ public class DWUtilDWThread implements Runnable
 		text += "  dw server <options>    - Server commands\r\n";
 		text += "  dw config <options>    - Configuration commands\r\n";
 		text += "  dw log <options>       - Logging commands\r\n";
+		text += "  dw midi <options>      - MIDI commands\r\n";
 		
 		
 		text += "\n";

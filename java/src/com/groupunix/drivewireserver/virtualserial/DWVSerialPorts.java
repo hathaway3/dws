@@ -4,6 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Synthesizer;
+
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -30,11 +37,27 @@ public class DWVSerialPorts {
 	
 	private int[] dataWait = new int[MAX_PORTS];
 	
+	private MidiDevice midiDevice;
 	
 	public DWVSerialPorts(int handlerno)
 	{
 		this.handlerno = handlerno;
 		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogVPortBytes", false);
+		
+		// initialize MIDI device to internal synth
+		logger.debug("initialize internal midi synth");
+			
+		try 
+		{
+			setMIDIDevice(MidiSystem.getSynthesizer());
+				
+		} 
+		catch (MidiUnavailableException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		
 	}
 
@@ -551,6 +574,59 @@ public class DWVSerialPorts {
 		}
 		
 		return(-1);
+	}
+	
+	
+	
+	public MidiDevice.Info getMidiDeviceInfo()
+	{
+		return(this.midiDevice.getDeviceInfo());
+	}
+	
+	
+	public void setMIDIDevice(MidiDevice device) 
+	{
+		if (this.midiDevice != null)
+		{
+			if (this.midiDevice.isOpen())
+			{
+				logger.info("midi: closing " + this.midiDevice.getDeviceInfo().getName());
+				this.midiDevice.close();
+			}
+		}
+		
+		this.midiDevice = device;
+		try 
+		{
+			this.midiDevice.open();
+			logger.info("midi: opened " + this.midiDevice.getDeviceInfo().getName());
+		} 
+		catch (MidiUnavailableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+
+	public void sendMIDIMsg(ShortMessage mmsg, int timestamp) 
+	{
+		try 
+		{
+			this.midiDevice.getReceiver().send(mmsg, timestamp);
+		} 
+		catch (MidiUnavailableException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+
+	public Receiver getMidiReceiver() throws MidiUnavailableException 
+	{
+		return(this.midiDevice.getReceiver());
 	}
 	
 }

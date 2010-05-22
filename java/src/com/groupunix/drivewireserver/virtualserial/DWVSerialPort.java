@@ -6,13 +6,11 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Synthesizer;
 
 import org.apache.log4j.Logger;
+
+import com.groupunix.drivewireserver.DriveWireServer;
 
 public class DWVSerialPort {
 
@@ -21,6 +19,8 @@ public class DWVSerialPort {
 	private static final int BUFFER_SIZE = -1;  //infinite
 
 	private int port = -1;
+	private int handlerno;
+	
 	private boolean connected = false;
 	private int opens = 0;
 
@@ -45,10 +45,7 @@ public class DWVSerialPort {
 	
 	private int conno = -1;
 	
-	private Synthesizer synth;
-	private Receiver synthReceiver;
-
-
+	// midi message stuff
 	private ShortMessage mmsg;
 	private int mmsg_pos = 0;
 	private int mmsg_data1;
@@ -62,33 +59,16 @@ public class DWVSerialPort {
 	{
 		logger.debug("New DWVSerialPort for port " + port + " in handler #" + handlerno);
 		this.port = port;
+		this.handlerno = handlerno;
+		
 		if (port != DWVSerialPorts.TERM_PORT)
 		{
 			this.porthandler = new DWVPortHandler(handlerno, port);
 		}
 		
-		if (port == DWVSerialPorts.MIDI_PORT)
-		{
-			// setup synth
-			
-			logger.debug("initialize midi synth for port " + this.port);
-			
-			try 
-			{
-				synth = MidiSystem.getSynthesizer();
-				synth.open();
-				synthReceiver = synth.getReceiver();
-				
-			} 
-			catch (MidiUnavailableException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
-		}
-		
 	}
+	
+	
 	
 	public int bytesWaiting() 
 	{
@@ -150,7 +130,7 @@ public class DWVSerialPort {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					this.synthReceiver.send(mmsg, -1);
+					DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
 					
 					mmsg_pos = 0;
 				}
@@ -533,7 +513,7 @@ public class DWVSerialPort {
 		
 	}
 	
-
+	
 	
 }
 
