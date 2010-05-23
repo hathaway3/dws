@@ -13,9 +13,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import javax.sound.midi.Instrument;
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Soundbank;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang.StringUtils;
@@ -212,48 +216,152 @@ public class DWUtilDWThread implements Runnable
 				return;
 			}
 		}
+		else if (args[2].toLowerCase().startsWith("b"))
+		{
+			// load soundbank
+			if (args.length < 4)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 2, "Syntax error: dw midi bank requires a file path as an argument.");
+				return;
+			}
+			else
+			{
+				Soundbank soundbank = null;
+				
+				File file = new File(args[3]);
+				try 
+				{
+					soundbank = MidiSystem.getSoundbank(file);
+				} 
+				catch (InvalidMidiDataException e) 
+				{
+					dwVSerialPorts.sendUtilityFailResponse(this.vport, 201, e.getMessage());
+					return;
+				} 
+				catch (IOException e) 
+				{
+					dwVSerialPorts.sendUtilityFailResponse(this.vport, 200, e.getMessage());
+					return;
+				}
+				
+				if (dwVSerialPorts.isSoundbankSupported(soundbank))
+				{				
+					if (dwVSerialPorts.setMidiSoundbank(soundbank, args[3]))
+					{
+						text = "Soundbank loaded.";
+					}
+					else
+					{
+						dwVSerialPorts.sendUtilityFailResponse(this.vport, 203, "Error: soundbank did not load");
+						return;
+					}
+					
+				}
+				else
+				{
+					dwVSerialPorts.sendUtilityFailResponse(this.vport, 202, "Error: unsupported soundbank");
+					return;
+				}
+				
+			}
+		}
 		else if (args[2].toLowerCase().startsWith("s"))
 		{
-			text += "\r\nDriveWire MIDI status:\r\n\n";
-
-			text +="Devices:\r\n";
+			if (args.length == 3)
+			{
 			
-			MidiDevice device;
-			MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
-			
-			for (int i = 0; i < infos.length; i++) {
-			    try {
-			        device = MidiSystem.getMidiDevice(infos[i]);
-			        text += "[" + i + "] ";
-			        text += device.getDeviceInfo().getName() + " (" + device.getClass().getSimpleName()  + ")\r\n";
-			        text += "    " + device.getDeviceInfo().getDescription() + ", ";
-			        text += device.getDeviceInfo().getVendor() + " ";
-			        text += device.getDeviceInfo().getVersion() + "\r\n";
+				text += "\r\nDriveWire MIDI status:\r\n\n";
 
-			       
+				text +="Devices:\r\n";
+			
+				MidiDevice device;
+				MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+			
+				for (int i = 0; i < infos.length; i++) 
+				{
+					try 
+					{
+						device = MidiSystem.getMidiDevice(infos[i]);
+						text += "[" + i + "] ";
+						text += device.getDeviceInfo().getName() + " (" + device.getClass().getSimpleName()  + ")\r\n";
+						text += "    " + device.getDeviceInfo().getDescription() + ", ";
+						text += device.getDeviceInfo().getVendor() + " ";
+						text += device.getDeviceInfo().getVersion() + "\r\n";
 			        
-			    } 
-			    catch (MidiUnavailableException e) 
-			    {
-			    	logger.error(e.getMessage());
-			    }
+					} 
+					catch (MidiUnavailableException e) 
+					{
+						logger.error(e.getMessage());
+					}
 			    
-			  
-			    
-			}
+				}
 
-			 text += "\r\nCurrent MIDI output device: ";
+				text += "\r\nCurrent MIDI output device: ";
 		        
-		     if (dwVSerialPorts.getMidiDeviceInfo() == null)
-		     {
+				if (dwVSerialPorts.getMidiDeviceInfo() == null)
+				{
 		        	
-		    	 text += "none\r\n";
-		     }
-		     else
-		     {
-		    	 text += dwVSerialPorts.getMidiDeviceInfo().getName() + "\r\n";  
-		     }
-		    
+					text += "none\r\n";
+				}
+				else
+				{
+					text += dwVSerialPorts.getMidiDeviceInfo().getName() + "\r\n";  
+				}
+		     
+				
+			}
+			else if ((args.length == 4) && (args[3].toLowerCase().startsWith("s")))
+			{
+				// dw midi show synth
+				text = "\r\nDriveWire Java synthesizer status:\r\n\n";
+			
+				MidiDevice.Info midiinfo = dwVSerialPorts.getMidiSynth().getDeviceInfo();
+			
+				text += "Device:\r\n";
+				text += midiinfo.getVendor() + ", " + midiinfo.getName() + ", " + midiinfo.getVersion() + "\r\n";
+				text += midiinfo.getDescription() + "\r\n";
+			
+				text += "\r\n";
+			
+
+				Soundbank sbank = dwVSerialPorts.getMidiSynth().getDefaultSoundbank();
+			
+				text += "Soundbank:\r\n";
+				text += sbank.getVendor() + ", " + sbank.getName() + ", " + sbank.getVersion() + "\r\n";
+				text += sbank.getDescription() + "\r\n";
+			    text += "File: " + dwVSerialPorts.getMidiSoundbankFilename();
+				text +="\r\n\n";
+				
+				text += "Latency:   " + dwVSerialPorts.getMidiSynth().getLatency() + "\r\n";
+				text += "Polyphony: " + dwVSerialPorts.getMidiSynth().getMaxPolyphony() + "\r\n";
+				text += "Position:  " + dwVSerialPorts.getMidiSynth().getMicrosecondPosition() + "\r\n";
+
+				/*
+				MidiChannel[] midchans = dwVSerialPorts.getMidiSynth().getChannels();
+				
+				for (int i = 0; i < midchans.length; i++)
+				{
+					if (midchans[i] != null)
+					{
+						text += i + ": " + midchans[i].getProgram() + "\r\n";
+					}
+				}
+				*/
+				
+				/*
+				Instrument[] instruments = dwVSerialPorts.getMidiSynth().getLoadedInstruments();
+				
+				for (int i = 0; i < instruments.length;i++)
+				{
+					text += instruments[i].getName() + "\r\n";
+				}
+				*/
+			}
+			else
+			{
+				sendSyntaxError(args[3]);
+				return;
+			}
 		}
 		else
 		{

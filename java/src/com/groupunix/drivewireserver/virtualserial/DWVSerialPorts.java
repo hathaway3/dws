@@ -9,6 +9,7 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 
 import org.apache.log4j.Logger;
@@ -38,6 +39,9 @@ public class DWVSerialPorts {
 	private int[] dataWait = new int[MAX_PORTS];
 	
 	private MidiDevice midiDevice;
+	private Synthesizer midiSynth;
+	private String soundbankfilename = "none";
+	
 	
 	public DWVSerialPorts(int handlerno)
 	{
@@ -49,7 +53,8 @@ public class DWVSerialPorts {
 			
 		try 
 		{
-			setMIDIDevice(MidiSystem.getSynthesizer());
+			midiSynth = MidiSystem.getSynthesizer();
+			setMIDIDevice(midiSynth);
 				
 		} 
 		catch (MidiUnavailableException e) 
@@ -80,6 +85,10 @@ public class DWVSerialPorts {
 		if (port == TERM_PORT)
 		{
 			return("Term");
+		}
+		else if (port == MIDI_PORT)
+		{
+			return("/MIDI");
 		}
 		else if (port < MAX_COCO_PORTS)
 		{
@@ -627,6 +636,37 @@ public class DWVSerialPorts {
 	public Receiver getMidiReceiver() throws MidiUnavailableException 
 	{
 		return(this.midiDevice.getReceiver());
+	}
+	
+
+	public Synthesizer getMidiSynth() 
+	{
+		return(midiSynth);
+	}
+	
+	
+	public boolean isSoundbankSupported(Soundbank soundbank) 
+	{
+		return(midiSynth.isSoundbankSupported(soundbank));
+	}
+		
+		
+	public boolean setMidiSoundbank(Soundbank soundbank, String fname) 
+	{
+		
+		if (midiSynth.loadAllInstruments(soundbank))
+		{
+			logger.debug("loaded soundbank file '" + fname + "'");
+			this.soundbankfilename = fname;
+			return(true);
+		}
+		
+		return(false);
+	}
+	
+	public String getMidiSoundbankFilename()
+	{
+		return(this.soundbankfilename);
 	}
 	
 }

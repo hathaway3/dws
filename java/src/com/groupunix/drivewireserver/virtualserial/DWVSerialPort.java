@@ -11,6 +11,7 @@ import javax.sound.midi.ShortMessage;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWVSerialPort {
 
@@ -50,10 +51,10 @@ public class DWVSerialPort {
 	private int mmsg_pos = 0;
 	private int mmsg_data1;
 	private int mmsg_status;
-
+	private int last_mmsg_status;
 	
 	private boolean midi_seen = false;
-	
+	private boolean log_midi_bytes = false;
 	
 	public DWVSerialPort(int handlerno, int port)
 	{
@@ -64,6 +65,11 @@ public class DWVSerialPort {
 		if (port != DWVSerialPorts.TERM_PORT)
 		{
 			this.porthandler = new DWVPortHandler(handlerno, port);
+		}
+		
+		if (DriveWireServer.getHandler(handlerno).config.getBoolean("LogMIDIBytes", false))
+		{
+			this.log_midi_bytes = true;
 		}
 		
 	}
@@ -100,14 +106,43 @@ public class DWVSerialPort {
 				logger.debug("MIDI data on port " + this.port);
 				midi_seen = true;
 			}
+			
+			
+			// incomplete, but enough to make most things work for now
+			
+			
+			databyte = (int)(databyte & 0xFF);
+			
+			if (databyte == 248)
+			{
+				// timing tick
+				try 
+				{
+					
+					mmsg.setMessage(ShortMessage.TIMING_CLOCK);
+					DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
+				} 
+				catch (InvalidMidiDataException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				
-			if (databyte < 0)
+				if (log_midi_bytes)
+				{
+					logger.debug("midimsg: timing tick");
+				}
+			}
+			else if (databyte > 127)
 			{
 				// status byte
+				
+				last_mmsg_status = mmsg_status;
 				mmsg_status = databyte;
 				// logger.debug("MIDI status byte: " + (databyte & 0xFF));
 
 				mmsg_pos = 0;
+				
 			}
 			else
 			{
@@ -121,16 +156,25 @@ public class DWVSerialPort {
 				else
 				{
 					//data2
-					try {
-						mmsg = new ShortMessage();
+					
+					mmsg = new ShortMessage();
+										
+					try 
+					{
 						mmsg.setMessage(mmsg_status, mmsg_data1, databyte);
+						DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
 					} 
 					catch (InvalidMidiDataException e) 
 					{
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
+					
+					if (log_midi_bytes)
+					{
+						byte[] tmpb = {(byte) mmsg_status, (byte) mmsg_data1, (byte) databyte};
+						logger.debug("midimsg: " + DWUtils.byteArrayToHexString( tmpb ));
+					}
 					
 					mmsg_pos = 0;
 				}
