@@ -8,6 +8,7 @@ import java.io.RandomAccessFile;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -25,11 +26,13 @@ public class DWRFMPath
 	private FileSystemManager fsManager;
 	private FileObject fileobj;
 	
-	public DWRFMPath(int handlerno, int pathno)
+	public DWRFMPath(int handlerno, int pathno) throws FileSystemException
 	{
 		this.setPathno(pathno);
 		this.setSeekpos(0);
 		logger.debug("new path " + pathno);
+		
+		this.fsManager = VFS.getManager();
 		this.setLocalroot(DriveWireServer.getHandler(this.handlerno).config.getString("RFMRoot","/"));
 		
 	}

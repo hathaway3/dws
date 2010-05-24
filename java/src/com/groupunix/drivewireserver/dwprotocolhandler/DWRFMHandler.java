@@ -470,6 +470,9 @@ public class DWRFMHandler
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (FileSystemException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} 
 		
 	}
@@ -509,6 +512,9 @@ public class DWRFMHandler
 		} 
 		catch (DWCommTimeOutException e)
 		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileSystemException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
