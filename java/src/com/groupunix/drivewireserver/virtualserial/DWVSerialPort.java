@@ -167,7 +167,25 @@ public class DWVSerialPort {
 					else
 					{
 						// send midimsg with 1 data byte
-						sendMIDI(mmsg_status, databyte, -1);
+						
+						if ((mmsg_status >= 192) && (databyte < 208)) 
+						{
+							if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiVoicelock())
+							{
+								// ignore program change
+								logger.debug("MIDI: ignored program change due to instrument lock.");
+							}
+							else
+							{
+								// translate program changes
+								databyte = DriveWireServer.getHandler(handlerno).getVPorts().getMidiVoice(databyte);
+								sendMIDI(mmsg_status, databyte, 0);
+							}
+						}
+						else
+						{
+							sendMIDI(mmsg_status, databyte, 0);
+						}
 						mmsg_pos = 0;
 					}
 				}

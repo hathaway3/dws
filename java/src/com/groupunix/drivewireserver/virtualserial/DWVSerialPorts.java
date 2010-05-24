@@ -1,9 +1,14 @@
 package com.groupunix.drivewireserver.virtualserial;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.List;
 
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -12,6 +17,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -38,10 +44,12 @@ public class DWVSerialPorts {
 	
 	private int[] dataWait = new int[MAX_PORTS];
 	
+	// midi stuff
 	private MidiDevice midiDevice;
 	private Synthesizer midiSynth;
-	private String soundbankfilename = "none";
-	
+	private String soundbankfilename = null;
+	private boolean midiVoicelock = false;
+	private  HierarchicalConfiguration midiProfConf = null;
 	
 	public DWVSerialPorts(int handlerno)
 	{
@@ -55,7 +63,12 @@ public class DWVSerialPorts {
 		{
 			midiSynth = MidiSystem.getSynthesizer();
 			setMIDIDevice(midiSynth);
-				
+			
+			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("MIDISynthDefaultSoundbank"))
+			{
+				loadSoundbank(DriveWireServer.getHandler(this.handlerno).config.getString("MIDISynthDefaultSoundbank"));
+			}
+			
 		} 
 		catch (MidiUnavailableException e) 
 		{
@@ -63,8 +76,17 @@ public class DWVSerialPorts {
 			e.printStackTrace();
 		}
 		
+		if (DriveWireServer.getHandler(this.handlerno).config.containsKey("MIDISynthDefaultProfile"))
+		{
+			if (!setMidiProfile(DriveWireServer.getHandler(this.handlerno).config.getString("MIDISynthDefaultProfile")))
+			{
+				logger.warn("Invalid MIDI profile specified in config file.");
+			}
+		}
 		
 	}
+
+
 
 
 	public void openPort(int port)
@@ -551,11 +573,6 @@ public class DWVSerialPorts {
 				this.vserialPorts[i].shutdown();
 			}
 		}
-		
-		
-		
-		
-		
 	}
 
 
@@ -669,4 +686,132 @@ public class DWVSerialPorts {
 		return(this.soundbankfilename);
 	}
 	
+	public boolean getMidiVoicelock()
+	{
+		return(this.midiVoicelock);
+	}
+
+	public void setMidiVoicelock(boolean lock)
+	{
+		this.midiVoicelock = lock;
+		logger.debug("MIDI: synth voicelock = " + lock);
+	}
+
+	private void loadSoundbank(String filename) 
+	{
+		Soundbank soundbank = null;
+		
+		File file = new File(filename);
+		try 
+		{
+			soundbank = MidiSystem.getSoundbank(file);
+		} 
+		catch (InvalidMidiDataException e) 
+		{
+			logger.warn("Error loading soundbank: " + e.getMessage());
+			return;
+		} 
+		catch (IOException e) 
+		{
+			logger.warn("Error loading soundbank: " + e.getMessage());
+			return;
+		}
+		
+		if (isSoundbankSupported(soundbank))
+		{				
+			if (!setMidiSoundbank(soundbank, filename))
+			{
+				logger.warn("Failed to set soundbank '" + filename + "'");
+				return;
+			}
+			
+		}
+		else
+		{
+			logger.warn("Unsupported soundbank '" + filename + "'");	
+			return;
+		}	
+	}
+
+
+
+
+	public String getMidiProfile() 
+	{
+		return(this.midiProfConf.getString("name","none"));
+	}
+
+	
+	public boolean setMidiProfile(String profile)
+	{
+		
+		List<HierarchicalConfiguration> profiles = DriveWireServer.serverconfig.configurationsAt("midisynthprofile");
+    	
+		for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
+		{
+		    HierarchicalConfiguration mprof = (HierarchicalConfiguration) it.next();
+		    
+		    if (mprof.getString("name").equalsIgnoreCase(profile))
+		    {
+		    	this.midiProfConf = (HierarchicalConfiguration) mprof.clone();
+		    	logger.debug("MIDI: set profile to '" + profile + "'");
+		    	return(true);
+		    }
+		    
+		}
+		
+		return(false);
+	}
+	
+	
+	
+	public int getMidiVoice(int voice)
+	{
+		if (this.midiProfConf == null)
+		{
+			return(voice);
+		}
+		
+		int xvoice = voice;
+		
+		List mappings = this.midiProfConf.configurationsAt("mapping");
+		
+		for(Iterator it = mappings.iterator(); it.hasNext();)
+		{
+			HierarchicalConfiguration sub = (HierarchicalConfiguration) it.next();
+			
+			if (sub.getInt("[@dev]") == voice)
+			{
+				xvoice = sub.getInt("[@gm]");
+			}
+			
+		}
+		
+		logger.debug("MIDI: profile '" + this.midiProfConf.getString("name") + "' translates instrument " + voice + " to " + xvoice);
+		return(xvoice);
+	}
+
+
+
+
+	public boolean setMIDIInstr(int channel, int instr) 
+	{
+		MidiChannel[] chans = this.midiSynth.getChannels();
+		
+		if (channel < chans.length)
+		{
+			if (chans[channel] != null)
+			{
+				chans[channel].programChange(instr);
+				logger.debug("MIDI: set instrument " + instr + " on channel " + channel);
+				return(true);
+			}
+		}
+		
+		return(false);
+		
+	}
+
+
+
 }
