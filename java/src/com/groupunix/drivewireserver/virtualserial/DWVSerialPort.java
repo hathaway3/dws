@@ -52,6 +52,7 @@ public class DWVSerialPort {
 	private int mmsg_data1;
 	private int mmsg_status;
 	private int last_mmsg_status;
+	private int mmsg_databytes = 2;
 	
 	private boolean midi_seen = false;
 	private boolean log_midi_bytes = false;
@@ -113,69 +114,67 @@ public class DWVSerialPort {
 			
 			databyte = (int)(databyte & 0xFF);
 			
-			if (databyte == 248)
+			if (databyte == 248)   // We ignore most other status stuff for now
 			{
+				sendMIDI(databyte);
+				
 				// timing tick
-				try 
+				if (log_midi_bytes)
 				{
-					
-					mmsg.setMessage(ShortMessage.TIMING_CLOCK);
-					DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
-				} 
-				catch (InvalidMidiDataException e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.debug("MIDI: timing tick");
 				}
+			}
+			else if ((databyte >= 192) && (databyte < 224))  // Program change and channel pressure have 1 data byte
+			{
+				mmsg_databytes = 1;
+				last_mmsg_status = mmsg_status;
+				mmsg_status = databyte;
+				mmsg_pos = 0;
 				
 				if (log_midi_bytes)
 				{
-					logger.debug("midimsg: timing tick");
+					if (databyte < 208)
+					{
+						logger.debug("MIDI program change: " + (databyte));
+					}
+					else
+					{
+						logger.debug("MIDI channel pressure: " + (databyte));
+					}
 				}
 			}
-			else if (databyte > 127)
+			else if ((databyte > 127) && (databyte < 240))  // Note on/off, key pressure, controller change, pitch bend have 2 data bytes
 			{
-				// status byte
-				
+				mmsg_databytes = 2;				
 				last_mmsg_status = mmsg_status;
 				mmsg_status = databyte;
-				// logger.debug("MIDI status byte: " + (databyte & 0xFF));
-
 				mmsg_pos = 0;
-				
 			}
 			else
 			{
+				// data bytes
+				
 				if (mmsg_pos == 0)
 				{
 					//data1
 					
-					mmsg_data1 = databyte;
-					mmsg_pos = 1;
+					if (mmsg_databytes == 2)
+					{
+						// store databyte 1
+						mmsg_data1 = databyte;
+						mmsg_pos = 1;
+					}
+					else
+					{
+						// send midimsg with 1 data byte
+						sendMIDI(mmsg_status, databyte, -1);
+						mmsg_pos = 0;
+					}
 				}
 				else
 				{
 					//data2
-					
-					mmsg = new ShortMessage();
-										
-					try 
-					{
-						mmsg.setMessage(mmsg_status, mmsg_data1, databyte);
-						DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
-					} 
-					catch (InvalidMidiDataException e) 
-					{
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					if (log_midi_bytes)
-					{
-						byte[] tmpb = {(byte) mmsg_status, (byte) mmsg_data1, (byte) databyte};
-						logger.debug("midimsg: " + DWUtils.byteArrayToHexString( tmpb ));
-					}
-					
+					sendMIDI(mmsg_status,mmsg_data1,databyte);
 					mmsg_pos = 0;
 				}
 			}
@@ -211,6 +210,55 @@ public class DWVSerialPort {
 		}
 		
 	}
+
+	private void sendMIDI(int statusbyte) 
+	{
+		ShortMessage mmsg = new ShortMessage();
+				
+		try 
+		{
+			
+			mmsg.setMessage(statusbyte);
+			DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
+		} 
+		catch (InvalidMidiDataException e) 
+		{
+			logger.warn("MIDI: " + e.getMessage());
+		}
+		
+		if (log_midi_bytes)
+		{
+			byte[] tmpb = {(byte) statusbyte };
+			logger.debug("midimsg: " + DWUtils.byteArrayToHexString( tmpb ));
+		}
+		
+	}
+
+
+	private void sendMIDI(int statusbyte, int data1, int data2) 
+	{
+		ShortMessage mmsg = new ShortMessage();
+				
+		try 
+		{
+			
+			mmsg.setMessage(statusbyte, data1, data2);
+			DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
+		} 
+		catch (InvalidMidiDataException e) 
+		{
+			logger.warn("MIDI: " + e.getMessage());
+		}
+		
+		if (log_midi_bytes)
+		{
+			byte[] tmpb = {(byte) statusbyte, (byte) data1, (byte) data2 };
+			logger.debug("midimsg: " + DWUtils.byteArrayToHexString( tmpb ));
+		}
+		
+	}
+
+	
 
 	public void writeM(String str)
 	{
