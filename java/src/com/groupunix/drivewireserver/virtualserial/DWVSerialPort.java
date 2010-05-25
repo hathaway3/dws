@@ -178,8 +178,10 @@ public class DWVSerialPort {
 							else
 							{
 								// translate program changes
-								databyte = DriveWireServer.getHandler(handlerno).getVPorts().getMidiVoice(databyte);
-								sendMIDI(mmsg_status, databyte, 0);
+								int xinstr = DriveWireServer.getHandler(handlerno).getVPorts().getGMInstrument(databyte);
+								sendMIDI(mmsg_status, xinstr, 0);
+								// set cache
+								DriveWireServer.getHandler(handlerno).getVPorts().setGMInstrumentCache(mmsg_status - 192, databyte);
 							}
 						}
 						else

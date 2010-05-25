@@ -327,7 +327,7 @@ public class DWUtilDWThread implements Runnable
 					text += "Latency:   " + dwVSerialPorts.getMidiSynth().getLatency() + "\r\n";
 					text += "Polyphony: " + dwVSerialPorts.getMidiSynth().getMaxPolyphony() + "\r\n";
 					text += "Position:  " + dwVSerialPorts.getMidiSynth().getMicrosecondPosition() + "\r\n\n";
-					text += "Profile:   " + dwVSerialPorts.getMidiProfile() + "\r\n";
+					text += "Profile:   " + dwVSerialPorts.getMidiProfileName() + "\r\n";
 					text += "Instrlock: " + dwVSerialPorts.getMidiVoicelock() + "\r\n";
 				}
 				else if ((args.length == 5) && (args[3].toLowerCase().startsWith("s")))
@@ -343,12 +343,16 @@ public class DWUtilDWThread implements Runnable
 						MidiChannel[] midchans = dwVSerialPorts.getMidiSynth().getChannels();
 						
 						Instrument[] instruments = dwVSerialPorts.getMidiSynth().getLoadedInstruments();
-												
+						
+						text +="Chan#  Instr#  Orig#   Instrument\r\n";
+						text +="-----------------------------------------------------------------------------\r\n";
+						
 						for (int i = 0; i < midchans.length; i++)
 						{
 							if (midchans[i] != null)
 							{
-								text += (i+1) + ": " + midchans[i].getProgram() + " ";
+								text += String.format(" %2d      %-3d    %-3d    ",(i+1),midchans[i].getProgram(),dwVSerialPorts.getGMInstrumentCache(i));
+								
 								if (midchans[i].getProgram() < instruments.length)
 								{
 									text += instruments[midchans[i].getProgram()].getName();
@@ -511,7 +515,7 @@ public class DWUtilDWThread implements Runnable
 					
 					try
 					{
-						channel = Integer.parseInt(args[4]);
+						channel = Integer.parseInt(args[4]) - 1;
 						instr = Integer.parseInt(args[5]);
 					}
 					catch (NumberFormatException e)
@@ -522,7 +526,7 @@ public class DWUtilDWThread implements Runnable
 					
 					if (dwVSerialPorts.setMIDIInstr(channel,instr)) 
 					{
-						text += "Set MIDI channel " + channel + " to instrument " + instr + "\r\n";
+						text += "Set MIDI channel " + (channel + 1) + " to instrument " + instr + "\r\n";
 					}
 					else
 					{

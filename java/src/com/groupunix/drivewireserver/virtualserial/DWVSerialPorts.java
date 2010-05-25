@@ -50,6 +50,8 @@ public class DWVSerialPorts {
 	private String soundbankfilename = null;
 	private boolean midiVoicelock = false;
 	private  HierarchicalConfiguration midiProfConf = null;
+	private int[] GMInstrumentCache;
+	
 	
 	public DWVSerialPorts(int handlerno)
 	{
@@ -59,6 +61,8 @@ public class DWVSerialPorts {
 		// initialize MIDI device to internal synth
 		logger.debug("initialize internal midi synth");
 			
+		clearGMInstrumentCache();
+		
 		try 
 		{
 			midiSynth = MidiSystem.getSynthesizer();
@@ -85,6 +89,11 @@ public class DWVSerialPorts {
 		}
 		
 	}
+
+
+
+
+
 
 
 
@@ -736,11 +745,17 @@ public class DWVSerialPorts {
 
 
 
-	public String getMidiProfile() 
+	public String getMidiProfileName() 
 	{
 		return(this.midiProfConf.getString("name","none"));
 	}
 
+	public HierarchicalConfiguration getMidiProfile() 
+	{
+		return(this.midiProfConf);
+	}
+
+	
 	
 	public boolean setMidiProfile(String profile)
 	{
@@ -753,7 +768,10 @@ public class DWVSerialPorts {
 		    
 		    if (mprof.getString("name").equalsIgnoreCase(profile))
 		    {
+		    	
 		    	this.midiProfConf = (HierarchicalConfiguration) mprof.clone();
+		    	doMidiTranslateCurrentVoices();
+		    	
 		    	logger.debug("MIDI: set profile to '" + profile + "'");
 		    	return(true);
 		    }
@@ -765,7 +783,26 @@ public class DWVSerialPorts {
 	
 	
 	
-	public int getMidiVoice(int voice)
+	private void doMidiTranslateCurrentVoices() 
+	{
+		// translate current GM voices to current profile
+		
+		MidiChannel[] chans = this.midiSynth.getChannels();
+		
+		for (int i = 0;i < chans.length;i++)
+		{
+			if (chans[i] != null)
+			{
+				chans[i].programChange(getGMInstrument(this.GMInstrumentCache[i]));
+			}
+				
+		}
+	}
+
+
+
+
+	public int getGMInstrument(int voice)
 	{
 		if (this.midiProfConf == null)
 		{
@@ -783,15 +820,15 @@ public class DWVSerialPorts {
 			if (sub.getInt("[@dev]") == voice)
 			{
 				xvoice = sub.getInt("[@gm]");
+				logger.debug("MIDI: profile '" + this.midiProfConf.getString("name") + "' translates device inst " + voice + " to GM instr " + xvoice);
+				return(xvoice);
 			}
 			
 		}
 		
-		logger.debug("MIDI: profile '" + this.midiProfConf.getString("name") + "' translates instrument " + voice + " to " + xvoice);
-		return(xvoice);
+		// no translation match
+		return(voice);
 	}
-
-
 
 
 	public boolean setMIDIInstr(int channel, int instr) 
@@ -812,6 +849,25 @@ public class DWVSerialPorts {
 		
 	}
 
+	
+	public void clearGMInstrumentCache() 
+	{
+		this.GMInstrumentCache = new int[16];
+		
+		for (int i = 0;i<16;i++)
+		{
+			this.GMInstrumentCache[i] = 0;
+		}
+	}
 
+	
+	public void setGMInstrumentCache(int chan,int instr)
+	{
+		this.GMInstrumentCache[chan] = instr;
+	}
 
+	public int getGMInstrumentCache(int chan)
+	{
+		return(this.GMInstrumentCache[chan]);
+	}
 }
