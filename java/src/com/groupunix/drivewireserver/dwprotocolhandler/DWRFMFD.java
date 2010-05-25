@@ -10,6 +10,8 @@ import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.OS9Defs;
+
 public class DWRFMFD
 {
 
@@ -168,15 +170,12 @@ MINSEC         SET       16
 	
 
 
-	public void readFD()
+	public void readFD() throws FileSystemException
 	{
-	/*	setOWN( new byte[] {0,0} );
+		setOWN( new byte[] {0,0} );
 		setLNK((byte)1);
 		
-		// file info
-		File f = new File(this.pathstr);
-		
-		if (f.exists())
+		if (this.fileobj.exists())
 		{
 			// attributes
 			
@@ -184,27 +183,30 @@ MINSEC         SET       16
 			
 			// for now.. user = public 
 			
-			if (f.canRead())
+			if (fileobj.isReadable())
 				tmpmode += OS9Defs.MODE_R + OS9Defs.MODE_PR;
 			
-			if (f.canWrite())
+			if (fileobj.isWriteable())
 				tmpmode += OS9Defs.MODE_W + OS9Defs.MODE_PW;
 			
-			if (f.canExecute())
+			// everything is executable for now
 				tmpmode += OS9Defs.MODE_E + OS9Defs.MODE_PE;
 			
-			if (f.isDirectory())
+			// TODO	
+			/* if (fileobj.  .isDirectory())
 				tmpmode += OS9Defs.MODE_DIR;
-		
+			*/
 			setATT(tmpmode);
 			
 			
 			// date and time modified
 			
-			setDAT(timeToBytes(f.lastModified()));
+			setDAT(timeToBytes(fileobj.getContent().getLastModifiedTime()));
 			
 			// size
-			setSIZ(lengthToBytes(f.length()));
+			setSIZ(lengthToBytes(fileobj.getContent().getSize()));
+			
+			
 			
 			// date created (java doesn't know)
 			setCreat(new byte[] {0,0,0});
@@ -213,7 +215,7 @@ MINSEC         SET       16
 		{
 			logger.error("attempt to read FD for non existant file '" + this.pathstr + "'");
 		}
-		*/
+		
 	}
 
 	
