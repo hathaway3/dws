@@ -7,6 +7,7 @@ import java.util.GregorianCalendar;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
@@ -192,13 +193,12 @@ MINSEC         SET       16
 			// everything is executable for now
 				tmpmode += OS9Defs.MODE_E + OS9Defs.MODE_PE;
 			
-			// TODO	
-			/* if (fileobj.  .isDirectory())
+			if (fileobj.getType() == FileType.FOLDER)
 				tmpmode += OS9Defs.MODE_DIR;
-			*/
+			
+			
 			setATT(tmpmode);
-			
-			
+						
 			// date and time modified
 			
 			setDAT(timeToBytes(fileobj.getContent().getLastModifiedTime()));
