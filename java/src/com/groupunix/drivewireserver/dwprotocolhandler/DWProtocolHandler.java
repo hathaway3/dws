@@ -221,106 +221,113 @@ public class DWProtocolHandler implements Runnable
 			if (opcodeint > -1)
 			{
 				lastOpcode = (byte) opcodeint;
-							
-				switch(lastOpcode)
+				
+				// fast writes
+				if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_COCO_PORTS - 1)))
 				{
-					case DWDefs.OP_RESET1:
-					case DWDefs.OP_RESET2:
-					case DWDefs.OP_RESET3:
-						DoOP_RESET();
-						break;
+					DoOP_FASTSERWRITE(lastOpcode);
+				}
+				else
+				{
+				
+					switch(lastOpcode)
+					{
+						case DWDefs.OP_RESET1:
+						case DWDefs.OP_RESET2:
+						case DWDefs.OP_RESET3:
+							DoOP_RESET();
+							break;
 
-					case DWDefs.OP_DWINIT:
-						DoOP_DWINIT();
-						break;
+						case DWDefs.OP_DWINIT:
+							DoOP_DWINIT();
+							break;
 									
-					case DWDefs.OP_INIT:
-						DoOP_INIT();
-						break;
+						case DWDefs.OP_INIT:
+							DoOP_INIT();
+							break;
 
-					case DWDefs.OP_TERM:
-						DoOP_TERM();	
-						break;
+						case DWDefs.OP_TERM:
+							DoOP_TERM();	
+							break;
 
-					case DWDefs.OP_REREAD:
-					case DWDefs.OP_READ:
-						DoOP_READ(lastOpcode);
-						break;
+						case DWDefs.OP_REREAD:
+						case DWDefs.OP_READ:
+							DoOP_READ(lastOpcode);
+							break;
 
-					case DWDefs.OP_REREADEX:
-					case DWDefs.OP_READEX:
-						DoOP_READEX(lastOpcode);
-						break;
+						case DWDefs.OP_REREADEX:
+						case DWDefs.OP_READEX:
+							DoOP_READEX(lastOpcode);
+							break;
 
-					case DWDefs.OP_WRITE:
-					case DWDefs.OP_REWRITE:
-						DoOP_WRITE(lastOpcode);
-						break;
+						case DWDefs.OP_WRITE:
+						case DWDefs.OP_REWRITE:
+							DoOP_WRITE(lastOpcode);
+							break;
 
+						case DWDefs.OP_GETSTAT:
+						case DWDefs.OP_SETSTAT:
+							DoOP_STAT(lastOpcode);
+							break;
 
-					case DWDefs.OP_GETSTAT:
-					case DWDefs.OP_SETSTAT:
-						DoOP_STAT(lastOpcode);
-						break;
+						case DWDefs.OP_TIME:
+							DoOP_TIME();
+							break;
 
-					case DWDefs.OP_TIME:
-						DoOP_TIME();
-						break;
+						case DWDefs.OP_PRINT:
+							DoOP_PRINT();
+							break;
 
-					case DWDefs.OP_PRINT:
-						DoOP_PRINT();
-						break;
-
-					case DWDefs.OP_PRINTFLUSH:
-						DoOP_PRINTFLUSH();
-						break;
+						case DWDefs.OP_PRINTFLUSH:
+							DoOP_PRINTFLUSH();
+							break;
 							
-					case DWDefs.OP_SERREADM:
-						DoOP_SERREADM();
-						break;
+						case DWDefs.OP_SERREADM:
+							DoOP_SERREADM();
+							break;
 
-					case DWDefs.OP_SERREAD:
-						DoOP_SERREAD();
-						break;
+						case DWDefs.OP_SERREAD:
+							DoOP_SERREAD();
+							break;
 
-					case DWDefs.OP_SERWRITE:
-						DoOP_SERWRITE();
-						break;
+						case DWDefs.OP_SERWRITE:
+							DoOP_SERWRITE();
+							break;
 
-					case DWDefs.OP_SERSETSTAT:
-						DoOP_SERSETSTAT();
-						break;
+						case DWDefs.OP_SERSETSTAT:
+							DoOP_SERSETSTAT();
+							break;
 							      
-					case DWDefs.OP_SERGETSTAT:
-						DoOP_SERGETSTAT();
-						break;
+						case DWDefs.OP_SERGETSTAT:
+							DoOP_SERGETSTAT();
+							break;
 			    
-					case DWDefs.OP_SERINIT:
-						DoOP_SERINIT();
-						break;
+						case DWDefs.OP_SERINIT:
+							DoOP_SERINIT();
+							break;
 							      
-					case DWDefs.OP_SERTERM:
-						DoOP_SERTERM();
-						break;	
+						case DWDefs.OP_SERTERM:
+							DoOP_SERTERM();
+							break;	
 									
-					case DWDefs.OP_NOP:
-						DoOP_NOP();
-						break;
+						case DWDefs.OP_NOP:
+							DoOP_NOP();
+							break;
 								
-					case DWDefs.OP_RFM:
-						DoOP_RFM();
-						break;
+						case DWDefs.OP_RFM:
+							DoOP_RFM();
+							break;
 									
-					default:
-						logger.info("UNKNOWN OPCODE: " + opcodeint);
-						break;
-					
+						default:
+							logger.info("UNKNOWN OPCODE: " + opcodeint);
+							break;
+					}	
 				}
 				
 			}
 			else
 			{
-				logger.debug("neg opcode");
+				logger.debug("timed out reading opcode (should not happen)");
 			}
 			
 		}
@@ -356,6 +363,31 @@ public class DWProtocolHandler implements Runnable
 	
 	
 	
+	private void DoOP_FASTSERWRITE(byte opcode) 
+	{
+		int databyte;
+		int port = opcode - DWDefs.OP_FASTWRITE_BASE;
+		
+		try {
+			databyte = protodev.comRead1(false);
+			
+			dwVSerialPorts.serWrite(port,databyte);
+			
+			if (config.getBoolean("LogOpCode", false))
+			{
+				logger.debug("DoOP_FASTSERWRITE to port " + port);
+			}
+			
+		} 
+		catch (DWCommTimeOutException e) 
+		{
+			logger.error("Timeout reading FASTSERWRITE data byte: " + e.getMessage());
+		}
+		
+	}
+
+
+
 	// DW OP methods
 
 	

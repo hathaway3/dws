@@ -8,10 +8,12 @@ import java.io.RandomAccessFile;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.OS9Defs;
 
 public class DWRFMPath
 {
@@ -22,6 +24,9 @@ public class DWRFMPath
 	private String localroot;
 	private int seekpos;
 	private int handlerno;
+	
+	private boolean dirmode = false;
+	private byte[] dirbuffer;
 	
 	private FileSystemManager fsManager;
 	private FileObject fileobj;
@@ -80,7 +85,7 @@ public class DWRFMPath
 		return seekpos;
 	}
 
-	public int openFile()
+	public int openFile(int modebyte)
 	{
 		// attempt to open local file
 		
@@ -88,20 +93,89 @@ public class DWRFMPath
 		{
 			fileobj = fsManager.resolveFile(this.localroot + this.pathstr);
 			
-			if (fileobj.isReadable())		
-			 {
-				 return(0);
-			 }
-			 else
-			 {
-				 fileobj.close();
-				 return(216);
-			 }
-		} catch (FileSystemException e)
+			if (((byte)modebyte & OS9Defs.MODE_DIR) == OS9Defs.MODE_DIR)
+			{
+				// Directory
+				if (fileobj.isReadable())		
+				 {
+					if (fileobj.getType() == FileType.FOLDER)
+					{
+						this.dirmode = true;
+						genDirBuffer();
+						
+						logger.debug("directory open: modebyte " + modebyte);
+						
+						return(0);
+						
+					}
+					else
+					{
+						 fileobj.close();
+						 return(214);
+					 }	
+				 }
+				 else
+				 {
+					 fileobj.close();
+					 return(216);
+				 }
+			}
+			else
+			{
+				// File
+			
+				if (fileobj.isReadable())		
+				{
+					return(0);
+				}
+				else
+				{
+					fileobj.close();
+					return(216);
+				}
+			}
+		} 
+		catch (FileSystemException e)
 		{
 			logger.warn("open failed: " + e.getMessage());
 			return(216);
 		}
+	}
+
+	private void genDirBuffer() throws FileSystemException 
+	{
+		FileObject[] childs = this.fileobj.getChildren();
+		
+		if (childs.length > 0)
+		{
+			this.dirbuffer = new byte[childs.length * 32];
+			
+			for (int i = 0;i<childs.length;i++)
+			{
+				 String fname = childs[i].getName().getBaseName();
+				 if (fname.length() <= 29)
+				 {
+					 System.arraycopy(fname.getBytes(), 0, this.dirbuffer, (i*32), fname.length());
+					 
+					 // set high bit in last char of filename
+					 this.dirbuffer[(i*32)+fname.length()-1] = (byte) (this.dirbuffer[(i*32)+fname.length()-1] + 128);
+					 
+					 // need to set last 3 bytes to something...
+					 
+				 }
+				 else
+				 {
+					 logger.debug("cannot add long named file '" +  childs[i].getName() + "'");
+				 }
+			}
+			
+		}
+		else
+		{
+			logger.debug("empty directory");
+			this.dirbuffer = null;
+		}
+		
 	}
 
 	public void setLocalroot(String localroot)
@@ -144,35 +218,45 @@ public class DWRFMPath
 
 	public int getBytesAvail(int maxbytes)
 	{
-		// return # bytes left in file from current seek pos, up to maxbytes
-
-
 		
-		File f = new File(this.localroot + this.pathstr);
-		if (f.exists())
+		if (this.dirmode)
 		{
-			// we only handle int sized files..
-			int tmpsize = (int)f.length() - this.seekpos;
+			// Dir mode
+			// return # bytes left in the dirbuffer
 			
-			// only 256 per call
-			if (tmpsize > 127)
-			{
-				tmpsize = 127;
-			}
-			
-			if (tmpsize > maxbytes)
-			{
-				return(maxbytes);
-			}
-			return(tmpsize);
+			return(this.dirbuffer.length - this.seekpos);
 			
 		}
 		else
 		{
-			 //TODO wrong!
-			 return(0);
+			// File mode
+			// return # bytes left in file from current seek pos, up to maxbytes
+	
+			File f = new File(this.localroot + this.pathstr);
+			if (f.exists())
+			{
+				// we only handle int sized files..
+				int tmpsize = (int)f.length() - this.seekpos;
+			
+				// only 256 per call
+				if (tmpsize > 127)
+				{
+					tmpsize = 127;
+				}
+			
+				if (tmpsize > maxbytes)
+				{
+					return(maxbytes);
+				}
+				return(tmpsize);
+			
+			}
+			else
+			{
+				//TODO wrong!
+				return(0);
+			}
 		}
-
 	}
 
 	public byte[] getBytes(int availbytes)
@@ -182,20 +266,19 @@ public class DWRFMPath
 		// TODO structure blindly assumes this will work.
 		// like above need to implement exceptions/error handling passed up to caller
 		
-		
 		byte[] buf = new byte[availbytes];
-		RandomAccessFile inFile = null;
 		
-		File f = new File(this.localroot + this.pathstr);
-		if (f.exists())
+		if (this.dirmode)
 		{
-			if (f.isDirectory())
-			{
-				// total hack
-				logger.debug("DIR: asked for "+ availbytes);
-				buf = "01234567890123456789012345670000".getBytes();
-			}
-			else
+			System.arraycopy(this.dirbuffer, this.seekpos, buf, 0, availbytes);
+			// this.seekpos += availbytes;
+		}
+		else
+		{
+			RandomAccessFile inFile = null;
+		
+			File f = new File(this.localroot + this.pathstr);
+			if (f.exists())
 			{
 				logger.debug("FILE: asked for "+ availbytes);
 				
@@ -234,10 +317,11 @@ public class DWRFMPath
 						e.printStackTrace();
 					}
 				}	
-			
 			}
 		}
+	
 		return(buf);
+		
 	}
 
 	public void incSeekpos(int bytes)

@@ -365,19 +365,27 @@ public class DWRFMHandler
 			
 			int availbytes = this.paths[pathno].getBytesAvail(maxbytes);
 			
-			byte[] buf = new byte[availbytes];
-			
-			System.arraycopy(this.paths[pathno].getBytes(availbytes),0, buf, 0, availbytes);
-			
-			protodev.comWrite1(availbytes);
-			
-			if (availbytes > 0)
+			if (maxbytes > availbytes)
 			{
-				protodev.comWrite(buf, availbytes);
-				this.paths[pathno].incSeekpos(availbytes);
+				maxbytes = availbytes;
 			}
 			
-			logger.debug("read on path " + pathno + " maxbytes: " + maxbytes + " availbytes: " + availbytes );
+			byte[] buf = new byte[maxbytes];
+			
+			System.arraycopy(this.paths[pathno].getBytes(maxbytes),0, buf, 0, maxbytes);
+			
+			protodev.comWrite1(maxbytes);
+			
+			if (maxbytes > 0)
+			{
+				protodev.comWrite(buf, maxbytes);
+				this.paths[pathno].incSeekpos(maxbytes);
+				
+				logger.debug("buf: " + DWUtils.byteArrayToHexString(buf));
+				
+			}
+			
+			logger.debug("read on path " + pathno + " maxbytes: " + maxbytes );
 		} 
 		catch (DWCommTimeOutException e)
 		{
@@ -445,6 +453,7 @@ public class DWRFMHandler
 			int pathno = protodev.comRead1(true);
 			int modebyte = protodev.comRead1(true);
 			
+			modebyte = (int)(modebyte & 0xFF);
 			
 			// read path str
 			String pathstr = new String();
@@ -489,7 +498,9 @@ public class DWRFMHandler
 		{
 			int pathno = protodev.comRead1(true);
 			int modebyte = protodev.comRead1(true);
-			
+
+			modebyte = (int)(modebyte & 0xFF);
+						
 			// read path str
 			String pathstr = new String();
 		
@@ -507,11 +518,11 @@ public class DWRFMHandler
 			this.paths[pathno] = new DWRFMPath(this.handlerno, pathno);
 			this.paths[pathno].setPathstr(pathstr);
 			
-			int result = this.paths[pathno].openFile();
-			
+			int result = this.paths[pathno].openFile(modebyte);
 			protodev.comWrite1(result);
-			
+				
 			logger.debug("open path " + pathno + " mode " + modebyte + ", to " + pathstr + ": result " + result);
+			
 		} 
 		catch (DWCommTimeOutException e)
 		{

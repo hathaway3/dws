@@ -46,5 +46,8 @@ public class DWDefs
 	// input buffer
 	public static final int INPUT_WAIT = 250;
 	
+	// fast writes
+	public static final byte OP_FASTWRITE_BASE = (byte) 128;
+	
 
 }
