@@ -443,6 +443,8 @@ public class DWRFMHandler
 		try
 		{
 			int pathno = protodev.comRead1(true);
+			int modebyte = protodev.comRead1(true);
+			
 			
 			// read path str
 			String pathstr = new String();
@@ -464,7 +466,7 @@ public class DWRFMHandler
 			
 			protodev.comWrite1(result);
 			
-			logger.debug("create path " + pathno + " to " + pathstr + ": result " + result);
+			logger.debug("create path " + pathno + " mode " + modebyte + ", to " + pathstr + ": result " + result);
 		} 
 		catch (DWCommTimeOutException e)
 		{
@@ -486,6 +488,7 @@ public class DWRFMHandler
 		try
 		{
 			int pathno = protodev.comRead1(true);
+			int modebyte = protodev.comRead1(true);
 			
 			// read path str
 			String pathstr = new String();
@@ -508,7 +511,7 @@ public class DWRFMHandler
 			
 			protodev.comWrite1(result);
 			
-			logger.debug("open path " + pathno + " to " + pathstr + ": result " + result);
+			logger.debug("open path " + pathno + " mode " + modebyte + ", to " + pathstr + ": result " + result);
 		} 
 		catch (DWCommTimeOutException e)
 		{
