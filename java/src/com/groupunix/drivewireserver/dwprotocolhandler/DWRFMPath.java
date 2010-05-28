@@ -148,11 +148,17 @@ public class DWRFMPath
 		
 		if (childs.length > 0)
 		{
-			this.dirbuffer = new byte[childs.length * 32];
+			this.dirbuffer = new byte[(childs.length * 32) + 64];
 			
-			for (int i = 0;i<childs.length;i++)
+			// . and ..
+			this.dirbuffer[0] = (byte) '.';
+			this.dirbuffer[1] = (byte) ('.' + 128);
+			this.dirbuffer[32] = (byte) ('.' + 128);
+			
+			// file entries
+			for (int i = 2;i<(childs.length+2);i++)
 			{
-				 String fname = childs[i].getName().getBaseName();
+				 String fname = childs[i-2].getName().getBaseName();
 				 if (fname.length() <= 29)
 				 {
 					 System.arraycopy(fname.getBytes(), 0, this.dirbuffer, (i*32), fname.length());
@@ -165,7 +171,7 @@ public class DWRFMPath
 				 }
 				 else
 				 {
-					 logger.debug("cannot add long named file '" +  childs[i].getName() + "'");
+					 logger.debug("cannot add long named file '" +  childs[i-2].getName() + "'");
 				 }
 			}
 			

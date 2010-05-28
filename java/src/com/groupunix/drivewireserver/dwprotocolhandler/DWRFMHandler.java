@@ -408,6 +408,7 @@ public class DWRFMHandler
 			// read seek pos
 			byte[] seekpos = new byte[4];
 			
+			
 			seekpos = protodev.comRead(4);
 			
 			this.paths[pathno].setSeekpos(DWUtils.int4(seekpos));

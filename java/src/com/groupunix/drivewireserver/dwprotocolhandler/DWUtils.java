@@ -12,7 +12,7 @@ public class DWUtils
 	
 	public static int int4(byte[] data) 
 	{
-		 return( (data[0] & 0xFF) << 32) + ((data[0] & 0xFF) << 16) + ((data[1] & 0xFF) << 8) + (data[2] & 0xFF);
+		 return( (data[0] & 0xFF) << 32) + ((data[1] & 0xFF) << 16) + ((data[2] & 0xFF) << 8) + (data[3] & 0xFF);
 	}
 	
 	public static int int3(byte[] data) 
