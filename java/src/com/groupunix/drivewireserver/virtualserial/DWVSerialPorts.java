@@ -257,7 +257,7 @@ public class DWVSerialPorts {
 			logger.debug("write to port " + port + ": " + databyte);
 		}
 		
-		if ((port < MAX_COCO_PORTS) && (port > 0))
+		if ((port < MAX_COCO_PORTS) && (port >= 0))
 		{
 			if (vserialPorts[port].isOpen())
 			{
