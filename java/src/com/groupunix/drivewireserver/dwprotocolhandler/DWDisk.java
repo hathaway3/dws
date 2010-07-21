@@ -2,6 +2,7 @@ package com.groupunix.drivewireserver.dwprotocolhandler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import org.apache.commons.vfs.Capability;
 import org.apache.commons.vfs.FileObject;
@@ -12,6 +13,7 @@ import org.apache.commons.vfs.VFS;
 import org.apache.commons.vfs.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 
 
@@ -19,10 +21,10 @@ public class DWDisk {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 	
-	public static final int MAX_SECTORS = 122880; // what is coco's max? 24 bits?
+	public static final int MAX_SECTORS = 16777215; // what is coco's max? 24 bits?
 	private int LSN = 0;
 	private boolean	wrProt = false;
-	private DWDiskSector[] sectors = new DWDiskSector[MAX_SECTORS];
+	private ArrayList<DWDiskSector> sectors = new ArrayList<DWDiskSector>();
 	
 	private int reads = 0;
 	private int writes = 0;
@@ -39,6 +41,7 @@ public class DWDisk {
 
 		logger.info("New DWDisk for '" + path + "'");
 		
+	
 		if (fileobj.isReadable())
 		{
 			loadSectors();
@@ -55,85 +58,85 @@ public class DWDisk {
 	public int DD_TOT()
 	{
 		byte[] dd_tot = new byte[3];
-		System.arraycopy( sectors[0].getData(), 0, dd_tot, 0, 3 ); 
+		System.arraycopy( sectors.get(0).getData(), 0, dd_tot, 0, 3 ); 
 		return(DWUtils.int3(dd_tot));
 	}
 	
 	public int DD_TKS()
 	{
-		return((int) sectors[0].getData()[3]);
+		return((int) sectors.get(0).getData()[3]);
 	}
 	
 	public int DD_MAP()
 	{
 		byte[] dd_map = new byte[2];
-		System.arraycopy( sectors[0].getData(), 4, dd_map, 0, 2 ); 
+		System.arraycopy( sectors.get(0).getData(), 4, dd_map, 0, 2 ); 
 		return(DWUtils.int2(dd_map));
 	}
 	
 	public int DD_BIT()
 	{
 		byte[] dd_bit = new byte[2];
-		System.arraycopy( sectors[0].getData(), 6, dd_bit, 0, 2 ); 
+		System.arraycopy( sectors.get(0).getData(), 6, dd_bit, 0, 2 ); 
 		return(DWUtils.int2(dd_bit));
 	}
 	
 	public int DD_DIR()
 	{
 		byte[] dd_dir = new byte[3];
-		System.arraycopy( sectors[0].getData(), 8, dd_dir, 0, 3 ); 
+		System.arraycopy( sectors.get(0).getData(), 8, dd_dir, 0, 3 ); 
 		return(DWUtils.int3(dd_dir));
 	}
 	
 	public int DD_OWN()
 	{
 		byte[] dd_own = new byte[2];
-		System.arraycopy( sectors[0].getData(), 11, dd_own, 0, 2 ); 
+		System.arraycopy( sectors.get(0).getData(), 11, dd_own, 0, 2 ); 
 		return(DWUtils.int2(dd_own));
 	}
 	
 	public byte DD_ATT()
 	{
-		return(sectors[0].getData()[13]);
+		return(sectors.get(0).getData()[13]);
 	}
 	
 	public long DD_DSK()
 	{
 		byte[] dd_dsk = new byte[2];
-		System.arraycopy( sectors[0].getData(), 14, dd_dsk, 0, 2 ); 
+		System.arraycopy( sectors.get(0).getData(), 14, dd_dsk, 0, 2 ); 
 		return(DWUtils.int2(dd_dsk));
 	}
 	
 	public byte DD_FMT()
 	{
-		return(sectors[0].getData()[16]);
+		return(sectors.get(0).getData()[16]);
 	}
 	
 	public long DD_SPT()
 	{
 		byte[] dd_spt = new byte[2];
-		System.arraycopy( sectors[0].getData(), 17, dd_spt, 0, 2 ); 
+		System.arraycopy( sectors.get(0).getData(), 17, dd_spt, 0, 2 ); 
 		return(DWUtils.int2(dd_spt));
 	}
 	
 	public long DD_BT()
 	{
 		byte[] dd_bt = new byte[3];
-		System.arraycopy( sectors[0].getData(), 21, dd_bt, 0, 3 ); 
+		System.arraycopy( sectors.get(0).getData(), 21, dd_bt, 0, 3 ); 
 		return(DWUtils.int3(dd_bt));
 	}
 	
 	public long DD_BSZ()
 	{
 		byte[] dd_bsz = new byte[2];
-		System.arraycopy( sectors[0].getData(), 24, dd_bsz, 0, 2 ); 
+		System.arraycopy( sectors.get(0).getData(), 24, dd_bsz, 0, 2 ); 
 		return(DWUtils.int2(dd_bsz));
 	}
 	
 	public byte[] DD_DAT()
 	{
 		byte[] dd_dat = new byte[5];
-		System.arraycopy( sectors[0].getData(), 26, dd_dat, 0, 5 ); 
+		System.arraycopy( sectors.get(0).getData(), 26, dd_dat, 0, 5 ); 
 		return(dd_dat);
 	}
 	
@@ -141,9 +144,9 @@ public class DWDisk {
 	{
 		byte[] dd_nam = new byte[32];
 		
-		if (sectors[0] != null)
+		if (!sectors.isEmpty())
 		{
-			System.arraycopy( sectors[0].getData(), 31, dd_nam, 0, 32 );
+			System.arraycopy( sectors.get(0).getData(), 31, dd_nam, 0, 32 );
 		}
 		else
 		{
@@ -155,7 +158,7 @@ public class DWDisk {
 	public byte[] DD_OPT()
 	{
 		byte[] dd_opt = new byte[32];
-		System.arraycopy( sectors[0].getData(), 63, dd_opt, 0, 32 ); 
+		System.arraycopy( sectors.get(0).getData(), 63, dd_opt, 0, 32 ); 
 		return(dd_opt);
 	}
 
@@ -171,17 +174,7 @@ public class DWDisk {
 	
 	public synchronized int getDiskSectors()
 	{
-		int num = 0;
-		
-		for (int i = 0;i<MAX_SECTORS;i++)
-		{
-			if (this.sectors[i] != null)
-			{
-				num++;
-			}
-		}
-		
-		return(num);
+		return(this.sectors.size());
 	}
 	
 
@@ -209,20 +202,16 @@ public class DWDisk {
 	
 	public synchronized void seekSector(int newLSN)
 	{
-		// TODO should check that the sector exists..
 		if ((newLSN < 0) || (newLSN > MAX_SECTORS))
 		{
 			logger.error("Seek out of range: sector " + newLSN + " ?");
 		}
-		else if (this.sectors[newLSN] == null)
-		{
-			// logger.debug("Seek to null sector: " + newLSN + " (seems this is OK...)");
-			this.LSN = newLSN;
-		}
 		else
 		{
 			this.LSN = newLSN;
+			
 			// logger.debug("seek to sector " + newLSN + " for '" + this.filePath + "'");
+		
 		}
 	}
 
@@ -280,9 +269,9 @@ public class DWDisk {
 			
 		   	if (bytesRead == 256)
 		   	{
-		   		this.sectors[sector] = new DWDiskSector(sector);
 		   		
-		   		this.sectors[sector].setData(buffer, false);
+		   		this.sectors.add(sector, new DWDiskSector(sector));
+		   		this.sectors.get(sector).setData(buffer, false);
 		   		sector++;
 		   		bytesRead = 0;
 		   	}	
@@ -313,13 +302,13 @@ public class DWDisk {
 		// logger.debug("Read sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
 		this.reads++;
 		
-		if (this.sectors[this.LSN] == null)
+		if (this.sectors.get(this.LSN) == null)
 		{
 			// logger.debug("request for undefined sector " + this.LSN);
-			this.sectors[this.LSN] = new DWDiskSector(this.LSN);
+			this.sectors.add(this.LSN, new DWDiskSector(this.LSN));
 		}
 		
-		return(this.sectors[this.LSN].getData());	
+		return(this.sectors.get(this.LSN).getData());	
 	}
 	
 	
@@ -333,13 +322,13 @@ public class DWDisk {
 		}
 		else
 		{
-			if (sectors[this.LSN] == null)
+			if (sectors.get(this.LSN) == null)
 			{
 				// expand disk / add sector
-				this.sectors[this.LSN] = new DWDiskSector(this.LSN);
+				this.sectors.add(this.LSN, new DWDiskSector(this.LSN));
 				logger.debug("new sector " + this.LSN);
 			}
-			sectors[this.LSN].setData(data);
+			this.sectors.get(this.LSN).setData(data);
 			
 			this.writes++;
 			
@@ -362,11 +351,11 @@ public class DWDisk {
 	{
 		int drt = 0;
 		
-		for (int i=0;i<MAX_SECTORS;i++)
+		for (int i=0;i<this.sectors.size();i++)
 		{
-			if (this.sectors[i] != null)
+			if (this.sectors.get(i) != null)
 			{
-				if (this.sectors[i].isDirty())
+				if (this.sectors.get(i).isDirty())
 				{
 					drt++;
 				}
@@ -380,7 +369,7 @@ public class DWDisk {
 	
 	public synchronized DWDiskSector getSector(int no)
 	{
-		return(this.sectors[no]);
+		return(this.sectors.get(no));
 	}
 
 	
@@ -462,7 +451,7 @@ public class DWDisk {
 		{
 			RandomAccessContent raf = fileobj.getContent().getRandomAccessContent(RandomAccessMode.READWRITE);
 		
-			for (int i = 0;i<DWDisk.MAX_SECTORS;i++)
+			for (int i = 0;i<this.sectors.size();i++)
 			{
 				if (getSector(i) != null)
 				{
@@ -507,11 +496,11 @@ public class DWDisk {
 
 	   int sector = 0;
        
-	   while ((this.sectors[sector] != null) && (sector < MAX_SECTORS)) 
+	   while (sector < this.sectors.size()) 
 	   {
 	    
-		   fos.write(this.sectors[sector].getData(), 0, 256);
-		   this.sectors[sector].makeClean();
+		   fos.write(this.sectors.get(sector).getData(), 0, 256);
+		   this.sectors.get(sector).makeClean();
 		   sector++;
 	   }
 		   
@@ -569,7 +558,9 @@ public FileObject getFileObject()
 public void reload() throws IOException
 {
 	logger.debug("reloading sectors from path");
-	this.sectors = new DWDiskSector[MAX_SECTORS];
+
+	this.sectors.clear();
+	
 	// load from path 
 	loadSectors();
 }

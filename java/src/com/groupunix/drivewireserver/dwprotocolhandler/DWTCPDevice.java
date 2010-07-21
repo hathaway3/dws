@@ -226,4 +226,10 @@ public class DWTCPDevice implements DWProtocolDevice {
 		}
 	}
 	
+	public int getRate()
+	{
+		// doesn't make sense here?
+		return(-1);
+	}
+	
 }

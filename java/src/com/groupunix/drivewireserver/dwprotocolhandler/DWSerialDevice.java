@@ -150,6 +150,12 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 	}
 	
+	
+	public int getRate()
+	{
+		return(this.serialPort.getBaudRate());
+	}
+	
 
 	
 	public void comWrite(byte[] data, int len)

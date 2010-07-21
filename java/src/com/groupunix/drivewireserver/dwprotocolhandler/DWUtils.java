@@ -5,6 +5,7 @@ import gnu.io.CommPortIdentifier;
 import java.util.ArrayList;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class DWUtils
 {
@@ -227,6 +228,12 @@ public class DWUtils
 	{
 		String res = "Unknown";
 
+		if ((opcode >= DWDefs.OP_FASTWRITE_BASE) && (opcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_COCO_PORTS - 1)))
+		{
+			res = "OP_FASTWRITE_" + (opcode - DWDefs.OP_FASTWRITE_BASE);
+		}
+		else
+		{
 		switch(opcode)
 		{
 		case DWDefs.OP_NOP:
@@ -325,6 +332,7 @@ public class DWUtils
             
 		default:
 				res = "Unknown: " + opcode;
+		}
 		}
 		
 		return(res);

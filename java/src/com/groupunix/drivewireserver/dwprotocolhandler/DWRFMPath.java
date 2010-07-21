@@ -44,6 +44,7 @@ public class DWRFMPath
 
 	public void setPathno(int pathno)
 	{
+		logger.debug("set path to " + pathno);
 		this.pathno = pathno;
 	}
 
@@ -54,7 +55,9 @@ public class DWRFMPath
 
 	public void setPathstr(String pathstr)
 	{
-		this.pathstr = pathstr;
+		this.pathstr = "/";
+		logger.debug("set pathstr to " + this.pathstr);
+		
 	}
 
 	public String getPathstr()

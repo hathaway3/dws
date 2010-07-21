@@ -1,9 +1,7 @@
 package com.groupunix.drivewireserver.virtualserial;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
@@ -11,7 +9,6 @@ import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 import javax.sound.midi.Instrument;
 import javax.sound.midi.InvalidMidiDataException;
@@ -35,9 +32,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWDisk;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWUtilDWThread implements Runnable 
@@ -49,7 +44,7 @@ public class DWUtilDWThread implements Runnable
 	private String strargs = null;
 	private int handlerno;
 	private DWVSerialPorts dwVSerialPorts;
-	
+	private boolean protect = false;
 	
 	public DWUtilDWThread(int handlerno, int vport, String args)
 	{
@@ -58,7 +53,12 @@ public class DWUtilDWThread implements Runnable
 		this.handlerno = handlerno;
 		this.dwVSerialPorts = DriveWireServer.getHandler(handlerno).getVPorts();
 		
-		logger.debug("init dw util thread");	
+		if (vport <= DWVSerialPorts.MAX_COCO_PORTS)
+		{
+			this.protect = DriveWireServer.getHandler(handlerno).config.getBoolean("ProtectedMode", false); 
+		}
+		
+		logger.debug("init dw util thread (protected mode: " + this.protect + ")");	
 	}
 	
 	
@@ -675,6 +675,12 @@ public class DWUtilDWThread implements Runnable
 			text += "  dw server show threads      - Show server threads\r\n";
 			text += "  dw server show handlers     - Show server handler instances\r\n";
 			text += "  dw server show config       - Show server level configuration\r\n";
+			
+			if (this.protect)
+			{
+				text += "\r\nThe following commands are not available in protected mode:\r\n";
+			}
+			
 			text += "  dw server restart #         - Restart handler #\r\n";
 			text += "  dw server dir [filepath]    - Show directory on server\r\n";
 			text += "  dw server list [filepath]   - List file on server\r\n";
@@ -686,9 +692,20 @@ public class DWUtilDWThread implements Runnable
 			{
 				text += "\r\nDriveWire version " + DriveWireServer.DWServerVersion + " (" + DriveWireServer.DWServerVersionDate + ") status:\r\n\n";
 			
-				text += "Device:        " + DriveWireServer.getHandler(this.handlerno).config.getString("SerialDevice","unknown") + "\r\n";
-				text += "CoCo Type:     " + DriveWireServer.getHandler(this.handlerno).config.getInt("CocoModel", 0) + "\r\n";
-			
+				text += "Total memory:  " + Runtime.getRuntime().totalMemory() / 1024 + " KB";
+			    text += "\r\nFree memory:   " + Runtime.getRuntime().freeMemory() / 1024 + " KB";
+			    
+			    if (DriveWireServer.getHandler(this.handlerno).config.getString("DeviceType","serial").equalsIgnoreCase("serial"))
+			    {
+					text += "\r\n\nDevice:        " + DriveWireServer.getHandler(this.handlerno).config.getString("SerialDevice","unknown");
+					text += " (" + DriveWireServer.getHandler(this.handlerno).getProtoDev().getRate() + " bps)\r\n";
+					text += "CoCo Type:     " + DriveWireServer.getHandler(this.handlerno).config.getInt("CocoModel", 0) + "\r\n";
+			    }
+			    else
+			    {
+			    	text += "\r\n\nDevice:        TCP, listening on port " + DriveWireServer.getHandler(this.handlerno).config.getString("TCPDevicePort","unknown");
+					text += "\r\n";
+			    }
 				text += "\r\n";
 			
 				text += "Last OpCode:   " + DWUtils.prettyOP(DriveWireServer.getHandler(handlerno).getLastOpcode()) + "\r\n";
@@ -700,12 +717,13 @@ public class DWUtilDWThread implements Runnable
 			
 				text += "\r\n";
 			
-				text += "Total Read Sectors:  " + String.format("%6d",DriveWireServer.getHandler(handlerno).getSectorsRead()) + "  (" + DriveWireServer.getHandler(handlerno).getReadRetries() + " retries)\r\n";
-				text += "Total Write Sectors: " + String.format("%6d",DriveWireServer.getHandler(handlerno).getSectorsWritten()) + "  (" + DriveWireServer.getHandler(handlerno).getWriteRetries() + " retries)\r\n";
+				// TODO:  include read and write retries per disk
+				// text += "Total Read Sectors:  " + String.format("%6d",DriveWireServer.getHandler(handlerno).getSectorsRead()) + "  (" + DriveWireServer.getHandler(handlerno).getReadRetries() + " retries)\r\n";
+				//text += "Total Write Sectors: " + String.format("%6d",DriveWireServer.getHandler(handlerno).getSectorsWritten()) + "  (" + DriveWireServer.getHandler(handlerno).getWriteRetries() + " retries)\r\n";
 			
 				text += "\r\n";
 			
-				text += "D#   Sectors  LSN   WP       Reads  Writes  Dirty \r\n";
+				text += "D#     Sectors        LSN   WP       Reads  Writes  Dirty \r\n";
 			
 				for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
 				{
@@ -713,8 +731,8 @@ public class DWUtilDWThread implements Runnable
 					{
 					 
 						text += "X"+ String.format("%-3d ",i);
-						text += String.format("%5d ", DriveWireServer.getHandler(handlerno).getDiskDrives().getDiskSectors(i));
-						text += String.format(" %5d ", DriveWireServer.getHandler(handlerno).getDiskDrives().getLSN(i));
+						text += String.format("%9d ", DriveWireServer.getHandler(handlerno).getDiskDrives().getDiskSectors(i));
+						text += String.format(" %9d ", DriveWireServer.getHandler(handlerno).getDiskDrives().getLSN(i));
 						text += String.format("  %5s  ", DriveWireServer.getHandler(handlerno).getDiskDrives().getWriteProtect(i));
 						text += String.format(" %6d ", DriveWireServer.getHandler(handlerno).getDiskDrives().getReads(i));
 						text += String.format(" %6d ", DriveWireServer.getHandler(handlerno).getDiskDrives().getWrites(i));
@@ -776,6 +794,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("r"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+			
 			if (args.length == 4)
 			{
 				doRestart(args[3]);
@@ -789,6 +813,13 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("d"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
+			
 			if (args.length == 4)
 			{
 				doDir(args[3]);
@@ -802,6 +833,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("l"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 4)
 			{
 				doList(args[3]);
@@ -815,6 +852,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("m"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 4)
 			{
 				doMakePass(args[3]);
@@ -888,6 +931,11 @@ public class DWUtilDWThread implements Runnable
 			// help
 			text += "Help for 'dw port':\r\n\n";
 			text += "  dw port show                - Show current port status\r\n";
+			if (this.protect)
+			{
+				text += "\r\nThe following commands are not available in protected mode:\r\n";
+			}
+			
 			text += "  dw port close #             - Force port # to close\r\n";
 			
 			
@@ -938,6 +986,13 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("c"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
+			
 			if (args.length == 4)
 			{
 				//TODO port close
@@ -972,6 +1027,12 @@ public class DWUtilDWThread implements Runnable
 			text += "Help for 'dw disk':\r\n\n";
 			text += "  dw disk show                - Show current disks\r\n";
 			text += "  dw disk show #              - Show details for disk in drive #\r\n";
+			
+			if (this.protect)
+			{
+				text += "\r\nThe following commands are not available in protected mode:\r\n";
+			}
+						
 			text += "  dw disk eject #             - Eject disk from drive #\r\n";
 			text += "  dw disk insert # [filepath] - Load disk in drive #\r\n";
 			text += "  dw disk reload #            - Reload disk in drive #\r\n";
@@ -991,8 +1052,8 @@ public class DWUtilDWThread implements Runnable
 			
 				text = "\r\nCurrent DriveWire Disks:\r\n\n";
 			
-				text += "D#   DSK File Name (* = write protected)       Disk Name\r\n";
-				text += "---- ----------------------------------------- --------------------------------\r\n";
+				text += "D#   DSK File Name (* = write protected)\r\n";
+				text += "---- --------------------------------------------------------------------------\r\n";
 			
 				for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
 				{
@@ -1008,8 +1069,7 @@ public class DWUtilDWThread implements Runnable
 						}
 					 
 						text += "X"+ String.format("%-3d ",i);
-						text += String.format("%-42s",df);
-						text += String.format("%-32s", DriveWireServer.getHandler(handlerno).getDiskDrives().getDiskName(i));
+						text += String.format("%-74s",df);
 						text += "\r\n";
 					}
 			
@@ -1026,6 +1086,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("e"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 4)
 			{
 				doDiskEject(args[3]);
@@ -1039,6 +1105,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("r"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 4)
 			{
 				doDiskReload(args[3]);
@@ -1052,6 +1124,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("i"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 5)
 			{
 				doDiskInsert(args[3], args[4]);
@@ -1065,6 +1143,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("wr"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 4)
 			{
 				// write to current path
@@ -1085,6 +1169,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("c"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 5)
 			{
 				// create disk
@@ -1099,6 +1189,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("wp"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 4)
 			{
 				doDiskWPToggle(args[3]);
@@ -1130,11 +1226,23 @@ public class DWUtilDWThread implements Runnable
 				}
 				else if (args[3].toLowerCase().startsWith("sa"))
 				{
+					if (this.protect)
+					{
+						dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+						return;
+					}
+
 					doDiskSetSave(args[4]);
 					return;
 				}
 				else if (args[3].toLowerCase().startsWith("l"))
 				{
+					if (this.protect)
+					{
+						dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+						return;
+					}
+
 					doDiskSetLoad(args[4]);
 					return;
 				}
@@ -1152,6 +1260,12 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("d"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			if (args.length == 5)
 			{
 				doDiskDump(args[3],args[4]);
@@ -1204,6 +1318,8 @@ public class DWUtilDWThread implements Runnable
 		{
 			int driveno = Integer.parseInt(drivestr);
 			
+			DriveWireServer.getHandler(handlerno).getDiskDrives().checkLoadedDriveNo(driveno);
+			
 			text = "Details for disk in drive #" + driveno + ":\r\n\n";
 			
 			text += "Path: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getFilePath() + "\r\n";
@@ -1232,6 +1348,14 @@ public class DWUtilDWThread implements Runnable
 		{
 			dwVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric drive #");
 			
+		} 
+		catch (DWDriveNotValidException e) 
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 201,"Invalid drive #");
+		} 
+		catch (DWDriveNotLoadedException e) 
+		{
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, 202,"There is no disk in the drive");
 		} 
 	}
 
@@ -1471,6 +1595,13 @@ public class DWUtilDWThread implements Runnable
 			text += "Help for 'dw config':\r\n\n";
 			text += "  dw config show              - Show current configuration\r\n";
 			text += "  dw config show [key]        - Show current value for key\r\n";
+			
+			if (this.protect)
+			{
+				text += "\r\nThe following commands are not available in protected mode:\r\n";
+			}
+			
+			
 			text += "  dw config set [key] [value] - Set config item key = value\r\n";
 			text += "  dw config save              - Save current configuration to disk\r\n";
 			text += "  dw config load              - Load configuration from disk\r\n";
@@ -1511,18 +1642,38 @@ public class DWUtilDWThread implements Runnable
 		}
 		else if (args[2].toLowerCase().startsWith("l"))
 		{
+
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			// reload
 			//DriveWireServer.getHandler(handlerno).reloadConfig();
 			text = "TBD! Loaded configuration from disk.";
 		}
 		else if (args[2].toLowerCase().startsWith("sa"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
+			
 			// reload
 			// DriveWireServer.getHandler(handlerno).saveConfig();
 			text = "TBD! Saved configuration to disk.";
 		}
 		else if (args[2].toLowerCase().startsWith("se"))
 		{
+			if (this.protect)
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 255, "This command is not available in protected mode.");
+				return;
+			}
+
 			// set value
 			if (args.length >= 5)
 			{

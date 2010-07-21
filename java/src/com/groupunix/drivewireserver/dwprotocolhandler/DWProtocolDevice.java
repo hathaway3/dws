@@ -14,5 +14,5 @@ public interface DWProtocolDevice
 	public void comWrite1(int data);
 	public byte[] comRead(int len) throws DWCommTimeOutException; 
 	public int comRead1(boolean timeout) throws DWCommTimeOutException; 
-	
+	public int getRate();
 }

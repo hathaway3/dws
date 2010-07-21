@@ -32,10 +32,9 @@ public class DWUIClientThread implements Runnable {
 		try 
 		{
 			skt.getOutputStream().write(("DW4UI " + DriveWireServer.DWServerVersion + "\r\n").getBytes());
-			logger.warn("1");
+
 			// open UI port, default to instance 0 for now
 			this.uiport = DriveWireServer.getHandler(0).getVPorts().openUIPort();
-			logger.warn("2");
 			
 			if (this.uiport == -1)
 			{

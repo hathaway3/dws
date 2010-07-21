@@ -44,9 +44,9 @@ public class DWUIThread implements Runnable {
 		catch (IOException e2) 
 		{
 			logger.error("Error opening UI socket on port " + this.tcpport +": " + e2.getMessage());
+			wanttodie = true;
 		}
-		
-		
+				
 		while ((wanttodie == false) && (srvr.isClosed() == false))
 		{
 			logger.debug("UI waiting for connection");

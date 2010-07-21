@@ -278,7 +278,7 @@ public class DWDiskDrives
 		}
 	}
 	
-	private void checkLoadedDriveNo(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException
+	public void checkLoadedDriveNo(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException
 	{
 		validateDriveNo(driveno);
 		

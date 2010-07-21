@@ -16,6 +16,8 @@ import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.virtualprinter.DWVPrinter;
 import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
@@ -68,7 +70,6 @@ public class DWProtocolHandler implements Runnable
 	
 	// Event handler
 	private DWProtocolEventHandler protocolEventHandler;
-	
 	
 	public DWProtocolHandler(int handlerno, HierarchicalConfiguration hconf)
 	{
@@ -216,8 +217,7 @@ public class DWProtocolHandler implements Runnable
 				logger.error(e.getMessage());
 				opcodeint = -1;
 			}
-						
-					
+				
 			if (opcodeint > -1)
 			{
 				lastOpcode = (byte) opcodeint;
@@ -329,10 +329,10 @@ public class DWProtocolHandler implements Runnable
 			{
 				logger.debug("timed out reading opcode (should not happen)");
 			}
-			
-		}
 
-					
+		}
+ 
+			
 		logger.info("handler #"+ handlerno+ ": exiting");
 		
 		
@@ -382,6 +382,14 @@ public class DWProtocolHandler implements Runnable
 		catch (DWCommTimeOutException e) 
 		{
 			logger.error("Timeout reading FASTSERWRITE data byte: " + e.getMessage());
+		} 
+		catch (DWPortNotOpenException e1) 
+		{
+			logger.error(e1.getMessage());
+		} 
+		catch (DWPortNotValidException e2)
+		{
+			logger.error(e2.getMessage());
 		}
 		
 	}
@@ -1029,6 +1037,14 @@ public class DWProtocolHandler implements Runnable
 		catch (DWCommTimeOutException e) 
 		{
 			logger.error("Timeout reading SERWRITE packet: " + e.getMessage());
+		} 
+		catch (DWPortNotOpenException e1) 
+		{
+			logger.error(e1.getMessage());
+		} 
+		catch (DWPortNotValidException e2) 
+		{
+			logger.error(e2.getMessage());
 		}
 		
 	}
@@ -1063,6 +1079,14 @@ public class DWProtocolHandler implements Runnable
 		catch (DWCommTimeOutException e) 
 		{
 			logger.error("Timeout reading SERREADM packet: " + e.getMessage());
+		} 
+		catch (DWPortNotOpenException e1) 
+		{
+			logger.error(e1.getMessage());
+		} 
+		catch (DWPortNotValidException e2) 
+		{
+			logger.error(e2.getMessage());
 		}
 		
 		
@@ -1209,11 +1233,15 @@ public class DWProtocolHandler implements Runnable
 
 
 
-	public DWProtocolEventHandler getEventHandler() {
-		// TODO Auto-generated method stub
+	public DWProtocolEventHandler getEventHandler() 
+	{
 		return this.protocolEventHandler;
 	}
 	
+	public DWProtocolDevice getProtoDev()
+	{
+		return(this.protodev);
+	}
 	
 }
 	

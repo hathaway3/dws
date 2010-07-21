@@ -21,6 +21,8 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 public class DWVSerialPorts {
 
@@ -241,7 +243,7 @@ public class DWVSerialPorts {
 	}
 
 
-	public void serWriteM(int port, String str)
+	public void serWriteM(int port, String str) throws DWPortNotOpenException, DWPortNotValidException
 	{
 		for (int i = 0;i<str.length();i++)
 		{
@@ -250,7 +252,7 @@ public class DWVSerialPorts {
 	}
 	
 
-	public void serWrite(int port, int databyte) 
+	public void serWrite(int port, int databyte) throws DWPortNotOpenException, DWPortNotValidException 
 	{
 		if (bytelog)
 		{
@@ -266,28 +268,41 @@ public class DWVSerialPorts {
 			}
 			else
 			{
-				logger.debug("write to closed port " + port);
+				throw new DWPortNotOpenException("Port " + port + " is not open");
 			}
 		}
 		else
 		{
-			logger.error("asked to write to nonexistant port " + port);
+			throw new DWPortNotValidException(port + " is not a valid port number");
 		}
 		
 	}
 
 
 
-	public byte[] serReadM(int tmpport, int tmplen) 
+	public byte[] serReadM(int port, int len) throws DWPortNotOpenException, DWPortNotValidException 
 	{
-		byte[] data = new byte[tmplen];
 		
-		data = vserialPorts[tmpport].readM(tmplen);
-		
-		return(data);
-	}
 
-	
+		if ((port < MAX_COCO_PORTS) && (port >= 0))
+		{
+			if (vserialPorts[port].isOpen())
+			{
+				byte[] data = new byte[len];
+				data = vserialPorts[port].readM(len);
+				return(data);
+			}
+			else
+			{
+				throw new DWPortNotOpenException("Port " + port + " is not open");
+			}
+		}
+		else
+		{
+			throw new DWPortNotValidException(port + " is not a valid port number");
+		}
+		
+	}
 	
 	
 	public OutputStream getPortInput(int vport) 
@@ -863,7 +878,14 @@ public class DWVSerialPorts {
 	
 	public void setGMInstrumentCache(int chan,int instr)
 	{
-		this.GMInstrumentCache[chan] = instr;
+		if ((chan >= 0) && (chan < this.GMInstrumentCache.length))
+		{
+			this.GMInstrumentCache[chan] = instr;
+		}
+		else
+		{
+			logger.debug("MIDI: channel out of range on program change: " + chan);
+		}
 	}
 
 	public int getGMInstrumentCache(int chan)
