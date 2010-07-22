@@ -261,13 +261,21 @@ public class DWVSerialPorts {
 		
 		if ((port < MAX_COCO_PORTS) && (port >= 0))
 		{
-			if (vserialPorts[port].isOpen())
+			if (vserialPorts[port] != null)
 			{
-				// normal write
-				vserialPorts[port].write(databyte);
+				if (vserialPorts[port].isOpen())
+				{
+					// normal write
+					vserialPorts[port].write(databyte);
+				}
+				else
+				{
+					throw new DWPortNotOpenException("Port " + port + " is not open");
+				}
 			}
 			else
 			{
+				// should port not initialized be different than port not open?
 				throw new DWPortNotOpenException("Port " + port + " is not open");
 			}
 		}

@@ -302,7 +302,8 @@ public class DWDisk {
 		// logger.debug("Read sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
 		this.reads++;
 		
-		if (this.sectors.get(this.LSN) == null)
+		// we can read beyond the current size of the image
+		if (this.LSN >= this.sectors.size())
 		{
 			// logger.debug("request for undefined sector " + this.LSN);
 			this.sectors.add(this.LSN, new DWDiskSector(this.LSN));
