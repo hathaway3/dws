@@ -358,5 +358,82 @@ public class DWUtils
 				
 		return(ports);
 	}
+
+	public static String midimsgToText(int statusbyte, int data1, int data2) 
+	{
+		// make midi messages into something humans can read.. 
+		String action = new String();
+		String chan = new String();
+		String d1 = new String();
+		String d2 = new String();
+		
+		if ((statusbyte >= 128) && (statusbyte <= 143))
+		{
+			action = "Note off";
+			chan = "Chan: " + (statusbyte - 128);
+			d1 = "Pitch: " + prettyMidiPitch(data1);
+			d2 = "Vel: " + data2;
+		}
+		else if ((statusbyte >= 144) && (statusbyte <= 159))
+		{
+			action = "Note on";
+			chan = "Chan: " + (statusbyte - 144);
+			d1 = "Pitch: " + prettyMidiPitch(data1);
+			d2 = "Vel: " + data2;
+		}
+		else if ((statusbyte >= 160) && (statusbyte <= 175))
+		{
+			action = "Key press";
+			chan = "Chan: " + (statusbyte - 160);
+			d1 = "Key: " + data1;
+			d2 = "Pressure: " + data2;
+		}
+		else if ((statusbyte >= 176) && (statusbyte <= 191))
+		{
+			action = "Ctr change";
+			chan = "Chan: " + (statusbyte - 176);
+			d1 = "Controller: " + data1;
+			d2 = "Value: " + data2;
+		}
+		else if ((statusbyte >= 192) && (statusbyte <= 207))
+		{
+			action = "Prg change";
+			chan = "Chan: " + (statusbyte - 192);
+			d1 = "Preset: " + data1;
+		}
+		else if ((statusbyte >= 208) && (statusbyte <= 223))
+		{
+			action = "Chan press";
+			chan = "Chan: " + (statusbyte - 208);
+			d1 = "Pressure: " + data1;
+		}
+		else if ((statusbyte >= 224) && (statusbyte <= 239))
+		{
+			action = "Pitch bend";
+			chan = "Chan: " + (statusbyte - 224);
+			d1 = "LSB: " + data1;
+			d2 = "MSB: " + data2;
+		}
+		else if (statusbyte == 248)
+		{
+			action = "Timing tick";
+		}
+		else 
+		{
+			action = "Unknown: " + statusbyte;
+			d1 = "Data1: " + data1;
+			d2 = "Data2: " + data2;
+		}
+		
+		
+		
+		return(String.format("%-10s %-10s %-20s %-20s", action, chan, d1, d2));
+	}
 	
+	private static String prettyMidiPitch(int pitch) 
+	{
+		String[] notes = new String[] {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
+		
+		return(String.format("%-3d %-2s %d",pitch,notes[pitch % 12],(pitch / 12) - 1));
+	}
 }

@@ -202,6 +202,8 @@ public class DWProtocolHandler implements Runnable
 			}
 		}			
 
+		logger.info("handler #" + handlerno + ": ready");
+		
 		// protocol loop
 		while(!wanttodie)
 		{ 
@@ -375,7 +377,7 @@ public class DWProtocolHandler implements Runnable
 			
 			if (config.getBoolean("LogOpCode", false))
 			{
-				logger.debug("DoOP_FASTSERWRITE to port " + port);
+				logger.info("DoOP_FASTSERWRITE to port " + port + ": " + databyte);
 			}
 			
 		} 
@@ -1013,7 +1015,7 @@ public class DWProtocolHandler implements Runnable
 		protodev.comWrite(result, 2);
 		
 		//if (result[0] != 0)
-		if (config.getBoolean("LogOpCode", false))
+		if (config.getBoolean("LogOpCodePolls", false))
 		{
 			logger.info("DoOP_SERREAD response " + (int) (result[0] & 0xFF) + ":" + (int) (result[1] & 0xFF));
 		}

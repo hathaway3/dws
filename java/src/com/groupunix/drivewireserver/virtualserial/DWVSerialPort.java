@@ -56,6 +56,8 @@ public class DWVSerialPort {
 	
 	private boolean midi_seen = false;
 	private boolean log_midi_bytes = false;
+	private boolean midi_in_sysex = false;
+	private String midi_sysex = new String();
 	
 	public DWVSerialPort(int handlerno, int port)
 	{
@@ -114,94 +116,100 @@ public class DWVSerialPort {
 			
 			databyte = (int)(databyte & 0xFF);
 			
-			if (databyte == 248)   // We ignore most other status stuff for now
+			if (midi_in_sysex)
 			{
-				sendMIDI(databyte);
-				
-				// timing tick
-				if (log_midi_bytes)
+				if (databyte == 247)
 				{
-					logger.debug("MIDI: timing tick");
-				}
-			}
-			else if ((databyte >= 192) && (databyte < 224))  // Program change and channel pressure have 1 data byte
-			{
-				mmsg_databytes = 1;
-				last_mmsg_status = mmsg_status;
-				mmsg_status = databyte;
-				mmsg_pos = 0;
-				
-				if (log_midi_bytes)
-				{
-					if (databyte < 208)
-					{
-						logger.debug("MIDI program change: " + (databyte));
-					}
-					else
-					{
-						logger.debug("MIDI channel pressure: " + (databyte));
-					}
-				}
-			}
-			else if ((databyte > 127) && (databyte < 240))  // Note on/off, key pressure, controller change, pitch bend have 2 data bytes
-			{
-				mmsg_databytes = 2;				
-				last_mmsg_status = mmsg_status;
-				mmsg_status = databyte;
-				mmsg_pos = 0;
-			}
-			else
-			{
-				// data bytes
-				
-				if (mmsg_pos == 0)
-				{
-					//data1
+					midi_in_sysex = false;
 					
-					if (mmsg_databytes == 2)
+					if (log_midi_bytes)
 					{
-						// store databyte 1
-						mmsg_data1 = databyte;
-						mmsg_pos = 1;
+						logger.info("midi sysex: " + midi_sysex);
 					}
-					else
-					{
-						// send midimsg with 1 data byte
-						
-						if ((mmsg_status >= 192) && (databyte < 208)) 
-						{
-							if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiVoicelock())
-							{
-								// ignore program change
-								logger.debug("MIDI: ignored program change due to instrument lock.");
-							}
-							else
-							{
-								// translate program changes
-								int xinstr = DriveWireServer.getHandler(handlerno).getVPorts().getGMInstrument(databyte);
-								sendMIDI(mmsg_status, xinstr, 0);
-								
-								// sendMIDI(mmsg_status, databyte, 0);
-								
-								// set cache
-								DriveWireServer.getHandler(handlerno).getVPorts().setGMInstrumentCache(mmsg_status - 192, databyte);
-							}
-						}
-						else
-						{
-							sendMIDI(mmsg_status, databyte, 0);
-						}
-						mmsg_pos = 0;
-					}
+					
+					midi_sysex = "";
 				}
 				else
 				{
-					//data2
-					sendMIDI(mmsg_status,mmsg_data1,databyte);
-					mmsg_pos = 0;
+					midi_sysex = midi_sysex + " " + databyte;
 				}
 			}
-			
+			else
+			{
+				if (databyte == 240)
+				{
+					midi_in_sysex = true;
+				}
+				else if (databyte == 248)   // We ignore other status stuff for now
+				{
+					sendMIDI(databyte);
+				}
+				else if ((databyte >= 192) && (databyte < 224))  // Program change and channel pressure have 1 data byte
+				{
+					mmsg_databytes = 1;
+					last_mmsg_status = mmsg_status;
+					mmsg_status = databyte;
+					mmsg_pos = 0;
+				}
+				else if ((databyte > 127) && (databyte < 240))  // Note on/off, key pressure, controller change, pitch bend have 2 data bytes
+				{
+					mmsg_databytes = 2;				
+					last_mmsg_status = mmsg_status;
+					mmsg_status = databyte;
+					mmsg_pos = 0;
+				}
+				else
+				{
+					// data bytes
+				
+					if (mmsg_pos == 0)
+					{
+						//data1
+					
+						if (mmsg_databytes == 2)
+						{
+							// store databyte 1
+							mmsg_data1 = databyte;
+							mmsg_pos = 1;
+						}
+						else
+						{
+							// send midimsg with 1 data byte
+						
+							if ((mmsg_status >= 192) && (databyte < 208)) 
+							{
+								if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiVoicelock())
+								{
+									// ignore program change
+									logger.debug("MIDI: ignored program change due to instrument lock.");
+								}
+								else
+								{
+									// translate program changes
+									int xinstr = DriveWireServer.getHandler(handlerno).getVPorts().getGMInstrument(databyte);
+									sendMIDI(mmsg_status, xinstr, 0);
+								
+									// sendMIDI(mmsg_status, databyte, 0);
+								
+									// set cache
+									DriveWireServer.getHandler(handlerno).getVPorts().setGMInstrumentCache(mmsg_status - 192, databyte);
+								}
+							}
+							else
+							{
+								sendMIDI(mmsg_status, databyte, 0);
+							}
+							mmsg_pos = 0;
+						}
+					}
+					else
+					{
+						//data2
+						sendMIDI(mmsg_status,mmsg_data1,databyte);
+						mmsg_pos = 0;
+					}
+				}
+			}
 		}
 		else
 		{	
@@ -252,7 +260,7 @@ public class DWVSerialPort {
 		if (log_midi_bytes)
 		{
 			byte[] tmpb = {(byte) statusbyte };
-			logger.debug("midimsg: " + DWUtils.byteArrayToHexString( tmpb ));
+			logger.info("midimsg: " + DWUtils.byteArrayToHexString( tmpb ));
 		}
 		
 	}
@@ -275,8 +283,8 @@ public class DWVSerialPort {
 		
 		if (log_midi_bytes)
 		{
-			byte[] tmpb = {(byte) statusbyte, (byte) data1, (byte) data2 };
-			logger.debug("midimsg: " + DWUtils.byteArrayToHexString( tmpb ));
+			// byte[] tmpb = {(byte) statusbyte, (byte) data1, (byte) data2 };
+			logger.info("midimsg: " + DWUtils.midimsgToText(statusbyte, data1, data2));
 		}
 		
 	}
