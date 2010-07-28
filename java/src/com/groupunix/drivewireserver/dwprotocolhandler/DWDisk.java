@@ -323,12 +323,14 @@ public class DWDisk {
 		}
 		else
 		{
-			if (sectors.get(this.LSN) == null)
+			// we can write beyond our current size
+			if (this.LSN >= this.sectors.size())
 			{
 				// expand disk / add sector
 				this.sectors.add(this.LSN, new DWDiskSector(this.LSN));
 				logger.debug("new sector " + this.LSN);
 			}
+			
 			this.sectors.get(this.LSN).setData(data);
 			
 			this.writes++;
