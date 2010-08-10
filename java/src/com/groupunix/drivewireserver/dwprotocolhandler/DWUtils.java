@@ -436,4 +436,39 @@ public class DWUtils
 		
 		return(String.format("%-3d %-2s %d",pitch,notes[pitch % 12],(pitch / 12) - 1));
 	}
+	
+	
+	public static String dropFirstToken(String txt)
+	{
+		// drop first token in string
+
+		String rest = new String();
+		
+		String[] tokens = txt.split(" ");
+		
+		for (int x = 1; x < tokens.length; x++)
+		{
+			if (rest.length() > 0)
+			{
+				rest = rest + " " + tokens[x];
+			}
+			else
+			{
+				rest = tokens[x];
+			}
+			
+		}
+		
+		return(rest);
+	}
+	
+	
+	public static String convertStarToBang(String txt)
+	{
+	
+		txt = txt.replaceAll("\\*", "!");
+		
+		return txt;
+	}
+	
 }

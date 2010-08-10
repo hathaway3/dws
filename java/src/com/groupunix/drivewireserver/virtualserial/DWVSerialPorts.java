@@ -134,9 +134,16 @@ public class DWVSerialPorts {
 	}
 
 
-	public void closePort(int port)
+	public void closePort(int port) throws DWPortNotValidException
 	{
-		vserialPorts[port].close();	
+		if (port < vserialPorts.length)
+		{
+			vserialPorts[port].close();	
+		}
+		else
+		{
+			throw new DWPortNotValidException("Valid port range is 0 - " + (vserialPorts.length - 1));
+		}
 	}
 	
 
@@ -156,7 +163,7 @@ public class DWVSerialPorts {
 					response[0] = (byte) 16;  // port status
 					response[1] = (byte) i;   // 000 portnumber
 					
-					logger.info("sending terminated status to coco for port " + i);
+					logger.debug("sending terminated status to coco for port " + i);
 					
 					vserialPorts[i] = new DWVSerialPort(this.handlerno, i);
 					
@@ -436,8 +443,9 @@ public class DWVSerialPorts {
 
 	public void sendUtilityOKResponse(int vport, String txt) 
 	{
-		logger.debug("API OK: port " + vport + ": " + txt);
-		vserialPorts[vport].sendUtilityOKResponse(txt);
+		logger.debug("API OK: port " + vport + ": command successful");
+		vserialPorts[vport].sendUtilityOKResponse("command successful");
+		vserialPorts[vport].writeToCoco(txt);
 	}
 
 
@@ -576,7 +584,7 @@ public class DWVSerialPorts {
 	{
 		if (vserialPorts[vport] != null)
 		{
-			return(DWVPortListenerPool.getConn(vserialPorts[vport].getConn()).getInetAddress().getCanonicalHostName());
+			return(DWVPortListenerPool.getConn(vserialPorts[vport].getConn()).getInetAddress().getHostAddress());
 		}
 		return(null);
 	}

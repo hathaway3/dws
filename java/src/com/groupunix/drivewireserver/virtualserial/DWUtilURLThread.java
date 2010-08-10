@@ -8,6 +8,7 @@ import java.net.URL;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 public class DWUtilURLThread implements Runnable {
 
@@ -84,7 +85,16 @@ public class DWUtilURLThread implements Runnable {
 		}
 		
 		
-		dwVSerialPorts.closePort(this.vport);
+		try 
+		{
+			dwVSerialPorts.closePort(this.vport);
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		logger.debug("exiting");
 	}
 

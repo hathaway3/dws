@@ -12,6 +12,7 @@ import javax.sound.midi.Transmitter;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 public class DWVPortMIDIPlayerThread implements Runnable {
 
@@ -111,7 +112,16 @@ public class DWVPortMIDIPlayerThread implements Runnable {
 		sm_sequencer.start();
 				
 		
-		DriveWireServer.getHandler(handlerno).getVPorts().closePort(vport);
+		try 
+		{
+			DriveWireServer.getHandler(handlerno).getVPorts().closePort(vport);
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		logger.debug("exit");
 	}
 

@@ -5,6 +5,8 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+
 public class DWUIClientThread implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("DWUIClientThread");
@@ -93,6 +95,11 @@ public class DWUIClientThread implements Runnable {
 		catch (IOException e) 
 		{
 			logger.warn("IO Exception: " + e.getMessage());
+		}
+		catch (DWPortNotValidException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		DriveWireServer.getHandler(0).getEventHandler().unregisterAllEvents(this.uiport);

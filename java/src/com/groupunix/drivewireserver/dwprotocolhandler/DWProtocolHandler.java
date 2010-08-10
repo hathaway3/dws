@@ -949,6 +949,10 @@ public class DWProtocolHandler implements Runnable
 		catch (DWCommTimeOutException e) 
 		{
 			logger.error("Timeout reading packet byte in SERSETSTAT");
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			logger.error(e.getMessage());
 		}
 		
 	}

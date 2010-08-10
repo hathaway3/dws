@@ -49,5 +49,38 @@ public class DWDefs
 	// fast writes
 	public static final byte OP_FASTWRITE_BASE = (byte) 128;
 	
+	
+	// result codes
+	public static final byte RC_SUCCESS = 0;
+	public static final byte RC_SYNTAX_ERROR = 100;
+	public static final byte RC_INVALID_DRIVE = 101;
+	public static final byte RC_DRIVE_NOT_LOADED = 102;
+	public static final byte RC_DRIVE_ALREADY_LOADED = 103;
+	public static final byte RC_NO_SUCH_DISKSET = 110;
+	
+	public static final byte RC_SERVER_FILESYSTEM_EXCEPTION = (byte)200;
+	public static final byte RC_SERVER_IO_EXCEPTION = (byte)201;
+	public static final byte RC_SERVER_FILE_NOT_FOUND = (byte)202;
+	
+
+	public static final byte RC_CONFIG_KEY_NOT_SET = (byte)220;
+
+	public static final byte RC_INVALID_PORT = (byte)140;
+
+	public static final byte RC_MIDI_UNAVAILABLE = (byte)150;
+
+	public static final byte RC_MIDI_INVALID_DEVICE = (byte)151;
+
+	public static final byte RC_MIDI_INVALID_DATA = (byte)152;
+
+	public static final byte RC_MIDI_SOUNDBANK_FAILED = (byte)153;
+
+	public static final byte RC_MIDI_SOUNDBANK_NOT_SUPPORTED = (byte)154;
+
+	public static final byte RC_MIDI_INVALID_PROFILE = (byte)155;
+
+	public static final byte RC_MIDI_ERROR = (byte)156;
+	
+	
 
 }

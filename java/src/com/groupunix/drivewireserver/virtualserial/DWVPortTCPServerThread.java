@@ -8,6 +8,7 @@ import java.net.Socket;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 public class DWVPortTCPServerThread implements Runnable {
 
@@ -153,7 +154,15 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 				logger.debug("exit stage 2, send peer signal");
 		
-				dwVSerialPorts.closePort(this.vport);
+				try 
+				{
+					dwVSerialPorts.closePort(this.vport);
+				} 
+				catch (DWPortNotValidException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			
 			DWVPortListenerPool.clearConn(this.conno);	

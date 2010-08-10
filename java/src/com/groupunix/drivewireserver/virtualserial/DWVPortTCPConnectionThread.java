@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 public class DWVPortTCPConnectionThread implements Runnable {
 
@@ -155,7 +156,15 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		
 				logger.debug("exit stage 2, send peer signal");
 		
-				dwVSerialPorts.closePort(this.vport);
+				try 
+				{
+					dwVSerialPorts.closePort(this.vport);
+				} 
+				catch (DWPortNotValidException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			
 			logger.debug("thread exiting");

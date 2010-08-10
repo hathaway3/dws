@@ -537,7 +537,7 @@ public class DWVSerialPort {
 		String perrno = String.format("%03d", errno);
 		logger.debug("command failed: " + perrno + " " + txt);
 		try {
-			inputBuffer.getOutputStream().write(("FAIL " + perrno + " " + txt + (char) 13).getBytes());
+			inputBuffer.getOutputStream().write(("FAIL " + perrno + " " + txt + (char) 10 + (char) 13).getBytes());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -548,7 +548,7 @@ public class DWVSerialPort {
 	public void sendUtilityOKResponse(String txt) 
 	{
 		try {
-			inputBuffer.getOutputStream().write(("OK " + txt + (char) 13).getBytes());
+			inputBuffer.getOutputStream().write(("OK " + txt + (char) 10 + (char) 13).getBytes());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
