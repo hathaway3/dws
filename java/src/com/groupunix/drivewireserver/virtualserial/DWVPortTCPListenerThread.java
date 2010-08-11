@@ -76,7 +76,7 @@ public class DWVPortTCPListenerThread implements Runnable
 			return;
 		}
 		
-		dwVSerialPorts.sendUtilityOKResponse(this.vport, "listening on port " + this.tcpport + (char) 0);
+		dwVSerialPorts.writeToCoco(vport, "OK listening on port " + this.tcpport + (char) 0 + (char) 13);
 		
 		// DWVSerialPorts.setSocket(this.vport, srvr);
 		DWVPortListenerPool.addListener(this.vport, srvr);

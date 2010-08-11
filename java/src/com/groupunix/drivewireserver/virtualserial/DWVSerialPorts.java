@@ -263,7 +263,8 @@ public class DWVSerialPorts {
 	{
 		if (bytelog)
 		{
-			logger.debug("write to port " + port + ": " + databyte);
+			
+			logger.debug("write to port " + port + ": " + databyte + " (" + (char)databyte + ")" );
 		}
 		
 		if ((port < MAX_COCO_PORTS) && (port >= 0))
