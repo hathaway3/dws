@@ -170,6 +170,29 @@ public class DWProtocolHandler implements Runnable
 			}
 			
 		}
+		else if (config.getString("DeviceType").equalsIgnoreCase("tcp-client"))
+		{
+			// create TCP device
+			if (config.containsKey("TCPClientPort") && config.containsKey("TCPClientHost"))		
+			{
+				try 
+				{
+					protodev = new DWTCPClientDevice(this.handlerno, config.getString("TCPClientHost"), config.getInt("TCPClientPort"));
+				} 
+				catch (IOException e) 
+				{
+					wanttodie = true;
+					logger.error("handler #"+handlerno+": " + e.getMessage());
+				}
+			}	
+			else
+			{
+				logger.error("TCP mode requires TCPClientPort and TCPClientHost to be set");
+				wanttodie = true;
+			}
+			
+		}
+		
 		
 		// if we've got a device, setup environment
 		if (!wanttodie)
@@ -329,7 +352,9 @@ public class DWProtocolHandler implements Runnable
 			}
 			else
 			{
-				logger.debug("timed out reading opcode (should not happen)");
+				logger.debug("timed out reading opcode (should not happen, did the serial port vanish?)");
+				logger.error("cannot read from protocol device, exiting");
+				this.wanttodie = true;
 			}
 
 		}

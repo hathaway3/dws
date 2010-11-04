@@ -248,7 +248,8 @@ public class DWSerialDevice implements DWProtocolDevice
 		} 
 		catch (IOException e) 
 		{
-			logger.error("error reading byte: " + e.getMessage());
+			logger.error("error reading byte, I want to die: " + e.getMessage());
+			this.wanttodie = true;
 			return(-1);
 		}
 		

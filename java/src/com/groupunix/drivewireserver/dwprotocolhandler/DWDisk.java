@@ -305,7 +305,10 @@ public class DWDisk {
 		// we can read beyond the current size of the image
 		if (this.LSN >= this.sectors.size())
 		{
-			// logger.debug("request for undefined sector " + this.LSN);
+			logger.debug("request for undefined sector " + this.LSN);
+			
+			// expand disk
+			expandDisk(this.LSN);
 			this.sectors.add(this.LSN, new DWDiskSector(this.LSN));
 		}
 		
@@ -314,6 +317,16 @@ public class DWDisk {
 	
 	
 	
+	private void expandDisk(int target) 
+	{
+		for (int i = this.sectors.size();i < target;i++)
+		{
+			this.sectors.add(i, new DWDiskSector(i));
+		}
+	}
+
+
+
 	public synchronized void writeSector(byte[] data) throws DWDriveWriteProtectedException, IOException
 	{
 		
@@ -327,6 +340,7 @@ public class DWDisk {
 			if (this.LSN >= this.sectors.size())
 			{
 				// expand disk / add sector
+				expandDisk(this.LSN);
 				this.sectors.add(this.LSN, new DWDiskSector(this.LSN));
 				logger.debug("new sector " + this.LSN);
 			}

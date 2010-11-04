@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
 
+
 <!-- DriveWire 4 configuration.  See below for settings that must be adjusted -->
 
 <drivewire-config>
@@ -9,8 +10,8 @@
 	<LogToFile default="false">false</LogToFile>
 	<LogFile default="drivewire.log">drivewire.log</LogFile>
 	<LogToConsole default="true">true</LogToConsole>
-	<LogFormat default="%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n">%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n</LogFormat>
-
+	<!-- <LogFormat default="%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n">%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n</LogFormat> -->
+	<LogFormat>%d{HH:mm:ss.SSS}: %m%n</LogFormat>
 	
 	<UIEnabled>true</UIEnabled>
 	<UIPort>6800</UIPort>
@@ -20,14 +21,15 @@
 	
 		
 		<instance>
-    		<Name>dw4_in_mess</Name>
+    		<Name>CoCo 3 on COM4</Name>
 
 
 			<!-- These settings need to be adjusted for your system -->
 
 			<!-- device type, serial (default) or tcp -->
 			<DeviceType>serial</DeviceType>
-			<TCPDevicePort>65504</TCPDevicePort>
+			<TCPClientPort>10002</TCPClientPort>
+			<TCPClientHost>vk3biz.ham-radio-op.net</TCPClientHost>
 
 			<!-- device name, like COM1 on windows or /dev/ttyS0 on linux -->		    		
     		<SerialDevice>COM4</SerialDevice>
@@ -40,7 +42,7 @@
 			<!-- Set to nos9-6309l2 for NitrOS9 6309 boot from CVS nightly builds via HTTP, nos9-6809l2 for a 6809 -->
 			<!-- or look below in the diskset section for many other options -->
 			
-			<DefaultDiskSet>side</DefaultDiskSet>
+			<DefaultDiskSet>pnp</DefaultDiskSet>
 
 
 			<!-- End of settings that must be adjusted -->
@@ -93,20 +95,24 @@
 			<!-- MIDI options -->
 			
 			<MIDISynthDefaultSoundbank>soundbank-deluxe.gm</MIDISynthDefaultSoundbank>
-			<MIDISynthDefaultProfile>mt540</MIDISynthDefaultProfile>
+			<MIDISynthDefaultProfile>gm</MIDISynthDefaultProfile>
 			
+			
+			<!-- This will map requests to disk 0 into other disk #s based on sector # -->
+			<HDBDOSMode>true</HDBDOSMode>
 			
 			<!-- Debugging options, only set these if you know why you are setting them -->
 			
-			<!-- <DW3Only>false</DW3Only> -->
+			<!-- <DW3Only>true</DW3Only> --> 
 			<!-- <LogDeviceBytes>true</LogDeviceBytes> -->
 			<!-- <LogVPortBytes>true</LogVPortBytes> -->
-			<!-- <LogMIDIBytes>true</LogMIDIBytes> -->
-			<!-- <LogOpCode>true</LogOpCode> -->
-			<!-- <RateOverride>1200</RateOverride> -->
+			<LogMIDIBytes>true</LogMIDIBytes>
+			<LogOpCode>true</LogOpCode>
+			<!-- <LogOpCodePolls>true</LogOpCodePolls> -->
+			<!-- <RateOverride>57600</RateOverride> -->
 			<!-- <OpTimeSendsDOW>true</OpTimeSendsDOW> -->
-			<!-- <RFMRoot>E:\cocoroot</RFMRoot> -->
-			
+			<RFMRoot>ftp://www.rtsi.com/OS9/OS9_6X09</RFMRoot>
+			<!-- <ProtectedMode>true</ProtectedMode> -->
 			
 		</instance>
     	
@@ -139,6 +145,37 @@
    		</diskset>
 
 
+
+    	<diskset>
+   			<Name>pnp</Name>
+   			<Description>Bootable NitrOS-9 L2 boot disk for 6309 with DriveWire 4 utils</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<path>e:\cocodisks\dod.dsk</path>
+   				
+   			</disk>
+   			
+   			
+   		</diskset>
+
+
+    	<diskset>
+   			<Name>level1</Name>
+   			<Description>level1</Description> 
+
+			<disk>
+   				<drive>0</drive>
+   				<relativepath>false</relativepath>
+   				<path>e:\cocodisks\nos96809l1v030209coco2_dw3.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+   			
+   			
+   		</diskset>
+
+
 		<diskset>
    			<Name>side</Name>
    			<Description>Bootable NitrOS-9 L2 boot disk for 6309 with SuperIDE</Description> 
@@ -149,34 +186,78 @@
    				<writeprotect>false</writeprotect>
    				<bootable>true</bootable>
    			</disk>
+   			
+   			<disk>
+   				<drive>1</drive>
+   				<relativepath>true</relativepath>
+   				<path>disks/dw4_extras.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   			<disk>
+   				<drive>2</drive>
+   				<path>E:/cocodisks/Music_Stuff.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   			   			
+   			<disk>
+   				<drive>3</drive>
+   				<path>E:/cocodisks/Music_Stuff2.dsk</path>
+   				<writeprotect>false</writeprotect>
+   				<bootable>false</bootable>
+   			</disk>
+   			
+   			
 		</diskset>
 		
 
-
 		<diskset>
-   			<Name>fpga</Name>
-   			<Description>Bootable NitrOS-9 L2 boot disk for 6809 80track</Description> 
+   			<Name>beta</Name>
+   			<Description>Beta disk testing</Description> 
 
 			<disk>
    				<drive>0</drive>
-   				<path>E:/multivue_6809.dsk</path>
+   				<path>http://www.nitros9.org/latest/nos96309l2v030209coco3_dw3.dsk</path>
+   				<writeprotect>true</writeprotect>
+   				<bootable>true</bootable>
+   			</disk>
+
+
+			<disk>
+   				<drive>2</drive>
+   				<path>e:/cocodisks/beta/dw4_server_l2_6309.dsk</path>
    				<writeprotect>false</writeprotect>
    				<bootable>true</bootable>
    			</disk>
 
 			<disk>
    				<drive>1</drive>
-   				<path>E:/nos96809l2v030209coco3_80d.dsk</path>
+   				<path>E:/cocodisks/beta/dw4_extras.dsk</path>
    				<writeprotect>false</writeprotect>
    				<bootable>true</bootable>
    			</disk>
-   			
-   			
+		</diskset>
+
+
+		<diskset>
+   			<Name>fpga</Name>
+   			<Description>Bootable NitrOS-9 L2 boot disk for Gary Becker's CoCo3FPGA</Description> 
+
 			<disk>
-   				<drive>2</drive>
-   				<path>E:/cocodisks/mandel09.dsk</path>
+   				<drive>0</drive>
+   				<path>http://www.nitros9.org/latest/nos96809l2v030209coco3_becker.dsk</path>
    				<writeprotect>false</writeprotect>
    				<bootable>true</bootable>
+   			</disk>
+
+   						
+   			<disk>
+   				<drive>1</drive>
+   				<path>E:/cocodisks/Music_Stuff2.dsk</path>
+   				<writeprotect>false</writeprotect>
    			</disk>
    			
    		</diskset>
@@ -721,7 +802,7 @@
 		<midisynthprofile>
 			<name>pss480</name>
 			<desc>Yamaha PSS-480/680</desc>
-			<mapping dev="0" gm="37"/>
+			<mapping dev="0" gm="38"/>
 			<mapping dev="1" gm="18"/>
 			<mapping dev="2" gm="19"/>					
 			<mapping dev="3" gm="0"/>
