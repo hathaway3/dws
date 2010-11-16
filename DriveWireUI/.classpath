@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.osgi_3.5.1.R35x_v20090827.jar" sourcepath="E:/eclipse/plugins/org.eclipse.osgi_3.5.1.R35x_v20090827.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.core.commands_3.5.0.I20090525-2000.jar" sourcepath="E:/eclipse/plugins/org.eclipse.core.commands_3.5.0.I20090525-2000.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.equinox.common_3.5.1.R35x_v20090807-1100.jar" sourcepath="E:/eclipse/plugins/org.eclipse.equinox.common_3.5.1.R35x_v20090807-1100.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.equinox.registry_3.4.100.v20090520-1800.jar" sourcepath="E:/eclipse/plugins/org.eclipse.equinox.registry_3.4.100.v20090520-1800.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.core.runtime_3.5.0.v20090525.jar" sourcepath="E:/eclipse/plugins/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.text_3.5.0.v20090513-2000.jar" sourcepath="E:/eclipse/plugins/org.eclipse.text_3.5.0.v20090513-2000.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.swt.win32.win32.x86_3.5.1.v3555a.jar" sourcepath="E:/eclipse/plugins/org.eclipse.swt.win32.win32.x86_3.5.1.v3555a.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.jface_3.5.1.M20090826-0800.jar" sourcepath="E:/eclipse/plugins/org.eclipse.jface_3.5.1.M20090826-0800.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.jface.text_3.5.1.r351_v20090708-0800.jar" sourcepath="E:/eclipse/plugins/org.eclipse.jface.text_3.5.1.r351_v20090708-0800.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.ui.workbench_3.5.1.M20090826-0800a.jar" sourcepath="E:/eclipse/plugins/org.eclipse.ui.workbench_3.5.1.M20090826-0800a.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/com.ibm.icu_4.0.1.v20090822.jar" sourcepath="E:/eclipse/plugins/com.ibm.icu_4.0.1.v20090822.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.ui.forms_3.4.1.v20090714_35x.jar" sourcepath="E:/eclipse/plugins/org.eclipse.ui.forms_3.4.1.v20090714_35x.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.core.databinding_1.2.0.M20090819-0800.jar" sourcepath="E:/eclipse/plugins/org.eclipse.core.databinding_1.2.0.M20090819-0800.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.core.databinding.beans_1.2.0.I20090525-2000.jar" sourcepath="E:/eclipse/plugins/org.eclipse.core.databinding.beans_1.2.0.I20090525-2000.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.core.databinding.observable_1.2.0.M20090902-0800.jar" sourcepath="E:/eclipse/plugins/org.eclipse.core.databinding.observable_1.2.0.M20090902-0800.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.core.databinding.property_1.2.0.M20090819-0800.jar" sourcepath="E:/eclipse/plugins/org.eclipse.core.databinding.property_1.2.0.M20090819-0800.jar"/>
+	<classpathentry kind="lib" path="E:/eclipse/plugins/org.eclipse.jface.databinding_1.3.1.M20090826-0800.jar" sourcepath="E:/eclipse/plugins/org.eclipse.jface.databinding_1.3.1.M20090826-0800.jar"/>
+	<classpathentry kind="lib" path="swing2swt.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
