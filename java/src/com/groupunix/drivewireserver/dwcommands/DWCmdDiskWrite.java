@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWCmdDiskWrite implements DWCommand {
@@ -91,7 +92,7 @@ public class DWCmdDiskWrite implements DWCommand {
 		{
 			int driveno = Integer.parseInt(drivestr);
 			
-			DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).writeDisk(path);
+			DriveWireServer.getHandler(handlerno).getDiskDrives().writeDisk(driveno,path);
 					
 			return(new DWCommandResponse("Disk #" + driveno + " written to '" + path + "'"));
 
@@ -103,6 +104,10 @@ public class DWCmdDiskWrite implements DWCommand {
 		catch (IOException e1)
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e1.getMessage()));
+		} 
+		catch (DWDriveNotLoadedException e2) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e2.getMessage()));
 		}
 	}
 	

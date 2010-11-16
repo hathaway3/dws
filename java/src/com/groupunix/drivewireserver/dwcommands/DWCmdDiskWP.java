@@ -2,6 +2,7 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 
 public class DWCmdDiskWP implements DWCommand {
 
@@ -70,6 +71,9 @@ public class DWCmdDiskWP implements DWCommand {
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error: non numeric drive #"));
 			
+		} catch (DWDriveNotLoadedException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED, e.getMessage()));
 		} 
 
 	}

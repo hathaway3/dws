@@ -47,7 +47,7 @@ public class DWCmdPortShow implements DWCommand {
 		
 		text += "\r\nCurrent port status:\r\n\n";
 		
-		for (int i = 0;i<DWVSerialPorts.MAX_COCO_PORTS;i++)
+		for (int i = 0;i<DWVSerialPorts.MAX_PORTS;i++)
 		{
 			text += String.format("%6s", DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(i));
 			

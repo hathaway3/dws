@@ -33,30 +33,32 @@ public class DWUIClientThread implements Runnable {
 		
 		try 
 		{
-			skt.getOutputStream().write(("DW4UI " + DriveWireServer.DWServerVersion + "\r\n").getBytes());
+			skt.getOutputStream().write(("Connected to DriveWire " + DriveWireServer.DWServerVersion + "\r\n").getBytes());
 
-			// open UI port, default to instance 0 for now
+			// open UI port, default to instance 0 for now... this does not really make sense?
 			this.uiport = DriveWireServer.getHandler(0).getVPorts().openUIPort();
 			
 			if (this.uiport == -1)
 			{
 				logger.warn("failed to open UI port");
-				this.skt.getOutputStream().write("FAIL could not open UI port\r\n".getBytes());
+			 	this.skt.getOutputStream().write("FAIL could not open UI port\r\n".getBytes());
 			}
 			else
 			{
-				this.skt.getOutputStream().write(("OK using UI port " + this.uiport + "\r\n").getBytes());
-		
+			   this.skt.getOutputStream().write(("OK using UI port " + this.uiport + "\r\n").getBytes());
+			   
+			   
 				// start output thread
 				this.outputT = new Thread(new DWUIClientOutputThread(this.skt.getOutputStream(),this.uiport));
 				outputT.start();
 				
 				String cmd = new String();
 			
-				while (!skt.isClosed() && !wanttodie)
+				while ((!skt.isClosed()) && (!wanttodie))
 				{
+
 					int databyte = skt.getInputStream().read();
-				
+					
 					if (databyte == -1)
 					{	
 						logger.debug("got -1 in input stream");
@@ -110,6 +112,7 @@ public class DWUIClientThread implements Runnable {
 	private void doCmd(String cmd) throws IOException 
 	{
 		DriveWireServer.getHandler(0).getVPorts().write(uiport, cmd + "\r");
+		//skt.getOutputStream().write(0);
 	}
 
 }

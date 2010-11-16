@@ -329,13 +329,21 @@ public class DWDiskDrives
 	}
 
 
-	public void setWriteProtect(int driveno, boolean onoff) 
+	public void setWriteProtect(int driveno, boolean onoff) throws DWDriveNotLoadedException 
 	{
-		diskDrives[driveno].setWriteProtect(onoff);
+		if (diskDrives[driveno] != null)
+		{
+			diskDrives[driveno].setWriteProtect(onoff);
+		}
+		else
+		{
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);
+		}
 	}
 	
 	public String getDiskName(int driveno)
 	{
+		
 		return(diskDrives[driveno].getDiskName());
 	}
 	
@@ -375,11 +383,32 @@ public class DWDiskDrives
 	}
 
 	
-	public void writeDisk(int driveno) throws IOException
+	public void writeDisk(int driveno) throws IOException, DWDriveNotLoadedException
 	{
-		diskDrives[driveno].writeDisk();
+		if (diskLoaded(driveno))
+		{
+			diskDrives[driveno].writeDisk();
+		}
+		else
+		{
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);
+		}
 	}
+	
 
+	public void writeDisk(int driveno, String path) throws IOException, DWDriveNotLoadedException
+	{
+		if (diskLoaded(driveno))
+		{
+			diskDrives[driveno].writeDisk(path);
+		}
+		else
+		{
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);
+		}
+		
+	}
+	
 	
 	public boolean isWriteable(int driveno)
 	{

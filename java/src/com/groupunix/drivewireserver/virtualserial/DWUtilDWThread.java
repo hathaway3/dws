@@ -67,7 +67,7 @@ public class DWUtilDWThread implements Runnable
 		
 		if (resp.getSuccess())
 		{
-			dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseText());
+			dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseText() + "\r\n");
 		}
 		else
 		{
@@ -85,15 +85,22 @@ public class DWUtilDWThread implements Runnable
 			e.printStackTrace();
 		}
 		
-		try 
+		
+		// dont close UI ports...
+		
+		if (this.vport < DWVSerialPorts.MAX_COCO_PORTS)
 		{
-			dwVSerialPorts.closePort(this.vport);
-		} 
-		catch (DWPortNotValidException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			try 
+			{
+				dwVSerialPorts.closePort(this.vport);
+			} 
+			catch (DWPortNotValidException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		
 		logger.debug("exiting");
 		
 	}

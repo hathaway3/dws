@@ -45,7 +45,7 @@ public class DWCmdServerDir implements DWCommand {
 
 	private DWCommandResponse doDir(String path)
 	{
-FileSystemManager fsManager;
+		FileSystemManager fsManager;
 		
 		String text = new String();
 		

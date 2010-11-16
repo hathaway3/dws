@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 
 public class DWDiskLazyWriter implements Runnable {
 
@@ -69,6 +70,9 @@ public class DWDiskLazyWriter implements Runnable {
 									catch (IOException e)
 									{
 										logger.error("Lazy write failed: " + e.getMessage());
+									} catch (DWDriveNotLoadedException e) 
+									{
+										logger.error(e.getMessage());
 									}
 								}
 				

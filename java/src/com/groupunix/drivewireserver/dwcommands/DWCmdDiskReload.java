@@ -4,6 +4,9 @@ import java.io.IOException;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 
 public class DWCmdDiskReload implements DWCommand {
 
@@ -55,7 +58,7 @@ public class DWCmdDiskReload implements DWCommand {
 		{
 			int driveno = Integer.parseInt(drivestr);
 			
-			DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).reload();
+			DriveWireServer.getHandler(handlerno).getDiskDrives().ReLoadDisk(driveno);
 	
 			return(new DWCommandResponse("Disk in drive #"+ driveno + " reloaded."));
 
@@ -67,6 +70,18 @@ public class DWCmdDiskReload implements DWCommand {
 		catch (IOException e1)
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e1.getMessage()));
+		} 
+		catch (DWDriveNotLoadedException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
+		} 
+		catch (DWDriveNotValidException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
+		} 
+		catch (DWDriveAlreadyLoadedException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_ALREADY_LOADED,e.getMessage()));
 		}
 		
 	}
