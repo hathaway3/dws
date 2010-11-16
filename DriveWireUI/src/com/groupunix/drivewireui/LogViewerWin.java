@@ -98,7 +98,7 @@ public class LogViewerWin extends Dialog {
 				  new Runnable() {
 					  public void run()
 					  {
-						  text.append(line + (char) 10);
+						  text.append(line + System.getProperty("line.separator"));
 						  
 					  }
 				  });

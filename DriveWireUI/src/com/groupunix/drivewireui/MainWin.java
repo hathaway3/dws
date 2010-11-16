@@ -90,7 +90,7 @@ public class MainWin {
 		});
 		shell.setSize(640, 514);
 		shell.setText("DriveWire User Interface");
-		shell.setLayout(null);
+		shell.setLayout(new BorderLayout(0, 0));
 		
 		Menu menu = new Menu(shell, SWT.BAR);
 		shell.setMenuBar(menu);
@@ -501,17 +501,14 @@ public class MainWin {
 		mntmAbout.setText("About...");
 		
 		text = new Text(shell, SWT.BORDER);
-		text.setBounds(0, 435, 624, 21);
 		text.setLayoutData(BorderLayout.SOUTH);
 		
 		text_1 = new Text(shell, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
-		text_1.setBounds(0, 24, 624, 411);
 		text_1.setLayoutData(BorderLayout.CENTER);
 		text_1.setFont(SWTResourceManager.getFont("Lucida Console", 9, SWT.NORMAL));
 		text_1.setEditable(false);
 		
 		ToolBar toolBar = new ToolBar(shell, SWT.FLAT | SWT.RIGHT);
-		toolBar.setBounds(0, 0, 624, 24);
 		toolBar.setLayoutData(BorderLayout.NORTH);
 		
 		ToolItem tltmShowDisks = new ToolItem(toolBar, SWT.NONE);
@@ -659,7 +656,7 @@ public class MainWin {
 	{
 		if (connectionAlive())
 		{
-			addToDisplay("\r\n");
+			addToDisplay(System.getProperty("line.separator"));
 			connection.sendCommand(cmd);
 		
 		}
@@ -708,7 +705,7 @@ public class MainWin {
 				  new Runnable() {
 					  public void run()
 					  {
-						  text_1.append(txt + "\r\n");
+						  text_1.append(txt + System.getProperty("line.separator"));
 						  // text_1.setText(txt + "\r\n" + text_1.getText());
 					  }
 				  });
