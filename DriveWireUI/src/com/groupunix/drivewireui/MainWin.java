@@ -1,7 +1,5 @@
 package com.groupunix.drivewireui;
 
-import org.eclipse.core.databinding.observable.Realm;
-import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
@@ -37,14 +35,12 @@ public class MainWin {
 	 */
 	public static void main(String[] args) 
 	{
-		display = new Display();
-		Realm.runWithDefault(SWTObservables.getRealm(display), new Runnable() 
-		{
-			public void run() 
-			{
-
-				try 
+		
+		
+			try 
 				{
+					display = new Display();
+					
 					MainWin window = new MainWin();
 					window.open(display);
 				} 
@@ -52,10 +48,9 @@ public class MainWin {
 				{
 					e.printStackTrace();
 				}
-			}
-		});
 		
 		
+				
 	}
 
 	/**

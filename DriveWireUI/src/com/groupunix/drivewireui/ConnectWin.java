@@ -3,7 +3,7 @@ package com.groupunix.drivewireui;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.eclipse.core.databinding.DataBindingContext;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -146,9 +146,5 @@ public class ConnectWin extends Dialog {
 	}
 
 
-	protected DataBindingContext initDataBindings() {
-		DataBindingContext bindingContext = new DataBindingContext();
-		//
-		return bindingContext;
-	}
+
 }
