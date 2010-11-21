@@ -222,7 +222,7 @@ public class DWDiskDrives
 			
 			lsn = lsn - (driveno * 630);
 			
-			logger.debug("HDB seek: mapped to drive " + driveno + " sector " + lsn);
+			logger.debug("HDBDOSMode seek: mapped to drive " + driveno + " sector " + lsn);
 			
 			this.hdbdrive = driveno;
 		}
@@ -240,7 +240,7 @@ public class DWDiskDrives
 		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("HDBDOSMode",false))
 		{
 			driveno = this.hdbdrive;
-			logger.debug("HDB write: mapped to drive " + driveno );
+			logger.debug("HDBDOSMode write: mapped to drive " + driveno );
 			
 		}
 		
