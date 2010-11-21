@@ -422,7 +422,7 @@ public class DWVSerialPort {
 				logger.debug("setting term on port " + this.port);
 				this.wanttodie = true;
 				
-				if (this.output != null)
+				if (output != null)
 				{
 					logger.debug("closing output on port " + this.port);
 					try {
@@ -456,7 +456,7 @@ public class DWVSerialPort {
 			// this actually happens in normal operation, when both sides have code to
 			// close port on exit.. probably not worth an error message
 			
-			// logger.error("close port " + this.port + " with no opens?");
+			// logger.debug("close port " + this.port + " with no opens? might be fine");
 		}
 		
 	}

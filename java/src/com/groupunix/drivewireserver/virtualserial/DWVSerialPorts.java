@@ -138,8 +138,11 @@ public class DWVSerialPorts {
 	{
 		if (port < vserialPorts.length)
 		{
-			vserialPorts[port].close();	
-			vserialPorts[port] = null;
+			if (vserialPorts[port] != null)
+			{
+				vserialPorts[port].close();	
+				//vserialPorts[port] = null;
+			}
 		}
 		else
 		{

@@ -27,7 +27,7 @@ public class DWProtocolEventHandler {
 
 	public void notifyEvent(String event, String detail) 
 	{
-		// logger.debug("notifyEvent in handler #"+this.handlerno + ": " + event+" - "+detail);
+		logger.debug("notifyEvent in handler #"+this.handlerno + ": " + event+" - "+detail);
 		
 		// send to registered listeners
 		
