@@ -13,25 +13,11 @@ import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
-import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
-import org.jasypt.util.password.BasicPasswordEncryptor;
 
-import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUILogAppender;
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwcommands.DWCmdConfig;
-import com.groupunix.drivewireserver.dwcommands.DWCmdDisk;
-import com.groupunix.drivewireserver.dwcommands.DWCmdLog;
-import com.groupunix.drivewireserver.dwcommands.DWCmdMidi;
-import com.groupunix.drivewireserver.dwcommands.DWCmdNet;
-import com.groupunix.drivewireserver.dwcommands.DWCmdPort;
-import com.groupunix.drivewireserver.dwcommands.DWCmdServer;
-import com.groupunix.drivewireserver.dwcommands.DWCommandList;
-import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
-import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWUtilUIThread implements Runnable 
 {
@@ -205,6 +191,10 @@ public class DWUtilUIThread implements Runnable
 				}
 			
 			}
+			else
+			{
+				sendUIError("no config item specified?");
+			}
 		}
 		else if (this.strargs.equalsIgnoreCase("ui list disks"))
 		{
@@ -241,7 +231,10 @@ public class DWUtilUIThread implements Runnable
 			
 		
 		}
-		
+		else
+		{
+			sendUIError("command not recognized");
+		}
 		
 		
 		/*
@@ -263,6 +256,21 @@ public class DWUtilUIThread implements Runnable
 		logger.debug("exiting");
 		
 	}
+
+
+
+	private void sendUIError(String txt) 
+	{
+		try {
+			DriveWireServer.getHandler(this.handlerno).getVPorts().getPortInput(this.vport).write(("\n" + (char) 0 + "\n").getBytes());
+			DriveWireServer.getHandler(this.handlerno).getVPorts().getPortInput(this.vport).write((txt + "\n").getBytes());
+	    	DriveWireServer.getHandler(this.handlerno).getVPorts().getPortInput(this.vport).write(((char) 0 + "\n").getBytes());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+}
 
 	
 	

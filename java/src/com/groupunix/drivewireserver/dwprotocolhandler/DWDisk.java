@@ -13,7 +13,6 @@ import org.apache.commons.vfs.VFS;
 import org.apache.commons.vfs.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 
 
