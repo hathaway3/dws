@@ -186,6 +186,26 @@ public class DWUtilUIThread implements Runnable
 			
 		
 		}
+		else if (this.strargs.startsWith("ui showconfigitem "))
+		{
+			if (strargs.length() > 18)
+			{
+				String item = strargs.substring(18);
+			
+				try 
+				{
+					DriveWireServer.getHandler(this.handlerno).getVPorts().getPortInput(this.vport).write(("\n" + (char) 0 + "\n").getBytes());
+			    	DriveWireServer.getHandler(this.handlerno).getVPorts().getPortInput(this.vport).write((DriveWireServer.getHandler(handlerno).config.getString(item,"not set") + "\n").getBytes());
+			    	DriveWireServer.getHandler(this.handlerno).getVPorts().getPortInput(this.vport).write(((char) 0 + "\n").getBytes());
+				}
+				catch (IOException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			
+			}
+		}
 		else if (this.strargs.equalsIgnoreCase("ui list disks"))
 		{
 			
