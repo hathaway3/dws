@@ -171,7 +171,7 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCmdDiskFile("dw disk in ","Load");
+				sendCmdDiskFile("dw disk in ","Load", SWT.OPEN);
 			}
 		});
 		mntmInsert.setText("Insert...");
@@ -211,7 +211,7 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCmdDiskFile("dw disk write ","Write");
+				sendCmdDiskFile("dw disk write ","Write", SWT.SAVE);
 			}
 		});
 		mntmWrite.setText("Write...");
@@ -221,7 +221,7 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCmdDiskFile("dw disk create","Create");
+				sendCmdDiskFile("dw disk create","Create", SWT.SAVE);
 			}
 		});
 		mntmCreate.setText("Create...");
@@ -605,11 +605,11 @@ public class MainWin {
 
 
 
-	protected void sendCmdDiskFile(String pre, String buttxt) 
+	protected void sendCmdDiskFile(String pre, String buttxt, int dialogType) 
 	{
 		if (connectionAlive())
 		{
-			ChooseDiskFileWin window = new ChooseDiskFileWin(shell,SWT.DIALOG_TRIM, buttxt, pre);
+			ChooseDiskFileWin window = new ChooseDiskFileWin(shell,SWT.DIALOG_TRIM, buttxt, pre, dialogType);
 			window.open();
 		}
 	}

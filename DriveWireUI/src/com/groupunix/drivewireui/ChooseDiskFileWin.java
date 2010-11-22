@@ -30,6 +30,7 @@ public class ChooseDiskFileWin extends Dialog {
 	private Combo cmbDisk;
 	private Combo combo;
 	private ArrayList<String> disks;
+	private int dialogType;
 	
 	/**
 	 * Create the dialog.
@@ -38,11 +39,12 @@ public class ChooseDiskFileWin extends Dialog {
 	 * @param pre 
 	 * @param pre 
 	 */
-	public ChooseDiskFileWin(Shell parent, int style, String buttxt, String pre) 
+	public ChooseDiskFileWin(Shell parent, int style, String buttxt, String pre, int dialogType) 
 	{
 		super(parent, style);
 		this.pre = pre;
 		this.buttxt = buttxt;
+		this.dialogType = dialogType;
 		
 		setText("SWT Dialog");
 	}
@@ -117,11 +119,21 @@ public class ChooseDiskFileWin extends Dialog {
 			public void widgetSelected(SelectionEvent e)
 			{
 			
-					 FileDialog fd = new FileDialog(shlChooseDiskNumber, SWT.OPEN);
-				        fd.setText("Choose a local disk image...");
+					 FileDialog fd = new FileDialog(shlChooseDiskNumber, dialogType);
+					 	
+					 	if (dialogType == SWT.OPEN)
+					 	{
+					 		fd.setText("Choose a local disk image...");
+					 	}
+					 	else if (dialogType == SWT.SAVE)
+					 	{
+					 		fd.setText("Save disk image as...");
+					 	}
+					 	
 				        fd.setFilterPath("");
 				        String[] filterExt = { "*.dsk", "*.*" };
 				        fd.setFilterExtensions(filterExt);
+				       
 				        String selected = fd.open();
 					
 				        if (!(selected == null))
@@ -143,7 +155,15 @@ public class ChooseDiskFileWin extends Dialog {
 					MainWin.sendCommand(pre + " " + spinner.getText() + " " + txtDisk.getText());
 				
 				if (combo.getSelectionIndex() == 1)
-					MainWin.sendCommand(pre + " " + spinner.getText() + " " + disks.get(cmbDisk.getSelectionIndex()));
+					if (cmbDisk.getSelectionIndex() == -1)
+					{
+						// append diskdir path from server to manually typed file name
+						MainWin.sendCommand(pre + " " + spinner.getText() + " " + UIUtils.getServerConfigItem("DiskDir") + "/" + cmbDisk.getText());
+					}
+					else
+					{
+						MainWin.sendCommand(pre + " " + spinner.getText() + " " + disks.get(cmbDisk.getSelectionIndex()));
+					}
 				
 				shlChooseDiskNumber.close();
 			}

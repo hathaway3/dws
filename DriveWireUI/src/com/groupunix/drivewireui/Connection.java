@@ -64,8 +64,12 @@ public class Connection
 	{
 		try 
 		{
-			this.sock.close();
-			MainWin.addToDisplay("Connection to DriveWire server closed.\r\n");
+			if (connected())
+			{
+				this.sock.close();
+			
+				MainWin.addToDisplay("Connection to DriveWire server closed.\r\n");
+			}
 		} 
 		catch (IOException e) 
 		{
@@ -77,7 +81,7 @@ public class Connection
 
 	public boolean connected() 
 	{
-		if (this.sock.isClosed())
+		if ((this.sock == null) || (this.sock.isClosed()))
 		{
 			return false;
 		}

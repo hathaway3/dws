@@ -50,6 +50,51 @@ public class UIUtils {
 		return res;
 	}
 
+	
+	public static String getServerConfigItem(String item)
+	{
+		String line = null;
+		String res = null;
+		
+		try 
+		{
+			Socket sock = new Socket(MainWin.getConnection().getHost(), MainWin.getConnection().getPort());
+			
+			sock.getOutputStream().write(("ui showconfigitem " + item + "\n").getBytes());
+			
+			line = readLine(sock);
+			
+			// eat welcome
+			while ((!sock.isClosed()) && (!line.equals(Character.toString((char) 0))))
+			{
+				line = readLine(sock);
+			}
+			
+			// data
+			line = readLine(sock);
+			
+			while ((!sock.isClosed()) && (!line.equals(Character.toString((char) 0))))
+			{
+				res = line;
+				line = readLine(sock);
+			}
+			
+			sock.close();
+		} 
+		catch (UnknownHostException e) 
+		{
+			MainWin.addToDisplay(e.getMessage());
+		} 
+		catch (IOException e) 
+		{
+			MainWin.addToDisplay(e.getMessage());
+		}
+		
+		return(res);
+		
+	}
+	
+	
 	private static String readLine(Socket sock) throws IOException 
 	{
 		String line = new String();
