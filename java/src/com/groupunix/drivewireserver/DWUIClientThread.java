@@ -36,59 +36,69 @@ public class DWUIClientThread implements Runnable {
 			skt.getOutputStream().write(("Connected to DriveWire " + DriveWireServer.DWServerVersion + "\r\n").getBytes());
 
 			// open UI port, default to instance 0 for now... this does not really make sense?
-			this.uiport = DriveWireServer.getHandler(0).getVPorts().openUIPort();
 			
-			if (this.uiport == -1)
+			if ((DriveWireServer.getHandler(0) == null) || (DriveWireServer.getHandler(0).getVPorts() == null))
 			{
-				logger.warn("failed to open UI port");
-			 	this.skt.getOutputStream().write("FAIL could not open UI port\r\n".getBytes());
+				skt.getOutputStream().write(("\r\nIt appears handler #0 is not running.  The UI currently only connects to the first instance.  " +
+						"If the server is just starting up, try reconnecting in a few seconds.\r\nConnection closed.\r\n").getBytes());
+				
 			}
 			else
 			{
-			   this.skt.getOutputStream().write(("OK using UI port " + this.uiport + "\r\n").getBytes());
-			   
-			   
-				// start output thread
-				this.outputT = new Thread(new DWUIClientOutputThread(this.skt.getOutputStream(),this.uiport));
-				outputT.start();
-				
-				String cmd = new String();
+				this.uiport = DriveWireServer.getHandler(0).getVPorts().openUIPort();
 			
-				while ((!skt.isClosed()) && (!wanttodie))
+				if (this.uiport == -1)
 				{
-
-					int databyte = skt.getInputStream().read();
-					
-					if (databyte == -1)
-					{	
-						logger.debug("got -1 in input stream");
-						wanttodie = true;
-					}
-					else
+					logger.warn("failed to open UI port");
+					this.skt.getOutputStream().write("FAIL could not open UI port in handler\r\n".getBytes());
+				}
+				else
+				{
+					this.skt.getOutputStream().write(("OK using UI port " + this.uiport + "\r\n").getBytes());
+			   
+			   
+					// 	start output thread
+					this.outputT = new Thread(new DWUIClientOutputThread(this.skt.getOutputStream(),this.uiport));
+					outputT.start();
+				
+					String cmd = new String();
+			
+					while ((!skt.isClosed()) && (!wanttodie))
 					{
-						if (databyte == 10)
-						{
-							doCmd(cmd);
-							cmd = "";
+
+						int databyte = skt.getInputStream().read();
+					
+						if (databyte == -1)
+						{	
+							logger.debug("got -1 in input stream");
+							wanttodie = true;
 						}
 						else
 						{
-							if ((databyte == 8) && (cmd.length() > 0))
+							if (databyte == 10)
 							{
-								cmd = cmd.substring(0, cmd.length() - 1);
+								doCmd(cmd);
+								cmd = "";
 							}
-							else if (databyte > 0)
+							else
 							{
-								cmd += Character.toString((char) databyte);
+								if ((databyte == 8) && (cmd.length() > 0))
+								{
+									cmd = cmd.substring(0, cmd.length() - 1);
+								}
+								else if (databyte > 0)
+								{
+									cmd += Character.toString((char) databyte);
+								}
 							}
 						}
 					}
+			
+					DriveWireServer.getHandler(0).getVPorts().closePort(uiport);
 				}
 			
-				DriveWireServer.getHandler(0).getVPorts().closePort(uiport);
+				this.outputT.interrupt();
 			}
-			
-			this.outputT.interrupt();
 			
 			skt.close();
 			
@@ -112,7 +122,7 @@ public class DWUIClientThread implements Runnable {
 	private void doCmd(String cmd) throws IOException 
 	{
 		DriveWireServer.getHandler(0).getVPorts().write(uiport, cmd + "\r");
-		//skt.getOutputStream().write(0);
+	
 	}
 
 }
