@@ -29,8 +29,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.75";
-	public static final String DWServerVersionDate = "11/22/2010";
+	public static final String DWServerVersion = "3.9.80";
+	public static final String DWServerVersionDate = "12/19/2010";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -46,8 +46,10 @@ public class DriveWireServer
 	private static int numHandlers;
 
 	private static Thread lazyWriterT;
+	private static DWUIThread uiObj;
 	private static Thread uiT;	
 	
+	private static boolean wanttodie = false;
 	
 	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	public static void main(String[] args) throws ConfigurationException
@@ -105,6 +107,10 @@ public class DriveWireServer
     		System.exit(-1);
 		}
     	
+    	
+    	// server config listener
+    	serverconfig.addConfigurationListener(new DWServerConfigListener());    	
+    	
     	// apply configuration
     	List<HierarchicalConfiguration> handlerconfs = serverconfig.configurationsAt("instance");
     	
@@ -113,7 +119,117 @@ public class DriveWireServer
     	dwProtoHandlers = new DWProtocolHandler[numHandlers];
     	dwProtoHandlerThreads = new Thread[numHandlers];
     	
-    	// logging
+    	
+    	applyLoggingSettings();
+    	
+    	
+    	
+    	// auto save
+    	
+    	if (serverconfig.getBoolean("ConfigAutosave",false))
+    	{
+    		logger.info("Auto save of configuration is enabled");
+    		serverconfig.setAutoSave(true);
+    	}
+    	
+    	
+    	
+    	// start protocol handler instances
+    	int hno = 0;
+    	
+		for(Iterator<HierarchicalConfiguration> it = handlerconfs.iterator(); it.hasNext();)
+		{
+		    HierarchicalConfiguration hconf = it.next();
+		      
+		    dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+		    
+		    if (hconf.getBoolean("AutoStart", true))
+		    {
+		    	logger.info("Starting protocol handler #" + hno + ": " + hconf.getString("Name","unnamed"));
+		    	dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
+		    	dwProtoHandlerThreads[hno].start();	
+    	    }
+		    
+		    hno++;
+		}
+    	
+    	
+    	
+    	// start lazy writer
+		startLazyWriter();
+    	
+		// start UI server
+		applyUISettings();
+		
+		
+    	
+    	// hang around so something is running even if handlers are not
+		
+		/*
+		while (!wanttodie)
+    	{
+    	
+    		try
+    		{
+    			Thread.sleep(2000);
+    		} 
+    		catch (InterruptedException e)
+    		{
+    			logger.warn("Server thread interrupted");
+    		}
+
+    	}
+    	
+    	*/	
+    	logger.info("Server exiting");	
+    	
+	}
+
+
+
+
+	private static void startLazyWriter() 
+	{
+    	lazyWriterT = new Thread(new DWDiskLazyWriter());
+		lazyWriterT.start();
+	}
+
+
+
+
+	public static void applyUISettings() 
+	{
+		if ((uiT != null) && (uiT.isAlive()))
+		{
+			uiObj.die();
+			uiT.interrupt();
+			try 
+			{
+				uiT.join();
+			} 
+			catch (InterruptedException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		if (serverconfig.getBoolean("UIEnabled",false))
+		{
+		
+			uiObj = new DWUIThread( serverconfig.getInt("UIPort",6800));
+			uiT = new Thread(uiObj);
+			uiT.start();
+		}
+
+	}
+
+
+
+
+	public static void applyLoggingSettings() 
+	{
+		// logging
     	if (serverconfig.containsKey("LogFormat"))
     	{
     		logLayout = new PatternLayout(serverconfig.getString("LogFormat"));
@@ -147,71 +263,7 @@ public class DriveWireServer
     	}
     	
     	Logger.getRootLogger().setLevel(Level.toLevel(serverconfig.getString("LogLevel", "WARN")));
-    	
-    	
-    	// start protocol handler instances
-    	int hno = 0;
-    	
-		for(Iterator<HierarchicalConfiguration> it = handlerconfs.iterator(); it.hasNext();)
-		{
-		    HierarchicalConfiguration hconf = it.next();
-		      
-		    dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
-		    
-		    if (hconf.getBoolean("AutoStart", true))
-		    {
-		    	logger.info("Starting protocol handler #" + hno + ": " + hconf.getString("Name","unnamed"));
-		    	dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
-		    	dwProtoHandlerThreads[hno].start();	
-    	    }
-		    
-		    hno++;
-		}
-    	
-    	
-    	
-    	// start lazy writer
-    	lazyWriterT = new Thread(new DWDiskLazyWriter());
-		lazyWriterT.start();
-    	
-		// start UI server
-		if (serverconfig.getBoolean("UIEnabled",false))
-		{
-		
-			uiT = new Thread(new DWUIThread(serverconfig.getInt("UIPort",6800)));
-			uiT.start();
-		}
-		
-    	// wait for all my children to die
-    	
-    	int activehandlers = 0;
-    	
-    	do
-    	{
-    	
-    		try
-    		{
-    			Thread.sleep(2000);
-    		} 
-    		catch (InterruptedException e)
-    		{
-    			logger.warn("Server thread interrupted");
-    		}
 
-    		activehandlers = 0;
-    		
-    		for (int i = 0;i<numHandlers;i++)
-    		{
-    			if (dwProtoHandlerThreads[i].isAlive())
-    			{
-    				activehandlers++;
-    			}
-    		}
-    	}
-    	while (activehandlers >= 0);
-    		
-    	logger.info("Server exiting");	
-    	
 	}
 
 
@@ -348,6 +400,25 @@ public class DriveWireServer
 		}
 	
 		return(null);
+	}
+
+
+
+
+	public static String getHandlerName(int handlerno) 
+	{
+		if (isValidHandlerNo(handlerno))
+		{
+			return(dwProtoHandlers[handlerno].config.getString("Name","unnamed instance " + handlerno));
+		}
+		
+		return("null handler " + handlerno);
+	}
+	
+	
+	public static void saveServerConfig() throws ConfigurationException
+	{
+		serverconfig.save();
 	}
 	
 }

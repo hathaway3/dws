@@ -43,4 +43,9 @@ public class DWCmdDiskSet implements DWCommand
 		return "dw disk set [command]";
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
+	
 }

@@ -69,7 +69,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 	{
 		logger.info("closing client connection");
 		
-		if (!skt.isClosed())
+		if ((skt != null) && (!skt.isClosed()))
 		{
 			try 
 			{

@@ -1,11 +1,17 @@
 package com.groupunix.drivewireserver;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwcommands.DWCommandList;
+import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
+import com.groupunix.drivewireserver.uicommands.UICmdInstance;
+import com.groupunix.drivewireserver.uicommands.UICmdLogview;
+import com.groupunix.drivewireserver.uicommands.UICmdServer;
 
 public class DWUIClientThread implements Runnable {
 
@@ -14,16 +20,26 @@ public class DWUIClientThread implements Runnable {
 	private Socket skt;
 	private boolean wanttodie = false;
 	private int uiport;
-	private Thread outputT;
+	private int instance = -1;
+	
+	private DWCommandList uiCmds = new DWCommandList();
+	
+	
+	private int ourHandler = 0;
 	
 	public DWUIClientThread(Socket skt) 
 	{
 		this.skt = skt;
 		
+		uiCmds.addcommand(new UICmdInstance(this));
+		uiCmds.addcommand(new UICmdServer(this));
+		uiCmds.addcommand(new UICmdLogview(this));
 	}
 
 	public void run() 
 	{
+		
+		
 		Thread.currentThread().setName("dwUIcliIn-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
@@ -35,69 +51,40 @@ public class DWUIClientThread implements Runnable {
 		{
 			skt.getOutputStream().write(("Connected to DriveWire " + DriveWireServer.DWServerVersion + "\r\n").getBytes());
 
-			// open UI port, default to instance 0 for now... this does not really make sense?
 			
-			if ((DriveWireServer.getHandler(0) == null) || (DriveWireServer.getHandler(0).getVPorts() == null))
-			{
-				skt.getOutputStream().write(("\r\nIt appears handler #0 is not running.  The UI currently only connects to the first instance.  " +
-						"If the server is just starting up, try reconnecting in a few seconds.\r\nConnection closed.\r\n").getBytes());
-				
-			}
-			else
-			{
-				this.uiport = DriveWireServer.getHandler(0).getVPorts().openUIPort();
+			// cmd loop
 			
-				if (this.uiport == -1)
-				{
-					logger.warn("failed to open UI port");
-					this.skt.getOutputStream().write("FAIL could not open UI port in handler\r\n".getBytes());
+			String cmd = new String();
+			
+			while ((!skt.isClosed()) && (!wanttodie))
+			{
+
+				int databyte = skt.getInputStream().read();
+			
+				if (databyte == -1)
+				{	
+					logger.debug("got -1 in input stream");
+					wanttodie = true;
 				}
 				else
 				{
-					this.skt.getOutputStream().write(("OK using UI port " + this.uiport + "\r\n").getBytes());
-			   
-			   
-					// 	start output thread
-					this.outputT = new Thread(new DWUIClientOutputThread(this.skt.getOutputStream(),this.uiport));
-					outputT.start();
-				
-					String cmd = new String();
-			
-					while ((!skt.isClosed()) && (!wanttodie))
+					if (databyte == 10)
 					{
-
-						int databyte = skt.getInputStream().read();
-					
-						if (databyte == -1)
-						{	
-							logger.debug("got -1 in input stream");
-							wanttodie = true;
-						}
-						else
+						doCmd(cmd);
+						cmd = "";
+					}
+					else
+					{
+						if ((databyte == 8) && (cmd.length() > 0))
 						{
-							if (databyte == 10)
-							{
-								doCmd(cmd);
-								cmd = "";
-							}
-							else
-							{
-								if ((databyte == 8) && (cmd.length() > 0))
-								{
-									cmd = cmd.substring(0, cmd.length() - 1);
-								}
-								else if (databyte > 0)
-								{
-									cmd += Character.toString((char) databyte);
-								}
-							}
+							cmd = cmd.substring(0, cmd.length() - 1);
+						}
+						else if (databyte > 0)
+						{
+							cmd += Character.toString((char) databyte);
 						}
 					}
-			
-					DriveWireServer.getHandler(0).getVPorts().closePort(uiport);
 				}
-			
-				this.outputT.interrupt();
 			}
 			
 			skt.close();
@@ -108,21 +95,140 @@ public class DWUIClientThread implements Runnable {
 		{
 			logger.warn("IO Exception: " + e.getMessage());
 		}
-		catch (DWPortNotValidException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 		
-		DriveWireServer.getHandler(0).getEventHandler().unregisterAllEvents(this.uiport);
+		DriveWireServer.getHandler(ourHandler).getEventHandler().unregisterAllEvents(this.uiport);
 		
 		logger.debug("exit");
 	}
 
 	private void doCmd(String cmd) throws IOException 
 	{
-		DriveWireServer.getHandler(0).getVPorts().write(uiport, cmd + "\r");
-	
+		
+		skt.getOutputStream().write(("\n>>\n").getBytes());
+		
+		if (serverCommand(cmd))
+		{
+			logger.debug("server command: " + cmd);
+		}
+		else
+		{
+			if (this.instance < 0)
+			{
+				logger.debug("no instance requested by client");
+			}
+			else
+			if (instanceCommand(cmd))
+			{
+				logger.debug("instance command: " + cmd);
+			}
+			else
+			{
+				skt.getOutputStream().write(("FAIL " + DWDefs.RC_SYNTAX_ERROR + " unknown command\r\n").getBytes());
+			}	
+				
+		}
+		
+		skt.getOutputStream().write(("<<\n").getBytes());
 	}
+
+	private boolean instanceCommand(String cmd) throws IOException 
+	{
+		if (cmd.startsWith("dw"))
+		{
+			if (DriveWireServer.isValidHandlerNo(instance))
+			{
+				if (DriveWireServer.handlerIsAlive(instance))
+				{
+			
+					DWCommandResponse resp = DriveWireServer.getHandler(instance).getDWCmds().parse(DWUtils.dropFirstToken(cmd));
+			
+					if (resp.getSuccess())
+					{
+
+						sendUIresponse(skt.getOutputStream(),resp.getResponseText());
+					}
+					else
+					{
+
+						sendUIresponse(skt.getOutputStream(),"FAIL " + resp.getResponseCode() + " " + resp.getResponseText());
+					}
+			
+				}
+				else
+				{
+					sendUIresponse(skt.getOutputStream(),"FAIL " + DWDefs.RC_INVALID_HANDLER + " Instance is not running");
+				
+				}
+			}
+			else
+			{
+				sendUIresponse(skt.getOutputStream(),"FAIL " + DWDefs.RC_INVALID_HANDLER + " Instance is not valid");
+			
+			}
+		
+			return true;
+		}
+		
+		return false;
+	}
+
+	
+	private boolean serverCommand(String cmd) throws IOException 
+	{
+		
+		if (cmd.startsWith("ui"))
+		{
+			DWCommandResponse resp = uiCmds.parse(DWUtils.dropFirstToken(cmd));
+			
+			if (resp.getSuccess())
+			{
+
+				sendUIresponse(skt.getOutputStream(),resp.getResponseText());
+			}
+			else
+			{
+
+				sendUIresponse(skt.getOutputStream(),"FAIL " + resp.getResponseCode() + " " + resp.getResponseText());
+
+			}
+			
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	private void sendUIresponse(OutputStream outputStream, String txt) throws IOException 
+	{
+
+		outputStream.write(txt.getBytes());
+
+	}
+
+	public void setInstance(int handler) 
+	{
+		System.out.println("SET INST: " + handler);
+		this.instance = handler;
+	}
+
+	public int getInstance() 
+	{
+		return this.instance;
+	}
+
+	public OutputStream getOutputStream() throws IOException 
+	{
+		return skt.getOutputStream();
+	}
+
+	public Socket getSocket() {
+		
+		return skt;
+	}
+	
+	
 
 }

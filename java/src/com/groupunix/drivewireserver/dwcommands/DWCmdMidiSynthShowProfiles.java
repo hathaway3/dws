@@ -9,12 +9,8 @@ import com.groupunix.drivewireserver.DriveWireServer;
 
 public class DWCmdMidiSynthShowProfiles implements DWCommand {
 
-	private int handlerno;
 
-	public DWCmdMidiSynthShowProfiles(int handlerno)
-	{
-		this.handlerno = handlerno;
-	}
+
 	
 	public String getCommand() 
 	{
@@ -39,6 +35,7 @@ public class DWCmdMidiSynthShowProfiles implements DWCommand {
 		return "dw midi synth show profiles";
 	}
 
+	@SuppressWarnings("unchecked")
 	public DWCommandResponse parse(String cmdline) 
 	{
 		String text = new String();
@@ -49,7 +46,7 @@ public class DWCmdMidiSynthShowProfiles implements DWCommand {
     	
 		for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
 		{
-		    HierarchicalConfiguration mprof = (HierarchicalConfiguration) it.next();
+		    HierarchicalConfiguration mprof = it.next();
 		    
 		    text += String.format("%-10s: %s", mprof.getString("name"), mprof.getString("desc") );
 		    text += "\r\n";
@@ -61,4 +58,8 @@ public class DWCmdMidiSynthShowProfiles implements DWCommand {
 	}
 
 
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

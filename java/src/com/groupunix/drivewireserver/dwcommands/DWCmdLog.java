@@ -41,4 +41,8 @@ public class DWCmdLog implements DWCommand {
 		return "dw log [command]";
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
 }

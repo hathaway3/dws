@@ -58,4 +58,10 @@ public class DWCmdMidiSynthProfile implements DWCommand {
 			return(new DWCommandResponse(false,DWDefs.RC_MIDI_INVALID_PROFILE,"Invalid translation profile '" + path + "'"));
 		}
 	}
+	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
+	
 }

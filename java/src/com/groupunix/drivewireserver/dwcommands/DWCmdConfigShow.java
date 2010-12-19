@@ -23,7 +23,7 @@ public class DWCmdConfigShow implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
+
 		return null;
 	}
 
@@ -67,6 +67,14 @@ public class DWCmdConfigShow implements DWCommand {
 		
 		
 	}
+	
+	
+	public boolean validate(String cmdline)
+	{
+
+		return true;
+	}
+	
 	
 	private DWCommandResponse doShowConfig()
 	{

@@ -67,5 +67,9 @@ public class DWCmdDiskDump implements DWCommand {
 		
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 	
 }

@@ -42,4 +42,8 @@ public class DWCmdPort implements DWCommand {
 		return "dw port [command]";
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
 }

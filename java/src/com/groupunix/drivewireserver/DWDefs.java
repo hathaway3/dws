@@ -61,7 +61,10 @@ public class DWDefs
 	public static final byte RC_SERVER_FILESYSTEM_EXCEPTION = (byte)200;
 	public static final byte RC_SERVER_IO_EXCEPTION = (byte)201;
 	public static final byte RC_SERVER_FILE_NOT_FOUND = (byte)202;
-	
+
+
+	public static final byte RC_INVALID_HANDLER = (byte) 210;
+
 
 	public static final byte RC_CONFIG_KEY_NOT_SET = (byte)220;
 

@@ -111,4 +111,8 @@ public class DWCmdDiskWrite implements DWCommand {
 		}
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

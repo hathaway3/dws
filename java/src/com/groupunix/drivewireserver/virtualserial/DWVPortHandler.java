@@ -196,13 +196,6 @@ public class DWVPortHandler
 				this.utilthread = new Thread(new DWUtilDWThread(this.handlerno, this.vport, cmd));
 				this.utilthread.start();
 			}
-			else if (cmdparts[0].equalsIgnoreCase("ui"))
-			{
-				// start DWcmd thread
-				
-				this.utilthread = new Thread(new DWUtilUIThread(this.handlerno, this.vport, cmd));
-				this.utilthread.start();
-			}
 			else if (cmdparts[0].equalsIgnoreCase("log"))
 			{
 				// log entry

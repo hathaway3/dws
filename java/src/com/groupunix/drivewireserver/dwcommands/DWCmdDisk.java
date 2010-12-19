@@ -48,4 +48,9 @@ public class DWCmdDisk implements DWCommand {
 		return "dw disk [command]";
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
+	
 }

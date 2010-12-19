@@ -104,7 +104,8 @@ public class DWCmdDiskSetShow implements DWCommand {
 			
 			text = "Details for disk set '" + setname + "':\r\n\n";
 			
-			text += "Description: " + theset.getString("Description","none") + "\r\n\n";
+			text += "Description: " + theset.getString("Description","none") + "\r\n";
+			text += "Save disk changes: " + theset.getBoolean("SaveChanges",false) + "\r\n\n";
 			
 			// disks
 			List<HierarchicalConfiguration> disks = theset.configurationsAt("disk");
@@ -136,4 +137,9 @@ public class DWCmdDiskSetShow implements DWCommand {
 		}
 	}	
 
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
+	
 }

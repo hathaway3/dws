@@ -78,4 +78,8 @@ public class DWCmdDiskWP implements DWCommand {
 
 	}
 
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

@@ -13,12 +13,29 @@ public class DWUIThread implements Runnable {
 
 	private int tcpport;
 	private boolean wanttodie = false;
+	private ServerSocket srvr = null;
 	
 	public DWUIThread(int port) 
 	{
 		this.tcpport = port;
 	}
 
+	
+	public void die()
+	{
+		
+		logger.debug("we've been asked to die");
+		this.wanttodie = true;
+		try 
+		{
+			this.srvr.close();
+		} 
+		catch (IOException e) 
+		{
+			logger.warn("IO Error closing socket: " + e.getMessage());
+		}
+	}
+	
 	
 	public void run() 
 	{
@@ -29,7 +46,7 @@ public class DWUIThread implements Runnable {
 		
 		// open server socket
 		
-		ServerSocket srvr = null;
+		
 		
 		try 
 		{
@@ -83,7 +100,7 @@ public class DWUIThread implements Runnable {
 		}
 		
 		
-		logger.debug("exit");
+		logger.debug("exiting");
 	}
 
 }

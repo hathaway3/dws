@@ -69,5 +69,9 @@ public class DWCmdMidiSynthInstr implements DWCommand {
 		
 	}
 
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 	
 }

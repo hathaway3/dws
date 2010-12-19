@@ -41,4 +41,8 @@ public class DWCmdNet implements DWCommand {
 		return "dw net [command]";
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
 }

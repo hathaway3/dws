@@ -122,6 +122,36 @@ public class DWCommandList {
 		return null;
 	}
 
+
+
+	public boolean validate(String cmdline) 
+	{
+		String[] args = cmdline.split(" ");
+		
+		if (cmdline.length() == 0)
+		{
+			// implied 'help'
+			return false;
+		}
+		
+		int matches = numCommandMatches(args[0]);
+		
+		if (matches == 0)
+		{
+			return false;
+		}
+		else if (matches > 1)
+		{
+			return false;
+		}
+		else
+		{
+			return(getCommandMatch(args[0]).validate(DWUtils.dropFirstToken(cmdline)));
+		}
+		
+		
+	}
+
 	
 	
 }

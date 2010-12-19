@@ -43,4 +43,9 @@ public class DWCmdServerShowHandlers implements DWCommand {
 		
 		return(new DWCommandResponse(text));
 	}
+	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

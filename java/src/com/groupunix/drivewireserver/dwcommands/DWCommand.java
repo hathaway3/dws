@@ -7,4 +7,5 @@ public interface DWCommand {
 	String getShortHelp();
 	String getLongHelp();
 	String getUsage();
+	boolean validate(String cmdline);
 }

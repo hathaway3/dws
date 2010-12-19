@@ -43,4 +43,8 @@ public class DWCmdMidi implements DWCommand {
 		return "dw midi [command]";
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
 }

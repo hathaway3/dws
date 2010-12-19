@@ -10,6 +10,7 @@ public class DWCmdConfig implements DWCommand
 	{
 		commands.addcommand(new DWCmdConfigShow(handlerno));
 		commands.addcommand(new DWCmdConfigSet(handlerno));
+		commands.addcommand(new DWCmdConfigSave(handlerno));
 		// save/load not implemented here
 	} 
 
@@ -41,6 +42,12 @@ public class DWCmdConfig implements DWCommand
 	public String getUsage() 
 	{
 		return "dw config [command]";
+	}
+
+
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
 	}
 	
 	

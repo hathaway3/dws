@@ -71,5 +71,9 @@ public class DWCmdMidiSynthShowChannels implements DWCommand {
 		return(new DWCommandResponse(text));
 	}
 
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 	
 }

@@ -53,4 +53,9 @@ public class DWCmdMidiSynthLock implements DWCommand {
 			return(new DWCommandResponse("Locked MIDI instruments, progam changes will be ignored"));
 		}
 	}
+	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

@@ -48,7 +48,7 @@ public class DWCmdDiskCreate implements DWCommand {
 		
 		String[] args = cmdline.split(" ");
 		
-		if ((args.length < 2) || (cmdline.length() == 0))
+		if ((cmdline.length() == 0) || (args.length < 2))
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk create requires a drive # and URI/path as arguments"));
 		}
@@ -102,6 +102,11 @@ public class DWCmdDiskCreate implements DWCommand {
 			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_ALREADY_LOADED,e.getMessage()));
 		}
 		
+	}
+
+	public boolean validate(String cmdline) 
+	{
+		return(true);
 	}
 	
 	

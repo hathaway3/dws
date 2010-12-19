@@ -59,5 +59,9 @@ public class DWCmdDiskSetLoad implements DWCommand {
 
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 	
 }

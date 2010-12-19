@@ -70,4 +70,8 @@ public class DWCmdLogShow implements DWCommand {
 	}
 	
 
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

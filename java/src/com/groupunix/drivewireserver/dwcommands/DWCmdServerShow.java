@@ -3,13 +3,12 @@ package com.groupunix.drivewireserver.dwcommands;
 
 public class DWCmdServerShow implements DWCommand {
 
-	private int handlerno;
+
 	private DWCommandList commands = new DWCommandList();
 	
 	
-	public DWCmdServerShow(int handlerno)
+	public DWCmdServerShow()
 	{
-		this.handlerno = handlerno;
 		commands.addcommand(new DWCmdServerShowThreads());
 		commands.addcommand(new DWCmdServerShowHandlers());
 	}
@@ -42,6 +41,9 @@ public class DWCmdServerShow implements DWCommand {
 		return(commands.parse(cmdline));
 	}
 
-	
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
 
 }

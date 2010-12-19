@@ -8,7 +8,7 @@ public class DWCmdServer implements DWCommand {
 	public DWCmdServer(int handlerno)
 	{
 		commands.addcommand(new DWCmdServerStatus(handlerno));
-		commands.addcommand(new DWCmdServerShow(handlerno));
+		commands.addcommand(new DWCmdServerShow());
 		commands.addcommand(new DWCmdServerList());
 		commands.addcommand(new DWCmdServerDir());
 	//	commands.addcommand(new DWCmdServerRestart(handlerno));
@@ -43,5 +43,9 @@ public class DWCmdServer implements DWCommand {
 	{
 		return "dw server [command]";
 	}
-	
+
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
 }

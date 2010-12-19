@@ -77,4 +77,8 @@ public class DWCmdDiskEject implements DWCommand
 		return "dw disk eject #";
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

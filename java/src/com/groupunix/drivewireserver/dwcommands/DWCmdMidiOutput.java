@@ -79,4 +79,10 @@ public class DWCmdMidiOutput implements DWCommand {
 			return(new DWCommandResponse(false,DWDefs.RC_MIDI_UNAVAILABLE,e.getMessage()));
 		} 
 	}
+	
+	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

@@ -71,5 +71,10 @@ public class DWCmdNetShow implements DWCommand {
 		
 	}
 	
+	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 
 }

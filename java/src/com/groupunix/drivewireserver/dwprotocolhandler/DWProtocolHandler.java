@@ -12,12 +12,22 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwcommands.DWCmdConfig;
+import com.groupunix.drivewireserver.dwcommands.DWCmdDisk;
+import com.groupunix.drivewireserver.dwcommands.DWCmdLog;
+import com.groupunix.drivewireserver.dwcommands.DWCmdMidi;
+import com.groupunix.drivewireserver.dwcommands.DWCmdNet;
+import com.groupunix.drivewireserver.dwcommands.DWCmdPort;
+import com.groupunix.drivewireserver.dwcommands.DWCmdServer;
+import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
+import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
 import com.groupunix.drivewireserver.virtualprinter.DWVPrinter;
 import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
@@ -71,11 +81,16 @@ public class DWProtocolHandler implements Runnable
 	// Event handler
 	private DWProtocolEventHandler protocolEventHandler;
 	
+	// DW commands
+	private DWCommandList dwcommands;
+	
+	
 	public DWProtocolHandler(int handlerno, HierarchicalConfiguration hconf)
 	{
 		this.handlerno = handlerno;
 		this.config = hconf;
 		this.protocolEventHandler = new DWProtocolEventHandler(handlerno);
+		this.dwcommands = createDWCmds(handlerno); 
 	}
 
 	
@@ -199,12 +214,20 @@ public class DWProtocolHandler implements Runnable
 		{
 			// setup drives
 			diskDrives = new DWDiskDrives(this.handlerno);
-				
+
+			// set current to default
 			if (config.containsKey("DefaultDiskSet"))
 			{
-				diskDrives.LoadDiskSet(config.getString("DefaultDiskSet"));
+				config.setProperty("CurrentDiskSet", config.getString("DefaultDiskSet"));
+			}
+			
+			// load current disk set
+			if (config.containsKey("CurrentDiskSet"))
+			{
+				diskDrives.LoadDiskSet(config.getString("CurrentDiskSet"));
 			}
 				
+			
 			// setup virtual ports
 			this.dwVSerialPorts = new DWVSerialPorts(this.handlerno);	
 			dwVSerialPorts.resetAllPorts();
@@ -623,7 +646,6 @@ public class DWProtocolHandler implements Runnable
 		{
 			// hopefully this is appropriate
 			response = DWDefs.DWERROR_WP;
-			logger.debug("DWWP EX");
 			logger.warn(e3.getMessage());
 		} 
 		catch (IOException e4) 
@@ -631,6 +653,16 @@ public class DWProtocolHandler implements Runnable
 			// error on our end doing the write
 			response = DWDefs.DWERROR_WRITE;
 			logger.error(e4.getMessage());
+		} 
+		catch (DWInvalidSectorException e5) 
+		{
+			response = DWDefs.DWERROR_WRITE;
+			logger.warn(e5.getMessage());
+		} 
+		catch (DWSeekPastEndOfDeviceException e6) 
+		{
+			response = DWDefs.DWERROR_WRITE;
+			logger.warn(e6.getMessage());
 		} 
 		
 		// record error
@@ -733,6 +765,16 @@ public class DWProtocolHandler implements Runnable
 			logger.error("DoOP_READEX, during read packet: " + e4.getMessage());
 			return;
 		}
+		catch (DWInvalidSectorException e5) 
+		{
+			sector = diskDrives.nullSector();
+			logger.error("DoOP_READEX: " + e5.getMessage());
+		} 
+		catch (DWSeekPastEndOfDeviceException e6) 
+		{
+			sector = diskDrives.nullSector();
+			logger.error("DoOP_READEX: " + e6.getMessage());
+		} 
 				
 		// artificial delay test
 		if (config.containsKey("ReadDelay"))
@@ -1273,6 +1315,29 @@ public class DWProtocolHandler implements Runnable
 	{
 		return(this.protodev);
 	}
+
+
+
+	public DWCommandList getDWCmds() 
+	{
+		return this.dwcommands;
+	}
+	
+	private DWCommandList createDWCmds(int handlerno)
+	{
+		DWCommandList commands = new DWCommandList();
+		
+		commands.addcommand(new DWCmdDisk(handlerno));
+		commands.addcommand(new DWCmdServer(handlerno));
+		commands.addcommand(new DWCmdConfig(handlerno));
+		commands.addcommand(new DWCmdPort(handlerno));
+		commands.addcommand(new DWCmdLog());
+		commands.addcommand(new DWCmdNet(handlerno));
+		commands.addcommand(new DWCmdMidi(handlerno));
+		
+		return(commands);
+	}
+
 	
 }
 	

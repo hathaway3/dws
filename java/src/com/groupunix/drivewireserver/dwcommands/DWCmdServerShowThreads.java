@@ -72,4 +72,10 @@ public class DWCmdServerShowThreads implements DWCommand {
             System.arraycopy(threads, 0, copy, 0, threads.length);
 	    return copy;
 	}
+	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
+	
 }

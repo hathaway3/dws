@@ -118,5 +118,9 @@ public class DWCmdDiskInsert implements DWCommand {
 		return "dw disk insert # URI/path";
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 	
 }

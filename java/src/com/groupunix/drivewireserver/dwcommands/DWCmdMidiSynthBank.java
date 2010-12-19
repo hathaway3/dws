@@ -91,4 +91,8 @@ public class DWCmdMidiSynthBank implements DWCommand {
 	}
 	
 
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 }

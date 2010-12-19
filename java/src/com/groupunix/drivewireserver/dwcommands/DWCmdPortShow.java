@@ -86,4 +86,9 @@ public class DWCmdPortShow implements DWCommand {
 		
 	}
 	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
+	
 }

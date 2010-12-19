@@ -24,6 +24,7 @@ public class DWDiskLazyWriter implements Runnable {
 
 			try 
 			{
+				//logger.debug("sleeping for " + DriveWireServer.serverconfig.getLong("DiskLazyWriteInterval",15000) + " ms...");
 				Thread.sleep(DriveWireServer.serverconfig.getLong("DiskLazyWriteInterval",15000));
 				syncDisks();
 			}	 
@@ -56,26 +57,39 @@ public class DWDiskLazyWriter implements Runnable {
 					
 						if (DriveWireServer.getHandler(h).getDiskDrives().diskLoaded(driveno))
 						{
-							if (DriveWireServer.getHandler(h).getDiskDrives().isRandomWriteable(driveno))
-							{	 
-				
-								if (DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) > 0)
+							try 
+							{
+								
+								if (DriveWireServer.getHandler(h).getDiskDrives().isSync(driveno))
 								{
-									logger.debug("cache for drive " + driveno + " in handler " + h + " has changed, " + DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
-						
-									try
-									{
-										DriveWireServer.getHandler(h).getDiskDrives().writeDisk(driveno);
-									} 
-									catch (IOException e)
-									{
-										logger.error("Lazy write failed: " + e.getMessage());
-									} catch (DWDriveNotLoadedException e) 
-									{
-										logger.error(e.getMessage());
+								
+									if (DriveWireServer.getHandler(h).getDiskDrives().isRandomWriteable(driveno))
+									{	 
+
+										if (DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) > 0)
+										{
+											logger.debug("cache for drive " + driveno + " in handler " + h + " has changed, " + DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
+
+											try
+											{
+												DriveWireServer.getHandler(h).getDiskDrives().writeDisk(driveno);
+											} 
+											catch (IOException e)
+											{
+												logger.error("Lazy write failed: " + e.getMessage());
+											} 
+											catch (DWDriveNotLoadedException e) 
+											{
+												logger.error(e.getMessage());
+											}
+										}
 									}
+
 								}
-				
+							} 
+							catch (DWDriveNotLoadedException e) 
+							{
+								e.printStackTrace();
 							}
 						}
 			

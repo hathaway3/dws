@@ -77,7 +77,23 @@ public class DWCmdDiskShow implements DWCommand
 			text += "Filesystem supports write: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isFSWriteable() + "\r\n";
 		    text += " FS supports random write: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isRandomWriteable() + "\r\n";
 			text += "      File can be written: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isWriteable() + "\r\n";     
+			text += "\r\n";
 			text += "  Disk is write protected: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getWriteProtect() + "\r\n";
+			text += "     Sync to file allowed: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isSync() + "\r\n";
+			text += "   Disk expansion allowed: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isExpand() + "\r\n";
+			
+			text += "          Disk size limit: ";
+			if (DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getSizelimit() < 0)
+			{
+				text += "none\r\n";
+			}
+			else
+			{
+				text += DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getSizelimit() + " sectors\r\n";
+			}
+				
+			text += "  File/disk sector offset: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getOffset() + "\r\n";
+			
 			
 			return(new DWCommandResponse(text));
 
@@ -131,5 +147,9 @@ public class DWCmdDiskShow implements DWCommand
 	}
 	
 		
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 	
 }

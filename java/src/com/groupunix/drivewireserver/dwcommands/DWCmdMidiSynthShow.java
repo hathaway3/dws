@@ -10,7 +10,7 @@ public class DWCmdMidiSynthShow implements DWCommand
 	{
 		commands.addcommand(new DWCmdMidiSynthShowChannels(handlerno));
 		commands.addcommand(new DWCmdMidiSynthShowInstr(handlerno));
-		commands.addcommand(new DWCmdMidiSynthShowProfiles(handlerno));
+		commands.addcommand(new DWCmdMidiSynthShowProfiles());
 	}
 	
 	public String getCommand() 
@@ -41,6 +41,9 @@ public class DWCmdMidiSynthShow implements DWCommand
 		return(commands.parse(cmdline));
 	}
 
-	
+	public boolean validate(String cmdline) 
+	{
+		return(true);
+	}
 
 }

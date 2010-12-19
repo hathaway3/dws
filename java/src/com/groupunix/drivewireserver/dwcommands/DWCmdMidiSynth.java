@@ -45,5 +45,8 @@ public class DWCmdMidiSynth implements DWCommand {
 		return "dw midi synth [command]";
 	}
 	
-
+	public boolean validate(String cmdline) 
+	{
+		return(commands.validate(cmdline));
+	}
 }

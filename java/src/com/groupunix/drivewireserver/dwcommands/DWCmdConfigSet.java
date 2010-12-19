@@ -77,6 +77,13 @@ public class DWCmdConfigSet implements DWCommand {
 		DriveWireServer.getHandler(this.handlerno).config.setProperty(item, value);
 		return(new DWCommandResponse("Item '" + item + "' set to '" + value + "'"));
 	}
+
+	
+	public boolean validate(String cmdline) 
+	{
+
+		return true;
+	}
 	
 	
 }

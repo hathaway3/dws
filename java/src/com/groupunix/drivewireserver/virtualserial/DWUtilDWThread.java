@@ -27,7 +27,7 @@ public class DWUtilDWThread implements Runnable
 	private DWVSerialPorts dwVSerialPorts;
 	private boolean protect = false;
 	
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 	
 	public DWUtilDWThread(int handlerno, int vport, String args)
 	{
@@ -42,13 +42,7 @@ public class DWUtilDWThread implements Runnable
 		}
 		
 		// setup command list
-		commands.addcommand(new DWCmdDisk(handlerno));
-		commands.addcommand(new DWCmdServer(handlerno));
-		commands.addcommand(new DWCmdConfig(handlerno));
-		commands.addcommand(new DWCmdPort(handlerno));
-		commands.addcommand(new DWCmdLog());
-		commands.addcommand(new DWCmdNet(handlerno));
-		commands.addcommand(new DWCmdMidi(handlerno));
+		commands = DriveWireServer.getHandler(handlerno).getDWCmds();
 		
 		logger.debug("init dw util thread (protected mode: " + this.protect + ")");	
 	}

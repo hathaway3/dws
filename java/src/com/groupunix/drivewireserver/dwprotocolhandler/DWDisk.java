@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.vfs.Capability;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
@@ -14,6 +15,8 @@ import org.apache.commons.vfs.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
+import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
+import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
 
 
 public class DWDisk {
@@ -23,6 +26,12 @@ public class DWDisk {
 	public static final int MAX_SECTORS = 16777215; // what is coco's max? 24 bits?
 	private int LSN = 0;
 	private boolean	wrProt = false;
+	private boolean expand = true;
+	private boolean sync = true;
+	
+	private int offset = 0;
+	private int sizelimit = -1;
+	
 	private ArrayList<DWDiskSector> sectors = new ArrayList<DWDiskSector>();
 	
 	private int reads = 0;
@@ -199,18 +208,27 @@ public class DWDisk {
 
 	
 	
-	public synchronized void seekSector(int newLSN)
+	public synchronized void seekSector(int newLSN) throws DWInvalidSectorException, DWSeekPastEndOfDeviceException
 	{
+	
+		
 		if ((newLSN < 0) || (newLSN > MAX_SECTORS))
 		{
-			logger.error("Seek out of range: sector " + newLSN + " ?");
+			throw new DWInvalidSectorException("Sector " + newLSN + " is not valid");
+			
+		}
+		else if ((newLSN >= this.getDiskSectors()) && (!this.expand))
+		{
+			throw new DWSeekPastEndOfDeviceException("Sector " + newLSN + " is beyond end of file, and expansion is not allowed");
+		}
+		else if ((this.sizelimit > -1) && (newLSN >= this.sizelimit))
+		{
+			throw new DWSeekPastEndOfDeviceException("Sector " + newLSN + " is beyond specified sector size limit");
 		}
 		else
 		{
 			this.LSN = newLSN;
 			
-			// logger.debug("seek to sector " + newLSN + " for '" + this.filePath + "'");
-		
 		}
 	}
 
@@ -301,17 +319,19 @@ public class DWDisk {
 		// logger.debug("Read sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
 		this.reads++;
 		
+		int effLSN = this.LSN + this.offset;
+		
 		// we can read beyond the current size of the image
-		if (this.LSN >= this.sectors.size())
+		if (effLSN >= this.sectors.size())
 		{
-			logger.debug("request for undefined sector " + this.LSN);
+			logger.debug("request for undefined sector " + effLSN + " (" + this.LSN + ")");
 			
 			// expand disk
-			expandDisk(this.LSN);
-			this.sectors.add(this.LSN, new DWDiskSector(this.LSN));
+			expandDisk(effLSN);
+			this.sectors.add(effLSN, new DWDiskSector(effLSN));
 		}
 		
-		return(this.sectors.get(this.LSN).getData());	
+		return(this.sectors.get(effLSN).getData());	
 	}
 	
 	
@@ -335,16 +355,18 @@ public class DWDisk {
 		}
 		else
 		{
+			int effLSN = this.LSN + this.offset;
+			
 			// we can write beyond our current size
-			if (this.LSN >= this.sectors.size())
+			if (effLSN>= this.sectors.size())
 			{
 				// expand disk / add sector
-				expandDisk(this.LSN);
-				this.sectors.add(this.LSN, new DWDiskSector(this.LSN));
-				logger.debug("new sector " + this.LSN);
+				expandDisk(effLSN);
+				this.sectors.add(effLSN, new DWDiskSector(effLSN));
+				logger.debug("new sector " + effLSN);
 			}
 			
-			this.sectors.get(this.LSN).setData(data);
+			this.sectors.get(effLSN).setData(data);
 			
 			this.writes++;
 			
@@ -598,6 +620,74 @@ public void shutdown()
 	}
 	
 }
+
+
+
+	public void setExpand(boolean expand) {
+		this.expand = expand;
+	}
+
+
+
+	public boolean isExpand() {
+		return expand;
+	}
+
+
+
+	public void setSync(boolean sync) {
+		this.sync = sync;
+	}
+
+
+
+	public boolean isSync() {
+		return sync;
+	}
+
+
+
+	public void setOffset(int offset) {
+		this.offset = offset;
+	}
+
+
+
+	public int getOffset() {
+		return offset;
+	}
+
+
+
+	public void setSizelimit(int size) {
+		this.sizelimit = size;
+	}
+
+
+
+	public int getSizelimit() {
+		return sizelimit;
+	}
+
+
+
+	public HierarchicalConfiguration getConfig() 
+	{
+		HierarchicalConfiguration config = new HierarchicalConfiguration();
+		
+		config.addProperty("disk.path", this.getFilePath());
+		config.addProperty("disk.TEST", "blah");
+		
+		
+		
+		
+		
+		
+		return(config);
+	}
+
+
+
 
 
 
