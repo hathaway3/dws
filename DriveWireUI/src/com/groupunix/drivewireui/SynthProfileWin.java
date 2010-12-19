@@ -1,5 +1,6 @@
 package com.groupunix.drivewireui;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -35,8 +36,10 @@ public class SynthProfileWin extends Dialog {
 	/**
 	 * Open the dialog.
 	 * @return the result
+	 * @throws DWUIOperationFailedException 
+	 * @throws IOException 
 	 */
-	public Object open() {
+	public Object open() throws IOException, DWUIOperationFailedException {
 		createContents();
 		
 		loadSynthProfiles(combo);
@@ -57,16 +60,16 @@ public class SynthProfileWin extends Dialog {
 		return result;
 	}
 
-	private void loadSynthProfiles(Combo cmb) 
+	private void loadSynthProfiles(Combo cmb) throws IOException, DWUIOperationFailedException 
 	{
-		profiles = UIUtils.loadArrayList("synthprofiles");
+		profiles = UIUtils.loadArrayList("ui server show synthprofiles");
 		
 		Collections.sort(profiles);
 		
 		for(int i=0; i<profiles.size(); i++)
 		{
 			
-			cmb.add(profiles.get(i).split(Character.toString((char) 0))[1]);
+			cmb.add(profiles.get(i));
 		}
 	}
 	
@@ -88,7 +91,7 @@ public class SynthProfileWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				MainWin.sendCommand("dw midi synth profile " + profiles.get(combo.getSelectionIndex()).split(Character.toString((char) 0))[0]);
+				MainWin.sendCommand("dw midi synth profile " + profiles.get(combo.getSelectionIndex()).split(" ")[0]);
 				shlChooseASynth.close();
 			}
 		});

@@ -42,7 +42,7 @@ public class LogInputThread implements Runnable
 		} 
 		catch (IOException e) 
 		{
-			MainWin.addToDisplay(e.getMessage());
+			MainWin.addToDisplay("Log viewer: " + e.getMessage());
 		}
 		
 		

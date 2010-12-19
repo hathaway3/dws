@@ -1,5 +1,6 @@
 package com.groupunix.drivewireui;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -40,8 +41,10 @@ public class ChooseDiskSetWin extends Dialog {
 	/**
 	 * Open the dialog.
 	 * @return the result
+	 * @throws DWUIOperationFailedException 
+	 * @throws IOException 
 	 */
-	public Object open() {
+	public Object open() throws IOException, DWUIOperationFailedException {
 		createContents();
 		
 		loadDiskSets(cmbDiskSet);
@@ -58,9 +61,9 @@ public class ChooseDiskSetWin extends Dialog {
 		return result;
 	}
 
-	private void loadDiskSets(Combo cmb) 
+	private void loadDiskSets(Combo cmb) throws IOException, DWUIOperationFailedException 
 	{
-		ArrayList<String> disksets = UIUtils.loadArrayList("disksets");
+		ArrayList<String> disksets = UIUtils.loadArrayList("ui server show disksets");
 		
 		Collections.sort(disksets);
 		

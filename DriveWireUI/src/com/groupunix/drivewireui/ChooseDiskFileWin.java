@@ -1,5 +1,6 @@
 package com.groupunix.drivewireui;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -30,7 +31,6 @@ public class ChooseDiskFileWin extends Dialog {
 	private Combo cmbDisk;
 	private Combo combo;
 	private ArrayList<String> disks;
-	private int dialogType;
 	
 	/**
 	 * Create the dialog.
@@ -39,12 +39,11 @@ public class ChooseDiskFileWin extends Dialog {
 	 * @param pre 
 	 * @param pre 
 	 */
-	public ChooseDiskFileWin(Shell parent, int style, String buttxt, String pre, int dialogType) 
+	public ChooseDiskFileWin(Shell parent, int style, String buttxt, String pre) 
 	{
 		super(parent, style);
 		this.pre = pre;
 		this.buttxt = buttxt;
-		this.dialogType = dialogType;
 		
 		setText("SWT Dialog");
 	}
@@ -52,8 +51,10 @@ public class ChooseDiskFileWin extends Dialog {
 	/**
 	 * Open the dialog.
 	 * @return the result
+	 * @throws DWUIOperationFailedException 
+	 * @throws IOException 
 	 */
-	public Object open() {
+	public Object open() throws IOException, DWUIOperationFailedException {
 		createContents();
 		
 		loadDisks(cmbDisk);
@@ -71,16 +72,28 @@ public class ChooseDiskFileWin extends Dialog {
 	}
 
 	
-	private void loadDisks(Combo cmb) 
+	private void loadDisks(Combo cmb) throws IOException
 	{
-		disks = UIUtils.loadArrayList("disks");
-		
-		Collections.sort(disks);
-		
-		for(int i=0; i<disks.size(); i++)
+		try {
+			disks = UIUtils.loadArrayList("ui server show localdisks");
+			
+			Collections.sort(disks);
+			
+			for(int i=0; i<disks.size(); i++)
+			{
+				cmb.add(disks.get(i).split("/")[disks.get(i).split("/").length - 1]);
+			}
+			
+		} 
+		catch (DWUIOperationFailedException e) 
 		{
-			cmb.add(disks.get(i).split("/")[disks.get(i).split("/").length - 1]);
+			// couldn't load server localdisks, but that's ok
+			
+			cmb.setEnabled(false);
+			
 		}
+		
+	
 	}
 	
 	/**
@@ -119,21 +132,11 @@ public class ChooseDiskFileWin extends Dialog {
 			public void widgetSelected(SelectionEvent e)
 			{
 			
-					 FileDialog fd = new FileDialog(shlChooseDiskNumber, dialogType);
-					 	
-					 	if (dialogType == SWT.OPEN)
-					 	{
-					 		fd.setText("Choose a local disk image...");
-					 	}
-					 	else if (dialogType == SWT.SAVE)
-					 	{
-					 		fd.setText("Save disk image as...");
-					 	}
-					 	
+					 FileDialog fd = new FileDialog(shlChooseDiskNumber, SWT.OPEN);
+				        fd.setText("Choose a local disk image...");
 				        fd.setFilterPath("");
 				        String[] filterExt = { "*.dsk", "*.*" };
 				        fd.setFilterExtensions(filterExt);
-				       
 				        String selected = fd.open();
 					
 				        if (!(selected == null))
@@ -155,15 +158,7 @@ public class ChooseDiskFileWin extends Dialog {
 					MainWin.sendCommand(pre + " " + spinner.getText() + " " + txtDisk.getText());
 				
 				if (combo.getSelectionIndex() == 1)
-					if (cmbDisk.getSelectionIndex() == -1)
-					{
-						// append diskdir path from server to manually typed file name
-						MainWin.sendCommand(pre + " " + spinner.getText() + " " + UIUtils.getServerConfigItem("DiskDir") + "/" + cmbDisk.getText());
-					}
-					else
-					{
-						MainWin.sendCommand(pre + " " + spinner.getText() + " " + disks.get(cmbDisk.getSelectionIndex()));
-					}
+					MainWin.sendCommand(pre + " " + spinner.getText() + " " + disks.get(cmbDisk.getSelectionIndex()));
 				
 				shlChooseDiskNumber.close();
 			}

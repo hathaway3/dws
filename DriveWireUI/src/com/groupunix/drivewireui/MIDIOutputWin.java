@@ -1,5 +1,6 @@
 package com.groupunix.drivewireui;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
@@ -33,8 +34,10 @@ public class MIDIOutputWin extends Dialog {
 	/**
 	 * Open the dialog.
 	 * @return the result
+	 * @throws DWUIOperationFailedException 
+	 * @throws IOException 
 	 */
-	public Object open() {
+	public Object open() throws IOException, DWUIOperationFailedException {
 		createContents();
 		
 		loadOutputDevs(combo);
@@ -72,7 +75,7 @@ public class MIDIOutputWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				MainWin.sendCommand("dw midi out " + outputdevs.get(combo.getSelectionIndex()).split(Character.toString((char) 0))[0]);
+				MainWin.sendCommand("dw midi out " + outputdevs.get(combo.getSelectionIndex()).split(" ")[0]);
 				shlChooseMidiOutput.close();
 			}
 		});
@@ -91,14 +94,14 @@ public class MIDIOutputWin extends Dialog {
 
 	}
 
-	private void loadOutputDevs(Combo cmb) 
+	private void loadOutputDevs(Combo cmb) throws IOException, DWUIOperationFailedException 
 	{
-		outputdevs = UIUtils.loadArrayList("midioutdevs");
+		outputdevs = UIUtils.loadArrayList("ui server show mididevs");
 		
 		for(int i=0; i<outputdevs.size(); i++)
 		{
 			
-			cmb.add(outputdevs.get(i).split(Character.toString((char) 0))[1]);
+			cmb.add(outputdevs.get(i));
 		}
 	}
 	

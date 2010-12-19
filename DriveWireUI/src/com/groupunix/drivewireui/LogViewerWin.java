@@ -37,21 +37,26 @@ public class LogViewerWin extends Dialog {
 		this.host = host;
 		this.port = port;
 		
-		setText("Log Viewer");
+		setText("Log Viewer - " + host + ":" + port);
 	}
 
 	/**
 	 * Open the dialog.
 	 * @return the result
+	 * @throws IOException 
+	 * @throws UnknownHostException 
 	 */
-	public Object open() {
+	public Object open() throws UnknownHostException, IOException 
+	{
+		// start log thread
+		Connect();
+		
 		createContents();
 		shell.open();
 		shell.layout();
 		display = getParent().getDisplay();
 		
-		// start log thread
-		Connect();
+		
 		
 		
 		while (!shell.isDisposed()) {
@@ -73,11 +78,12 @@ public class LogViewerWin extends Dialog {
 			{
 				try 
 				{
-					sock.close();
+					if ((sock != null) && (!sock.isClosed()))
+						sock.close();
 				} 
 				catch (IOException e1) 
 				{
-					MainWin.addToDisplay(e1.getMessage());
+					MainWin.showError("Error sending command" + e1.getMessage(), e1.toString() , UIUtils.getStackTrace(e1));
 				}
 			}
 		});
@@ -86,6 +92,7 @@ public class LogViewerWin extends Dialog {
 		shell.setLayout(new BorderLayout(0, 0));
 		
 		text = new Text(shell, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL);
+		text.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
 		text.setFont(SWTResourceManager.getFont("Lucida Console", 9, SWT.NORMAL));
 		text.setEditable(false);
 		text.setLayoutData(BorderLayout.CENTER);
@@ -98,32 +105,22 @@ public class LogViewerWin extends Dialog {
 				  new Runnable() {
 					  public void run()
 					  {
-						  text.append(line + System.getProperty("line.separator"));
+						  // trim pesky crlf stuff
+						  if (line.length() > 1)
+							  text.append(line.substring(0, line.length() -1) + System.getProperty("line.separator"));
 						  
 					  }
 				  });
 	}
 
 	
-	public void Connect()
+	public void Connect() throws UnknownHostException, IOException
 	{
-		try 
-		{
-			this.sock = new Socket(this.host, this.port);
-			inputT = new Thread(new LogInputThread(this.sock.getInputStream()));
-			inputT.start();
+		this.sock = new Socket(this.host, this.port);
+		inputT = new Thread(new LogInputThread(this.sock.getInputStream()));
+		inputT.start();
 			
-			sock.getOutputStream().write("ui logview\n".getBytes());
-		} 
-		catch (UnknownHostException e) 
-		{
-			MainWin.addToDisplay(e.getMessage());
-		} 
-		catch (IOException e) 
-		{
-			MainWin.addToDisplay(e.getMessage());
-		}
-		
+		sock.getOutputStream().write("ui logview\n".getBytes());
 		
 	}
 	

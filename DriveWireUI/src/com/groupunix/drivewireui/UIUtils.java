@@ -1,115 +1,222 @@
 package com.groupunix.drivewireui;
 
 import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class UIUtils {
 
-	public static ArrayList<String> loadArrayList(String arg) 
-	{
-		ArrayList<String> res = new ArrayList<String>();
-		
-		try 
-		{
-			Socket sock = new Socket(MainWin.getConnection().getHost(), MainWin.getConnection().getPort());
-			
-			sock.getOutputStream().write(("ui list " + arg + "\n").getBytes());
-			
-			String line = readLine(sock);
-			
-			// eat welcome
-			while ((!sock.isClosed()) && (!line.equals(Character.toString((char) 0))))
-			{
-				line = readLine(sock);
-			}
-			
-			// data
-			line = readLine(sock);
-			
-			while ((!sock.isClosed()) && (!line.equals(Character.toString((char) 0))))
-			{
-				res.add(line);
-
-				line = readLine(sock);
-				
-			}
-			
-			sock.close();
-		} 
-		catch (UnknownHostException e) 
-		{
-			MainWin.addToDisplay(e.getMessage());
-		} 
-		catch (IOException e) 
-		{
-			MainWin.addToDisplay(e.getMessage());
-		}
-		
-		return res;
-	}
 
 	
-	public static String getServerConfigItem(String item)
+	public static ArrayList<String> loadArrayList(String arg) throws IOException, DWUIOperationFailedException
 	{
-		String line = null;
-		String res = null;
+		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
 		
-		try 
+		ArrayList<String> res = new ArrayList<String>();
+		
+		conn.Connect();
+			
+		res = conn.loadArrayList(arg);
+			
+		conn.close();
+			
+		if (res.size() < 1)
 		{
-			Socket sock = new Socket(MainWin.getConnection().getHost(), MainWin.getConnection().getPort());
-			
-			sock.getOutputStream().write(("ui showconfigitem " + item + "\n").getBytes());
-			
-			line = readLine(sock);
-			
-			// eat welcome
-			while ((!sock.isClosed()) && (!line.equals(Character.toString((char) 0))))
-			{
-				line = readLine(sock);
-			}
-			
-			// data
-			line = readLine(sock);
-			
-			while ((!sock.isClosed()) && (!line.equals(Character.toString((char) 0))))
-			{
-				res = line;
-				line = readLine(sock);
-			}
-			
-			sock.close();
-		} 
-		catch (UnknownHostException e) 
-		{
-			MainWin.addToDisplay(e.getMessage());
-		} 
-		catch (IOException e) 
-		{
-			MainWin.addToDisplay(e.getMessage());
+			throw new DWUIOperationFailedException("Null result from server");
 		}
+		else if (res.get(0).startsWith("FAIL"))
+		{
+			throw new DWUIOperationFailedException(res.get(0));
+		}
+		
 		
 		return(res);
 		
 	}
 	
 	
-	private static String readLine(Socket sock) throws IOException 
+	public static String getStackTrace(Throwable aThrowable) {
+	    final Writer result = new StringWriter();
+	    final PrintWriter printWriter = new PrintWriter(result);
+	    aThrowable.printStackTrace(printWriter);
+	    return result.toString();
+	  }
+
+
+	public static HashMap<String, String> getServerSettings(ArrayList<String> settings) throws DWUIOperationFailedException, IOException 
 	{
-		String line = new String();
+		// create hashmap containing the requested settings
 		
-		int data = sock.getInputStream().read();
+		HashMap<String,String> values = new HashMap<String,String>();
+			
+		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
 		
-		while ((!sock.isClosed()) && (data != -1) && (data != 10))
+		conn.Connect();
+		
+		
+		
+		
+		for (int i = 0;i<settings.size();i++)
 		{
-			line += Character.toString((char) data);
-			data = sock.getInputStream().read();
+			ArrayList<String> res = conn.loadArrayList("ui server config show " + settings.get(i));
+			
+			if (res.size() < 1)
+			{
+				throw new DWUIOperationFailedException("Null result from server");
+			}
+			else if (res.get(0).startsWith("FAIL"))
+			{
+				throw new DWUIOperationFailedException(res.get(0));
+			}
+			else
+			{
+				values.put(settings.get(i), res.get(0));
+			}
 		}
 		
+		conn.close();
 		
-		return line;
+		
+		return(values);
 	}
+
+
+
+	public static boolean sTob(String val) 
+	{
+		if ((val != null) && (val.equalsIgnoreCase("true")))
+			return true;
+		
+		return false;
+	}
+
+
+	public static void setServerSettings(HashMap<String, String> values) throws IOException, DWUIOperationFailedException 
+	{
+		if (values.size() > 0)
+		{
+			Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
+		
+			conn.Connect();
+
+			Collection<String> c = values.keySet();
+			Iterator<String> itr = c.iterator();
+		
+			while(itr.hasNext())
+			{
+				String val = itr.next();
+				conn.sendCommand("ui server config set " + val + " " + values.get(val),0);
+			}
+		
+			conn.close();
+		}
+	}
+
+
+	public static String bTos(boolean selection) 
+	{
+		if (selection)
+			return("true");
+		
+		return "false";
+	}
+
+	public static boolean validateNum(String data) 
+	{
+		try 
+		{
+			Integer.parseInt(data);
+
+		}
+		catch (NumberFormatException e)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+
 	
-	
+
+	public static boolean validateNum(String data, int min) 
+	{
+		try 
+		{
+			int val = Integer.parseInt(data);
+			if (val < min)
+				return false;
+		}
+		catch (NumberFormatException e)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+
+	public static boolean validateNum(String data, int min, int max) 
+	{
+		try 
+		{
+			int val = Integer.parseInt(data);
+			if ((val < min) || (val > max))
+				return false;
+			
+		}
+		catch (NumberFormatException e)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+
+
+	public static HashMap<String, String> getInstanceSettings(int instance, ArrayList<String> settings) throws DWUIOperationFailedException, IOException 
+	{
+		// create hashmap containing the requested settings
+		
+		HashMap<String,String> values = new HashMap<String,String>();
+			
+		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), instance);
+		
+		conn.Connect();
+		
+		// connect to instance
+		conn.attach(instance);
+		
+		for (int i = 0;i<settings.size();i++)
+		{
+			ArrayList<String> res = conn.loadArrayList("ui instance config show " + settings.get(i));
+			
+			if (res.size() < 1)
+			{
+				throw new DWUIOperationFailedException("Null result from server");
+			}
+			else if (res.get(0).startsWith("FAIL -36"))
+			{
+				// config item is not set
+				values.put(settings.get(i), null);
+			}
+			else if (res.get(0).startsWith("FAIL"))
+			{
+				
+				throw new DWUIOperationFailedException(res.get(0));
+			}
+			else
+			{
+				values.put(settings.get(i), res.get(0));
+			}
+		}
+		
+		conn.close();
+		
+		
+		return(values);
+	}
 }

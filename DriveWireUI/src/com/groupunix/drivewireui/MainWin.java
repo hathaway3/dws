@@ -1,5 +1,8 @@
 package com.groupunix.drivewireui;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
@@ -22,12 +25,16 @@ import com.swtdesigner.SWTResourceManager;
 
 public class MainWin {
 
-	protected Shell shell;
-	private static Connection connection;
+	protected static Shell shell;
+
 	private Text text;
 	private static Text text_1;
 	private static Display display;
 	private static LogViewerWin logViewerWin;
+	
+	private static String host;
+	private static int port;
+	private static int instance;
 	
 	/**
 	 * Launch the application.
@@ -36,6 +43,9 @@ public class MainWin {
 	public static void main(String[] args) 
 	{
 		
+		host = "127.0.0.1";
+		port = 6800;
+		instance = 0;
 		
 			try 
 				{
@@ -61,9 +71,8 @@ public class MainWin {
 		createContents();
 		shell.open();
 		shell.layout();
-		
-		ConnectWin window = new ConnectWin(shell,SWT.DIALOG_TRIM);
-		window.open();
+
+		updateTitlebar();
 		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
@@ -72,20 +81,22 @@ public class MainWin {
 		}
 	}
 
+	private static void updateTitlebar() 
+	{
+		shell.setText("DriveWire User Interface - " + host + ":" + port + " [" + instance + "]");
+	}
+
 	/**
 	 * Create contents of the window.
 	 */
 	protected void createContents() {
 		shell = new Shell();
+		shell.setImage(SWTResourceManager.getImage(MainWin.class, "/dw4logo5.png"));
 		shell.addShellListener(new ShellAdapter() {
 			@Override
 			public void shellClosed(ShellEvent e) 
 			{
-				if (connection != null)
-				{
-					connection.close();
-				}
-			
+				
 			}
 		});
 		shell.setSize(640, 514);
@@ -101,26 +112,41 @@ public class MainWin {
 		Menu menu_1 = new Menu(mntmFile);
 		mntmFile.setMenu(menu_1);
 		
-		MenuItem mntmConnectTo = new MenuItem(menu_1, SWT.NONE);
-		mntmConnectTo.addSelectionListener(new SelectionAdapter() {
+		MenuItem mntmChooseServer = new MenuItem(menu_1, SWT.NONE);
+		mntmChooseServer.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				ConnectWin window = new ConnectWin(shell,SWT.DIALOG_TRIM);
-				window.open();
+				ChooseServerWin chooseServerWin = new ChooseServerWin(shell,SWT.DIALOG_TRIM);
+				chooseServerWin.open();
+				
 			}
 		});
-		mntmConnectTo.setText("Connect to...");
+		mntmChooseServer.setText("Choose Server...");
 		
-		MenuItem mntmDisconnect = new MenuItem(menu_1, SWT.NONE);
-		mntmDisconnect.addSelectionListener(new SelectionAdapter() {
+		MenuItem mntmChooseInstance = new MenuItem(menu_1, SWT.NONE);
+		mntmChooseInstance.addSelectionListener(new SelectionAdapter() {
 			@Override
-			public void widgetSelected(SelectionEvent e)
+			public void widgetSelected(SelectionEvent e) 
 			{
-				connection.close();
+				ChooseInstanceWin window = new ChooseInstanceWin(shell,SWT.DIALOG_TRIM);
+				
+				try 
+				{
+					window.open();
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+			
 			}
 		});
-		mntmDisconnect.setText("Disconnect");
+		mntmChooseInstance.setText("Choose Instance...");
 		
 		new MenuItem(menu_1, SWT.SEPARATOR);
 		
@@ -171,7 +197,7 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCmdDiskFile("dw disk in ","Load", SWT.OPEN);
+				sendCmdDiskFile("dw disk in ","Load");
 			}
 		});
 		mntmInsert.setText("Insert...");
@@ -211,7 +237,7 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCmdDiskFile("dw disk write ","Write", SWT.SAVE);
+				sendCmdDiskFile("dw disk write ","Write");
 			}
 		});
 		mntmWrite.setText("Write...");
@@ -221,7 +247,7 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCmdDiskFile("dw disk create","Create", SWT.SAVE);
+				sendCmdDiskFile("dw disk create","Create");
 			}
 		});
 		mntmCreate.setText("Create...");
@@ -317,49 +343,38 @@ public class MainWin {
 		new MenuItem(menu_4, SWT.SEPARATOR);
 		
 		MenuItem mntmLogViewer = new MenuItem(menu_4, SWT.NONE);
-		mntmLogViewer.addSelectionListener(new SelectionAdapter() {
+		mntmLogViewer.addSelectionListener(new SelectionAdapter() 
+		{
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				if ((connection != null) && (connection.connected()))
+				if ((logViewerWin == null) || (logViewerWin.shell.isDisposed()))
 				{
-				
-					if ((logViewerWin == null) || (logViewerWin.shell.isDisposed()))
+					logViewerWin = new LogViewerWin(shell,SWT.DIALOG_TRIM, getHost(), getPort());
+					try 
 					{
-						logViewerWin = new LogViewerWin(shell,SWT.DIALOG_TRIM,connection.getHost(), connection.getPort());
 						logViewerWin.open();
-					}
-					else
+					} 
+					catch (UnknownHostException e1) 
 					{
-						logViewerWin.shell.setFocus();
-					}
-			
+						showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+					} 
+					catch (IOException e1) 
+					{
+						showError("Error sending command",e1.getMessage(),  UIUtils.getStackTrace(e1));
+						
+					} 
 				}
 				else
 				{
-					addToDisplay("Cannot open log viewer until we are connected to a server.");
+					logViewerWin.shell.setFocus();
 				}
 				
 			}
 		});
 		mntmLogViewer.setText("Log Viewer");
 		
-		MenuItem mntmConfig = new MenuItem(menu, SWT.CASCADE);
-		mntmConfig.setText("Config");
-		
-		Menu menu_5 = new Menu(mntmConfig);
-		mntmConfig.setMenu(menu_5);
-		
-		MenuItem mntmServer_1 = new MenuItem(menu_5, SWT.NONE);
-		mntmServer_1.setText("Server...");
-		
-		MenuItem mntmInstanceConfig = new MenuItem(menu_5, SWT.NONE);
-		mntmInstanceConfig.setText("Instance...");
-		
-		MenuItem mntmPrinterConfig = new MenuItem(menu_5, SWT.NONE);
-		mntmPrinterConfig.setText("Printer...");
-		
-		MenuItem mntmMidi = new MenuItem(menu_5, SWT.CASCADE);
+		MenuItem mntmMidi = new MenuItem(menu, SWT.CASCADE);
 		mntmMidi.setText("MIDI");
 		
 		Menu menu_6 = new Menu(mntmMidi);
@@ -381,7 +396,19 @@ public class MainWin {
 			public void widgetSelected(SelectionEvent e) 
 			{
 				MIDIOutputWin window = new MIDIOutputWin(shell,SWT.DIALOG_TRIM);
-				window.open();
+				
+				try 
+				{
+					window.open();
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
 				
 			}
 		});
@@ -467,7 +494,20 @@ public class MainWin {
 			public void widgetSelected(SelectionEvent e) 
 			{
 				SynthProfileWin window = new SynthProfileWin(shell,SWT.DIALOG_TRIM);
-				window.open();
+				
+				try 
+				{
+					window.open();
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+			
 			}
 		});
 		mntmSetProfile.setText("Set profile...");
@@ -481,6 +521,63 @@ public class MainWin {
 			}
 		});
 		mntmLockInstruments.setText("Lock instruments");
+		
+		MenuItem mntmConfig = new MenuItem(menu, SWT.CASCADE);
+		mntmConfig.setText("Config");
+		
+		Menu menu_5 = new Menu(mntmConfig);
+		mntmConfig.setMenu(menu_5);
+		
+		MenuItem mntmServer_1 = new MenuItem(menu_5, SWT.NONE);
+		mntmServer_1.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				ServerConfigWin window = new ServerConfigWin(shell,SWT.DIALOG_TRIM);
+
+				try 
+				{
+					window.open();
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+			
+			}
+		});
+		mntmServer_1.setText("Server...");
+		
+		MenuItem mntmInstanceConfig = new MenuItem(menu_5, SWT.NONE);
+		mntmInstanceConfig.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				InstanceConfigWin window = new InstanceConfigWin(shell,SWT.DIALOG_TRIM);
+
+				try 
+				{
+					window.open();
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+			
+			}
+		});
+		mntmInstanceConfig.setText("Instance...");
+		
+		MenuItem mntmDiskSets = new MenuItem(menu_5, SWT.NONE);
+		mntmDiskSets.setText("Disk Sets...");
 		
 		MenuItem mntmHelp = new MenuItem(menu, SWT.CASCADE);
 		mntmHelp.setText("Help");
@@ -504,6 +601,7 @@ public class MainWin {
 		text.setLayoutData(BorderLayout.SOUTH);
 		
 		text_1 = new Text(shell, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		text_1.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
 		text_1.setLayoutData(BorderLayout.CENTER);
 		text_1.setFont(SWTResourceManager.getFont("Lucida Console", 9, SWT.NORMAL));
 		text_1.setEditable(false);
@@ -605,99 +703,109 @@ public class MainWin {
 
 
 
-	protected void sendCmdDiskFile(String pre, String buttxt, int dialogType) 
+	protected void sendCmdDiskFile(String pre, String buttxt) 
 	{
-		if (connectionAlive())
+		ChooseDiskFileWin window = new ChooseDiskFileWin(shell,SWT.DIALOG_TRIM, buttxt, pre);
+
+		try 
 		{
-			ChooseDiskFileWin window = new ChooseDiskFileWin(shell,SWT.DIALOG_TRIM, buttxt, pre, dialogType);
 			window.open();
+		} 
+		catch (DWUIOperationFailedException e1) 
+		{
+			showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+		} 
+		catch (IOException e1) 
+		{
+			showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
 		}
 	}
 
 	protected void sendCmdDiskNo(String pre, String post) 
 	{
-		if (connectionAlive())
-		{
-			ChooseDiskNoWin window = new ChooseDiskNoWin(shell,SWT.DIALOG_TRIM,pre,post);
-			window.open();
-		}
+		ChooseDiskNoWin window = new ChooseDiskNoWin(shell,SWT.DIALOG_TRIM,pre,post);
+		window.open();
 	}
 
 
 	protected void sendDiskSetCmd(String pre, String post) 
 	{
-		if (connectionAlive())
+		ChooseDiskSetWin window = new ChooseDiskSetWin(shell,SWT.DIALOG_TRIM,pre,post);
+		try 
 		{
-			ChooseDiskSetWin window = new ChooseDiskSetWin(shell,SWT.DIALOG_TRIM,pre,post);
 			window.open();
+		} 
+		catch (DWUIOperationFailedException e1) 
+		{
+			showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+		} 
+		catch (IOException e1) 
+		{
+			showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
 		}
 	}
 
 	
 	protected void quickInDisk(int diskno) 
 	{
-		if (connectionAlive())
-		{
-		 FileDialog fd = new FileDialog(shell, SWT.OPEN);
-	        fd.setText("Choose a local disk image...");
-	        fd.setFilterPath("");
-	        String[] filterExt = { "*.dsk", "*.*" };
-	        fd.setFilterExtensions(filterExt);
-	        String selected = fd.open();
+		FileDialog fd = new FileDialog(shell, SWT.OPEN);
+		fd.setText("Choose a local disk image...");
+        fd.setFilterPath("");
+        String[] filterExt = { "*.dsk", "*.*" };
+        fd.setFilterExtensions(filterExt);
+        String selected = fd.open();
 	        
-	        if (selected != null)
-	        {
-	        	sendCommand("dw disk in "+ diskno + " " + selected);
-	        }
-		}   
+        if (selected != null)
+        {
+        	sendCommand("dw disk in "+ diskno + " " + selected);
+        }
 	}
 
+	
 	protected static void sendCommand(String cmd) 
 	{
-		if (connectionAlive())
-		{
-			addToDisplay(System.getProperty("line.separator"));
-			connection.sendCommand(cmd);
+		Connection connection = new Connection(host,port,instance);
 		
-		}
+		try 
+		{
 		
-	}
-
-
-
-	private static boolean connectionAlive() 
-	{
-		if (connection != null)
-		{
-			if (connection.connected())
-			{
-				return true;
-			}
-			else
-			{
-				addToDisplay("Cannot send command, connection to DriveWire server lost.");
-				return false;
-			}
-		}
-		else
-		{
-			addToDisplay("Cannot send command, no connection to DriveWire server.");
-			return false;
-		}
-	}
-
-	public static void openConnection(String host, int port) 
-	{
-		if (connection != null)
-		{
+			connection.Connect();
+			connection.sendCommand(cmd,instance);
 			connection.close();
-		}
+
+		} 
+		catch (UnknownHostException e) 
+		{
+			showError("Unknown host error while sending command", e.getMessage(), UIUtils.getStackTrace(e));
+		} 
+		catch (IOException e1) 
+		{
+			showError("IO error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+			
+		} catch (DWUIOperationFailedException e2) 
+		{
+			showError("DW error sending command", e2.getMessage(), UIUtils.getStackTrace(e2));
+		} 
 		
-		connection = new Connection(host,port);
-		connection.Connect();
+		
 		
 		
 	}
+
+
+
+	public static void showError(final String title,final String summary,final String detail)
+	{
+		display.asyncExec(
+				  new Runnable() {
+					  public void run()
+					  {
+						  ErrorWin ew = new ErrorWin(shell,SWT.DIALOG_TRIM,title,summary,detail);
+						  ew.open();
+					  }
+				  });
+	}
+
 
 	public static void addToDisplay(final String txt) 
 	{
@@ -706,6 +814,7 @@ public class MainWin {
 					  public void run()
 					  {
 						  text_1.append(txt + System.getProperty("line.separator"));
+
 						  // text_1.setText(txt + "\r\n" + text_1.getText());
 					  }
 				  });
@@ -717,8 +826,40 @@ public class MainWin {
 		return logViewerWin;
 	}
 
-	public static Connection getConnection() 
+	
+	public static String getHost()
 	{
-		return connection;
+		return host;
+	}
+
+	public static int getPort()
+	{
+		return port;
+	}
+	
+	public static int getInstance()
+	{
+		return instance;
+	}
+
+	public static void setHost(String h) 
+	{
+		host = h;
+		updateTitlebar();
+	}
+
+	public static void setPort(String p) 
+	{
+		try
+		{
+			port = Integer.parseInt(p);
+			updateTitlebar();
+		}
+		catch (NumberFormatException e)
+		{
+			showError("Invalid port number","'" + p + "' is not a valid port number.","Valid port numbers are 1-65535.");
+		}
+		
+		
 	}
 }
