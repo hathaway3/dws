@@ -50,7 +50,7 @@ public class DWCmdConfigSet implements DWCommand {
 		}
 		else
 		{
-			return(doSetConfig(args[0],args[1]));
+			return(doSetConfig(args[0],cmdline.substring(args[0].length()+1)));
 		}
 		
 	}
@@ -61,13 +61,9 @@ public class DWCmdConfigSet implements DWCommand {
 		if (DriveWireServer.getHandler(this.handlerno).config.containsKey(item))
 		{
 			DriveWireServer.getHandler(this.handlerno).config.clearProperty(item);
-			return(new DWCommandResponse("Item '" + item + "' removed from config"));
-		}
-		else
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_CONFIG_KEY_NOT_SET, "Key '" + item + "' is not set."));
 		}
 		
+		return(new DWCommandResponse("Item '" + item + "' removed from config"));
 		
 	}
 	

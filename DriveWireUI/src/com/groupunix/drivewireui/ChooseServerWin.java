@@ -1,5 +1,7 @@
 package com.groupunix.drivewireui;
 
+import java.util.List;
+
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -10,12 +12,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.ModifyEvent;
 
 public class ChooseServerWin extends Dialog {
 
 	protected Object result;
 	protected Shell shlChooseServer;
-	private Text txtPort;
 	private Combo cmbHost;
 
 	/**
@@ -34,6 +37,9 @@ public class ChooseServerWin extends Dialog {
 	 */
 	public Object open() {
 		createContents();
+		
+		loadServerHistory();
+		
 		shlChooseServer.open();
 		shlChooseServer.layout();
 		Display display = getParent().getDisplay();
@@ -45,12 +51,26 @@ public class ChooseServerWin extends Dialog {
 		return result;
 	}
 
+	private void loadServerHistory() 
+	{
+		List<String> sh = MainWin.getServerHistory();
+		
+		if (sh != null)
+		{
+			for (int i = sh.size() - 1;i > -1;i--)
+			{
+				this.cmbHost.add(sh.get(i));
+			}
+			
+		}
+	}
+
 	/**
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
 		shlChooseServer = new Shell(getParent(), getStyle());
-		shlChooseServer.setSize(326, 154);
+		shlChooseServer.setSize(291, 151);
 		shlChooseServer.setText("Choose Server...");
 		
 		Button btnOk = new Button(shlChooseServer, SWT.NONE);
@@ -58,14 +78,31 @@ public class ChooseServerWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				// TODO save recent hosts?
-				MainWin.setHost(cmbHost.getText());
-				MainWin.setPort(txtPort.getText());
-				
-				shlChooseServer.close();
+				if (cmbHost.getText().contains(":"))
+				{
+					String[] hp = cmbHost.getText().split(":");
+	
+					if (UIUtils.validateNum(hp[1], 1, 65535))	
+					{
+						MainWin.addServerToHistory(cmbHost.getText());
+						MainWin.setHost(hp[0]);
+						MainWin.setPort(hp[1]);
+					
+						shlChooseServer.close();
+					}
+					else
+					{
+						MainWin.showError("Invalid server entry", "The port entered for server address is not valid.", "Valid TCP port range is 1-65535.");
+					}
+				}
+				else
+				{
+					MainWin.showError("Invalid server entry", "The data entered for server address is not valid.", "Please enter a server address and port in the form host:port.\r\n\nFor example: 127.0.0.1:6800");
+				}
+			
 			}
 		});
-		btnOk.setBounds(120, 91, 82, 25);
+		btnOk.setBounds(101, 91, 82, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlChooseServer, SWT.NONE);
@@ -77,26 +114,17 @@ public class ChooseServerWin extends Dialog {
 			
 			}
 		});
-		btnCancel.setBounds(235, 91, 75, 25);
+		btnCancel.setBounds(200, 91, 75, 25);
 		btnCancel.setText("Cancel");
 		
-		txtPort = new Text(shlChooseServer, SWT.BORDER);
-		txtPort.setText(MainWin.getPort() + "");
-		txtPort.setBounds(67, 50, 60, 21);
-		
-		Label lblHost = new Label(shlChooseServer, SWT.NONE);
-		lblHost.setAlignment(SWT.RIGHT);
-		lblHost.setBounds(23, 24, 38, 15);
-		lblHost.setText("Host:");
-		
-		Label lblPort = new Label(shlChooseServer, SWT.NONE);
-		lblPort.setAlignment(SWT.RIGHT);
-		lblPort.setBounds(29, 53, 32, 15);
-		lblPort.setText("Port:");
-		
 		cmbHost = new Combo(shlChooseServer, SWT.NONE);
-		cmbHost.setBounds(67, 21, 214, 23);
-		cmbHost.setText(MainWin.getHost());
+
+		cmbHost.setBounds(22, 40, 241, 23);
+		cmbHost.setText(MainWin.getHost() + ":" + MainWin.getPort());
+		
+		Label lblEnterServerAddress = new Label(shlChooseServer, SWT.NONE);
+		lblEnterServerAddress.setBounds(22, 19, 241, 15);
+		lblEnterServerAddress.setText("Enter server address in the form host:port");
 
 	}
 }

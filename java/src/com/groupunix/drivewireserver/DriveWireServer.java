@@ -29,8 +29,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.80";
-	public static final String DWServerVersionDate = "12/19/2010";
+	public static final String DWServerVersion = "3.9.82";
+	public static final String DWServerVersionDate = "12/24/2010";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -420,5 +420,21 @@ public class DriveWireServer
 	{
 		serverconfig.save();
 	}
+	
+	 public static ArrayList<String> getAvailableSerialPorts() 
+	 {
+	        ArrayList<String> h = new ArrayList();
+	        
+	        java.util.Enumeration thePorts = gnu.io.CommPortIdentifier.getPortIdentifiers();
+	        while (thePorts.hasMoreElements()) 
+	        {
+	            gnu.io.CommPortIdentifier com = (gnu.io.CommPortIdentifier) thePorts.nextElement();
+	            if (com.getPortType() == gnu.io.CommPortIdentifier.PORT_SERIAL)
+	                 h.add(com.getName());
+	                
+	            
+	        }
+	        return h;
+	    }
 	
 }

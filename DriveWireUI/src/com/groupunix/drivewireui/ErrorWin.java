@@ -71,7 +71,7 @@ public class ErrorWin extends Dialog {
 		btnClose.setBounds(173, 230, 75, 25);
 		btnClose.setText("Close");
 		
-		txtDetail = new Text(shlAnErrorHas, SWT.BORDER | SWT.V_SCROLL);
+		txtDetail = new Text(shlAnErrorHas, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 		txtDetail.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
 		txtDetail.setEditable(false);
 		txtDetail.setBounds(21, 60, 392, 156);

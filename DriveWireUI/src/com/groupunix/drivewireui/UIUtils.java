@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -201,7 +202,7 @@ public class UIUtils {
 			else if (res.get(0).startsWith("FAIL -36"))
 			{
 				// config item is not set
-				values.put(settings.get(i), null);
+				//values.put(settings.get(i), null);
 			}
 			else if (res.get(0).startsWith("FAIL"))
 			{
@@ -218,5 +219,37 @@ public class UIUtils {
 		
 		
 		return(values);
+	}
+
+
+	public static boolean validTCPPort(int port) 
+	{
+		if ((port > 0) && (port < 65536))
+			return true;
+		
+		return false;
+	}
+
+
+	public static void setInstanceSettings(int instance, HashMap<String, String> values) throws UnknownHostException, IOException, DWUIOperationFailedException
+	{
+		if (values.size() > 0)
+		{
+			Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
+		
+			conn.Connect();
+			
+			Collection<String> c = values.keySet();
+			Iterator<String> itr = c.iterator();
+		
+			while(itr.hasNext())
+			{
+				String val = itr.next();
+				conn.sendCommand("dw config set " + val + " " + values.get(val),instance);
+			}
+		
+			conn.close();
+		}
+		
 	}
 }

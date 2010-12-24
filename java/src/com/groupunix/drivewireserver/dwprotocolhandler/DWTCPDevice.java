@@ -110,30 +110,33 @@ public class DWTCPDevice implements DWProtocolDevice {
 			getClient();
 		}
 		
-		try 
+		if (skt != null)
 		{
-			data = skt.getInputStream().read();
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-			closeClient();
-		}
+			try 
+			{
+				data = skt.getInputStream().read();
+			} 
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+				closeClient();
+			}
 		
-		if (data < 0)
-		{
-			// read problem
+			if (data < 0)
+			{
+				// read problem
 			
-			logger.info("socket error reading device");
+				logger.info("socket error reading device");
 			
-			closeClient();
+				closeClient();
 			
-			// call ourselves to get another byte... not sure this is a great idea
-			return comRead1(timeout);
+				// call ourselves to get another byte... not sure this is a great idea
+				return comRead1(timeout);
+			}
+			
+			if (bytelog)
+				logger.debug("TCPREAD: " + data);
 		}
-			
-		if (bytelog)
-			logger.debug("TCPREAD: " + data);
 		
 		return data;
 	}
@@ -198,6 +201,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 
 	public void shutdown() 
 	{
+			
 		close();
 	}
 

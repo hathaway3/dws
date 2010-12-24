@@ -5,20 +5,14 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShow implements DWCommand {
+public class UICmdDiskset implements DWCommand {
 
-	static final String command = "show";
-	
+	static final String command = "diskset";
 	private DWCommandList commands = new DWCommandList();
 		
-	public UICmdServerShow(DWUIClientThread dwuiClientThread)
+	public UICmdDiskset(DWUIClientThread dwuiClientThread)
 	{
-		commands.addcommand(new UICmdServerShowVersion());
-		commands.addcommand(new UICmdServerShowInstances());
-		commands.addcommand(new UICmdServerShowMIDIDevs());
-		commands.addcommand(new UICmdServerShowSynthProfiles());
-		commands.addcommand(new UICmdServerShowLocalDisks());
-		commands.addcommand(new UICmdServerShowSerialDevs());
+		commands.addcommand(new UICmdDisksetShow());
 	}
 
 	
@@ -42,13 +36,13 @@ public class UICmdServerShow implements DWCommand {
 
 	public String getShortHelp() 
 	{
-		return "Informational commands";
+		return "Diskset commands";
 	}
 
 
 	public String getUsage() 
 	{
-		return "ui server show [item]";
+		return "ui diskset [command]";
 	}
 	
 	public boolean validate(String cmdline) 

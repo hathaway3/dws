@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
+import com.groupunix.drivewireserver.uicommands.UICmdDiskset;
 import com.groupunix.drivewireserver.uicommands.UICmdInstance;
 import com.groupunix.drivewireserver.uicommands.UICmdLogview;
 import com.groupunix.drivewireserver.uicommands.UICmdServer;
@@ -33,6 +34,7 @@ public class DWUIClientThread implements Runnable {
 		
 		uiCmds.addcommand(new UICmdInstance(this));
 		uiCmds.addcommand(new UICmdServer(this));
+		uiCmds.addcommand(new UICmdDiskset(this));
 		uiCmds.addcommand(new UICmdLogview(this));
 	}
 
@@ -63,7 +65,7 @@ public class DWUIClientThread implements Runnable {
 			
 				if (databyte == -1)
 				{	
-					logger.debug("got -1 in input stream");
+					//logger.debug("got -1 in input stream");
 					wanttodie = true;
 				}
 				else
@@ -210,7 +212,6 @@ public class DWUIClientThread implements Runnable {
 
 	public void setInstance(int handler) 
 	{
-		System.out.println("SET INST: " + handler);
 		this.instance = handler;
 	}
 

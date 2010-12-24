@@ -5,20 +5,17 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShow implements DWCommand {
+public class UICmdInstanceReset implements DWCommand {
 
-	static final String command = "show";
+	static final String command = "reset";
 	
 	private DWCommandList commands = new DWCommandList();
 		
-	public UICmdServerShow(DWUIClientThread dwuiClientThread)
+	public UICmdInstanceReset(DWUIClientThread dwuiClientThread)
 	{
-		commands.addcommand(new UICmdServerShowVersion());
-		commands.addcommand(new UICmdServerShowInstances());
-		commands.addcommand(new UICmdServerShowMIDIDevs());
-		commands.addcommand(new UICmdServerShowSynthProfiles());
-		commands.addcommand(new UICmdServerShowLocalDisks());
-		commands.addcommand(new UICmdServerShowSerialDevs());
+
+		commands.addcommand(new UICmdInstanceResetProtodev(dwuiClientThread));
+
 	}
 
 	
@@ -42,13 +39,13 @@ public class UICmdServerShow implements DWCommand {
 
 	public String getShortHelp() 
 	{
-		return "Informational commands";
+		return "Restart commands";
 	}
 
 
 	public String getUsage() 
 	{
-		return "ui server show [item]";
+		return "ui instance reset [command]";
 	}
 	
 	public boolean validate(String cmdline) 

@@ -91,6 +91,9 @@ public class DWProtocolHandler implements Runnable
 		this.config = hconf;
 		this.protocolEventHandler = new DWProtocolEventHandler(handlerno);
 		this.dwcommands = createDWCmds(handlerno); 
+		
+		//config.addConfigurationListener(new DWProtocolConfigListener());   
+		
 	}
 
 	
@@ -126,92 +129,14 @@ public class DWProtocolHandler implements Runnable
 		// this thread has got to run a LOT or we might lose bytes on the serial port
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		
-		logger.info("handler #" + handlerno + ": starting...");
-
 		
-		// setup protocol device
+		setupProtocolDevice();
 		
-		if (config.getString("DeviceType","serial").equalsIgnoreCase("serial") )
-		{
-		
-			// create serial device
-			if ((config.containsKey("SerialDevice") && config.containsKey("CocoModel")))		
-			{
-				try 
-				{
-					protodev = new DWSerialDevice(this.handlerno, config.getString("SerialDevice"), config.getInt("CocoModel"));
-				}
-				catch (NoSuchPortException e1)
-				{
-					wanttodie = true;
-					logger.error("handler #"+handlerno+": Serial device '" + config.getString("SerialDevice") + "' not found");
-				} 
-				catch (PortInUseException e2)
-				{
-					wanttodie = true;
-					logger.error("handler #"+handlerno+": Serial device '" + config.getString("SerialDevice") + "' in use");
-				}
-				catch (UnsupportedCommOperationException e3)
-				{
-					wanttodie = true;
-					logger.error("handler #"+handlerno+": Unsupported comm operation while opening serial port '"+config.getString("SerialDevice")+"'");
-				}
-			}	
-			else
-			{
-				logger.error("Serial mode requires both SerialDevice and CocoModel to be set");
-				wanttodie = true;
-			}
-		}
-		else if (config.getString("DeviceType").equalsIgnoreCase("tcp"))
-		{
-			// create TCP device
-			if (config.containsKey("TCPDevicePort"))		
-			{
-				try 
-				{
-					protodev = new DWTCPDevice(this.handlerno, config.getInt("TCPDevicePort"));
-				} 
-				catch (IOException e) 
-				{
-					wanttodie = true;
-					logger.error("handler #"+handlerno+": " + e.getMessage());
-				}
-			}	
-			else
-			{
-				logger.error("TCP mode requires TCPDevicePort to be set");
-				wanttodie = true;
-			}
-			
-		}
-		else if (config.getString("DeviceType").equalsIgnoreCase("tcp-client"))
-		{
-			// create TCP device
-			if (config.containsKey("TCPClientPort") && config.containsKey("TCPClientHost"))		
-			{
-				try 
-				{
-					protodev = new DWTCPClientDevice(this.handlerno, config.getString("TCPClientHost"), config.getInt("TCPClientPort"));
-				} 
-				catch (IOException e) 
-				{
-					wanttodie = true;
-					logger.error("handler #"+handlerno+": " + e.getMessage());
-				}
-			}	
-			else
-			{
-				logger.error("TCP mode requires TCPClientPort and TCPClientHost to be set");
-				wanttodie = true;
-			}
-			
-		}
-		
-		
-		// if we've got a device, setup environment
+		// setup environment and get started
 		if (!wanttodie)
 		{
+			logger.info("handler #" + handlerno + ": starting...");
+
 			// setup drives
 			diskDrives = new DWDiskDrives(this.handlerno);
 
@@ -255,15 +180,20 @@ public class DWProtocolHandler implements Runnable
 		{ 
 						
 			// try to get an opcode
-			try 
-			{
-					opcodeint = protodev.comRead1(false);
-			} 
-			catch (DWCommTimeOutException e) 
-			{
-				// this should not actually ever get thrown, since we call comRead1 with timeout = false..
-				logger.error(e.getMessage());
+			if (protodev == null)
 				opcodeint = -1;
+			else
+			{
+				try 
+				{
+					opcodeint = protodev.comRead1(false);
+				} 
+				catch (DWCommTimeOutException e) 
+				{
+					// this should not actually ever get thrown, since we call comRead1 with timeout = false..
+					logger.error(e.getMessage());
+					opcodeint = -1;
+				}
 			}
 				
 			if (opcodeint > -1)
@@ -367,7 +297,7 @@ public class DWProtocolHandler implements Runnable
 							break;
 									
 						default:
-							logger.info("UNKNOWN OPCODE: " + opcodeint);
+							logger.warn("UNKNOWN OPCODE: " + opcodeint);
 							break;
 					}	
 				}
@@ -375,9 +305,21 @@ public class DWProtocolHandler implements Runnable
 			}
 			else
 			{
-				logger.debug("timed out reading opcode (should not happen, did the serial port vanish?)");
-				logger.error("cannot read from protocol device, exiting");
-				this.wanttodie = true;
+				logger.debug("serious problem with the device.. does it exist?");
+				
+				// take a break, reset, hope things work themselves out
+				try 
+				{
+					Thread.sleep(config.getInt("FailedPortRetryTime",1000));
+					resetProtocolDevice();
+					
+				} 
+				catch (InterruptedException e) 
+				{
+					logger.error("Interrupted during failed port delay.. giving up on this situation");
+					wanttodie = true;
+				}
+				
 			}
 
 		}
@@ -1338,6 +1280,98 @@ public class DWProtocolHandler implements Runnable
 		return(commands);
 	}
 
+	
+	public void resetProtocolDevice()
+	{
+		logger.warn("resetting protocol device");
+		// do we need to do anything else here?
+		setupProtocolDevice();
+	}
+	
+	
+	private void setupProtocolDevice()
+	{
+		
+		if (protodev != null)
+			protodev.shutdown();
+		
+		if (config.getString("DeviceType","serial").equalsIgnoreCase("serial") )
+		{
+		
+			// create serial device
+			if ((config.containsKey("SerialDevice") && config.containsKey("CocoModel")))		
+			{
+				try 
+				{
+					protodev = new DWSerialDevice(this.handlerno, config.getString("SerialDevice"), config.getInt("CocoModel"));
+				}
+				catch (NoSuchPortException e1)
+				{
+					//wanttodie = true; lets keep on living and see how that goes
+					logger.error("handler #"+handlerno+": Serial device '" + config.getString("SerialDevice") + "' not found");
+				} 
+				catch (PortInUseException e2)
+				{
+					//wanttodie = true;
+					logger.error("handler #"+handlerno+": Serial device '" + config.getString("SerialDevice") + "' in use");
+				}
+				catch (UnsupportedCommOperationException e3)
+				{
+					//wanttodie = true;
+					logger.error("handler #"+handlerno+": Unsupported comm operation while opening serial port '"+config.getString("SerialDevice")+"'");
+				}
+			}	
+			else
+			{
+				logger.error("Serial mode requires both SerialDevice and CocoModel to be set, cannot use this configuration");
+				//wanttodie = true;
+			}
+		}
+		else if (config.getString("DeviceType").equalsIgnoreCase("tcp"))
+		{
+			// create TCP device
+			if (config.containsKey("TCPDevicePort"))		
+			{
+				try 
+				{
+					protodev = new DWTCPDevice(this.handlerno, config.getInt("TCPDevicePort"));
+				} 
+				catch (IOException e) 
+				{
+					//wanttodie = true;
+					logger.error("handler #"+handlerno+": " + e.getMessage());
+				}
+			}	
+			else
+			{
+				logger.error("TCP mode requires TCPDevicePort to be set, cannot use this configuration");
+				//wanttodie = true;
+			}
+			
+		}
+		else if (config.getString("DeviceType").equalsIgnoreCase("tcp-client"))
+		{
+			// create TCP device
+			if (config.containsKey("TCPClientPort") && config.containsKey("TCPClientHost"))		
+			{
+				try 
+				{
+					protodev = new DWTCPClientDevice(this.handlerno, config.getString("TCPClientHost"), config.getInt("TCPClientPort"));
+				} 
+				catch (IOException e) 
+				{
+					//wanttodie = true;
+					logger.error("handler #"+handlerno+": " + e.getMessage());
+				}
+			}	
+			else
+			{
+				logger.error("TCP mode requires TCPClientPort and TCPClientHost to be set, cannot use this configuration");
+				//wanttodie = true;
+			}
+			
+		}	
+	}
 	
 }
 	

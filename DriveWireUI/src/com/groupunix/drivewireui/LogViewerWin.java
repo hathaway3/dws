@@ -13,6 +13,8 @@ import org.eclipse.swt.SWT;
 import com.swtdesigner.SWTResourceManager;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 
 public class LogViewerWin extends Dialog {
 
@@ -52,6 +54,10 @@ public class LogViewerWin extends Dialog {
 		Connect();
 		
 		createContents();
+		
+		text.setFont(new Font(display,new FontData(MainWin.config.getString("LogFont",MainWin.default_LogFont), MainWin.config.getInt("LogFontSize", MainWin.default_LogFontSize), MainWin.config.getInt("LogFontStyle", MainWin.default_LogFontStyle))));
+		
+		
 		shell.open();
 		shell.layout();
 		display = getParent().getDisplay();
@@ -122,6 +128,11 @@ public class LogViewerWin extends Dialog {
 			
 		sock.getOutputStream().write("ui logview\n".getBytes());
 		
+	}
+
+	public void setFont(FontData newFont) 
+	{
+		text.setFont(new Font(display, newFont));
 	}
 	
 	

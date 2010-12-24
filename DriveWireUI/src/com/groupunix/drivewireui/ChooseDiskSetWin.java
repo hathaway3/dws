@@ -63,7 +63,7 @@ public class ChooseDiskSetWin extends Dialog {
 
 	private void loadDiskSets(Combo cmb) throws IOException, DWUIOperationFailedException 
 	{
-		ArrayList<String> disksets = UIUtils.loadArrayList("ui server show disksets");
+		ArrayList<String> disksets = UIUtils.loadArrayList("ui diskset show");
 		
 		Collections.sort(disksets);
 		

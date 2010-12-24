@@ -1,8 +1,13 @@
 package com.groupunix.drivewireui;
 
+
+import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.List;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
@@ -10,6 +15,8 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
@@ -25,6 +32,26 @@ import com.swtdesigner.SWTResourceManager;
 
 public class MainWin {
 
+	public static final String DWUIVersion = "3.9.80";
+	public static final String DWUIVersionDate = "12/19/2010";
+	
+	public static final String default_Host = "127.0.0.1";
+	public static final int default_Port = 6800;
+	public static final int default_Instance = 0;
+	
+	public static final int default_DiskHistorySize = 10;
+	public static final int default_ServerHistorySize = 10;
+	
+	public static final String default_MainFont = "Lucida Console";
+	public static final int default_MainFontSize = 9;
+	public static final int default_MainFontStyle = 0;
+	public static final String default_LogFont = "Lucida Console";
+	public static final int default_LogFontSize = 9;
+	public static final int default_LogFontStyle = 0;
+	
+	public static XMLConfiguration config;
+	public static final String configfile = "drivewireUI.xml";
+	
 	protected static Shell shell;
 
 	private Text text;
@@ -43,9 +70,7 @@ public class MainWin {
 	public static void main(String[] args) 
 	{
 		
-		host = "127.0.0.1";
-		port = 6800;
-		instance = 0;
+		loadConfig();
 		
 			try 
 				{
@@ -63,6 +88,48 @@ public class MainWin {
 				
 	}
 
+	private static void loadConfig() 
+	{
+	
+		try 
+    	{
+			
+			File f = new File(configfile);
+			
+			if (f.exists())
+			{
+				config = new XMLConfiguration(configfile);
+			}
+			else
+			{
+				//f.createNewFile(); 
+				config = new XMLConfiguration();
+				config.setFileName(configfile);
+				config.addProperty("AutoCreated", true);
+				config.save();
+			}
+			
+			config.setAutoSave(true);
+			
+			MainWin.host = config.getString("LastHost",default_Host);
+			MainWin.port = config.getInt("LastPort",default_Port);
+			MainWin.instance = config.getInt("LastInstance",default_Instance);
+			
+		} 
+    	catch (ConfigurationException e1) 
+    	{
+    		System.out.println("Fatal - Could not process config file '" + configfile + "'.  Please consult the documentation.");
+    		System.exit(-1);
+		} 
+    	//catch (IOException e) 
+    	//{
+    	//	System.out.println("Fatal - IO error creating config file '" + configfile + "'.  Please consult the documentation.");
+    	//	System.exit(-1);
+		//}
+		
+		
+	}
+
 	/**
 	 * Open the window.
 	 */
@@ -73,6 +140,9 @@ public class MainWin {
 		shell.layout();
 
 		updateTitlebar();
+
+		FontData f = new FontData(config.getString("MainFont",default_MainFont), config.getInt("MainFontSize", default_MainFontSize), config.getInt("MainFontStyle", default_MainFontStyle) );
+		text_1.setFont(new Font(display, f));
 		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
@@ -252,6 +322,28 @@ public class MainWin {
 		});
 		mntmCreate.setText("Create...");
 		
+		MenuItem mntmdskDisk = new MenuItem(menu_2, SWT.CASCADE);
+		mntmdskDisk.setText(".dsk <-> disk");
+		
+		Menu menu_10 = new Menu(mntmdskDisk);
+		mntmdskDisk.setMenu(menu_10);
+		
+		MenuItem mntmTransferdskTo = new MenuItem(menu_10, SWT.NONE);
+		mntmTransferdskTo.setText("Copy .dsk to floppy disk");
+		
+		MenuItem mntmTransferFloppyDisk = new MenuItem(menu_10, SWT.NONE);
+		mntmTransferFloppyDisk.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				CopyDiskToDSKWin window = new CopyDiskToDSKWin(shell,SWT.DIALOG_TRIM);
+				window.open();
+				
+			
+			}
+		});
+		mntmTransferFloppyDisk.setText("Copy floppy disk to .dsk");
+		
 		new MenuItem(menu_2, SWT.SEPARATOR);
 		
 		MenuItem mntmDiskSet = new MenuItem(menu_2, SWT.CASCADE);
@@ -354,6 +446,7 @@ public class MainWin {
 					try 
 					{
 						logViewerWin.open();
+						
 					} 
 					catch (UnknownHostException e1) 
 					{
@@ -528,6 +621,19 @@ public class MainWin {
 		Menu menu_5 = new Menu(mntmConfig);
 		mntmConfig.setMenu(menu_5);
 		
+		MenuItem mntmInitialConfig = new MenuItem(menu_5, SWT.NONE);
+		mntmInitialConfig.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				InitialConfigWin window = new InitialConfigWin(shell,SWT.DIALOG_TRIM);
+				window.open();
+			}
+		});
+		mntmInitialConfig.setText("Simple Config...");
+		
+		new MenuItem(menu_5, SWT.SEPARATOR);
+		
 		MenuItem mntmServer_1 = new MenuItem(menu_5, SWT.NONE);
 		mntmServer_1.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -577,7 +683,54 @@ public class MainWin {
 		mntmInstanceConfig.setText("Instance...");
 		
 		MenuItem mntmDiskSets = new MenuItem(menu_5, SWT.NONE);
+		mntmDiskSets.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				DisksetWin window = new DisksetWin(shell,SWT.DIALOG_TRIM);
+				
+				try 
+				{
+					window.open();
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+				
+			
+			}
+		});
 		mntmDiskSets.setText("Disk Sets...");
+		
+		MenuItem mntmUserInterface = new MenuItem(menu_5, SWT.NONE);
+		mntmUserInterface.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				UIConfigWin window = new UIConfigWin(shell,SWT.DIALOG_TRIM);
+				window.open();
+			
+			}
+		});
+		mntmUserInterface.setText("User Interface...");
+		
+		new MenuItem(menu_5, SWT.SEPARATOR);
+		
+		MenuItem mntmResetInstanceDevice = new MenuItem(menu_5, SWT.NONE);
+		mntmResetInstanceDevice.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				sendCommand("ui instance reset protodev");
+				
+			}
+		});
+		mntmResetInstanceDevice.setText("Reset Instance Device");
 		
 		MenuItem mntmHelp = new MenuItem(menu, SWT.CASCADE);
 		mntmHelp.setText("Help");
@@ -603,8 +756,10 @@ public class MainWin {
 		text_1 = new Text(shell, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
 		text_1.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
 		text_1.setLayoutData(BorderLayout.CENTER);
-		text_1.setFont(SWTResourceManager.getFont("Lucida Console", 9, SWT.NORMAL));
+		text_1.setFont(SWTResourceManager.getFont(config.getString("MainFont",default_MainFont), config.getInt("MainFontSize",default_MainFontSize), SWT.NORMAL));
 		text_1.setEditable(false);
+		
+		
 		
 		ToolBar toolBar = new ToolBar(shell, SWT.FLAT | SWT.RIGHT);
 		toolBar.setLayoutData(BorderLayout.NORTH);
@@ -758,6 +913,7 @@ public class MainWin {
         if (selected != null)
         {
         	sendCommand("dw disk in "+ diskno + " " + selected);
+        	addDiskFileToHistory(selected);
         }
 	}
 
@@ -845,6 +1001,7 @@ public class MainWin {
 	public static void setHost(String h) 
 	{
 		host = h;
+		config.setProperty("LastHost",h);
 		updateTitlebar();
 	}
 
@@ -853,6 +1010,7 @@ public class MainWin {
 		try
 		{
 			port = Integer.parseInt(p);
+			config.setProperty("LastPort", p);
 			updateTitlebar();
 		}
 		catch (NumberFormatException e)
@@ -861,5 +1019,95 @@ public class MainWin {
 		}
 		
 		
+	}
+
+	public static void addDiskFileToHistory(String filename) 
+	{
+		List<String> diskhist = config.getList("DiskHistory",null);
+		
+		if (diskhist == null)
+		{
+			if (config.getInt("DiskHistorySize",default_DiskHistorySize) > 0)
+			{
+				config.addProperty("DiskHistory", filename);
+			}
+		}
+		else if (!diskhist.contains(filename))
+		{
+			if (diskhist.size() >= config.getInt("DiskHistorySize",default_DiskHistorySize))
+			{
+				diskhist.remove(0);
+			}
+			
+			diskhist.add(filename);
+			config.setProperty("DiskHistory", diskhist);
+			
+		}
+	
+	}
+	
+	
+	public static List<String> getDiskHistory()
+	{
+		return(config.getList("DiskHistory",null));
+	}
+
+	public static void setFont(FontData newFont) 
+	{
+		text_1.setFont(new Font(display, newFont));
+		config.setProperty("MainFont", newFont.getName());
+        config.setProperty("MainFontSize", newFont.getHeight());
+        config.setProperty("MainFontStyle", newFont.getStyle());
+	}
+
+	public static void setLogFont(FontData newFont) 
+	{
+		if ((logViewerWin != null) && (!logViewerWin.shell.isDisposed()))
+		{
+			logViewerWin.setFont(newFont);
+		}
+		
+		config.setProperty("LogFont", newFont.getName());
+        config.setProperty("LogFontSize", newFont.getHeight());
+        config.setProperty("LogFontStyle", newFont.getStyle());
+
+        
+	}
+
+	public static List<String> getServerHistory() 
+	{
+		return(config.getList("ServerHistory",null));
+	}
+
+	public static void addServerToHistory(String server) 
+	{
+		List<String> shist = config.getList("ServerHistory",null);
+		
+		if (shist == null)
+		{
+			if (config.getInt("ServerHistorySize",default_ServerHistorySize) > 0)
+			{
+				config.addProperty("ServerHistory", server);
+			}
+		}
+		else if (!shist.contains(server))
+		{
+			if (shist.size() >= config.getInt("ServerHistorySize",default_ServerHistorySize))
+			{
+				shist.remove(0);
+			}
+			
+			shist.add(server);
+			config.setProperty("ServerHistory", shist);
+			
+		}
+		
+	}
+
+	public static void setInstance(int inst) 
+	{
+		MainWin.instance = inst;
+		config.setProperty("LastInstance", inst);
+		updateTitlebar();
 	}
 }

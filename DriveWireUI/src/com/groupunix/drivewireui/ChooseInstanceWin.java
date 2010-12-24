@@ -70,6 +70,14 @@ public class ChooseInstanceWin extends Dialog {
 		lblInstance.setText("Instance:");
 		
 		Button btnOk = new Button(shlChooseAnInstance, SWT.NONE);
+		btnOk.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				MainWin.setInstance(cmbInstance.getSelectionIndex());
+				shlChooseAnInstance.close();
+			}
+		});
 		btnOk.setBounds(123, 80, 75, 25);
 		btnOk.setText("Ok");
 		

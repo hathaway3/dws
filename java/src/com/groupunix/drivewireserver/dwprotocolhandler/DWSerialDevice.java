@@ -56,6 +56,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	{
 		logger.info("closing serial device " +  this.device + " in handler #" + this.handlerno);
 		this.serialPort.close();
+	
 	}
 
 	

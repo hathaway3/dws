@@ -9,6 +9,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
@@ -64,7 +65,6 @@ public class InstanceConfigWin extends Dialog {
 	private Button btnLogVirtualDevice;
 	private Button btnLogMidiDevice;
 	private Button btnDrivewireMode;
-	private Button btnHdbdosMode;
 	
 	
 	/**
@@ -133,7 +133,7 @@ public class InstanceConfigWin extends Dialog {
 		settings.add("PrinterLines");
 		settings.add("MIDISynthDefaultSoundbank");
 		settings.add("MIDISynthDefaultProfile");
-		settings.add("HDBDOSMode");
+		
 		settings.add("DW3Only");
 		settings.add("LogDeviceBytes");
 		settings.add("LogVPortBytes");
@@ -154,23 +154,67 @@ public class InstanceConfigWin extends Dialog {
 	{
 		HashMap<String,String> res = new HashMap<String,String>();
 		
-/*		addIfChanged(res,"LogToConsole",UIUtils.bTos(this.btnLogToConsole.getSelection()));
-		addIfChanged(res,"LogToFile",UIUtils.bTos(this.btnLogToFile.getSelection()));
-		addIfChanged(res,"UIEnabled",UIUtils.bTos(this.btnUIEnabled.getSelection()));
-		addIfChanged(res,"LogFile",this.textLogFile.getText());
-		addIfChanged(res,"LogFormat",this.textLogFormat.getText());
-		addIfChanged(res,"UIPort",this.textUIPort.getText());
-		addIfChanged(res,"DiskLazyWriteInterval",this.textLazyWrite.getText());
-		addIfChanged(res,"LocalDiskDir",this.textLocalDiskDir.getText());
-		addIfChanged(res,"LogLevel",this.comboLogLevel.getItem(this.comboLogLevel.getSelectionIndex()));
-	*/
+		// connection page
+		addIfChanged(res,"Name",this.textName.getText());
+		addIfChanged(res,"DeviceType",this.comboDevType.getText());
+		addIfChanged(res,"CocoModel",this.comboCocoModel.getText());
+		addIfChanged(res,"SerialDevice",this.textSerialPort.getText());
+		addIfChanged(res,"TCPDevicePort",this.textTCPServerPort.getText());
+		addIfChanged(res,"TCPClientPort",this.textTCPClientPort.getText());
+		addIfChanged(res,"TCPClientHost",this.textTCPClientHost.getText());
+		addIfChanged(res,"AutoStart",UIUtils.bTos(this.btnStartAutomatically.getSelection()));
+		
+		// devices page
+		addIfChanged(res,"PrinterDir",this.textPrinterDir.getText());
+		addIfChanged(res,"PrinterCharacterFile",this.textCharacterFile.getText());
+		addIfChanged(res,"PrinterColumns",this.textPrinterCol.getText());
+		addIfChanged(res,"PrinterLines",this.textPrinterRow.getText());
+		addIfChanged(res,"PrinterType",this.comboPrinterType.getText());
+		addIfChanged(res,"MIDISynthDefaultSoundbank",this.textMIDIsoundbank.getText());
+		addIfChanged(res,"MIDISynthDefaultProfile",this.textMIDIprofile.getText());
+		
+		// networking page
+		addIfChanged(res,"ListenAddress",this.textListenAddress.getText());
+		addIfChanged(res,"TermPort",this.textTermPort.getText());
+		addIfChanged(res,"TelnetBannerFile",this.textTelnetBanner.getText());
+		addIfChanged(res,"TelnetBannedFile",this.textTelnetBanned.getText());
+		addIfChanged(res,"TelnetNoPortsBannerFile",this.textTelnetNoPorts.getText());
+		addIfChanged(res,"TelnetPreAuthFile",this.textTelnetPreAuth.getText());
+		addIfChanged(res,"TelnetPasswdFile",this.textTelnetPasswd.getText());
+		
+		// ip access page
+		addIfChanged(res,"TelnetBanned",this.textIPBanned.getText());
+		addIfChanged(res,"GeoIPLookup",UIUtils.bTos(this.btnUseGeoipLookups.getSelection()));
+		addIfChanged(res,"GeoIPDatabaseFile",this.textGeoIPfile.getText());
+		addIfChanged(res,"GeoIPBannedCountries",this.textIPBannedCountries.getText());
+		addIfChanged(res,"GeoIPBannedCities",this.textIPBannedCities.getText());
+		
+		// advanced page
+		addIfChanged(res,"RateOverride",this.textRateOverride.getText());
+		addIfChanged(res,"DefaultDiskSet",this.textDefaultDiskSet.getText());
+		
+		addIfChanged(res,"DW3Only",UIUtils.bTos(this.btnDrivewireMode.getSelection()));
+		addIfChanged(res,"OpTimeSendsDOW",UIUtils.bTos(this.btnOptimeSendsDow.getSelection()));
+		addIfChanged(res,"LogDeviceBytes",UIUtils.bTos(this.btnLogProtocolDevice.getSelection()));
+		addIfChanged(res,"LogVPortBytes",UIUtils.bTos(this.btnLogVirtualDevice.getSelection()));
+		addIfChanged(res,"LogMIDIBytes",UIUtils.bTos(this.btnLogMidiDevice.getSelection()));
+		addIfChanged(res,"LogOpCode",UIUtils.bTos(this.btnLogOpcodes.getSelection()));
+		addIfChanged(res,"LogOpCodePolls",UIUtils.bTos(this.btnEvenOppoll.getSelection()));
+		
 		return(res);
 	}
 
 	private void addIfChanged(HashMap<String, String> map, String key, String value) 
 	{
-		if (!values.get(key).equals(value))
+		if (values.get(key) == null)
+		{
+			if (!value.equals(""))
+				map.put(key, value);
+		}
+		else if (!values.get(key).equals(value))
+		{
 			map.put(key, value);
+		}
 	}
 
 	private boolean validateValues() 
@@ -305,9 +349,6 @@ public class InstanceConfigWin extends Dialog {
 		if (values.get("DefaultDiskSet") != null)
 			this.textDefaultDiskSet.setText(values.get("DefaultDiskSet"));
 		
-		
-		if (values.get("HDBDOSMode") != null)
-			this.btnHdbdosMode.setSelection(UIUtils.sTob(values.get("HDBDOSMode")));
 		
 		if (values.get("DW3Only") != null)
 			this.btnDrivewireMode.setSelection(UIUtils.sTob(values.get("DW3Only")));
@@ -639,10 +680,6 @@ public class InstanceConfigWin extends Dialog {
 		Composite composite_4 = new Composite(tabFolder, SWT.NONE);
 		tbtmAdvanced_1.setControl(composite_4);
 		
-		btnHdbdosMode = new Button(composite_4, SWT.CHECK);
-		btnHdbdosMode.setBounds(21, 107, 119, 16);
-		btnHdbdosMode.setText("HDBDOS mode");
-		
 		btnDrivewireMode = new Button(composite_4, SWT.CHECK);
 		btnDrivewireMode.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -697,18 +734,102 @@ public class InstanceConfigWin extends Dialog {
 		lblDefaultDiskset.setText("Default diskset:");
 		
 		Button btnUndo = new Button(shlInstanceConfiguration, SWT.NONE);
+		btnUndo.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				applySettings();
+			}
+		});
 		btnUndo.setBounds(10, 400, 75, 25);
 		btnUndo.setText("Undo");
-		
+	
 		Button btnOk = new Button(shlInstanceConfiguration, SWT.NONE);
+		btnOk.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				if (validateValues())
+				{
+					
+					try 
+					{
+						boolean letsreset = false;
+						
+						HashMap<String, String> changes = getChangedValues();
+						
+						if (hasDeviceChange(changes))
+						{
+							 MessageBox messageBox = new MessageBox(shlInstanceConfiguration, SWT.ICON_QUESTION
+							            | SWT.YES | SWT.NO);
+							        messageBox.setMessage("You've changed one or more settings which can not take effect until the device for this instance is reset.  Would you like to reset it now?");
+							        messageBox.setText("Reset Instance Device?");
+							        int response = messageBox.open();
+							        if (response == SWT.YES)
+							        {
+							        	letsreset = true;
+							        }
+						}
+						
+						UIUtils.setInstanceSettings(MainWin.getInstance(),changes);
+						
+						if (letsreset)
+							MainWin.sendCommand("ui instance reset protodev");
+						
+						shlInstanceConfiguration.close();
+					} 
+					catch (IOException e1) 
+					{
+						MainWin.showError("Error sending updated config", e1.getMessage() , UIUtils.getStackTrace(e1));
+						
+					} catch (DWUIOperationFailedException e2) 
+					{
+						MainWin.showError("Error sending updated config", e2.getMessage() , UIUtils.getStackTrace(e2));
+					}
+					
+				}
+			}
+		});
 		btnOk.setBounds(146, 400, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlInstanceConfiguration, SWT.NONE);
+		btnCancel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				shlInstanceConfiguration.close();
+			}
+		});
 		btnCancel.setBounds(288, 400, 75, 25);
 		btnCancel.setText("Cancel");
 
 		
 		
+	}
+
+	protected boolean hasDeviceChange(HashMap<String, String> changes) 
+	{
+		if (changes.containsKey("SerialDevice"))
+			return true;
+		
+		if (changes.containsKey("DeviceType"))
+			return true;
+		
+		if (changes.containsKey("CocoModel"))
+			return true;
+		
+		if (changes.containsKey("TCPDevicePort"))
+			return true;
+		
+		if (changes.containsKey("TCPClientPort"))
+			return true;
+		
+		if (changes.containsKey("TCPClientHost"))
+			return true;
+		
+		
+		
+		return false;
 	}
 }

@@ -1,21 +1,19 @@
 package com.groupunix.drivewireserver.uicommands;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.configuration.HierarchicalConfiguration;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShowDisksets implements DWCommand {
+public class UICmdServerShowSerialDevs implements DWCommand {
 
 	@Override
 	public String getCommand() 
 	{
 		// TODO Auto-generated method stub
-		return "disksets";
+		return "serialdevs";
 	}
 
 	@Override
@@ -27,32 +25,30 @@ public class UICmdServerShowDisksets implements DWCommand {
 	@Override
 	public String getShortHelp() {
 		// TODO Auto-generated method stub
-		return "show server disk sets";
+		return "show available serial devices";
 	}
 
+	
+
+	
+	
 	@Override
 	public String getUsage() {
 		// TODO Auto-generated method stub
-		return "ui server show disksets";
+		return "ui server show serialdevs";
 	}
 
 	@Override
 	public DWCommandResponse parse(String cmdline) 
 	{
-		List<HierarchicalConfiguration> disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
-    	
-		int tmp = 0;
-		String res = new String();
+		String txt = new String();
 			
-		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
-		{
-			HierarchicalConfiguration dset = (HierarchicalConfiguration) it.next();
-		    
-			res += dset.getString("Name","unnamed-" + tmp) + "\n";
-		   	tmp++;
-		} 
-			
-		return(new DWCommandResponse(res));
+		ArrayList<String> ports = DriveWireServer.getAvailableSerialPorts();
+		
+		for (int i = 0;i<ports.size();i++)
+			txt += ports.get(i) + "\n";
+		
+		return(new DWCommandResponse(txt));
 	}
 
 	public boolean validate(String cmdline) 
