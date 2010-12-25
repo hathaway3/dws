@@ -193,6 +193,7 @@ public class DWVPortTCPListenerThread implements Runnable
 	
 	
 
+	@SuppressWarnings("unused")
 	private void processHTTPReqOld(Socket skt) 
 	{
 		

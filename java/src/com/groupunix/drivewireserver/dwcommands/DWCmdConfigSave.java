@@ -1,9 +1,6 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import java.util.Iterator;
-
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.lang.StringUtils;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -14,7 +11,7 @@ public class DWCmdConfigSave implements DWCommand {
 
 	public DWCmdConfigSave(int handlerno)
 	{
-		this.handlerno = handlerno;
+		this.setHandlerno(handlerno);
 	}
 	
 	public String getCommand() 
@@ -61,6 +58,14 @@ public class DWCmdConfigSave implements DWCommand {
 	{
 
 		return true;
+	}
+
+	public void setHandlerno(int handlerno) {
+		this.handlerno = handlerno;
+	}
+
+	public int getHandlerno() {
+		return handlerno;
 	}
 	
 	

@@ -795,6 +795,7 @@ public class DWVSerialPorts {
 
 	
 	
+	@SuppressWarnings("unchecked")
 	public boolean setMidiProfile(String profile)
 	{
 		
@@ -802,7 +803,7 @@ public class DWVSerialPorts {
     	
 		for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
 		{
-		    HierarchicalConfiguration mprof = (HierarchicalConfiguration) it.next();
+		    HierarchicalConfiguration mprof = it.next();
 		    
 		    if (mprof.getString("name").equalsIgnoreCase(profile))
 		    {
@@ -840,6 +841,7 @@ public class DWVSerialPorts {
 
 
 
+	@SuppressWarnings("unchecked")
 	public int getGMInstrument(int voice)
 	{
 		if (this.midiProfConf == null)
@@ -849,11 +851,11 @@ public class DWVSerialPorts {
 		
 		int xvoice = voice;
 		
-		List mappings = this.midiProfConf.configurationsAt("mapping");
+		List<HierarchicalConfiguration> mappings = this.midiProfConf.configurationsAt("mapping");
 		
-		for(Iterator it = mappings.iterator(); it.hasNext();)
+		for(Iterator<HierarchicalConfiguration> it = mappings.iterator(); it.hasNext();)
 		{
-			HierarchicalConfiguration sub = (HierarchicalConfiguration) it.next();
+			HierarchicalConfiguration sub = it.next();
 			
 			if (sub.getInt("[@dev]") == voice)
 			{

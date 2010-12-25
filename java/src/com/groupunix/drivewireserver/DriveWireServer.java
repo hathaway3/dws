@@ -49,9 +49,10 @@ public class DriveWireServer
 	private static DWUIThread uiObj;
 	private static Thread uiT;	
 	
-	private static boolean wanttodie = false;
+
 	
 	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws ConfigurationException
 	{
 		String configfile = "config.xml";
@@ -363,6 +364,7 @@ public class DriveWireServer
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	public static boolean hasDiskset(String setname)
 	{
 		List<HierarchicalConfiguration> disksets = serverconfig.configurationsAt("diskset");
@@ -383,6 +385,7 @@ public class DriveWireServer
 		return(setexists);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static HierarchicalConfiguration getDiskset(String setname)
 	{
 		List<HierarchicalConfiguration> disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
@@ -421,14 +424,15 @@ public class DriveWireServer
 		serverconfig.save();
 	}
 	
-	 public static ArrayList<String> getAvailableSerialPorts() 
+	 @SuppressWarnings("unchecked")
+	public static ArrayList<String> getAvailableSerialPorts() 
 	 {
-	        ArrayList<String> h = new ArrayList();
+	        ArrayList<String> h = new ArrayList<String>();
 	        
-	        java.util.Enumeration thePorts = gnu.io.CommPortIdentifier.getPortIdentifiers();
+	        java.util.Enumeration<gnu.io.CommPortIdentifier> thePorts =  gnu.io.CommPortIdentifier.getPortIdentifiers();
 	        while (thePorts.hasMoreElements()) 
 	        {
-	            gnu.io.CommPortIdentifier com = (gnu.io.CommPortIdentifier) thePorts.nextElement();
+	            gnu.io.CommPortIdentifier com = thePorts.nextElement();
 	            if (com.getPortType() == gnu.io.CommPortIdentifier.PORT_SERIAL)
 	                 h.add(com.getName());
 	                

@@ -1,10 +1,7 @@
 package com.groupunix.drivewireserver.uicommands;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;

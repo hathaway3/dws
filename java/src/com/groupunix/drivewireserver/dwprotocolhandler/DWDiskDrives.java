@@ -35,6 +35,7 @@ public class DWDiskDrives
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	public void LoadDiskSet(String setname)
 	{
 		if (DriveWireServer.hasDiskset(setname))
@@ -154,6 +155,7 @@ public class DWDiskDrives
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	private void updateCurrentDiskSet(int driveno) 
 	{
 		if (DriveWireServer.getHandler(this.handlerno).config.containsKey("CurrentDiskSet"))

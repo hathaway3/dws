@@ -32,6 +32,7 @@ public class fx80img implements Runnable {
 
 	
 	private boolean m_expanded = false;
+	@SuppressWarnings("unused")
 	private boolean m_pica = true;
 	private boolean m_elite = false;
 	private boolean m_compressed = false;
@@ -366,7 +367,9 @@ public class fx80img implements Runnable {
 				
 				
 				int r = (int) (char_width / 5);
+				@SuppressWarnings("unused")
 				int x = ((int) xpos) - (r/2);
+				@SuppressWarnings("unused")
 				int y = ((int) ypos) - (r/2);
 				
 				int[] pdx = new int[4];

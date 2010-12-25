@@ -258,6 +258,7 @@ MINSEC         SET       16
 		return(b);
 	}
 
+	@SuppressWarnings("unused")
 	private long bytesToTime(byte[] b)
 	{
 

@@ -68,6 +68,7 @@ public class DWVSerialCircularBuffer {
 	private byte DW_PD_QUT = 0;
 	
 	
+	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialCircularBuffer");
 	
 	/**

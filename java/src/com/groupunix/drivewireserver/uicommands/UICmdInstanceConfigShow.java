@@ -8,7 +8,6 @@ import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
-import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
 public class UICmdInstanceConfigShow implements DWCommand {
@@ -28,6 +27,7 @@ public class UICmdInstanceConfigShow implements DWCommand {
 		return command;
 	}
 
+	@SuppressWarnings("unchecked")
 	public DWCommandResponse parse(String cmdline)
 	{
 		String res = new String();
@@ -36,9 +36,9 @@ public class UICmdInstanceConfigShow implements DWCommand {
 		
 		if (cmdline.length() == 0)
 		{
-			for (Iterator i = DriveWireServer.getHandler(instance).config.getKeys(); i.hasNext();)
+			for (Iterator<String> i = DriveWireServer.getHandler(instance).config.getKeys(); i.hasNext();)
 			{
-				String key = (String) i.next();
+				String key = i.next();
 				String value = StringUtils.join(DriveWireServer.getHandler(instance).config.getStringArray(key), ", ");
 		
 				res += key + " = " + value + "\r\n";

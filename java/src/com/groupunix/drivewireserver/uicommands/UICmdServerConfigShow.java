@@ -5,10 +5,8 @@ import java.util.Iterator;
 import org.apache.commons.lang.StringUtils;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
-import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
 public class UICmdServerConfigShow implements DWCommand {
@@ -21,6 +19,7 @@ public class UICmdServerConfigShow implements DWCommand {
 		return command;
 	}
 
+	@SuppressWarnings("unchecked")
 	public DWCommandResponse parse(String cmdline)
 	{
 		String res = new String();
@@ -28,9 +27,9 @@ public class UICmdServerConfigShow implements DWCommand {
 		
 		if (cmdline.length() == 0)
 		{
-			for (Iterator i = DriveWireServer.serverconfig.getKeys(); i.hasNext();)
+			for (Iterator<String> i = DriveWireServer.serverconfig.getKeys(); i.hasNext();)
 			{
-				String key = (String) i.next();
+				String key = i.next();
 				String value = StringUtils.join(DriveWireServer.serverconfig.getStringArray(key), ", ");
 		
 				res += key + " = " + value + "\r\n";

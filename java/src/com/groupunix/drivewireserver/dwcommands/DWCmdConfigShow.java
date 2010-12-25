@@ -76,15 +76,16 @@ public class DWCmdConfigShow implements DWCommand {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	private DWCommandResponse doShowConfig()
 	{
 		String text = new String();
 		
 		text += "Current protocol handler configuration:\r\n\n";
 		
-		for (Iterator i = DriveWireServer.getHandler(this.handlerno).config.getKeys(); i.hasNext();)
+		for (Iterator<String> i = DriveWireServer.getHandler(this.handlerno).config.getKeys(); i.hasNext();)
 		{
-			String key = (String) i.next();
+			String key = i.next();
 			String value = StringUtils.join(DriveWireServer.getHandler(this.handlerno).config.getStringArray(key), ", ");
 		
 			text += key + " = " + value + "\r\n";

@@ -47,10 +47,12 @@ public class DWVSerialPort {
 	private int conno = -1;
 	
 	// midi message stuff
+	@SuppressWarnings("unused")
 	private ShortMessage mmsg;
 	private int mmsg_pos = 0;
 	private int mmsg_data1;
 	private int mmsg_status;
+	@SuppressWarnings("unused")
 	private int last_mmsg_status;
 	private int mmsg_databytes = 2;
 	

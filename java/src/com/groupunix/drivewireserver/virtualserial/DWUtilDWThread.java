@@ -1,16 +1,8 @@
 package com.groupunix.drivewireserver.virtualserial;
 
 import org.apache.log4j.Logger;
-import org.jasypt.util.password.BasicPasswordEncryptor;
 
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwcommands.DWCmdConfig;
-import com.groupunix.drivewireserver.dwcommands.DWCmdDisk;
-import com.groupunix.drivewireserver.dwcommands.DWCmdLog;
-import com.groupunix.drivewireserver.dwcommands.DWCmdMidi;
-import com.groupunix.drivewireserver.dwcommands.DWCmdNet;
-import com.groupunix.drivewireserver.dwcommands.DWCmdPort;
-import com.groupunix.drivewireserver.dwcommands.DWCmdServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
@@ -100,51 +92,11 @@ public class DWUtilDWThread implements Runnable
 	}
 
 	
-	// leftovers from move to new command structure.. might use these someday
-	
-	private void doRestart(String hno)
-	{
-		try
-		{
-			int handler = Integer.parseInt(hno);
-			
-			// validate
-			if (DriveWireServer.isValidHandlerNo(handler))
-			{
-				
-				dwVSerialPorts.sendUtilityOKResponse(this.vport, "restarting handler");
-				dwVSerialPorts.writeToCoco(this.vport, "Restarting handler #" + handler + ".");
-				
-				// sync output
-				try {
-					while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
-					{
-						Thread.sleep(100);
-					}
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				DriveWireServer.restartHandler(handler);
-			}
-			else
-			{
-				dwVSerialPorts.sendUtilityFailResponse(this.vport, 60,"Invalid handler #"); 
-			}
-
-		}
-		catch (NumberFormatException e)
-		{
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, 2,"Syntax error: non numeric handler #");
-		} 
-	
-	}
-
-
-
 	
 
+
+	// total crap hack.  does user management even belong in dw?
+/*
 	private void doMakePass(String pw)
 	{
 		dwVSerialPorts.sendUtilityOKResponse(this.vport, "encrypted pw follows");
@@ -154,7 +106,7 @@ public class DWUtilDWThread implements Runnable
 		dwVSerialPorts.writeToCoco(this.vport, "Encypted form of '" + pw + "' is: " + bpe.encryptPassword(pw));
 
 	}
-
+*/
 
 
 	

@@ -36,6 +36,7 @@ public class UICmdServerShowSynthProfiles implements DWCommand {
 		return "ui server show synthprofiles";
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public DWCommandResponse parse(String cmdline) 
 	{

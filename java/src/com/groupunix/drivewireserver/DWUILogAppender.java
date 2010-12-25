@@ -1,7 +1,6 @@
 package com.groupunix.drivewireserver;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
 
 import org.apache.log4j.AppenderSkeleton;
@@ -16,7 +15,7 @@ public class DWUILogAppender extends AppenderSkeleton
 	public DWUILogAppender(Layout layout, Socket outskt, DWUIClientThread dwuiref )
 	{
 		this.outskt = outskt;
-		this.dwuiref = dwuiref;
+		this.setDwuiref(dwuiref);
 		setLayout(layout);
 	}
 	
@@ -61,6 +60,14 @@ public class DWUILogAppender extends AppenderSkeleton
 	public void close() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public void setDwuiref(DWUIClientThread dwuiref) {
+		this.dwuiref = dwuiref;
+	}
+
+	public DWUIClientThread getDwuiref() {
+		return dwuiref;
 	}
 
 
