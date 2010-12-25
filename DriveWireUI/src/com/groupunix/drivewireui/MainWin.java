@@ -21,6 +21,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
@@ -49,6 +50,8 @@ public class MainWin {
 	public static final int default_LogFontSize = 9;
 	public static final int default_LogFontStyle = 0;
 	
+	public static final int default_TCPTimeout = 15000;
+	
 	public static XMLConfiguration config;
 	public static final String configfile = "drivewireUI.xml";
 	
@@ -62,6 +65,8 @@ public class MainWin {
 	private static String host;
 	private static int port;
 	private static int instance;
+	
+	private static boolean firsttimer = false;
 	
 	/**
 	 * Launch the application.
@@ -77,6 +82,7 @@ public class MainWin {
 					display = new Display();
 					
 					MainWin window = new MainWin();
+					
 					window.open(display);
 				} 
 				catch (Exception e) 
@@ -107,6 +113,9 @@ public class MainWin {
 				config.setFileName(configfile);
 				config.addProperty("AutoCreated", true);
 				config.save();
+				
+				firsttimer = true;
+					
 			}
 			
 			config.setAutoSave(true);
@@ -136,6 +145,7 @@ public class MainWin {
 	public void open(Display display) {
 		
 		createContents();
+		
 		shell.open();
 		shell.layout();
 
@@ -143,6 +153,21 @@ public class MainWin {
 
 		FontData f = new FontData(config.getString("MainFont",default_MainFont), config.getInt("MainFontSize", default_MainFontSize), config.getInt("MainFontStyle", default_MainFontStyle) );
 		text_1.setFont(new Font(display, f));
+		
+		
+		if (firsttimer)
+		{
+		 MessageBox messageBox = new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES | SWT.NO);
+		        
+		 messageBox.setMessage("It looks like this is the first time the client has been run.\n\nWould you like to run the simple configuration wizard now?");
+		 messageBox.setText("New Installation");
+		        int response = messageBox.open();
+		        if (response == SWT.YES)
+		        {
+		        	InitialConfigWin icw = new InitialConfigWin(shell,SWT.DIALOG_TRIM);
+		        	icw.open();
+		        }
+		}
 		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
@@ -1021,6 +1046,7 @@ public class MainWin {
 		
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void addDiskFileToHistory(String filename) 
 	{
 		List<String> diskhist = config.getList("DiskHistory",null);
@@ -1047,6 +1073,7 @@ public class MainWin {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	public static List<String> getDiskHistory()
 	{
 		return(config.getList("DiskHistory",null));
@@ -1074,11 +1101,13 @@ public class MainWin {
         
 	}
 
+	@SuppressWarnings("unchecked")
 	public static List<String> getServerHistory() 
 	{
 		return(config.getList("ServerHistory",null));
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void addServerToHistory(String server) 
 	{
 		List<String> shist = config.getList("ServerHistory",null);

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 
 public class Connection 
 {
-	public static final int SOCK_TIMEOUT = 15000;
 	
 	private int port;
 	private String host;
@@ -28,7 +27,7 @@ public class Connection
 	public void Connect() throws UnknownHostException, IOException
 	{
 		this.sock = new Socket(this.host, this.port);
-		this.sock.setSoTimeout(SOCK_TIMEOUT);
+		this.sock.setSoTimeout(MainWin.config.getInt("TCPTimeout",MainWin.default_TCPTimeout));
 	}
 	
 	
