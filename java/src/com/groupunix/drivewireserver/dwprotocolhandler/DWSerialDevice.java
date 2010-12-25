@@ -231,7 +231,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 		try {
 
-			while ((retdata == -1) && (!this.wanttodie))
+			while ((retdata == -1) && (!this.wanttodie) && (serialPort != null))
 			{
 				retdata = serialPort.getInputStream().read();
 			}

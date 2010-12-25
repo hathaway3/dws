@@ -305,7 +305,7 @@ public class DWProtocolHandler implements Runnable
 			}
 			else
 			{
-				logger.debug("serious problem with the device.. does it exist?");
+				logger.debug("cannot access the device.. maybe it has not been configured or maybe it does not exist");
 				
 				// take a break, reset, hope things work themselves out
 				try 
