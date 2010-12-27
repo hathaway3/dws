@@ -82,7 +82,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	{
 		logger.info("attempting to open device '" + portName + "'");
 		
-		logger.info("Note: RXTX Version mismatch here is not a problem...");
+		//logger.info("Note: RXTX Version mismatch here is not a problem...");
 		
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
         if ( portIdentifier.isCurrentlyOwned() )
