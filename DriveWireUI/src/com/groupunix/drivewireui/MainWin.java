@@ -33,8 +33,8 @@ import com.swtdesigner.SWTResourceManager;
 
 public class MainWin {
 
-	public static final String DWUIVersion = "3.9.80";
-	public static final String DWUIVersionDate = "12/19/2010";
+	public static final String DWUIVersion = "3.9.83";
+	public static final String DWUIVersionDate = "12/27/2010";
 	
 	public static final String default_Host = "127.0.0.1";
 	public static final int default_Port = 6800;
@@ -762,6 +762,19 @@ public class MainWin {
 		
 		Menu menu_3 = new Menu(mntmHelp);
 		mntmHelp.setMenu(menu_3);
+		
+		MenuItem mntmDocumentation = new MenuItem(menu_3, SWT.NONE);
+		mntmDocumentation.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				// open wiki in browser
+				org.eclipse.swt.program.Program.launch("http://sourceforge.net/apps/mediawiki/drivewireserver/index.php");
+			}
+		});
+		mntmDocumentation.setText("Documentation");
+		
+		new MenuItem(menu_3, SWT.SEPARATOR);
 		
 		MenuItem mntmAbout = new MenuItem(menu_3, SWT.NONE);
 		mntmAbout.addSelectionListener(new SelectionAdapter() 

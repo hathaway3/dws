@@ -87,6 +87,10 @@ public class CopyDiskToDSKWin extends Dialog {
 		Button btnCancel = new Button(shlCreatedskFrom, SWT.NONE);
 		btnCancel.setBounds(359, 237, 75, 25);
 		btnCancel.setText("Cancel");
+		
+		Label lblWorkInProgress = new Label(shlCreatedskFrom, SWT.NONE);
+		lblWorkInProgress.setBounds(20, 218, 362, 15);
+		lblWorkInProgress.setText("WORK IN PROGRESS, THIS FORM IS NOT FUNCTIONAL YET");
 
 	}
 

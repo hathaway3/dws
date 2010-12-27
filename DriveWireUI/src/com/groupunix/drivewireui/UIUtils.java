@@ -197,7 +197,8 @@ public class UIUtils {
 			
 			if (res.size() < 1)
 			{
-				throw new DWUIOperationFailedException("Null result from server");
+				// config item is null..
+				//throw new DWUIOperationFailedException("Null result from server");
 			}
 			else if (res.get(0).startsWith("FAIL -36"))
 			{

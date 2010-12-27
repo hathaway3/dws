@@ -17,6 +17,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import com.swtdesigner.SWTResourceManager;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Link;
 
 public class InitialConfigWin extends Dialog {
 
@@ -64,6 +65,10 @@ public class InitialConfigWin extends Dialog {
 		this.labelOK.setVisible(false);
 		this.labelERR.setVisible(false);
 		
+		Link link = new Link(compPage2, SWT.NONE);
+		link.setBounds(10, 150, 366, 31);
+		link.setText("If you have trouble connecting, please <a href=\"http://sourceforge.net/apps/mediawiki/drivewireserver/index.php\">consult the documentation.</a>");
+		
 		this.labelHost.setVisible(false);
 		this.textHost.setVisible(false);
 		
@@ -85,7 +90,7 @@ public class InitialConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlInitialConfiguration = new Shell(getParent(), getStyle());
-		shlInitialConfiguration.setSize(410, 409);
+		shlInitialConfiguration.setSize(415, 409);
 		shlInitialConfiguration.setText("Initial Configuration");
 		shlInitialConfiguration.setLayout(null);
 		
@@ -221,17 +226,8 @@ public class InitialConfigWin extends Dialog {
 		lblOkNowLets.setText("Ok, now let's make sure we can communicate with the server.");
 		
 		Label lblIfYouHavent = new Label(compPage2, SWT.WRAP);
-		lblIfYouHavent.setBounds(10, 43, 366, 63);
-		lblIfYouHavent.setText("If you haven't started the server, please start it now.  On some systems, you can do this by double clicking on the file \"DriveWire.jar\".  On others you may need to open a command prompt (or shell) and issue the command:");
-		
-		Label lblJavajarDrivewirejar = new Label(compPage2, SWT.NONE);
-		lblJavajarDrivewirejar.setFont(SWTResourceManager.getFont("vt100", 10, SWT.NORMAL));
-		lblJavajarDrivewirejar.setBounds(10, 112, 345, 15);
-		lblJavajarDrivewirejar.setText("java -jar DriveWire.jar");
-		
-		Label lblYouMustBe = new Label(compPage2, SWT.WRAP);
-		lblYouMustBe.setBounds(10, 139, 366, 33);
-		lblYouMustBe.setText("You must be in the directory where you unpacked the DriveWire server distribution files when you issue this command.");
+		lblIfYouHavent.setBounds(10, 43, 366, 101);
+		lblIfYouHavent.setText("If you haven't started the server, please start it now.  \r\n\r\nIf you aren't sure whether the server is running, there is no harm in using the \"Test Connection\" button here to find out.  If the connection is successful, you'll see a green \"OK\" logo and the current server version displayed.");
 		
 		Button btnTestConnection = new Button(compPage2, SWT.NONE);
 		btnTestConnection.addSelectionListener(new SelectionAdapter() {
@@ -332,12 +328,14 @@ public class InitialConfigWin extends Dialog {
 					if (ports.size()>0)
 					 	comboSerialDev.select(0);
 					
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (DWUIOperationFailedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					MainWin.showError("Error listing serial devices", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+				catch (DWUIOperationFailedException e1) 
+				{
+					MainWin.showError("Error listing serial devices", e1.getMessage(), UIUtils.getStackTrace(e1));
 				}
 				
 				

@@ -54,11 +54,11 @@ public class AboutWin extends Dialog {
 		shell.setSize(459, 381);
 		shell.setText(getText());
 		
-		Label lblDrivewireUserInterface = new Label(shell, SWT.NONE);
-		lblDrivewireUserInterface.setFont(SWTResourceManager.getFont("Segoe UI", 8, SWT.NORMAL));
-		lblDrivewireUserInterface.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
-		lblDrivewireUserInterface.setBounds(10, 41, 159, 15);
-		lblDrivewireUserInterface.setText(" DriveWire User Interface v0.2");
+		Label lblVersion = new Label(shell, SWT.NONE);
+		lblVersion.setFont(SWTResourceManager.getFont("Segoe UI", 8, SWT.NORMAL));
+		lblVersion.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		lblVersion.setBounds(10, 41, 411, 15);
+		lblVersion.setText(" DriveWire User Interface version " + MainWin.DWUIVersion + " (" + MainWin.DWUIVersionDate + ")");
 		
 		txtGnuGeneralPublic = new Text(shell, SWT.BORDER | SWT.V_SCROLL);
 		txtGnuGeneralPublic.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));

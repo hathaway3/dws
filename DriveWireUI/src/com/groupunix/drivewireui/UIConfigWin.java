@@ -23,6 +23,7 @@ public class UIConfigWin extends Dialog {
 	private Text textLogFont;
 	private Spinner spinnerDiskHist;
 	private Spinner spinnerServerHist;
+	private Text textTCPTimeout;
 	
 	
 	/**
@@ -64,6 +65,8 @@ public class UIConfigWin extends Dialog {
 		this.spinnerDiskHist.setSelection(MainWin.config.getInt("DiskHistorySize",MainWin.default_DiskHistorySize));
 		this.spinnerServerHist.setSelection(MainWin.config.getInt("ServerHistorySize",MainWin.default_ServerHistorySize));
 		
+		this.textTCPTimeout.setText(MainWin.config.getInt("TCPTimeout",MainWin.default_TCPTimeout) +"");
+		
 	}
 	
 	private void setFonts() 
@@ -88,20 +91,20 @@ public class UIConfigWin extends Dialog {
 		
 		spinnerDiskHist = new Spinner(shlUserInterfaceConfiguration, SWT.BORDER);
 		spinnerDiskHist.setMaximum(999);
-		spinnerDiskHist.setBounds(153, 125, 47, 22);
+		spinnerDiskHist.setBounds(153, 102, 47, 22);
 		
 		spinnerServerHist = new Spinner(shlUserInterfaceConfiguration, SWT.BORDER);
 		spinnerServerHist.setMaximum(999);
-		spinnerServerHist.setBounds(153, 153, 47, 22);
+		spinnerServerHist.setBounds(153, 130, 47, 22);
 		
 		Label lblDiskPathHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblDiskPathHistory.setAlignment(SWT.RIGHT);
-		lblDiskPathHistory.setBounds(30, 128, 117, 15);
+		lblDiskPathHistory.setBounds(30, 105, 117, 15);
 		lblDiskPathHistory.setText("Disk path history:");
 		
 		Label lblServerHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblServerHistory.setAlignment(SWT.RIGHT);
-		lblServerHistory.setBounds(40, 156, 107, 15);
+		lblServerHistory.setBounds(40, 133, 107, 15);
 		lblServerHistory.setText("Server history:");
 		
 		Button btnOk = new Button(shlUserInterfaceConfiguration, SWT.NONE);
@@ -192,6 +195,18 @@ public class UIConfigWin extends Dialog {
 		});
 		button.setText("Set...");
 		button.setBounds(283, 55, 47, 25);
+		
+		textTCPTimeout = new Text(shlUserInterfaceConfiguration, SWT.BORDER);
+		textTCPTimeout.setBounds(153, 177, 76, 21);
+		
+		Label lblServerTcpResponse = new Label(shlUserInterfaceConfiguration, SWT.NONE);
+		lblServerTcpResponse.setAlignment(SWT.RIGHT);
+		lblServerTcpResponse.setBounds(10, 180, 137, 15);
+		lblServerTcpResponse.setText("Server response timeout:");
+		
+		Label lblMs = new Label(shlUserInterfaceConfiguration, SWT.NONE);
+		lblMs.setBounds(235, 180, 47, 15);
+		lblMs.setText("ms");
 
 	}
 
@@ -202,5 +217,9 @@ public class UIConfigWin extends Dialog {
 		
 		MainWin.config.setProperty("DiskHistorySize", this.spinnerDiskHist.getSelection());
 		MainWin.config.setProperty("ServerHistorySize", this.spinnerServerHist.getSelection());
+		
+		if (UIUtils.validateNum(this.textTCPTimeout.getText(), 0))
+				MainWin.config.setProperty("TCPTimeout", this.textTCPTimeout.getText());
+		
 	}
 }

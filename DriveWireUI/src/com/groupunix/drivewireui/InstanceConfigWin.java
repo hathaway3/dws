@@ -9,6 +9,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Composite;
@@ -48,10 +49,10 @@ public class InstanceConfigWin extends Dialog {
 	private Text textIPBannedCountries;
 	private Text textRateOverride;
 	private Text textMIDIsoundbank;
-	private Text textMIDIprofile;
+	private Combo textMIDIprofile;
 	private Text textDefaultDiskSet;
 	private Combo comboDevType;
-	private Text textSerialPort;
+	private Combo textSerialPort;
 	private Combo comboCocoModel;
 	private Button btnStartAutomatically;
 	private Combo comboPrinterType;
@@ -87,6 +88,7 @@ public class InstanceConfigWin extends Dialog {
 		createContents();
 		
 		loadSettings();
+		applySettings();
 		
 		shlInstanceConfiguration.open();
 		shlInstanceConfiguration.layout();
@@ -133,7 +135,6 @@ public class InstanceConfigWin extends Dialog {
 		settings.add("PrinterLines");
 		settings.add("MIDISynthDefaultSoundbank");
 		settings.add("MIDISynthDefaultProfile");
-		
 		settings.add("DW3Only");
 		settings.add("LogDeviceBytes");
 		settings.add("LogVPortBytes");
@@ -145,11 +146,38 @@ public class InstanceConfigWin extends Dialog {
 		
 		values = UIUtils.getInstanceSettings(MainWin.getInstance(),settings);
 		
-		applySettings();
+		// combos
+		loadCombo("ui server show serialdevs",this.textSerialPort);
+		loadCombo("ui server show synthprofiles",this.textMIDIprofile);
+		
+		
 		
 	}
 
 	
+	private void loadCombo(String cmd, Combo combo) 
+	{
+		combo.removeAll();
+		
+		try {
+			ArrayList<String> ports = UIUtils.loadArrayList(cmd);
+			
+			for (int i = 0;i<ports.size();i++)
+			{
+				combo.add(ports.get(i));
+			}
+		} 
+		catch (IOException e1) 
+		{
+			MainWin.showError("Error loading data", e1.getMessage(), UIUtils.getStackTrace(e1));
+		}
+		catch (DWUIOperationFailedException e1) 
+		{
+			MainWin.showError("Error loading data", e1.getMessage(), UIUtils.getStackTrace(e1));
+		}
+		
+	}
+
 	private HashMap<String, String> getChangedValues() 
 	{
 		HashMap<String,String> res = new HashMap<String,String>();
@@ -244,139 +272,100 @@ public class InstanceConfigWin extends Dialog {
 		
 		// connection page
 		
-		if (values.get("Name") != null)
-			this.textName.setText(values.get("Name"));
+		setTextValue("Name",this.textName);
 		
-		if (values.get("DeviceType") != null)
-			this.comboDevType.select(this.comboDevType.indexOf(values.get("DeviceType")));
+		setComboValue("DeviceType",this.comboDevType);	
+		setComboValue("CocoModel",this.comboCocoModel);
+		setComboValue("SerialDevice",this.textSerialPort);
 		
-		if (values.get("CocoModel") != null)
-			this.comboCocoModel.select(this.comboCocoModel.indexOf(values.get("CocoModel")));
+		setTextValue("TCPDevicePort",this.textTCPServerPort);
+		setTextValue("TCPClientPort", this.textTCPClientPort);
+		setTextValue("TCPClientHost", this.textTCPClientHost);
 		
-		if (values.get("SerialDevice") != null)
-			this.textSerialPort.setText(values.get("SerialDevice"));
+		setBooleanValue("AutoStart", this.btnStartAutomatically, true);
 		
-		if (values.get("TCPDevicePort") != null)
-			this.textTCPServerPort.setText(values.get("TCPDevicePort"));
-		
-		if (values.get("TCPClientPort") != null)
-			this.textTCPClientPort.setText(values.get("TCPClientPort"));
-		
-		if (values.get("TCPClientHost") != null)
-			this.textTCPClientHost.setText(values.get("TCPClientHost"));
-		
-		if (values.get("AutoStart") == null)
-		{
-			this.btnStartAutomatically.setSelection(true);
-		}
-		else
-		{
-			this.btnStartAutomatically.setSelection(UIUtils.sTob(values.get("AutoStart")));
-		}
-		
-
 		// devices page
 		
-		if (values.get("PrinterDir") != null)
-			this.textPrinterDir.setText(values.get("PrinterDir"));
+		setTextValue("PrinterDir", this.textPrinterDir);
+		setTextValue("PrinterCharacterFile", this.textCharacterFile);
+		setTextValue("PrinterColumns", this.textPrinterCol);
+		setTextValue("PrinterLines", this.textPrinterRow);
 		
-		if (values.get("PrinterCharacterFile") != null)
-			this.textCharacterFile.setText(values.get("PrinterCharacterFile"));
+		setComboValue("PrinterType",this.comboPrinterType);
 		
-		if (values.get("PrinterColumns") != null)
-			this.textPrinterCol.setText(values.get("PrinterColumns"));
+		setTextValue("MIDISynthDefaultSoundbank", this.textMIDIsoundbank);
 		
-		if (values.get("PrinterLines") != null)
-			this.textPrinterRow.setText(values.get("PrinterLines"));
-		
-		if (values.get("PrinterType") != null)
-			this.comboPrinterType.select(this.comboPrinterType.indexOf(values.get("PrinterType")));
-		
-		if (values.get("MIDISynthDefaultSoundbank") != null)
-			this.textMIDIsoundbank.setText(values.get("MIDISynthDefaultSoundbank"));
-		
-		if (values.get("MIDISynthDefaultProfile") != null)
-			this.textMIDIprofile.setText(values.get("MIDISynthDefaultProfile"));
-		
+		setComboValue("MIDISynthDefaultProfile", this.textMIDIprofile);
 		
 		// networking page
 		
-		if (values.get("ListenAddress") != null)
-			this.textListenAddress.setText(values.get("ListenAddress"));
-		
-		if (values.get("TermPort") != null)
-			this.textTermPort.setText(values.get("TermPort"));
-		
-		if (values.get("TelnetBannerFile") != null)
-			this.textTelnetBanner.setText(values.get("TelnetBannerFile"));
-		
-		if (values.get("TelnetBannedFile") != null)
-			this.textTelnetBanned.setText(values.get("TelnetBannedFile"));
-		
-		if (values.get("TelnetNoPortsBannerFile") != null)
-			this.textTelnetNoPorts.setText(values.get("TelnetNoPortsBannerFile"));
-		
-		if (values.get("TelnetPreAuthFile") != null)
-			this.textTelnetPreAuth.setText(values.get("TelnetPreAuthFile"));
-		
-		if (values.get("TelnetPasswdFile") != null)
-			this.textTelnetPasswd.setText(values.get("TelnetPasswdFile"));
-		
+		setTextValue("ListenAddress", this.textListenAddress);
+		setTextValue("TermPort", this.textTermPort);
+		setTextValue("TelnetBannerFile", this.textTelnetBanner);
+		setTextValue("TelnetBannedFile", this.textTelnetBanned);
+		setTextValue("TelnetNoPortsBannerFile", this.textTelnetNoPorts);
+		setTextValue("TelnetPreAuthFile", this.textTelnetPreAuth);
+		setTextValue("TelnetPasswdFile", this.textTelnetPasswd);
 		
 		// ip access page
 		
-		if (values.get("TelnetBanned") != null)
-			this.textIPBanned.setText(values.get("TelnetBanned"));
+		setTextValue("TelnetBanned", this.textIPBanned);
 		
-		if (values.get("GeoIPLookup") != null)
-			this.btnUseGeoipLookups.setSelection(UIUtils.sTob(values.get("GeoIPLookup")));
+		setBooleanValue("GeoIPLookups", this.btnUseGeoipLookups, false);
 		
-		if (values.get("GeoIPDatabaseFile") != null)
-			this.textGeoIPfile.setText(values.get("GeoIPDatabaseFile"));
-		
-		if (values.get("GeoIPBannedCountries") != null)
-			this.textIPBannedCountries.setText(values.get("GeoIPBannedCountries"));
-		
-		if (values.get("GeoIPBannedCities") != null)
-			this.textIPBannedCities.setText(values.get("GeoIPBannedCities"));
-		
+		setTextValue("GeoIPDatabaseFile", this.textGeoIPfile);
+		setTextValue("GeoIPBannedCountries", this.textIPBannedCountries);
+		setTextValue("GeoIPBannedCities", this.textIPBannedCities);
 		
 		// advanced page
 		
-		if (values.get("RateOverride") != null)
-			this.textRateOverride.setText(values.get("RateOverride"));
+		setTextValue("RateOverrride", this.textRateOverride);
+		setTextValue("DefaultDiskSet", this.textDefaultDiskSet);
 		
-		if (values.get("DefaultDiskSet") != null)
-			this.textDefaultDiskSet.setText(values.get("DefaultDiskSet"));
-		
-		
-		if (values.get("DW3Only") != null)
-			this.btnDrivewireMode.setSelection(UIUtils.sTob(values.get("DW3Only")));
-		
-		if (values.get("OpTimeSendsDOW") != null)
-			this.btnOptimeSendsDow.setSelection(UIUtils.sTob(values.get("OpTimeSendsDOW")));
-		
-		if (values.get("LogDeviceBytes") != null)
-			this.btnLogProtocolDevice.setSelection(UIUtils.sTob(values.get("LogDeviceBytes")));
-		
-		if (values.get("LogVPortBytes") != null)
-			this.btnLogVirtualDevice.setSelection(UIUtils.sTob(values.get("LogVPortBytes")));
-		
-		if (values.get("LogMIDIBytes") != null)
-			this.btnLogMidiDevice.setSelection(UIUtils.sTob(values.get("LogMIDIBytes")));
-		
-		if (values.get("LogOpCode") != null)
-			this.btnLogOpcodes.setSelection(UIUtils.sTob(values.get("LogOpCode")));
-		
-		if (values.get("LogOpCodePolls") != null)
-			this.btnEvenOppoll.setSelection(UIUtils.sTob(values.get("LogOpCodePolls")));
-		
+		setBooleanValue("DW3Only", this.btnDrivewireMode, false);
+		setBooleanValue("OpTimeSendsDOW", this.btnOptimeSendsDow, false);
+		setBooleanValue("LogDeviceBytes", this.btnLogProtocolDevice, false);
+		setBooleanValue("LogVPortBytes", this.btnLogVirtualDevice, false);
+		setBooleanValue("LogMIDIBytes", this.btnLogMidiDevice, true);
+		setBooleanValue("LogOpCode", this.btnLogOpcodes, false);
+		setBooleanValue("LogOpCodePolls", this.btnEvenOppoll, false);
 		
 		
 	}
 	
 	
 	
+	private void setBooleanValue(String key, Button btn, boolean def) 
+	{
+		
+		if (values.get(key) != null)
+			btn.setSelection(UIUtils.sTob(values.get(key)));
+		else
+			btn.setSelection(def);
+	
+	}
+
+	private void setComboValue(String key, Combo combo) 
+	{
+		if (values.get(key) != null)
+		{
+			combo.select(combo.indexOf(values.get(key)));
+		}
+		else
+		{
+			combo.select(-1);
+			combo.setText("");
+		}
+	}
+
+	private void setTextValue(String key, Text textObj) 
+	{
+		if (values.get(key) != null)
+			textObj.setText(values.get(key));
+		else
+			textObj.setText("");	
+	}
+
 	/**
 	 * Create contents of the dialog.
 	 */
@@ -456,7 +445,7 @@ public class InstanceConfigWin extends Dialog {
 		btnStartAutomatically.setBounds(110, 301, 184, 16);
 		btnStartAutomatically.setText("Start automatically");
 		
-		textSerialPort = new Text(composite, SWT.BORDER);
+		textSerialPort = new Combo(composite, SWT.BORDER);
 		textSerialPort.setBounds(110, 145, 182, 21);
 		
 		TabItem tbtmDevices = new TabItem(tabFolder, SWT.NONE);
@@ -478,6 +467,23 @@ public class InstanceConfigWin extends Dialog {
 		textPrinterDir.setBounds(81, 35, 191, 21);
 		
 		Button button = new Button(grpPrintingOptions, SWT.NONE);
+		button.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose printer output directory...");
+			        fd.setFilterPath("");
+			        String[] filterExt = { "*.*" };
+			        fd.setFilterExtensions(filterExt);
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textPrinterDir.setText(selected);
+			        }
+			}
+		});
 		button.setBounds(273, 33, 26, 25);
 		button.setText("...");
 		
@@ -495,6 +501,23 @@ public class InstanceConfigWin extends Dialog {
 		textCharacterFile.setBounds(81, 100, 191, 21);
 		
 		Button button_1 = new Button(grpPrintingOptions, SWT.NONE);
+		button_1.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose character definition file...");
+			        fd.setFilterPath("");
+			        String[] filterExt = { "*.*" };
+			        fd.setFilterExtensions(filterExt);
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textCharacterFile.setText(selected);
+			        }
+			}
+		});
 		button_1.setBounds(273, 98, 26, 25);
 		button_1.setText("...");
 		
@@ -532,11 +555,28 @@ public class InstanceConfigWin extends Dialog {
 		textMIDIsoundbank.setBounds(126, 34, 149, 21);
 		
 		Button button_8 = new Button(grpMidiOptions, SWT.NONE);
+		button_8.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose MIDI SoundBank...");
+			        fd.setFilterPath("");
+			        String[] filterExt = { "*.*" };
+			        fd.setFilterExtensions(filterExt);
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textMIDIsoundbank.setText(selected);
+			        }
+			}
+		});
 		button_8.setText("...");
 		button_8.setBounds(276, 32, 26, 25);
 		
-		textMIDIprofile = new Text(grpMidiOptions, SWT.BORDER);
-		textMIDIprofile.setBounds(126, 61, 76, 21);
+		textMIDIprofile = new Combo(grpMidiOptions, SWT.BORDER);
+		textMIDIprofile.setBounds(126, 61, 149, 21);
 		
 		Label lblDefaultProfile = new Label(grpMidiOptions, SWT.NONE);
 		lblDefaultProfile.setAlignment(SWT.RIGHT);
@@ -584,6 +624,23 @@ public class InstanceConfigWin extends Dialog {
 		lblBanned.setText("Banned:");
 		
 		Button button_2 = new Button(grpTelnetOptions, SWT.NONE);
+		button_2.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose telnet banner file...");
+			        fd.setFilterPath("");
+			        String[] filterExt = { "*.*" };
+			        fd.setFilterExtensions(filterExt);
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textTelnetBanner.setText(selected);
+			        }
+			}
+		});
 		button_2.setBounds(271, 24, 28, 25);
 		button_2.setText("...");
 		
@@ -597,14 +654,65 @@ public class InstanceConfigWin extends Dialog {
 		textTelnetBanned.setBounds(71, 108, 200, 21);
 		
 		Button button_3 = new Button(grpTelnetOptions, SWT.NONE);
+		button_3.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose telnet no ports banner...");
+			        fd.setFilterPath("");
+			        String[] filterExt = { "*.*" };
+			        fd.setFilterExtensions(filterExt);
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textTelnetNoPorts.setText(selected);
+			        }
+			}
+		});
 		button_3.setText("...");
 		button_3.setBounds(271, 51, 28, 25);
 		
 		Button button_4 = new Button(grpTelnetOptions, SWT.NONE);
+		button_4.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose telnet pre-auth banner...");
+			        fd.setFilterPath("");
+			        String[] filterExt = { "*.*" };
+			        fd.setFilterExtensions(filterExt);
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textTelnetPreAuth.setText(selected);
+			        }
+			}
+		});
 		button_4.setText("...");
 		button_4.setBounds(271, 79, 28, 25);
 		
 		Button button_5 = new Button(grpTelnetOptions, SWT.NONE);
+		button_5.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose telnet banned banner...");
+			        fd.setFilterPath("");
+			        String[] filterExt = { "*.*" };
+			        fd.setFilterExtensions(filterExt);
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textTelnetBanned.setText(selected);
+			        }
+			}
+		});
 		button_5.setText("...");
 		button_5.setBounds(271, 106, 28, 25);
 		
@@ -657,6 +765,23 @@ public class InstanceConfigWin extends Dialog {
 		lblDatabaseFile.setText("Database file:");
 		
 		Button button_7 = new Button(composite_3, SWT.NONE);
+		button_7.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose GeoIP database file...");
+			        fd.setFilterPath("");
+			        String[] filterExt = { "*.*" };
+			        fd.setFilterExtensions(filterExt);
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textGeoIPfile.setText(selected);
+			        }
+			}
+		});
 		button_7.setBounds(297, 160, 27, 25);
 		button_7.setText("...");
 		

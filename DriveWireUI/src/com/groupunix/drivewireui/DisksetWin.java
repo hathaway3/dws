@@ -129,6 +129,10 @@ public class DisksetWin extends Dialog {
 		
 		loadDiskSets(comboDiskset);
 		comboDiskset.select(0);
+		
+		Label lblWorkInProgress = new Label(shlDisksetEditor, SWT.NONE);
+		lblWorkInProgress.setBounds(136, 334, 342, 15);
+		lblWorkInProgress.setText("WORK IN PROGRESS, THIS FORM IS NOT FUNCTIONAL YET");
 
 		shlDisksetEditor.open();
 		shlDisksetEditor.layout();
