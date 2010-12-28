@@ -5,17 +5,17 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdInstance implements DWCommand {
+public class UICmdInstanceDisk implements DWCommand {
 
-	static final String command = "instance";
+	static final String command = "disk";
+	
 	private DWCommandList commands = new DWCommandList();
 		
-	public UICmdInstance(DWUIClientThread dwuiClientThread)
+	public UICmdInstanceDisk(DWUIClientThread dwuiClientThread)
 	{
-		commands.addcommand(new UICmdInstanceAttach(dwuiClientThread));
-		commands.addcommand(new UICmdInstanceConfig(dwuiClientThread));
-		commands.addcommand(new UICmdInstanceDisk(dwuiClientThread));
-		commands.addcommand(new UICmdInstanceReset(dwuiClientThread));
+
+		commands.addcommand(new UICmdInstanceDiskShow(dwuiClientThread));
+		
 	}
 
 	
@@ -39,13 +39,13 @@ public class UICmdInstance implements DWCommand {
 
 	public String getShortHelp() 
 	{
-		return "Instance commands";
+		return "Instance disk commands";
 	}
 
 
 	public String getUsage() 
 	{
-		return "ui instance [command]";
+		return "ui instance disk [command]";
 	}
 	
 	public boolean validate(String cmdline) 
