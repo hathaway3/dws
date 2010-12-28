@@ -166,8 +166,9 @@ public class DriveWireServer
     	
     	// hang around so something is running even if handlers are not
 		
-		/*
-		while (!wanttodie)
+		logger.info("going to sleep...");	
+		
+		while (true)
     	{
     	
     		try
@@ -181,8 +182,8 @@ public class DriveWireServer
 
     	}
     	
-    	*/	
-    	logger.info("Server exiting");	
+    		
+    	
     	
 	}
 
