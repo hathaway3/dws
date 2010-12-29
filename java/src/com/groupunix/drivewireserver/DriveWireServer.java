@@ -127,7 +127,7 @@ public class DriveWireServer
     	
     	// auto save
     	
-    	if (serverconfig.getBoolean("ConfigAutosave",false))
+    	if (serverconfig.getBoolean("ConfigAutosave",true))
     	{
     		logger.info("Auto save of configuration is enabled");
     		serverconfig.setAutoSave(true);
