@@ -60,34 +60,38 @@ public class DWVSerialPorts {
 		this.handlerno = handlerno;
 		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogVPortBytes", false);
 		
-		// initialize MIDI device to internal synth
-		logger.debug("initialize internal midi synth");
-			
-		clearGMInstrumentCache();
 		
-		try 
+		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("UseMIDI", true))
 		{
-			midiSynth = MidiSystem.getSynthesizer();
-			setMIDIDevice(midiSynth);
+			// initialize MIDI device to internal synth
+			logger.debug("initialize internal midi synth");
 			
-			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("MIDISynthDefaultSoundbank"))
-			{
-				loadSoundbank(DriveWireServer.getHandler(this.handlerno).config.getString("MIDISynthDefaultSoundbank"));
-			}
-			
-		} 
-		catch (MidiUnavailableException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			clearGMInstrumentCache();
 		
-		if (DriveWireServer.getHandler(this.handlerno).config.containsKey("MIDISynthDefaultProfile"))
-		{
-			if (!setMidiProfile(DriveWireServer.getHandler(this.handlerno).config.getString("MIDISynthDefaultProfile")))
+			try 
 			{
-				logger.warn("Invalid MIDI profile specified in config file.");
+				midiSynth = MidiSystem.getSynthesizer();
+				setMIDIDevice(midiSynth);
+			
+				if (DriveWireServer.getHandler(this.handlerno).config.containsKey("MIDISynthDefaultSoundbank"))
+				{
+					loadSoundbank(DriveWireServer.getHandler(this.handlerno).config.getString("MIDISynthDefaultSoundbank"));
+				}
+			
+			} 
+			catch (MidiUnavailableException e) 
+			{
+				logger.warn("MIDI is not available");
 			}
+		
+			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("MIDISynthDefaultProfile"))
+			{
+				if (!setMidiProfile(DriveWireServer.getHandler(this.handlerno).config.getString("MIDISynthDefaultProfile")))
+				{
+					logger.warn("Invalid MIDI profile specified in config file.");
+				}
+			}
+		
 		}
 		
 	}
