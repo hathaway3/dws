@@ -9,6 +9,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.TabItem;
@@ -20,6 +21,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 
 public class InstanceConfigWin extends Dialog {
 
@@ -27,7 +30,7 @@ public class InstanceConfigWin extends Dialog {
 
 	
 	protected Object result;
-	protected Shell shlInstanceConfiguration;
+	protected static Shell shlInstanceConfiguration;
 	private Text textName;
 	private Text textTCPClientHost;
 	private Text textTCPClientPort;
@@ -67,6 +70,15 @@ public class InstanceConfigWin extends Dialog {
 	private Button btnLogMidiDevice;
 	private Button btnDrivewireMode;
 	
+	private static Composite compositeP1;
+	private static Composite compositeP2;
+	private static Composite compositeP3;
+	private static Composite compositeP4;
+	private static Composite compositeP5;
+	private static Group grpPrintingOptions;
+	private static Group grpMidiOptions;
+	private static Group grpTelnetOptions;
+	private static Group grpTelnetAuthentication;
 	
 	/**
 	 * Create the dialog.
@@ -86,7 +98,7 @@ public class InstanceConfigWin extends Dialog {
 	 */
 	public Object open() throws DWUIOperationFailedException, IOException {
 		createContents();
-		
+		applyFont();
 		loadSettings();
 		applySettings();
 		
@@ -101,7 +113,84 @@ public class InstanceConfigWin extends Dialog {
 		return result;
 	}
 
-	
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shlInstanceConfiguration.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = compositeP1.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = compositeP2.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = compositeP3.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = compositeP4.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = compositeP5.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		
+		controls = grpPrintingOptions.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = grpMidiOptions.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = grpTelnetOptions.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = grpTelnetAuthentication.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		
+	}
 	
 	private void loadSettings() throws DWUIOperationFailedException, IOException 
 	{
@@ -389,80 +478,80 @@ public class InstanceConfigWin extends Dialog {
 		TabItem tbtmConnection = new TabItem(tabFolder, SWT.NONE);
 		tbtmConnection.setText("Connection");
 		
-		Composite composite = new Composite(tabFolder, SWT.NONE);
-		tbtmConnection.setControl(composite);
+		compositeP1 = new Composite(tabFolder, SWT.NONE);
+		tbtmConnection.setControl(compositeP1);
 		
-		textName = new Text(composite, SWT.BORDER);
+		textName = new Text(compositeP1, SWT.BORDER);
 		textName.setBounds(110, 27, 182, 21);
 		
-		Label lblInstanceName = new Label(composite, SWT.NONE);
+		Label lblInstanceName = new Label(compositeP1, SWT.NONE);
 		lblInstanceName.setAlignment(SWT.RIGHT);
 		lblInstanceName.setBounds(14, 30, 90, 15);
 		lblInstanceName.setText("Instance name:");
 		
-		comboDevType = new Combo(composite, SWT.READ_ONLY);
+		comboDevType = new Combo(compositeP1, SWT.READ_ONLY);
 		comboDevType.setItems(new String[] {"serial", "tcp", "tcpclient"});
 		comboDevType.setBounds(110, 104, 91, 23);
 		comboDevType.select(0);
 		
-		Label lblDeviceType = new Label(composite, SWT.NONE);
+		Label lblDeviceType = new Label(compositeP1, SWT.NONE);
 		lblDeviceType.setAlignment(SWT.RIGHT);
 		lblDeviceType.setBounds(24, 107, 80, 15);
 		lblDeviceType.setText("Device type:");
 		
-		Label lblSerialPort = new Label(composite, SWT.NONE);
+		Label lblSerialPort = new Label(compositeP1, SWT.NONE);
 		lblSerialPort.setAlignment(SWT.RIGHT);
 		lblSerialPort.setBounds(24, 148, 80, 15);
 		lblSerialPort.setText("Serial device:");
 		
-		textTCPClientHost = new Text(composite, SWT.BORDER);
+		textTCPClientHost = new Text(compositeP1, SWT.BORDER);
 		textTCPClientHost.setBounds(110, 227, 182, 21);
 		
-		textTCPClientPort = new Text(composite, SWT.BORDER);
+		textTCPClientPort = new Text(compositeP1, SWT.BORDER);
 		textTCPClientPort.setBounds(110, 254, 76, 21);
 		
-		Label lblTcpPort = new Label(composite, SWT.NONE);
+		Label lblTcpPort = new Label(compositeP1, SWT.NONE);
 		lblTcpPort.setAlignment(SWT.RIGHT);
 		lblTcpPort.setBounds(14, 230, 90, 15);
 		lblTcpPort.setText("TCP client host:");
 		
-		Label lblTcpHost = new Label(composite, SWT.NONE);
+		Label lblTcpHost = new Label(compositeP1, SWT.NONE);
 		lblTcpHost.setAlignment(SWT.RIGHT);
 		lblTcpHost.setBounds(14, 257, 90, 15);
 		lblTcpHost.setText("TCP client port:");
 		
-		comboCocoModel = new Combo(composite, SWT.READ_ONLY);
+		comboCocoModel = new Combo(compositeP1, SWT.READ_ONLY);
 		comboCocoModel.setItems(new String[] {"1", "2", "3"});
 		comboCocoModel.setBounds(110, 64, 50, 23);
 		comboCocoModel.select(2);
 		
-		Label lblCocoModel = new Label(composite, SWT.NONE);
+		Label lblCocoModel = new Label(compositeP1, SWT.NONE);
 		lblCocoModel.setAlignment(SWT.RIGHT);
 		lblCocoModel.setBounds(24, 67, 80, 15);
 		lblCocoModel.setText("CoCo model:");
 		
-		textTCPServerPort = new Text(composite, SWT.BORDER);
+		textTCPServerPort = new Text(compositeP1, SWT.BORDER);
 		textTCPServerPort.setBounds(110, 188, 76, 21);
 		
-		Label lblTcpServerPort = new Label(composite, SWT.NONE);
+		Label lblTcpServerPort = new Label(compositeP1, SWT.NONE);
 		lblTcpServerPort.setAlignment(SWT.RIGHT);
 		lblTcpServerPort.setBounds(16, 191, 88, 15);
 		lblTcpServerPort.setText("TCP server port:");
 		
-		btnStartAutomatically = new Button(composite, SWT.CHECK);
+		btnStartAutomatically = new Button(compositeP1, SWT.CHECK);
 		btnStartAutomatically.setBounds(110, 301, 184, 16);
 		btnStartAutomatically.setText("Start automatically");
 		
-		textSerialPort = new Combo(composite, SWT.BORDER);
+		textSerialPort = new Combo(compositeP1, SWT.BORDER);
 		textSerialPort.setBounds(110, 145, 182, 21);
 		
 		TabItem tbtmDevices = new TabItem(tabFolder, SWT.NONE);
 		tbtmDevices.setText("Devices");
 		
-		Composite composite_1 = new Composite(tabFolder, SWT.NONE);
-		tbtmDevices.setControl(composite_1);
+		compositeP2 = new Composite(tabFolder, SWT.NONE);
+		tbtmDevices.setControl(compositeP2);
 		
-		Group grpPrintingOptions = new Group(composite_1, SWT.NONE);
+		grpPrintingOptions = new Group(compositeP2, SWT.NONE);
 		grpPrintingOptions.setText(" Printing Options ");
 		grpPrintingOptions.setBounds(10, 21, 314, 207);
 		
@@ -550,7 +639,7 @@ public class InstanceConfigWin extends Dialog {
 		lblLines.setAlignment(SWT.RIGHT);
 		lblLines.setText("Lines:");
 		
-		Group grpMidiOptions = new Group(composite_1, SWT.NONE);
+		grpMidiOptions = new Group(compositeP2, SWT.NONE);
 		grpMidiOptions.setText(" MIDI Options ");
 		grpMidiOptions.setBounds(10, 244, 314, 103);
 		
@@ -594,17 +683,17 @@ public class InstanceConfigWin extends Dialog {
 		TabItem tbtmNetworking_1 = new TabItem(tabFolder, SWT.NONE);
 		tbtmNetworking_1.setText("Networking");
 		
-		Composite composite_2 = new Composite(tabFolder, SWT.NONE);
-		tbtmNetworking_1.setControl(composite_2);
+		compositeP3 = new Composite(tabFolder, SWT.NONE);
+		tbtmNetworking_1.setControl(compositeP3);
 		
-		textListenAddress = new Text(composite_2, SWT.BORDER);
+		textListenAddress = new Text(compositeP3, SWT.BORDER);
 		textListenAddress.setBounds(154, 19, 156, 21);
 		
-		Label lblBindAddress = new Label(composite_2, SWT.NONE);
+		Label lblBindAddress = new Label(compositeP3, SWT.NONE);
 		lblBindAddress.setBounds(23, 22, 133, 15);
 		lblBindAddress.setText("Listen interface address:");
 		
-		Group grpTelnetOptions = new Group(composite_2, SWT.NONE);
+		grpTelnetOptions = new Group(compositeP3, SWT.NONE);
 		grpTelnetOptions.setText(" Telnet server text files ");
 		grpTelnetOptions.setBounds(10, 92, 320, 149);
 		
@@ -724,14 +813,14 @@ public class InstanceConfigWin extends Dialog {
 		button_5.setText("...");
 		button_5.setBounds(271, 106, 28, 25);
 		
-		textTermPort = new Text(composite_2, SWT.BORDER);
+		textTermPort = new Text(compositeP3, SWT.BORDER);
 		textTermPort.setBounds(181, 49, 57, 21);
 		
-		Label lblOsTermDevice = new Label(composite_2, SWT.NONE);
+		Label lblOsTermDevice = new Label(compositeP3, SWT.NONE);
 		lblOsTermDevice.setBounds(23, 52, 156, 15);
 		lblOsTermDevice.setText("OS9 TERM device telnet port:");
 		
-		Group grpTelnetAuthentication = new Group(composite_2, SWT.NONE);
+		grpTelnetAuthentication = new Group(compositeP3, SWT.NONE);
 		grpTelnetAuthentication.setText(" Telnet authentication ");
 		grpTelnetAuthentication.setBounds(10, 265, 320, 74);
 		
@@ -750,29 +839,29 @@ public class InstanceConfigWin extends Dialog {
 		TabItem tbtmAdvanced = new TabItem(tabFolder, SWT.NONE);
 		tbtmAdvanced.setText("IP Access");
 		
-		Composite composite_3 = new Composite(tabFolder, SWT.NONE);
-		tbtmAdvanced.setControl(composite_3);
+		compositeP4 = new Composite(tabFolder, SWT.NONE);
+		tbtmAdvanced.setControl(compositeP4);
 		
-		textIPBanned = new Text(composite_3, SWT.BORDER | SWT.V_SCROLL);
+		textIPBanned = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
 		textIPBanned.setBounds(10, 44, 325, 72);
 		
-		Label lblBannedIpAddresses = new Label(composite_3, SWT.NONE);
+		Label lblBannedIpAddresses = new Label(compositeP4, SWT.NONE);
 		lblBannedIpAddresses.setBounds(10, 23, 123, 15);
 		lblBannedIpAddresses.setText("Banned IP Addresses:");
 		
-		btnUseGeoipLookups = new Button(composite_3, SWT.CHECK);
+		btnUseGeoipLookups = new Button(compositeP4, SWT.CHECK);
 		btnUseGeoipLookups.setBounds(10, 132, 123, 16);
 		btnUseGeoipLookups.setText("Use GeoIP lookups");
 		
-		textGeoIPfile = new Text(composite_3, SWT.BORDER);
+		textGeoIPfile = new Text(compositeP4, SWT.BORDER);
 		textGeoIPfile.setBounds(95, 162, 201, 21);
 		
-		Label lblDatabaseFile = new Label(composite_3, SWT.NONE);
+		Label lblDatabaseFile = new Label(compositeP4, SWT.NONE);
 		lblDatabaseFile.setAlignment(SWT.RIGHT);
 		lblDatabaseFile.setBounds(10, 165, 79, 15);
 		lblDatabaseFile.setText("Database file:");
 		
-		Button button_7 = new Button(composite_3, SWT.NONE);
+		Button button_7 = new Button(compositeP4, SWT.NONE);
 		button_7.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -793,27 +882,27 @@ public class InstanceConfigWin extends Dialog {
 		button_7.setBounds(297, 160, 27, 25);
 		button_7.setText("...");
 		
-		textIPBannedCities = new Text(composite_3, SWT.BORDER | SWT.V_SCROLL);
+		textIPBannedCities = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
 		textIPBannedCities.setBounds(10, 220, 325, 46);
 		
-		textIPBannedCountries = new Text(composite_3, SWT.BORDER | SWT.V_SCROLL);
+		textIPBannedCountries = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
 		textIPBannedCountries.setBounds(10, 301, 325, 46);
 		
-		Label lblBannedCities = new Label(composite_3, SWT.NONE);
+		Label lblBannedCities = new Label(compositeP4, SWT.NONE);
 		lblBannedCities.setBounds(10, 199, 98, 15);
 		lblBannedCities.setText("Banned Cities:");
 		
-		Label lblBannedCountries = new Label(composite_3, SWT.NONE);
+		Label lblBannedCountries = new Label(compositeP4, SWT.NONE);
 		lblBannedCountries.setBounds(10, 280, 112, 15);
 		lblBannedCountries.setText("Banned Countries:");
 		
 		TabItem tbtmAdvanced_1 = new TabItem(tabFolder, SWT.NONE);
 		tbtmAdvanced_1.setText("Advanced");
 		
-		Composite composite_4 = new Composite(tabFolder, SWT.NONE);
-		tbtmAdvanced_1.setControl(composite_4);
+		compositeP5 = new Composite(tabFolder, SWT.NONE);
+		tbtmAdvanced_1.setControl(compositeP5);
 		
-		btnDrivewireMode = new Button(composite_4, SWT.CHECK);
+		btnDrivewireMode = new Button(compositeP5, SWT.CHECK);
 		btnDrivewireMode.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -822,18 +911,18 @@ public class InstanceConfigWin extends Dialog {
 		btnDrivewireMode.setBounds(21, 129, 119, 16);
 		btnDrivewireMode.setText("DriveWire 3 mode");
 		
-		textRateOverride = new Text(composite_4, SWT.BORDER);
+		textRateOverride = new Text(compositeP5, SWT.BORDER);
 		textRateOverride.setBounds(126, 20, 97, 21);
 		
-		Label lblBaudRateOverride = new Label(composite_4, SWT.NONE);
+		Label lblBaudRateOverride = new Label(compositeP5, SWT.NONE);
 		lblBaudRateOverride.setBounds(21, 23, 105, 15);
 		lblBaudRateOverride.setText("Baud rate override:");
 		
-		btnOptimeSendsDow = new Button(composite_4, SWT.CHECK);
+		btnOptimeSendsDow = new Button(compositeP5, SWT.CHECK);
 		btnOptimeSendsDow.setBounds(21, 165, 199, 16);
 		btnOptimeSendsDow.setText("OP_TIME sends DOW");
 		
-		btnLogOpcodes = new Button(composite_4, SWT.CHECK);
+		btnLogOpcodes = new Button(compositeP5, SWT.CHECK);
 		btnLogOpcodes.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -842,26 +931,26 @@ public class InstanceConfigWin extends Dialog {
 		btnLogOpcodes.setBounds(21, 199, 119, 16);
 		btnLogOpcodes.setText("Log opcodes");
 		
-		btnLogProtocolDevice = new Button(composite_4, SWT.CHECK);
+		btnLogProtocolDevice = new Button(compositeP5, SWT.CHECK);
 		btnLogProtocolDevice.setBounds(21, 247, 186, 16);
 		btnLogProtocolDevice.setText("Log protocol device bytes");
 		
-		btnEvenOppoll = new Button(composite_4, SWT.CHECK);
+		btnEvenOppoll = new Button(compositeP5, SWT.CHECK);
 		btnEvenOppoll.setBounds(47, 221, 105, 16);
 		btnEvenOppoll.setText("Even OP_POLL");
 		
-		btnLogVirtualDevice = new Button(composite_4, SWT.CHECK);
+		btnLogVirtualDevice = new Button(compositeP5, SWT.CHECK);
 		btnLogVirtualDevice.setBounds(21, 269, 157, 16);
 		btnLogVirtualDevice.setText("Log virtual port bytes");
 		
-		btnLogMidiDevice = new Button(composite_4, SWT.CHECK);
+		btnLogMidiDevice = new Button(compositeP5, SWT.CHECK);
 		btnLogMidiDevice.setBounds(21, 291, 157, 16);
 		btnLogMidiDevice.setText("Log MIDI device bytes");
 		
-		textDefaultDiskSet = new Text(composite_4, SWT.BORDER);
+		textDefaultDiskSet = new Text(compositeP5, SWT.BORDER);
 		textDefaultDiskSet.setBounds(126, 54, 97, 21);
 		
-		Label lblDefaultDiskset = new Label(composite_4, SWT.NONE);
+		Label lblDefaultDiskset = new Label(compositeP5, SWT.NONE);
 		lblDefaultDiskset.setAlignment(SWT.RIGHT);
 		lblDefaultDiskset.setBounds(21, 57, 99, 15);
 		lblDefaultDiskset.setText("Default diskset:");

@@ -1,5 +1,6 @@
 package com.groupunix.drivewireui;
 
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -8,12 +9,15 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
+
 import com.swtdesigner.SWTResourceManager;
 
 public class ErrorWin extends Dialog {
 
 	protected Object result;
-	protected Shell shlAnErrorHas;
+	protected static Shell shlAnErrorHas;
 	private Text txtDetail;
 	private Text txtSummary;
 
@@ -40,6 +44,7 @@ public class ErrorWin extends Dialog {
 	 */
 	public Object open() {
 		createContents();
+		applyFont();
 		shlAnErrorHas.open();
 		shlAnErrorHas.layout();
 		Display display = getParent().getDisplay();
@@ -51,6 +56,22 @@ public class ErrorWin extends Dialog {
 		return result;
 	}
 
+	
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shlAnErrorHas.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlAnErrorHas.getDisplay(), f));
+		}
+		
+	}
+	
+	
 	/**
 	 * Create contents of the dialog.
 	 */

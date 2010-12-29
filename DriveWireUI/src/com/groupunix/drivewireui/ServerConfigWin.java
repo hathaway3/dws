@@ -7,8 +7,11 @@ import java.util.HashMap;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
@@ -20,7 +23,7 @@ import org.eclipse.swt.widgets.Text;
 public class ServerConfigWin extends Dialog {
 
 	protected Object result;
-	protected Shell shlServerConfiguration;
+	protected static Shell shlServerConfiguration;
 	
 	
 	private HashMap<String,String> values = new HashMap<String,String>();
@@ -35,6 +38,11 @@ public class ServerConfigWin extends Dialog {
 	private Text textUIPort;
 	private Text textLazyWrite;
 	private Text textLocalDiskDir;
+	
+	private static Group grpLogging;
+	private static Group grpMiscellaneous;
+	private static Group grpUserInterfaceSupport;
+	
 	
 	
 	/**
@@ -55,7 +63,7 @@ public class ServerConfigWin extends Dialog {
 	 */
 	public Object open() throws DWUIOperationFailedException, IOException {
 		createContents();
-				
+		applyFont();		
 		loadSettings();
 		
 		shlServerConfiguration.open();
@@ -69,6 +77,47 @@ public class ServerConfigWin extends Dialog {
 		return result;
 	}
 
+	
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shlServerConfiguration.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlServerConfiguration.getDisplay(), f));
+			
+		}
+	
+		controls = grpMiscellaneous.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlServerConfiguration.getDisplay(), f));
+			
+		}
+		
+		controls = grpUserInterfaceSupport.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlServerConfiguration.getDisplay(), f));
+			
+		}
+		
+		controls = grpLogging.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlServerConfiguration.getDisplay(), f));
+			
+		}
+		
+	}
+	
+	
 	private void loadSettings() throws DWUIOperationFailedException, IOException 
 	{
 		ArrayList<String> settings = new ArrayList<String>();
@@ -247,7 +296,7 @@ public class ServerConfigWin extends Dialog {
 		shlServerConfiguration.setText("Server Configuration");
 		shlServerConfiguration.setLayout(null);
 		
-		Group grpLogging = new Group(shlServerConfiguration, SWT.NONE);
+		grpLogging = new Group(shlServerConfiguration, SWT.NONE);
 		grpLogging.setText(" Logging ");
 		grpLogging.setBounds(15, 21, 339, 180);
 		
@@ -308,7 +357,7 @@ public class ServerConfigWin extends Dialog {
 		textLogFormat = new Text(grpLogging, SWT.BORDER);
 		textLogFormat.setBounds(81, 138, 238, 21);
 		
-		Group grpUserInterfaceSupport = new Group(shlServerConfiguration, SWT.NONE);
+		grpUserInterfaceSupport = new Group(shlServerConfiguration, SWT.NONE);
 		grpUserInterfaceSupport.setText(" User Interface Support");
 		grpUserInterfaceSupport.setBounds(15, 218, 339, 67);
 		
@@ -324,22 +373,22 @@ public class ServerConfigWin extends Dialog {
 		lblListenOnTcp.setBounds(126, 31, 129, 15);
 		lblListenOnTcp.setText("Listen on TCP port:");
 		
-		Group grpMiscellanous = new Group(shlServerConfiguration, SWT.NONE);
-		grpMiscellanous.setText(" Disk Settings ");
-		grpMiscellanous.setBounds(15, 305, 339, 112);
+		grpMiscellaneous = new Group(shlServerConfiguration, SWT.NONE);
+		grpMiscellaneous.setText(" Disk Settings ");
+		grpMiscellaneous.setBounds(15, 305, 339, 112);
 		
-		Label lblDiskSyncLazy = new Label(grpMiscellanous, SWT.NONE);
+		Label lblDiskSyncLazy = new Label(grpMiscellaneous, SWT.NONE);
 		lblDiskSyncLazy.setAlignment(SWT.RIGHT);
 		lblDiskSyncLazy.setBounds(10, 33, 187, 15);
 		lblDiskSyncLazy.setText("Disk sync lazy write interval (ms):");
 		
-		textLazyWrite = new Text(grpMiscellanous, SWT.BORDER);
+		textLazyWrite = new Text(grpMiscellaneous, SWT.BORDER);
 		textLazyWrite.setBounds(203, 30, 65, 21);
 		
-		textLocalDiskDir = new Text(grpMiscellanous, SWT.BORDER);
+		textLocalDiskDir = new Text(grpMiscellaneous, SWT.BORDER);
 		textLocalDiskDir.setBounds(25, 73, 289, 21);
 		
-		Label lblLocalDiskDirectory = new Label(grpMiscellanous, SWT.NONE);
+		Label lblLocalDiskDirectory = new Label(grpMiscellaneous, SWT.NONE);
 		lblLocalDiskDirectory.setBounds(25, 54, 155, 15);
 		lblLocalDiskDirectory.setText("Local disk directory:");
 		

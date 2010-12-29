@@ -18,6 +18,7 @@ import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
@@ -64,6 +65,10 @@ public class MainWin {
 	public static final String default_LogFont = "Lucida Console";
 	public static final int default_LogFontSize = 9;
 	public static final int default_LogFontStyle = 0;
+	
+	public static final String default_DialogFont = "Segoe UI";
+	public static final int default_DialogFontSize = 9;
+	public static final int default_DialogFontStyle = 0;
 	
 	public static final int default_TCPTimeout = 15000;
 	
@@ -121,6 +126,9 @@ public class MainWin {
 	private static Button btnApply;
 	private static Button buttonFile;
 	
+	private static SashForm sashForm;
+	private static SashForm sashForm_1;
+	private static Composite composite;
 	
 	
 	public static void main(String[] args) 
@@ -192,6 +200,8 @@ public class MainWin {
 		
 		createContents();
 		
+		applyFont();
+		
 		shell.open();
 		shell.layout();
 
@@ -229,6 +239,20 @@ public class MainWin {
 				display.sleep();
 			}
 		}
+	}
+
+	private static void applyFont() 
+	{
+		FontData f = new FontData(config.getString("DialogFont",default_DialogFont), config.getInt("DialogFontSize", default_DialogFontSize), config.getInt("DialogFontStyle", default_DialogFontStyle) );
+		
+		
+		Control[] controls = MainWin.composite.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(display, f));
+		}
+		
 	}
 
 	private static void updateTitlebar() 
@@ -910,12 +934,12 @@ public class MainWin {
 		tltmShowServer.setImage(SWTResourceManager.getImage(MainWin.class, "/javax/swing/plaf/metal/icons/ocean/computer.gif"));
 		tltmShowServer.setText("Server Status");
 		
-		SashForm sashForm = new SashForm(shell, SWT.SMOOTH | SWT.VERTICAL);
+		sashForm = new SashForm(shell, SWT.SMOOTH | SWT.VERTICAL);
 		sashForm.setLayoutData(BorderLayout.CENTER);
 		
 		
 		
-		SashForm sashForm_1 = new SashForm(sashForm, SWT.SMOOTH);
+		sashForm_1 = new SashForm(sashForm, SWT.SMOOTH);
 		
 		table = new Table(sashForm_1, SWT.BORDER | SWT.FULL_SELECTION);
 		table.addSelectionListener(new SelectionAdapter() {
@@ -937,7 +961,7 @@ public class MainWin {
 		tblclmnUri.setWidth(202);
 		tblclmnUri.setText("URI");
 		
-		Composite composite = new Composite(sashForm_1, SWT.BORDER);
+		composite = new Composite(sashForm_1, SWT.BORDER);
 		composite.setLayout(null);
 		
 		textDiskURI = new Combo(composite, SWT.BORDER);
@@ -1737,5 +1761,15 @@ public class MainWin {
 		MainWin.instance = inst;
 		config.setProperty("LastInstance", inst);
 		updateTitlebar();
+	}
+
+	public static void setDialogFont(FontData newFont) 
+	{
+		config.setProperty("DialogFont", newFont.getName());
+        config.setProperty("DialogFontSize", newFont.getHeight());
+        config.setProperty("DialogFontStyle", newFont.getStyle());
+        
+        applyFont();
+	
 	}
 }
