@@ -320,7 +320,7 @@ public class InstanceConfigWin extends Dialog {
 		
 		// advanced page
 		
-		setTextValue("RateOverrride", this.textRateOverride);
+		setTextValue("RateOverride", this.textRateOverride);
 		setTextValue("DefaultDiskSet", this.textDefaultDiskSet);
 		
 		setBooleanValue("DW3Only", this.btnDrivewireMode, false);
