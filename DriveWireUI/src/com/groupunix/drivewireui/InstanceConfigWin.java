@@ -350,7 +350,14 @@ public class InstanceConfigWin extends Dialog {
 	{
 		if (values.get(key) != null)
 		{
-			combo.select(combo.indexOf(values.get(key)));
+			if (combo.indexOf(values.get(key)) > -1)
+			{
+				combo.select(combo.indexOf(values.get(key)));
+			}
+			else
+			{
+				combo.setText(values.get(key));
+			}
 		}
 		else
 		{
