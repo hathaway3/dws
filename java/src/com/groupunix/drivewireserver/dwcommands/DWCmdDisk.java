@@ -14,6 +14,10 @@ public class DWCmdDisk implements DWCommand {
 		commands.addcommand(new DWCmdDiskWrite(handlerno));
 		commands.addcommand(new DWCmdDiskCreate(handlerno));
 		commands.addcommand(new DWCmdDiskWP(handlerno));
+		commands.addcommand(new DWCmdDiskSync(handlerno));
+		commands.addcommand(new DWCmdDiskExpand(handlerno));
+		commands.addcommand(new DWCmdDiskOffset(handlerno));
+		commands.addcommand(new DWCmdDiskLimit(handlerno));
 		commands.addcommand(new DWCmdDiskSet(handlerno));
 		commands.addcommand(new DWCmdDiskDump(handlerno));
 	}

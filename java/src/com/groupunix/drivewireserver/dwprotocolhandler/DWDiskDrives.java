@@ -495,5 +495,42 @@ public class DWDiskDrives
 		return this.diskDrives[driveno].isExpand();
 		
 	}
+
+
+	public void setSync(int driveno, boolean b) throws DWDriveNotLoadedException 
+	{
+		if (!diskLoaded(driveno))
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);	
+
+		this.diskDrives[driveno].setSync(b);
+	}
+
+
+	public void setExpand(int driveno, boolean b) throws DWDriveNotLoadedException 
+	{
+		if (!diskLoaded(driveno))
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);	
+
+		this.diskDrives[driveno].setExpand(b);	
+	}
+
+
+	public void setOffset(int driveno, int offset) throws DWDriveNotLoadedException 
+	{
+		if (!diskLoaded(driveno))
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);	
+
+		this.diskDrives[driveno].setOffset(offset);	
+		
+	}
+
+
+	public void setLimit(int driveno, int limit) throws DWDriveNotLoadedException 
+	{
+		if (!diskLoaded(driveno))
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);	
+
+		this.diskDrives[driveno].setSizelimit(limit);
+	}
 	
 }

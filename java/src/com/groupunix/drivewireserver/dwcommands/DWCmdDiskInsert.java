@@ -31,12 +31,12 @@ public class DWCmdDiskInsert implements DWCommand {
 	{
 		String[] args = cmdline.split(" ");
 		
-		if (args.length != 2)
+		if (args.length < 2)
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk insert requires a drive number and a URI or local path as arguments"));
 		}
 		
-		return(doDiskInsert(args[0],args[1]));
+		return(doDiskInsert(args[0], cmdline.substring(args[0].length()+1)));
 		
 	}
 
@@ -63,7 +63,7 @@ public class DWCmdDiskInsert implements DWCommand {
 			
 			DriveWireServer.getHandler(handlerno).getDiskDrives().LoadDiskFromFile(driveno, path);
 			
-			return(new DWCommandResponse("Disk loaded in drive " + driveno));
+			return(new DWCommandResponse("Disk inserted in drive " + driveno + "."));
 
 		}
 		catch (NumberFormatException e)

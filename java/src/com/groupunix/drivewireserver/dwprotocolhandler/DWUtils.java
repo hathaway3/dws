@@ -470,5 +470,27 @@ public class DWUtils
 		
 		return txt;
 	}
+
+	public static boolean isStringFalse(String tf) 
+	{
+		if (tf.equalsIgnoreCase("false"))
+			return true;
+		
+		if (tf.equalsIgnoreCase("off"))
+			return true;
+		
+		return false;
+	}
+	
+	public static boolean isStringTrue(String tf) 
+	{
+		if (tf.equalsIgnoreCase("true"))
+			return true;
+		
+		if (tf.equalsIgnoreCase("on"))
+			return true;
+		
+		return false;
+	}
 	
 }

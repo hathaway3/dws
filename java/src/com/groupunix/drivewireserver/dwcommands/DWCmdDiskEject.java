@@ -40,7 +40,7 @@ public class DWCmdDiskEject implements DWCommand
 	
 			DriveWireServer.getHandler(handlerno).getDiskDrives().EjectDisk(driveno);
 		
-			return(new DWCommandResponse("disk ejected from drive " + driveno));
+			return(new DWCommandResponse("Disk ejected from drive " + driveno + "."));
 			
 		}
 		catch (NumberFormatException e)

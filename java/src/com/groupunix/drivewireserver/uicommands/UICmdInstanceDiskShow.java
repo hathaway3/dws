@@ -1,9 +1,5 @@
 package com.groupunix.drivewireserver.uicommands;
 
-import java.util.Iterator;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -27,7 +23,6 @@ public class UICmdInstanceDiskShow implements DWCommand {
 		return command;
 	}
 
-	@SuppressWarnings("unchecked")
 	public DWCommandResponse parse(String cmdline)
 	{
 		String res = new String();
@@ -54,6 +49,7 @@ public class UICmdInstanceDiskShow implements DWCommand {
 				
 				if (DriveWireServer.getHandler(instance).getDiskDrives().diskLoaded(driveno))
 				{
+					res += "loaded: true\n"; 
 					res += "path: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getFilePath() + "\n";
 					res += "sizelimit: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getSizelimit() + "\n";
 					res += "offset: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getOffset() + "\n";
@@ -76,7 +72,7 @@ public class UICmdInstanceDiskShow implements DWCommand {
 				}
 				else
 				{
-					return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,"There is no disk loaded in drive " + driveno));
+					res += "loaded: false\n";
 				}
 			}
 			catch (NumberFormatException e)
