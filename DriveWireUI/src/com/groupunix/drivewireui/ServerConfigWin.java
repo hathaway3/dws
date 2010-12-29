@@ -112,8 +112,11 @@ public class ServerConfigWin extends Dialog {
 
 	private void addIfChanged(HashMap<String, String> map, String key, String value) 
 	{
-		if (!values.get(key).equals(value))
+		if ((!values.containsKey(key)) || (!values.get(key).equals(value)))
+		{ 
 			map.put(key, value);
+		}
+		
 	}
 
 	private boolean validateValues() 
@@ -140,17 +143,99 @@ public class ServerConfigWin extends Dialog {
 
 	private void applySettings() 
 	{
-		this.btnLogToConsole.setSelection(UIUtils.sTob(values.get("LogToConsole")));
-		this.btnLogToFile.setSelection(UIUtils.sTob(values.get("LogToFile")));
-		this.btnUIEnabled.setSelection(UIUtils.sTob(values.get("UIEnabled")));
+		// apply settings, considering defaults
 		
-		this.textLogFile.setText(values.get("LogFile"));
-		this.textLogFormat.setText(values.get("LogFormat"));
-		this.textUIPort.setText(values.get("UIPort"));
-		this.textLazyWrite.setText(values.get("DiskLazyWriteInterval"));
-		this.textLocalDiskDir.setText(values.get("LocalDiskDir"));
+		if (values.containsKey("LogToConsole"))
+		{
+			this.btnLogToConsole.setSelection(UIUtils.sTob(values.get("LogToConsole")));
+		}
+		else
+		{
+			this.btnLogToConsole.setSelection(true);
+		}
 		
-		this.comboLogLevel.select(this.comboLogLevel.indexOf(values.get("LogLevel")));
+		
+		if (values.containsKey("LogToFile"))
+		{
+			this.btnLogToFile.setSelection(UIUtils.sTob(values.get("LogToFile")));
+		}
+		else
+		{
+			this.btnLogToFile.setSelection(false);
+		}
+		
+		
+		if (values.containsKey("UIEnabled"))
+		{
+			this.btnUIEnabled.setSelection(UIUtils.sTob(values.get("UIEnabled")));
+		}
+		else
+		{
+			this.btnUIEnabled.setSelection(false);
+		}
+		
+		
+		if (values.containsKey("LogFile"))
+		{
+			this.textLogFile.setText(values.get("LogFile"));
+		}
+		else
+		{
+			this.textLogFile.setText("");
+		}
+	
+		
+		if (values.containsKey("LogFormat"))
+		{
+			this.textLogFormat.setText(values.get("LogFormat"));
+		}
+		else
+		{
+			this.textLogFormat.setText("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
+		}
+		
+		
+		
+		if (values.containsKey("UIPort"))
+		{
+			this.textUIPort.setText(values.get("UIPort"));
+		}
+		else
+		{
+			this.textUIPort.setText("");
+		}
+		
+		
+		if (values.containsKey("DiskLazyWriteInterval"))
+		{
+			this.textLazyWrite.setText(values.get("DiskLazyWriteInterval"));
+		}
+		else
+		{
+			this.textLazyWrite.setText("15000");
+		}
+		
+		
+		
+		if (values.containsKey("LocalDiskDir"))
+		{
+			this.textLocalDiskDir.setText(values.get("LocalDiskDir"));
+		}
+		else
+		{
+			this.textLocalDiskDir.setText("");
+		}
+		
+		
+		if (values.containsKey("LogLevel"))
+		{
+			this.comboLogLevel.select(this.comboLogLevel.indexOf(values.get("LogLevel")));
+		}
+		else
+		{
+			this.comboLogLevel.select(this.comboLogLevel.indexOf("WARN"));
+		
+		}
 	}
 
 	/**

@@ -100,6 +100,10 @@ public class UIUtils {
 			{
 				throw new DWUIOperationFailedException("Null result from server");
 			}
+			else if (res.get(0).startsWith("FAIL -36"))
+			{
+				// don't care
+			}
 			else if (res.get(0).startsWith("FAIL"))
 			{
 				throw new DWUIOperationFailedException(res.get(0));
