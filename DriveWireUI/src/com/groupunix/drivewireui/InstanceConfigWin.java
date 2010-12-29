@@ -173,6 +173,7 @@ public class InstanceConfigWin extends Dialog {
 		}
 		catch (DWUIOperationFailedException e1) 
 		{
+			
 			MainWin.showError("Error loading data", e1.getMessage(), UIUtils.getStackTrace(e1));
 		}
 		
