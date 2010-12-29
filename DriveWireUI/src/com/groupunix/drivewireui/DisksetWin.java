@@ -1,6 +1,8 @@
 package com.groupunix.drivewireui;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Matcher;
@@ -11,6 +13,9 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Dialog;
@@ -21,6 +26,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Canvas;
 
 public class DisksetWin extends Dialog {
 
@@ -28,11 +34,11 @@ public class DisksetWin extends Dialog {
 	protected Shell shlDisksetEditor;
 	private Table table;
 	private Combo comboDiskset;
-	private Text textImageURL;
 	private DiskDef[] disks;
 	private Text textDescription;
 	private Button btnSaveChanges;
 	private Button btnHdbdosMode;
+	private Text text;
 	
 	
 	
@@ -57,48 +63,19 @@ public class DisksetWin extends Dialog {
 		createContents();
 		
 		btnSaveChanges = new Button(shlDisksetEditor, SWT.CHECK);
-		btnSaveChanges.setBounds(350, 79, 128, 16);
-		btnSaveChanges.setText("Save disk changes");
+		btnSaveChanges.setBounds(357, 243, 204, 16);
+		btnSaveChanges.setText("Save disk changes during use");
 		
 		btnHdbdosMode = new Button(shlDisksetEditor, SWT.CHECK);
-		btnHdbdosMode.setBounds(350, 101, 215, 16);
+		btnHdbdosMode.setBounds(357, 265, 215, 16);
 		btnHdbdosMode.setText("HDBDOS sector -> drive translation");
 		
 		Button btnOk = new Button(shlDisksetEditor, SWT.NONE);
-		btnOk.setBounds(237, 362, 97, 25);
+		btnOk.setBounds(237, 431, 97, 25);
 		btnOk.setText("Save Diskset");
 		
-		textImageURL = new Text(shlDisksetEditor, SWT.BORDER);
-		textImageURL.setBounds(105, 99, 229, 21);
-		
-		Label lblImage = new Label(shlDisksetEditor, SWT.NONE);
-		lblImage.setAlignment(SWT.RIGHT);
-		lblImage.setBounds(32, 102, 67, 15);
-		lblImage.setText("Image:");
-		
-		Button btnEdit = new Button(shlDisksetEditor, SWT.NONE);
-		btnEdit.setBounds(10, 303, 75, 25);
-		btnEdit.setText("Edit...");
-		
-		Button btnAdd = new Button(shlDisksetEditor, SWT.NONE);
-		btnAdd.setBounds(91, 303, 75, 25);
-		btnAdd.setText("Add...");
-		
-		Button btnRemove = new Button(shlDisksetEditor, SWT.NONE);
-		btnRemove.setBounds(171, 303, 75, 25);
-		btnRemove.setText("Remove");
-		
-		Button btnNew = new Button(shlDisksetEditor, SWT.NONE);
-		btnNew.setBounds(488, 18, 106, 25);
-		btnNew.setText("New Diskset...");
-		
 		textDescription = new Text(shlDisksetEditor, SWT.BORDER);
-		textDescription.setBounds(105, 75, 229, 21);
-		
-		Label lblDescription = new Label(shlDisksetEditor, SWT.NONE);
-		lblDescription.setAlignment(SWT.RIGHT);
-		lblDescription.setBounds(32, 78, 67, 15);
-		lblDescription.setText("Description:");
+		textDescription.setBounds(266, 20, 295, 21);
 		
 		Button btnCancel = new Button(shlDisksetEditor, SWT.NONE);
 		btnCancel.addSelectionListener(new SelectionAdapter() {
@@ -107,7 +84,7 @@ public class DisksetWin extends Dialog {
 				shlDisksetEditor.close();
 			}
 		});
-		btnCancel.setBounds(519, 362, 75, 25);
+		btnCancel.setBounds(519, 431, 75, 25);
 		btnCancel.setText("Close");
 		
 		
@@ -130,10 +107,20 @@ public class DisksetWin extends Dialog {
 		loadDiskSets(comboDiskset);
 		comboDiskset.select(0);
 		
-		Label lblWorkInProgress = new Label(shlDisksetEditor, SWT.NONE);
-		lblWorkInProgress.setBounds(136, 334, 342, 15);
-		lblWorkInProgress.setText("WORK IN PROGRESS, THIS FORM IS NOT FUNCTIONAL YET");
+		text = new Text(shlDisksetEditor, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+		text.setBounds(266, 51, 295, 186);
+		
+		Canvas canvasCover = new Canvas(shlDisksetEditor, SWT.NONE);
+		canvasCover.setBounds(10, 51, 250, 250);
 
+		 URL url = new URL("http://www.old-computers.com/museum/photos/tandy_coco1_1.jpg");
+	     InputStream stream = url.openStream();
+	     ImageLoader loader = new ImageLoader();
+	     ImageData[] imageDataArray = loader.load(stream);
+	     stream.close();
+	     
+	     canvasCover.setBackgroundImage(new Image(shlDisksetEditor.getDisplay(), imageDataArray[0]));
+		
 		shlDisksetEditor.open();
 		shlDisksetEditor.layout();
 		Display display = getParent().getDisplay();
@@ -168,12 +155,12 @@ public class DisksetWin extends Dialog {
 	 */
 	private void createContents() {
 		shlDisksetEditor = new Shell(getParent(), getStyle());
-		shlDisksetEditor.setSize(613, 424);
+		shlDisksetEditor.setSize(613, 494);
 		shlDisksetEditor.setText("Diskset Editor");
 		shlDisksetEditor.setLayout(null);
 		
 		table = new Table(shlDisksetEditor, SWT.BORDER | SWT.FULL_SELECTION);
-		table.setBounds(10, 134, 584, 163);
+		table.setBounds(10, 321, 584, 104);
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
 		
@@ -207,7 +194,7 @@ public class DisksetWin extends Dialog {
 		
 		comboDiskset = new Combo(shlDisksetEditor, SWT.READ_ONLY);
 		
-		comboDiskset.setBounds(10, 20, 192, 23);
+		comboDiskset.setBounds(10, 20, 250, 23);
 
 	}
 
@@ -218,7 +205,7 @@ public class DisksetWin extends Dialog {
 		disks = new DiskDef[256];
 		
 		this.textDescription.setText("");
-		this.textImageURL.setText("");
+		
 		this.btnHdbdosMode.setSelection(false);
 		this.btnSaveChanges.setSelection(false);
 		
@@ -270,9 +257,7 @@ public class DisksetWin extends Dialog {
 					{
 						if (m.group(1).equals("Description"))
 							this.textDescription.setText(m.group(2));
-						
-						if (m.group(1).equals("ImageURL"))
-							this.textImageURL.setText(m.group(2));
+				
 						
 						if (m.group(1).equals("SaveChanges"))
 							this.btnSaveChanges.setSelection(UIUtils.sTob(m.group(2)));

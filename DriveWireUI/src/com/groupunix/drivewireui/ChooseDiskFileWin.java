@@ -31,19 +31,15 @@ public class ChooseDiskFileWin extends Dialog {
 	private Combo cmbDisk;
 	private Combo combo;
 	private ArrayList<String> disks;
+	private int disk;
 	
-	/**
-	 * Create the dialog.
-	 * @param parent
-	 * @param style
-	 * @param pre 
-	 * @param pre 
-	 */
-	public ChooseDiskFileWin(Shell parent, int style, String buttxt, String pre) 
+
+	public ChooseDiskFileWin(Shell parent, int style, int disk, String buttxt, String pre) 
 	{
 		super(parent, style);
 		this.pre = pre;
 		this.buttxt = buttxt;
+		this.disk = disk;
 		
 		setText("SWT Dialog");
 	}
@@ -60,7 +56,7 @@ public class ChooseDiskFileWin extends Dialog {
 		loadFileHistory();
 		
 		loadDisks(cmbDisk);
-		cmbDisk.select(0);
+
 		
 		shlChooseDiskNumber.open();
 		shlChooseDiskNumber.layout();
@@ -118,29 +114,21 @@ public class ChooseDiskFileWin extends Dialog {
 	 */
 	private void createContents() {
 		shlChooseDiskNumber = new Shell(getParent(), getStyle());
-		shlChooseDiskNumber.setSize(370, 181);
-		shlChooseDiskNumber.setText("Choose disk number and file...");
-		
-		final Spinner spinner = new Spinner(shlChooseDiskNumber, SWT.BORDER);
-		spinner.setMaximum(255);
-		spinner.setBounds(93, 22, 47, 22);
-		
-		Label lblDiskNumber = new Label(shlChooseDiskNumber, SWT.RIGHT);
-		lblDiskNumber.setBounds(10, 25, 77, 15);
-		lblDiskNumber.setText("Disk number:");
+		shlChooseDiskNumber.setSize(370, 167);
+		shlChooseDiskNumber.setText("Choose file...");
 		
 		
 		
 		Label lblFileType = new Label(shlChooseDiskNumber, SWT.RIGHT);
-		lblFileType.setBounds(10, 53, 77, 15);
+		lblFileType.setBounds(10, 24, 77, 15);
 		lblFileType.setText("Path source:");
 		
 		txtDisk = new Combo(shlChooseDiskNumber, SWT.BORDER);
-		txtDisk.setBounds(93, 79, 225, 21);
+		txtDisk.setBounds(93, 52, 225, 21);
 		
 		Label lblFileName = new Label(shlChooseDiskNumber, SWT.NONE);
 		lblFileName.setAlignment(SWT.RIGHT);
-		lblFileName.setBounds(20, 82, 67, 15);
+		lblFileName.setBounds(20, 55, 67, 15);
 		lblFileName.setText("File path:");
 		
 		butDisk = new Button(shlChooseDiskNumber, SWT.NONE);
@@ -163,7 +151,7 @@ public class ChooseDiskFileWin extends Dialog {
 			
 			}
 		});
-		butDisk.setBounds(319, 77, 28, 25);
+		butDisk.setBounds(319, 50, 28, 25);
 		butDisk.setText("...");
 		
 		btnOk = new Button(shlChooseDiskNumber, SWT.NONE);
@@ -173,19 +161,19 @@ public class ChooseDiskFileWin extends Dialog {
 			{
 				if (combo.getSelectionIndex() == 0)
 				{
-					MainWin.sendCommand(pre + " " + spinner.getText() + " " + txtDisk.getText());
+					MainWin.sendCommand(pre + " " + disk + " " + txtDisk.getText());
 					//add to history
 					MainWin.addDiskFileToHistory(txtDisk.getText());
 				}
 				else if (combo.getSelectionIndex() == 1)
 				{
-					MainWin.sendCommand(pre + " " + spinner.getText() + " " + disks.get(cmbDisk.getSelectionIndex()));
+					MainWin.sendCommand(pre + " " + disk + " " + disks.get(cmbDisk.getSelectionIndex()));
 				}
 				
 				shlChooseDiskNumber.close();
 			}
 		});
-		btnOk.setBounds(141, 118, 75, 25);
+		btnOk.setBounds(141, 99, 75, 25);
 		btnOk.setText(this.buttxt);
 		
 		Button btnCancel = new Button(shlChooseDiskNumber, SWT.NONE);
@@ -196,12 +184,12 @@ public class ChooseDiskFileWin extends Dialog {
 				shlChooseDiskNumber.close();
 			}
 		});
-		btnCancel.setBounds(272, 118, 75, 25);
+		btnCancel.setBounds(272, 99, 75, 25);
 		btnCancel.setText("Cancel");
 		
 		cmbDisk = new Combo(shlChooseDiskNumber, SWT.NONE);
 		cmbDisk.setVisibleItemCount(15);
-		cmbDisk.setBounds(93, 79, 254, 23);
+		cmbDisk.setBounds(93, 52, 254, 23);
 
 		
 		combo = new Combo(shlChooseDiskNumber, SWT.READ_ONLY);
@@ -223,7 +211,7 @@ public class ChooseDiskFileWin extends Dialog {
 			}
 		});
 		combo.setItems(new String[] {"From local file or URI", "From server disk directory"});
-		combo.setBounds(93, 50, 254, 23);
+		combo.setBounds(93, 21, 254, 23);
 		combo.select(0);
 		
 	}

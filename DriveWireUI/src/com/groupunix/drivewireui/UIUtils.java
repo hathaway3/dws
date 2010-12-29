@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UIUtils {
 
@@ -22,6 +24,34 @@ public class UIUtils {
 		
 		conn.Connect();
 			
+		res = conn.loadArrayList(arg);
+			
+		conn.close();
+			
+		if (res.size() < 1)
+		{
+			throw new DWUIOperationFailedException("Null result from server");
+		}
+		else if (res.get(0).startsWith("FAIL"))
+		{
+			throw new DWUIOperationFailedException(res.get(0));
+		}
+		
+		
+		return(res);
+		
+	}
+	
+	public static ArrayList<String> loadArrayList(int instance, String arg) throws IOException, DWUIOperationFailedException
+	{
+		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
+		
+		ArrayList<String> res = new ArrayList<String>();
+		
+		conn.Connect();
+		
+		conn.attach(instance);
+		
 		res = conn.loadArrayList(arg);
 			
 		conn.close();
@@ -251,6 +281,84 @@ public class UIUtils {
 		
 			conn.close();
 		}
+		
+	}
+
+	public static DiskDef getDiskDef(int instance,int diskno) throws IOException, DWUIOperationFailedException
+	{
+		
+		DiskDef disk = new DiskDef();
+		
+		
+		try 
+		{
+			ArrayList<String> res = UIUtils.loadArrayList(instance, "ui instance disk show " + diskno);
+			
+			
+			for (int i = 0;i<res.size();i++)
+			{
+				Pattern p_item = Pattern.compile("^(.+):\\s(.+)");
+				Matcher m = p_item.matcher(res.get(i));
+			  
+				if (m.find())
+				{
+				
+					if (m.group(1).equals("path"))
+						disk.setPath(m.group(2));
+					
+					if (m.group(1).equals("sizelimit"))
+						disk.setSizelimit(Integer.parseInt(m.group(2)));
+					
+					if (m.group(1).equals("offset"))
+						disk.setOffset(Integer.parseInt(m.group(2)));
+					
+					if (m.group(1).equals("writeprotect"))
+						disk.setWriteprotect(UIUtils.sTob(m.group(2)));
+					
+					if (m.group(1).equals("sync"))
+						disk.setSync(UIUtils.sTob(m.group(2)));
+					
+					if (m.group(1).equals("expand"))
+						disk.setExpand(UIUtils.sTob(m.group(2)));
+					
+					if (m.group(1).equals("fswriteable"))
+						disk.setFswriteable(UIUtils.sTob(m.group(2)));
+					
+					if (m.group(1).equals("writeable"))
+						disk.setWriteable(UIUtils.sTob(m.group(2)));
+					
+					if (m.group(1).equals("randomwriteable"))
+						disk.setRandomwriteable(UIUtils.sTob(m.group(2)));
+					
+					if (m.group(1).equals("sectors"))
+						disk.setSectors(Integer.parseInt(m.group(2)));
+					
+					if (m.group(1).equals("dirty"))
+						disk.setDirty(Integer.parseInt(m.group(2)));
+					
+					if (m.group(1).equals("lsn"))
+						disk.setLsn(Integer.parseInt(m.group(2)));
+					
+					if (m.group(1).equals("reads"))
+						disk.setReads(Integer.parseInt(m.group(2)));
+					
+					if (m.group(1).equals("writes"))
+						disk.setWrites(Integer.parseInt(m.group(2)));
+					
+					if (m.group(1).equals("loaded"))
+						disk.setLoaded(UIUtils.sTob(m.group(2)));
+					
+				}
+				
+			}
+		}
+		catch (NumberFormatException e)
+		{
+			throw new DWUIOperationFailedException("Error parsing disk set results: " + e.getMessage());
+		} 
+		
+		
+		return(disk);
 		
 	}
 }

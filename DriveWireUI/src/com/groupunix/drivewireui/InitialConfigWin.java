@@ -382,6 +382,8 @@ public class InitialConfigWin extends Dialog {
 
 			MainWin.sendCommand("ui instance reset protodev");
 			
+			MainWin.refreshDiskTable();
+			
 			shlInitialConfiguration.close();
 			
 		} 
