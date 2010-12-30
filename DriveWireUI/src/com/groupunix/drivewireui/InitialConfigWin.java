@@ -66,7 +66,7 @@ public class InitialConfigWin extends Dialog {
 		this.labelERR.setVisible(false);
 		
 		Link link = new Link(compPage2, SWT.NONE);
-		link.setBounds(10, 150, 366, 31);
+		link.setBounds(10, 150, 406, 31);
 		link.setText("If you have trouble connecting, please <a href=\"http://sourceforge.net/apps/mediawiki/drivewireserver/index.php\">consult the documentation.</a>");
 		
 		this.labelHost.setVisible(false);
@@ -90,7 +90,7 @@ public class InitialConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlInitialConfiguration = new Shell(getParent(), getStyle());
-		shlInitialConfiguration.setSize(452, 409);
+		shlInitialConfiguration.setSize(453, 409);
 		shlInitialConfiguration.setText("Initial Configuration");
 		shlInitialConfiguration.setLayout(null);
 		
@@ -207,27 +207,27 @@ public class InitialConfigWin extends Dialog {
 		textHost.setText("127.0.0.1");
 		
 		Label lblByDefaultThe = new Label(compPage1, SWT.WRAP);
-		lblByDefaultThe.setBounds(10, 194, 406, 83);
+		lblByDefaultThe.setBounds(10, 196, 406, 94);
 		lblByDefaultThe.setText("By default, the server listens for clients on TCP port 6800.  \r\n\r\nYou can change this using the client once we have a connection to the server, or by editing the server's configuration file.\r\n");
 		
 		Label lblWhatTcpPort = new Label(compPage1, SWT.NONE);
 		lblWhatTcpPort.setAlignment(SWT.RIGHT);
-		lblWhatTcpPort.setBounds(10, 286, 239, 18);
+		lblWhatTcpPort.setBounds(10, 296, 239, 18);
 		lblWhatTcpPort.setText("What TCP port does the server use?");
 		
 		textPort = new Text(compPage1, SWT.BORDER);
-		textPort.setBounds(255, 283, 55, 21);
+		textPort.setBounds(255, 293, 55, 21);
 		textPort.setText("6800");
 		
 		compPage2 = new Composite(shlInitialConfiguration, SWT.NO_FOCUS);
-		compPage2.setBounds(10, 10, 386, 314);
+		compPage2.setBounds(10, 10, 426, 314);
 		
 		Label lblOkNowLets = new Label(compPage2, SWT.NONE);
-		lblOkNowLets.setBounds(10, 10, 345, 15);
+		lblOkNowLets.setBounds(10, 10, 406, 15);
 		lblOkNowLets.setText("Ok, now let's make sure we can communicate with the server.");
 		
 		Label lblIfYouHavent = new Label(compPage2, SWT.WRAP);
-		lblIfYouHavent.setBounds(10, 43, 366, 101);
+		lblIfYouHavent.setBounds(10, 43, 406, 101);
 		lblIfYouHavent.setText("If you haven't started the server, please start it now.  \r\n\r\nIf you aren't sure whether the server is running, there is no harm in using the \"Test Connection\" button here to find out.  If the connection is successful, you'll see a green \"OK\" logo and the current server version displayed.");
 		
 		Button btnTestConnection = new Button(compPage2, SWT.NONE);
@@ -287,6 +287,7 @@ public class InitialConfigWin extends Dialog {
 		labelOK.setBounds(27, 239, 64, 54);
 		
 		textConnTest = new Text(compPage2, SWT.READ_ONLY | SWT.WRAP | SWT.CENTER);
+		textConnTest.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 		textConnTest.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		textConnTest.setBounds(97, 250, 203, 54);
 		
@@ -295,7 +296,7 @@ public class InitialConfigWin extends Dialog {
 		labelERR.setBounds(40, 250, 38, 43);
 		
 		compPage3 = new Composite(shlInitialConfiguration, SWT.NONE);
-		compPage3.setBounds(10, 10, 386, 314);
+		compPage3.setBounds(10, 10, 426, 314);
 		
 		Label lblFinallyWeNeed = new Label(compPage3, SWT.WRAP);
 		lblFinallyWeNeed.setBounds(10, 10, 366, 35);
