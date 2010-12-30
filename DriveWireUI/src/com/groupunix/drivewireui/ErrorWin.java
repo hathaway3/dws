@@ -99,6 +99,7 @@ public class ErrorWin extends Dialog {
 		txtDetail.setText(detail);
 		
 		txtSummary = new Text(shlAnErrorHas, SWT.NONE);
+		txtSummary.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 		txtSummary.setEditable(false);
 		txtSummary.setBounds(21, 20, 392, 21);
 		txtSummary.setText(summary);
