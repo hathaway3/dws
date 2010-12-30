@@ -91,8 +91,12 @@ public class SynthProfileWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				MainWin.sendCommand("dw midi synth profile " + profiles.get(combo.getSelectionIndex()).split(" ")[0]);
+				if (combo.getSelectionIndex() > -1)
+				{
+					MainWin.sendCommand("dw midi synth profile " + profiles.get(combo.getSelectionIndex()).split(" ")[0]);
+				}
 				shlChooseASynth.close();
+				
 			}
 		});
 		btnOk.setBounds(71, 63, 75, 25);
