@@ -90,7 +90,7 @@ public class InitialConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlInitialConfiguration = new Shell(getParent(), getStyle());
-		shlInitialConfiguration.setSize(454, 409);
+		shlInitialConfiguration.setSize(453, 409);
 		shlInitialConfiguration.setText("Initial Configuration");
 		shlInitialConfiguration.setLayout(null);
 		
@@ -354,12 +354,12 @@ public class InitialConfigWin extends Dialog {
 		
 		comboCocoModel = new Combo(compPage3, SWT.READ_ONLY);
 		comboCocoModel.setItems(new String[] {"CoCo 1: 38400 bps", "CoCo 2: 57600 bps", "CoCo 3: 115200 bps"});
-		comboCocoModel.setBounds(102, 250, 160, 23);
+		comboCocoModel.setBounds(120, 250, 160, 23);
 		comboCocoModel.select(2);
 		
 		Label lblCocoModel = new Label(compPage3, SWT.NONE);
 		lblCocoModel.setAlignment(SWT.RIGHT);
-		lblCocoModel.setBounds(10, 253, 86, 15);
+		lblCocoModel.setBounds(10, 253, 104, 15);
 		lblCocoModel.setText("CoCo model:");
 
 	}
