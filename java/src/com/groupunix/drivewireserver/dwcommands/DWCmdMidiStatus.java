@@ -50,42 +50,49 @@ public class DWCmdMidiStatus implements DWCommand {
 		
 		text += "\r\nDriveWire MIDI status:\r\n\n";
 
-		text +="Devices:\r\n";
-	
-		MidiDevice device;
-		MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
-	
-		for (int i = 0; i < infos.length; i++) 
+		if (DriveWireServer.getHandler(handlerno).config.getBoolean("UseMIDI",true))
 		{
-			try 
+			text +="Devices:\r\n";
+	
+			MidiDevice device;
+			MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+	
+			for (int i = 0; i < infos.length; i++) 
 			{
-				device = MidiSystem.getMidiDevice(infos[i]);
-				text += "[" + i + "] ";
-				text += device.getDeviceInfo().getName() + " (" + device.getClass().getSimpleName()  + ")\r\n";
-				text += "    " + device.getDeviceInfo().getDescription() + ", ";
-				text += device.getDeviceInfo().getVendor() + " ";
-				text += device.getDeviceInfo().getVersion() + "\r\n";
+				try 
+				{
+					device = MidiSystem.getMidiDevice(infos[i]);
+					text += "[" + i + "] ";
+					text += device.getDeviceInfo().getName() + " (" + device.getClass().getSimpleName()  + ")\r\n";
+					text += "    " + device.getDeviceInfo().getDescription() + ", ";
+					text += device.getDeviceInfo().getVendor() + " ";
+					text += device.getDeviceInfo().getVersion() + "\r\n";
 	        
-			} 
-			catch (MidiUnavailableException e) 
-			{
-				return(new DWCommandResponse(false,DWDefs.RC_MIDI_UNAVAILABLE,e.getMessage()));
-			}
+				} 
+				catch (MidiUnavailableException e) 
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_MIDI_UNAVAILABLE,e.getMessage()));
+				}
 	    
-		}
+			}
 
-		text += "\r\nCurrent MIDI output device: ";
+			text += "\r\nCurrent MIDI output device: ";
         
-		if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiDeviceInfo() == null)
-		{
+			if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiDeviceInfo() == null)
+			{
         	
-			text += "none\r\n";
+				text += "none\r\n";
+			}
+			else
+			{
+				text += DriveWireServer.getHandler(handlerno).getVPorts().getMidiDeviceInfo().getName() + "\r\n";  
+			}
 		}
 		else
 		{
-			text += DriveWireServer.getHandler(handlerno).getVPorts().getMidiDeviceInfo().getName() + "\r\n";  
+			text += "MIDI is disabled.\r\n";
 		}
-		
+			
 		return(new DWCommandResponse(text));
 	}
 	

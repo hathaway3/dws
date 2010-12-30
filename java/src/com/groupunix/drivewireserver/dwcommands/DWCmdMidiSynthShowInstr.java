@@ -43,26 +43,32 @@ public class DWCmdMidiSynthShowInstr implements DWCommand {
 		
 		text = "\r\nInternal synthesizer instrument list:\r\n\n";
 		
-		Instrument[] instruments = DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getLoadedInstruments();
-		
-		if (instruments.length == 0)
+		if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth() != null)
 		{
-			text += "No instruments found, you may need to load a soundbank.\r\n";
-		}
+			Instrument[] instruments = DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getLoadedInstruments();
 		
-		for (int i = 0;i<instruments.length;i++)
-		{
-			text += String.format("%3d:%-15s",i,instruments[i].getName());
-			
-			if ((i % 4) == 0)
+			if (instruments.length == 0)
 			{
-				text += "\r\n";
+				text += "No instruments found, you may need to load a soundbank.\r\n";
 			}
-			
-		}
-		//instruments[i].getDataClass().getSimpleName()
-		text += "\r\n";
 		
+			for (int i = 0;i<instruments.length;i++)
+			{
+				text += String.format("%3d:%-15s",i,instruments[i].getName());
+			
+				if ((i % 4) == 0)
+				{
+					text += "\r\n";
+				}
+			
+			}
+			//	instruments[i].getDataClass().getSimpleName()
+			text += "\r\n";
+		}
+		else
+		{
+			text += "MIDI is disabled.\r\n";
+		}
 		return(new DWCommandResponse(text));
 	}
 

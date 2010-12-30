@@ -57,37 +57,43 @@ public class DWCmdMidiSynthBank implements DWCommand {
 	{
 		Soundbank soundbank = null;
 		
-		File file = new File(path);
-		try 
+		if (DriveWireServer.getHandler(handlerno).config.getBoolean("UseMIDI",true))
 		{
-			soundbank = MidiSystem.getSoundbank(file);
-		} 
-		catch (InvalidMidiDataException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_MIDI_INVALID_DATA,e.getMessage()));
-		} 
-		catch (IOException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
-		}
-		
-		if (DriveWireServer.getHandler(handlerno).getVPorts().isSoundbankSupported(soundbank))
-		{				
-			if (DriveWireServer.getHandler(handlerno).getVPorts().setMidiSoundbank(soundbank, path))
+			File file = new File(path);
+			try 
 			{
-				return(new DWCommandResponse("Soundbank loaded without error"));
+				soundbank = MidiSystem.getSoundbank(file);
+			} 
+			catch (InvalidMidiDataException e) 
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_MIDI_INVALID_DATA,e.getMessage()));
+			} 
+			catch (IOException e) 
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
+			}
+		
+			if (DriveWireServer.getHandler(handlerno).getVPorts().isSoundbankSupported(soundbank))
+			{				
+				if (DriveWireServer.getHandler(handlerno).getVPorts().setMidiSoundbank(soundbank, path))
+				{
+					return(new DWCommandResponse("Soundbank loaded without error"));
+				}
+				else
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_MIDI_SOUNDBANK_FAILED,"Failed to load soundbank"));
+				}
+				
 			}
 			else
 			{
-				return(new DWCommandResponse(false,DWDefs.RC_MIDI_SOUNDBANK_FAILED,"Failed to load soundbank"));
+				return(new DWCommandResponse(false,DWDefs.RC_MIDI_SOUNDBANK_NOT_SUPPORTED,"Soundbank not supported"));
 			}
-			
 		}
 		else
 		{
-			return(new DWCommandResponse(false,DWDefs.RC_MIDI_SOUNDBANK_NOT_SUPPORTED,"Soundbank not supported"));
+			return(new DWCommandResponse(false,DWDefs.RC_MIDI_UNAVAILABLE,"MIDI is disabled."));
 		}
-	
 	}
 	
 

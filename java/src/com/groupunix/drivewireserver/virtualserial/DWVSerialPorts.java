@@ -657,7 +657,10 @@ public class DWVSerialPorts {
 	
 	public MidiDevice.Info getMidiDeviceInfo()
 	{
-		return(this.midiDevice.getDeviceInfo());
+		if (this.midiDevice != null)
+			return(this.midiDevice.getDeviceInfo());
+		
+		return(null);
 	}
 	
 	

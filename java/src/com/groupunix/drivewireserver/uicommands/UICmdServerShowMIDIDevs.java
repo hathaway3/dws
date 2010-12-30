@@ -5,6 +5,7 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
@@ -40,24 +41,32 @@ public class UICmdServerShowMIDIDevs implements DWCommand {
 	{
 		String res = new String();
 	
-		MidiDevice device;
-		MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
-	
-		for (int i = 0; i < infos.length; i++) 
-		{
-			try 
-			{
-				device = MidiSystem.getMidiDevice(infos[i]);
-				res += i + " " + device.getDeviceInfo().getName()+ " (" + device.getClass().getSimpleName() + ")\n";
-				
-			} 
-			catch (MidiUnavailableException e) 
-			{
-				return(new DWCommandResponse(false,DWDefs.RC_MIDI_UNAVAILABLE,"MIDI unavailable during UI device listing"));
-			}
-	    
-		}
+		// hack.. should look at current instance but I just don't care
+		if (DriveWireServer.getHandler(0).config.getBoolean("UseMIDI",true))
+		{	
 		
+			MidiDevice device;
+			MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+	
+			for (int i = 0; i < infos.length; i++) 
+			{
+				try 
+				{
+					device = MidiSystem.getMidiDevice(infos[i]);
+					res += i + " " + device.getDeviceInfo().getName()+ " (" + device.getClass().getSimpleName() + ")\n";
+				
+				} 
+				catch (MidiUnavailableException e) 
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_MIDI_UNAVAILABLE,"MIDI unavailable during UI device listing"));
+				}
+	    
+			}
+		}
+		else
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_MIDI_UNAVAILABLE,"MIDI is disabled."));
+		}
 		
 		return(new DWCommandResponse(res));
 	}
