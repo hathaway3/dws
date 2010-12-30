@@ -468,12 +468,12 @@ public class InstanceConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlInstanceConfiguration = new Shell(getParent(), getStyle());
-		shlInstanceConfiguration.setSize(377, 459);
+		shlInstanceConfiguration.setSize(426, 459);
 		shlInstanceConfiguration.setText("Instance Configuration");
 		shlInstanceConfiguration.setLayout(null);
 		
 		TabFolder tabFolder = new TabFolder(shlInstanceConfiguration, SWT.NONE);
-		tabFolder.setBounds(10, 9, 353, 385);
+		tabFolder.setBounds(10, 9, 400, 385);
 		
 		TabItem tbtmConnection = new TabItem(tabFolder, SWT.NONE);
 		tbtmConnection.setText("Connection");
@@ -482,60 +482,60 @@ public class InstanceConfigWin extends Dialog {
 		tbtmConnection.setControl(compositeP1);
 		
 		textName = new Text(compositeP1, SWT.BORDER);
-		textName.setBounds(110, 27, 182, 21);
+		textName.setBounds(168, 30, 182, 21);
 		
 		Label lblInstanceName = new Label(compositeP1, SWT.NONE);
 		lblInstanceName.setAlignment(SWT.RIGHT);
-		lblInstanceName.setBounds(14, 30, 90, 15);
+		lblInstanceName.setBounds(14, 33, 148, 18);
 		lblInstanceName.setText("Instance name:");
 		
 		comboDevType = new Combo(compositeP1, SWT.READ_ONLY);
 		comboDevType.setItems(new String[] {"serial", "tcp", "tcpclient"});
-		comboDevType.setBounds(110, 104, 91, 23);
+		comboDevType.setBounds(168, 107, 91, 23);
 		comboDevType.select(0);
 		
 		Label lblDeviceType = new Label(compositeP1, SWT.NONE);
 		lblDeviceType.setAlignment(SWT.RIGHT);
-		lblDeviceType.setBounds(24, 107, 80, 15);
+		lblDeviceType.setBounds(24, 110, 138, 20);
 		lblDeviceType.setText("Device type:");
 		
 		Label lblSerialPort = new Label(compositeP1, SWT.NONE);
 		lblSerialPort.setAlignment(SWT.RIGHT);
-		lblSerialPort.setBounds(24, 148, 80, 15);
+		lblSerialPort.setBounds(24, 151, 138, 20);
 		lblSerialPort.setText("Serial device:");
 		
 		textTCPClientHost = new Text(compositeP1, SWT.BORDER);
-		textTCPClientHost.setBounds(110, 227, 182, 21);
+		textTCPClientHost.setBounds(168, 230, 182, 21);
 		
 		textTCPClientPort = new Text(compositeP1, SWT.BORDER);
-		textTCPClientPort.setBounds(110, 254, 76, 21);
+		textTCPClientPort.setBounds(168, 257, 76, 21);
 		
 		Label lblTcpPort = new Label(compositeP1, SWT.NONE);
 		lblTcpPort.setAlignment(SWT.RIGHT);
-		lblTcpPort.setBounds(14, 230, 90, 15);
+		lblTcpPort.setBounds(14, 233, 148, 18);
 		lblTcpPort.setText("TCP client host:");
 		
 		Label lblTcpHost = new Label(compositeP1, SWT.NONE);
 		lblTcpHost.setAlignment(SWT.RIGHT);
-		lblTcpHost.setBounds(14, 257, 90, 15);
+		lblTcpHost.setBounds(14, 260, 148, 18);
 		lblTcpHost.setText("TCP client port:");
 		
 		comboCocoModel = new Combo(compositeP1, SWT.READ_ONLY);
 		comboCocoModel.setItems(new String[] {"1", "2", "3"});
-		comboCocoModel.setBounds(110, 64, 50, 23);
+		comboCocoModel.setBounds(168, 67, 50, 23);
 		comboCocoModel.select(2);
 		
 		Label lblCocoModel = new Label(compositeP1, SWT.NONE);
 		lblCocoModel.setAlignment(SWT.RIGHT);
-		lblCocoModel.setBounds(24, 67, 80, 15);
+		lblCocoModel.setBounds(24, 70, 138, 20);
 		lblCocoModel.setText("CoCo model:");
 		
 		textTCPServerPort = new Text(compositeP1, SWT.BORDER);
-		textTCPServerPort.setBounds(110, 188, 76, 21);
+		textTCPServerPort.setBounds(168, 191, 76, 21);
 		
 		Label lblTcpServerPort = new Label(compositeP1, SWT.NONE);
 		lblTcpServerPort.setAlignment(SWT.RIGHT);
-		lblTcpServerPort.setBounds(16, 191, 88, 15);
+		lblTcpServerPort.setBounds(16, 194, 146, 18);
 		lblTcpServerPort.setText("TCP server port:");
 		
 		btnStartAutomatically = new Button(compositeP1, SWT.CHECK);
@@ -543,7 +543,7 @@ public class InstanceConfigWin extends Dialog {
 		btnStartAutomatically.setText("Start automatically");
 		
 		textSerialPort = new Combo(compositeP1, SWT.BORDER);
-		textSerialPort.setBounds(110, 145, 182, 21);
+		textSerialPort.setBounds(168, 148, 182, 21);
 		
 		TabItem tbtmDevices = new TabItem(tabFolder, SWT.NONE);
 		tbtmDevices.setText("Devices");
@@ -553,15 +553,15 @@ public class InstanceConfigWin extends Dialog {
 		
 		grpPrintingOptions = new Group(compositeP2, SWT.NONE);
 		grpPrintingOptions.setText(" Printing Options ");
-		grpPrintingOptions.setBounds(10, 21, 314, 207);
+		grpPrintingOptions.setBounds(10, 21, 372, 207);
 		
 		Label lblOutputTo = new Label(grpPrintingOptions, SWT.NONE);
-		lblOutputTo.setBounds(20, 38, 55, 15);
+		lblOutputTo.setBounds(10, 35, 111, 21);
 		lblOutputTo.setAlignment(SWT.RIGHT);
 		lblOutputTo.setText("Output to:");
 		
 		textPrinterDir = new Text(grpPrintingOptions, SWT.BORDER);
-		textPrinterDir.setBounds(81, 35, 191, 21);
+		textPrinterDir.setBounds(127, 32, 197, 21);
 		
 		Button button = new Button(grpPrintingOptions, SWT.NONE);
 		button.addSelectionListener(new SelectionAdapter() {
@@ -581,21 +581,21 @@ public class InstanceConfigWin extends Dialog {
 			        }
 			}
 		});
-		button.setBounds(273, 33, 26, 25);
+		button.setBounds(324, 31, 26, 25);
 		button.setText("...");
 		
 		comboPrinterType = new Combo(grpPrintingOptions, SWT.READ_ONLY);
 		comboPrinterType.setItems(new String[] {"FX80", "TEXT"});
-		comboPrinterType.setBounds(81, 62, 102, 23);
+		comboPrinterType.setBounds(127, 62, 102, 23);
 		comboPrinterType.select(0);
 		
 		Label lblPrinter = new Label(grpPrintingOptions, SWT.NONE);
-		lblPrinter.setBounds(8, 65, 67, 15);
+		lblPrinter.setBounds(10, 66, 111, 21);
 		lblPrinter.setAlignment(SWT.RIGHT);
 		lblPrinter.setText("Printer type:");
 		
 		textCharacterFile = new Text(grpPrintingOptions, SWT.BORDER);
-		textCharacterFile.setBounds(81, 100, 191, 21);
+		textCharacterFile.setBounds(127, 97, 197, 21);
 		
 		Button button_1 = new Button(grpPrintingOptions, SWT.NONE);
 		button_1.addSelectionListener(new SelectionAdapter() {
@@ -615,41 +615,41 @@ public class InstanceConfigWin extends Dialog {
 			        }
 			}
 		});
-		button_1.setBounds(273, 98, 26, 25);
+		button_1.setBounds(324, 96, 26, 25);
 		button_1.setText("...");
 		
 		Label lblCharacters = new Label(grpPrintingOptions, SWT.NONE);
-		lblCharacters.setBounds(8, 103, 67, 15);
+		lblCharacters.setBounds(10, 100, 111, 18);
 		lblCharacters.setAlignment(SWT.RIGHT);
 		lblCharacters.setText("Characters:");
 		
 		textPrinterCol = new Text(grpPrintingOptions, SWT.BORDER);
-		textPrinterCol.setBounds(81, 138, 76, 21);
+		textPrinterCol.setBounds(127, 135, 76, 21);
 		
 		textPrinterRow = new Text(grpPrintingOptions, SWT.BORDER);
-		textPrinterRow.setBounds(81, 165, 76, 21);
+		textPrinterRow.setBounds(127, 162, 76, 21);
 		
 		Label lblColumns = new Label(grpPrintingOptions, SWT.NONE);
-		lblColumns.setBounds(10, 141, 65, 15);
+		lblColumns.setBounds(10, 138, 111, 21);
 		lblColumns.setAlignment(SWT.RIGHT);
 		lblColumns.setText("Columns:");
 		
 		Label lblLines = new Label(grpPrintingOptions, SWT.NONE);
-		lblLines.setBounds(20, 168, 55, 15);
+		lblLines.setBounds(10, 165, 111, 18);
 		lblLines.setAlignment(SWT.RIGHT);
 		lblLines.setText("Lines:");
 		
 		grpMidiOptions = new Group(compositeP2, SWT.NONE);
 		grpMidiOptions.setText(" MIDI Options ");
-		grpMidiOptions.setBounds(10, 244, 314, 103);
+		grpMidiOptions.setBounds(10, 244, 372, 103);
 		
 		Label lblDefaultSoundbank = new Label(grpMidiOptions, SWT.NONE);
 		lblDefaultSoundbank.setAlignment(SWT.RIGHT);
-		lblDefaultSoundbank.setBounds(10, 37, 110, 15);
+		lblDefaultSoundbank.setBounds(10, 37, 136, 18);
 		lblDefaultSoundbank.setText("Default soundbank:");
 		
 		textMIDIsoundbank = new Text(grpMidiOptions, SWT.BORDER);
-		textMIDIsoundbank.setBounds(126, 34, 149, 21);
+		textMIDIsoundbank.setBounds(152, 34, 171, 21);
 		
 		Button button_8 = new Button(grpMidiOptions, SWT.NONE);
 		button_8.addSelectionListener(new SelectionAdapter() {
@@ -670,14 +670,14 @@ public class InstanceConfigWin extends Dialog {
 			}
 		});
 		button_8.setText("...");
-		button_8.setBounds(276, 32, 26, 25);
+		button_8.setBounds(324, 32, 26, 25);
 		
 		textMIDIprofile = new Combo(grpMidiOptions, SWT.BORDER);
-		textMIDIprofile.setBounds(126, 61, 149, 21);
+		textMIDIprofile.setBounds(152, 61, 166, 23);
 		
 		Label lblDefaultProfile = new Label(grpMidiOptions, SWT.NONE);
 		lblDefaultProfile.setAlignment(SWT.RIGHT);
-		lblDefaultProfile.setBounds(10, 64, 110, 15);
+		lblDefaultProfile.setBounds(10, 64, 136, 20);
 		lblDefaultProfile.setText("Default profile:");
 		
 		TabItem tbtmNetworking_1 = new TabItem(tabFolder, SWT.NONE);
@@ -687,37 +687,38 @@ public class InstanceConfigWin extends Dialog {
 		tbtmNetworking_1.setControl(compositeP3);
 		
 		textListenAddress = new Text(compositeP3, SWT.BORDER);
-		textListenAddress.setBounds(154, 19, 156, 21);
+		textListenAddress.setBounds(212, 19, 156, 21);
 		
 		Label lblBindAddress = new Label(compositeP3, SWT.NONE);
-		lblBindAddress.setBounds(23, 22, 133, 15);
+		lblBindAddress.setAlignment(SWT.RIGHT);
+		lblBindAddress.setBounds(23, 22, 183, 15);
 		lblBindAddress.setText("Listen interface address:");
 		
 		grpTelnetOptions = new Group(compositeP3, SWT.NONE);
 		grpTelnetOptions.setText(" Telnet server text files ");
-		grpTelnetOptions.setBounds(10, 92, 320, 149);
+		grpTelnetOptions.setBounds(10, 92, 372, 149);
 		
 		textTelnetBanner = new Text(grpTelnetOptions, SWT.BORDER);
-		textTelnetBanner.setBounds(71, 26, 200, 21);
+		textTelnetBanner.setBounds(115, 29, 209, 21);
 		
 		Label lblBanner = new Label(grpTelnetOptions, SWT.NONE);
-		lblBanner.setBounds(10, 29, 55, 15);
+		lblBanner.setBounds(10, 32, 99, 18);
 		lblBanner.setAlignment(SWT.RIGHT);
 		lblBanner.setText("Banner:");
 		
 		Label lblNoPorts = new Label(grpTelnetOptions, SWT.NONE);
 		lblNoPorts.setAlignment(SWT.RIGHT);
-		lblNoPorts.setBounds(10, 56, 55, 15);
+		lblNoPorts.setBounds(10, 59, 99, 22);
 		lblNoPorts.setText("No ports:");
 		
 		Label lblPreauth = new Label(grpTelnetOptions, SWT.NONE);
 		lblPreauth.setAlignment(SWT.RIGHT);
-		lblPreauth.setBounds(10, 84, 55, 15);
+		lblPreauth.setBounds(10, 87, 99, 21);
 		lblPreauth.setText("Pre-auth:");
 		
 		Label lblBanned = new Label(grpTelnetOptions, SWT.NONE);
 		lblBanned.setAlignment(SWT.RIGHT);
-		lblBanned.setBounds(10, 111, 55, 15);
+		lblBanned.setBounds(10, 114, 99, 18);
 		lblBanned.setText("Banned:");
 		
 		Button button_2 = new Button(grpTelnetOptions, SWT.NONE);
@@ -738,17 +739,17 @@ public class InstanceConfigWin extends Dialog {
 			        }
 			}
 		});
-		button_2.setBounds(271, 24, 28, 25);
+		button_2.setBounds(324, 27, 28, 25);
 		button_2.setText("...");
 		
 		textTelnetNoPorts = new Text(grpTelnetOptions, SWT.BORDER);
-		textTelnetNoPorts.setBounds(71, 53, 200, 21);
+		textTelnetNoPorts.setBounds(115, 56, 209, 21);
 		
 		textTelnetPreAuth = new Text(grpTelnetOptions, SWT.BORDER);
-		textTelnetPreAuth.setBounds(71, 81, 200, 21);
+		textTelnetPreAuth.setBounds(115, 84, 209, 21);
 		
 		textTelnetBanned = new Text(grpTelnetOptions, SWT.BORDER);
-		textTelnetBanned.setBounds(71, 108, 200, 21);
+		textTelnetBanned.setBounds(115, 111, 209, 21);
 		
 		Button button_3 = new Button(grpTelnetOptions, SWT.NONE);
 		button_3.addSelectionListener(new SelectionAdapter() {
@@ -769,7 +770,7 @@ public class InstanceConfigWin extends Dialog {
 			}
 		});
 		button_3.setText("...");
-		button_3.setBounds(271, 51, 28, 25);
+		button_3.setBounds(324, 54, 28, 25);
 		
 		Button button_4 = new Button(grpTelnetOptions, SWT.NONE);
 		button_4.addSelectionListener(new SelectionAdapter() {
@@ -790,7 +791,7 @@ public class InstanceConfigWin extends Dialog {
 			}
 		});
 		button_4.setText("...");
-		button_4.setBounds(271, 79, 28, 25);
+		button_4.setBounds(324, 82, 28, 25);
 		
 		Button button_5 = new Button(grpTelnetOptions, SWT.NONE);
 		button_5.addSelectionListener(new SelectionAdapter() {
@@ -811,29 +812,30 @@ public class InstanceConfigWin extends Dialog {
 			}
 		});
 		button_5.setText("...");
-		button_5.setBounds(271, 106, 28, 25);
+		button_5.setBounds(324, 109, 28, 25);
 		
 		textTermPort = new Text(compositeP3, SWT.BORDER);
-		textTermPort.setBounds(181, 49, 57, 21);
+		textTermPort.setBounds(212, 49, 57, 21);
 		
 		Label lblOsTermDevice = new Label(compositeP3, SWT.NONE);
-		lblOsTermDevice.setBounds(23, 52, 156, 15);
-		lblOsTermDevice.setText("OS9 TERM device telnet port:");
+		lblOsTermDevice.setAlignment(SWT.RIGHT);
+		lblOsTermDevice.setBounds(23, 52, 183, 15);
+		lblOsTermDevice.setText("OS9 TERM telnet port:");
 		
 		grpTelnetAuthentication = new Group(compositeP3, SWT.NONE);
 		grpTelnetAuthentication.setText(" Telnet authentication ");
-		grpTelnetAuthentication.setBounds(10, 265, 320, 74);
+		grpTelnetAuthentication.setBounds(10, 265, 372, 74);
 		
 		textTelnetPasswd = new Text(grpTelnetAuthentication, SWT.BORDER);
-		textTelnetPasswd.setBounds(85, 33, 184, 21);
+		textTelnetPasswd.setBounds(115, 33, 209, 21);
 		
 		Button button_6 = new Button(grpTelnetAuthentication, SWT.NONE);
 		button_6.setText("...");
-		button_6.setBounds(269, 31, 28, 25);
+		button_6.setBounds(324, 31, 28, 25);
 		
 		Label lblPasswdFile = new Label(grpTelnetAuthentication, SWT.NONE);
 		lblPasswdFile.setAlignment(SWT.RIGHT);
-		lblPasswdFile.setBounds(10, 36, 69, 15);
+		lblPasswdFile.setBounds(10, 36, 99, 18);
 		lblPasswdFile.setText("Passwd file:");
 		
 		TabItem tbtmAdvanced = new TabItem(tabFolder, SWT.NONE);
@@ -843,22 +845,22 @@ public class InstanceConfigWin extends Dialog {
 		tbtmAdvanced.setControl(compositeP4);
 		
 		textIPBanned = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
-		textIPBanned.setBounds(10, 44, 325, 72);
+		textIPBanned.setBounds(10, 44, 372, 72);
 		
 		Label lblBannedIpAddresses = new Label(compositeP4, SWT.NONE);
-		lblBannedIpAddresses.setBounds(10, 23, 123, 15);
+		lblBannedIpAddresses.setBounds(10, 23, 247, 21);
 		lblBannedIpAddresses.setText("Banned IP Addresses:");
 		
 		btnUseGeoipLookups = new Button(compositeP4, SWT.CHECK);
-		btnUseGeoipLookups.setBounds(10, 132, 123, 16);
+		btnUseGeoipLookups.setBounds(10, 132, 230, 24);
 		btnUseGeoipLookups.setText("Use GeoIP lookups");
 		
 		textGeoIPfile = new Text(compositeP4, SWT.BORDER);
-		textGeoIPfile.setBounds(95, 162, 201, 21);
+		textGeoIPfile.setBounds(135, 162, 218, 21);
 		
 		Label lblDatabaseFile = new Label(compositeP4, SWT.NONE);
 		lblDatabaseFile.setAlignment(SWT.RIGHT);
-		lblDatabaseFile.setBounds(10, 165, 79, 15);
+		lblDatabaseFile.setBounds(10, 165, 119, 18);
 		lblDatabaseFile.setText("Database file:");
 		
 		Button button_7 = new Button(compositeP4, SWT.NONE);
@@ -879,21 +881,21 @@ public class InstanceConfigWin extends Dialog {
 			        }
 			}
 		});
-		button_7.setBounds(297, 160, 27, 25);
+		button_7.setBounds(355, 160, 27, 25);
 		button_7.setText("...");
 		
 		textIPBannedCities = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
-		textIPBannedCities.setBounds(10, 220, 325, 46);
+		textIPBannedCities.setBounds(10, 220, 372, 46);
 		
 		textIPBannedCountries = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
-		textIPBannedCountries.setBounds(10, 301, 325, 46);
+		textIPBannedCountries.setBounds(10, 301, 372, 46);
 		
 		Label lblBannedCities = new Label(compositeP4, SWT.NONE);
-		lblBannedCities.setBounds(10, 199, 98, 15);
+		lblBannedCities.setBounds(10, 199, 197, 21);
 		lblBannedCities.setText("Banned Cities:");
 		
 		Label lblBannedCountries = new Label(compositeP4, SWT.NONE);
-		lblBannedCountries.setBounds(10, 280, 112, 15);
+		lblBannedCountries.setBounds(10, 280, 197, 21);
 		lblBannedCountries.setText("Banned Countries:");
 		
 		TabItem tbtmAdvanced_1 = new TabItem(tabFolder, SWT.NONE);
@@ -908,18 +910,19 @@ public class InstanceConfigWin extends Dialog {
 			public void widgetSelected(SelectionEvent e) {
 			}
 		});
-		btnDrivewireMode.setBounds(21, 129, 119, 16);
+		btnDrivewireMode.setBounds(21, 101, 224, 21);
 		btnDrivewireMode.setText("DriveWire 3 mode");
 		
 		textRateOverride = new Text(compositeP5, SWT.BORDER);
-		textRateOverride.setBounds(126, 20, 97, 21);
+		textRateOverride.setBounds(148, 20, 97, 21);
 		
 		Label lblBaudRateOverride = new Label(compositeP5, SWT.NONE);
-		lblBaudRateOverride.setBounds(21, 23, 105, 15);
+		lblBaudRateOverride.setAlignment(SWT.RIGHT);
+		lblBaudRateOverride.setBounds(10, 23, 132, 18);
 		lblBaudRateOverride.setText("Baud rate override:");
 		
 		btnOptimeSendsDow = new Button(compositeP5, SWT.CHECK);
-		btnOptimeSendsDow.setBounds(21, 165, 199, 16);
+		btnOptimeSendsDow.setBounds(21, 289, 224, 21);
 		btnOptimeSendsDow.setText("OP_TIME sends DOW");
 		
 		btnLogOpcodes = new Button(compositeP5, SWT.CHECK);
@@ -928,31 +931,31 @@ public class InstanceConfigWin extends Dialog {
 			public void widgetSelected(SelectionEvent e) {
 			}
 		});
-		btnLogOpcodes.setBounds(21, 199, 119, 16);
+		btnLogOpcodes.setBounds(21, 141, 186, 21);
 		btnLogOpcodes.setText("Log opcodes");
 		
 		btnLogProtocolDevice = new Button(compositeP5, SWT.CHECK);
-		btnLogProtocolDevice.setBounds(21, 247, 186, 16);
+		btnLogProtocolDevice.setBounds(21, 194, 224, 21);
 		btnLogProtocolDevice.setText("Log protocol device bytes");
 		
 		btnEvenOppoll = new Button(compositeP5, SWT.CHECK);
-		btnEvenOppoll.setBounds(47, 221, 105, 16);
+		btnEvenOppoll.setBounds(41, 168, 160, 20);
 		btnEvenOppoll.setText("Even OP_POLL");
 		
 		btnLogVirtualDevice = new Button(compositeP5, SWT.CHECK);
-		btnLogVirtualDevice.setBounds(21, 269, 157, 16);
+		btnLogVirtualDevice.setBounds(21, 221, 186, 21);
 		btnLogVirtualDevice.setText("Log virtual port bytes");
 		
 		btnLogMidiDevice = new Button(compositeP5, SWT.CHECK);
-		btnLogMidiDevice.setBounds(21, 291, 157, 16);
+		btnLogMidiDevice.setBounds(21, 248, 205, 21);
 		btnLogMidiDevice.setText("Log MIDI device bytes");
 		
 		textDefaultDiskSet = new Text(compositeP5, SWT.BORDER);
-		textDefaultDiskSet.setBounds(126, 54, 97, 21);
+		textDefaultDiskSet.setBounds(148, 54, 97, 21);
 		
 		Label lblDefaultDiskset = new Label(compositeP5, SWT.NONE);
 		lblDefaultDiskset.setAlignment(SWT.RIGHT);
-		lblDefaultDiskset.setBounds(21, 57, 99, 15);
+		lblDefaultDiskset.setBounds(10, 57, 132, 18);
 		lblDefaultDiskset.setText("Default diskset:");
 		
 		Button btnUndo = new Button(shlInstanceConfiguration, SWT.NONE);
@@ -1012,7 +1015,7 @@ public class InstanceConfigWin extends Dialog {
 				}
 			}
 		});
-		btnOk.setBounds(146, 400, 75, 25);
+		btnOk.setBounds(177, 400, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlInstanceConfiguration, SWT.NONE);
@@ -1023,7 +1026,7 @@ public class InstanceConfigWin extends Dialog {
 				shlInstanceConfiguration.close();
 			}
 		});
-		btnCancel.setBounds(288, 400, 75, 25);
+		btnCancel.setBounds(335, 400, 75, 25);
 		btnCancel.setText("Cancel");
 
 		

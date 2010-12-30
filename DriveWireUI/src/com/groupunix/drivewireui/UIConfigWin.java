@@ -106,12 +106,12 @@ public class UIConfigWin extends Dialog {
 		
 		Label lblDiskPathHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblDiskPathHistory.setAlignment(SWT.RIGHT);
-		lblDiskPathHistory.setBounds(10, 148, 137, 15);
+		lblDiskPathHistory.setBounds(10, 147, 137, 22);
 		lblDiskPathHistory.setText("Disk path history:");
 		
 		Label lblServerHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblServerHistory.setAlignment(SWT.RIGHT);
-		lblServerHistory.setBounds(10, 176, 137, 15);
+		lblServerHistory.setBounds(10, 176, 137, 19);
 		lblServerHistory.setText("Server history:");
 		
 		Button btnOk = new Button(shlUserInterfaceConfiguration, SWT.NONE);
@@ -169,7 +169,7 @@ public class UIConfigWin extends Dialog {
 		
 		Label lblMainFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblMainFont.setAlignment(SWT.RIGHT);
-		lblMainFont.setBounds(10, 69, 122, 15);
+		lblMainFont.setBounds(10, 69, 122, 20);
 		lblMainFont.setText("Terminal font:");
 		
 		textMainFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
@@ -178,7 +178,7 @@ public class UIConfigWin extends Dialog {
 		Label lblLogFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblLogFont.setText("Log font:");
 		lblLogFont.setAlignment(SWT.RIGHT);
-		lblLogFont.setBounds(30, 100, 102, 15);
+		lblLogFont.setBounds(30, 100, 102, 20);
 		
 		textLogFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
 		textLogFont.setBounds(138, 97, 200, 23);
@@ -208,7 +208,7 @@ public class UIConfigWin extends Dialog {
 		
 		Label lblServerTcpResponse = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblServerTcpResponse.setAlignment(SWT.RIGHT);
-		lblServerTcpResponse.setBounds(10, 216, 176, 15);
+		lblServerTcpResponse.setBounds(10, 216, 176, 18);
 		lblServerTcpResponse.setText("Server response timeout:");
 		
 		Label lblMs = new Label(shlUserInterfaceConfiguration, SWT.NONE);
@@ -218,7 +218,7 @@ public class UIConfigWin extends Dialog {
 		Label lblDialogFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblDialogFont.setText("Dialog font:");
 		lblDialogFont.setAlignment(SWT.RIGHT);
-		lblDialogFont.setBounds(30, 38, 102, 15);
+		lblDialogFont.setBounds(30, 38, 102, 22);
 		
 		textDialogFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
 		textDialogFont.setText("<dynamic> 0");

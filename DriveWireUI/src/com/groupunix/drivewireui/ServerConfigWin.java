@@ -301,11 +301,11 @@ public class ServerConfigWin extends Dialog {
 		grpLogging.setBounds(15, 21, 378, 180);
 		
 		btnLogToConsole = new Button(grpLogging, SWT.CHECK);
-		btnLogToConsole.setBounds(30, 53, 214, 16);
+		btnLogToConsole.setBounds(30, 53, 214, 23);
 		btnLogToConsole.setText("Log to console");
 		
 		btnLogToFile = new Button(grpLogging, SWT.CHECK);
-		btnLogToFile.setBounds(30, 75, 214, 16);
+		btnLogToFile.setBounds(30, 75, 214, 23);
 		btnLogToFile.setText("Log to file");
 		
 		comboLogLevel = new Combo(grpLogging, SWT.READ_ONLY);
@@ -314,12 +314,12 @@ public class ServerConfigWin extends Dialog {
 		
 		Label lblLogLevel = new Label(grpLogging, SWT.NONE);
 		lblLogLevel.setAlignment(SWT.RIGHT);
-		lblLogLevel.setBounds(17, 23, 82, 15);
+		lblLogLevel.setBounds(17, 23, 82, 24);
 		lblLogLevel.setText("Log level:");
 		
 		Label lblLogFile = new Label(grpLogging, SWT.NONE);
 		lblLogFile.setAlignment(SWT.RIGHT);
-		lblLogFile.setBounds(20, 106, 82, 15);
+		lblLogFile.setBounds(20, 106, 82, 18);
 		lblLogFile.setText("Log file:");
 		
 		textLogFile = new Text(grpLogging, SWT.BORDER);
@@ -351,7 +351,7 @@ public class ServerConfigWin extends Dialog {
 		
 		Label lblLineFormat = new Label(grpLogging, SWT.NONE);
 		lblLineFormat.setAlignment(SWT.RIGHT);
-		lblLineFormat.setBounds(11, 141, 91, 15);
+		lblLineFormat.setBounds(11, 141, 91, 18);
 		lblLineFormat.setText("Log format:");
 		
 		textLogFormat = new Text(grpLogging, SWT.BORDER);
@@ -362,7 +362,7 @@ public class ServerConfigWin extends Dialog {
 		grpUserInterfaceSupport.setBounds(15, 218, 378, 67);
 		
 		btnUIEnabled = new Button(grpUserInterfaceSupport, SWT.CHECK);
-		btnUIEnabled.setBounds(30, 30, 130, 16);
+		btnUIEnabled.setBounds(30, 30, 130, 19);
 		btnUIEnabled.setText("UI Enabled");
 		
 		textUIPort = new Text(grpUserInterfaceSupport, SWT.BORDER);
@@ -370,7 +370,7 @@ public class ServerConfigWin extends Dialog {
 		
 		Label lblListenOnTcp = new Label(grpUserInterfaceSupport, SWT.NONE);
 		lblListenOnTcp.setAlignment(SWT.RIGHT);
-		lblListenOnTcp.setBounds(155, 31, 138, 15);
+		lblListenOnTcp.setBounds(155, 31, 138, 18);
 		lblListenOnTcp.setText("Listen on TCP port:");
 		
 		grpMiscellaneous = new Group(shlServerConfiguration, SWT.NONE);
@@ -379,17 +379,17 @@ public class ServerConfigWin extends Dialog {
 		
 		Label lblDiskSyncLazy = new Label(grpMiscellaneous, SWT.NONE);
 		lblDiskSyncLazy.setAlignment(SWT.RIGHT);
-		lblDiskSyncLazy.setBounds(10, 33, 231, 15);
+		lblDiskSyncLazy.setBounds(10, 30, 231, 18);
 		lblDiskSyncLazy.setText("Disk sync lazy write interval (ms):");
 		
 		textLazyWrite = new Text(grpMiscellaneous, SWT.BORDER);
-		textLazyWrite.setBounds(247, 30, 65, 21);
+		textLazyWrite.setBounds(247, 27, 65, 21);
 		
 		textLocalDiskDir = new Text(grpMiscellaneous, SWT.BORDER);
 		textLocalDiskDir.setBounds(25, 73, 331, 21);
 		
 		Label lblLocalDiskDirectory = new Label(grpMiscellaneous, SWT.NONE);
-		lblLocalDiskDirectory.setBounds(25, 54, 171, 15);
+		lblLocalDiskDirectory.setBounds(25, 54, 171, 21);
 		lblLocalDiskDirectory.setText("Local disk directory:");
 		
 		Button btnOk = new Button(shlServerConfiguration, SWT.NONE);
