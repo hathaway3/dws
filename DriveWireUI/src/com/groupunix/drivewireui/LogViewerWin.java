@@ -50,8 +50,6 @@ public class LogViewerWin extends Dialog {
 	 */
 	public Object open() throws UnknownHostException, IOException 
 	{
-		// start log thread
-		Connect();
 		
 		createContents();
 		
@@ -62,8 +60,8 @@ public class LogViewerWin extends Dialog {
 		shell.layout();
 		display = getParent().getDisplay();
 		
-		
-		
+		// start log thread
+		Connect();
 		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {

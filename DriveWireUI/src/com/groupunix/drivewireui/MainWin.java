@@ -44,8 +44,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
+
 
 public class MainWin {
 
@@ -341,27 +340,7 @@ public class MainWin {
 		mntmServer.setMenu(menu_4);
 		
 		MenuItem mntmDisksetProperties = new MenuItem(menu_4, SWT.NONE);
-		mntmDisksetProperties.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-			
-				DisksetWin win = new DisksetWin(shell,SWT.DIALOG_TRIM);
-				
-				try {
-					win.open();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (DWUIOperationFailedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				
-				
-			
-			}
-		});
+		
 		mntmDisksetProperties.setText("Diskset properties..");
 		
 		MenuItem mntmCreate = new MenuItem(menu_4, SWT.NONE);
@@ -707,31 +686,6 @@ public class MainWin {
 			}
 		});
 		mntmInstanceConfig.setText("Instance...");
-		
-		MenuItem mntmDiskSets = new MenuItem(menu_5, SWT.NONE);
-		mntmDiskSets.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				DisksetWin window = new DisksetWin(shell,SWT.DIALOG_TRIM);
-				
-				try 
-				{
-					window.open();
-				} 
-				catch (DWUIOperationFailedException e1) 
-				{
-					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
-				} 
-				catch (IOException e1) 
-				{
-					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
-				}
-				
-			
-			}
-		});
-		mntmDiskSets.setText("Disk Sets...");
 		
 		MenuItem mntmUserInterface = new MenuItem(menu_5, SWT.NONE);
 		mntmUserInterface.addSelectionListener(new SelectionAdapter() {
