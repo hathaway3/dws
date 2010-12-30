@@ -90,7 +90,7 @@ public class InitialConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlInitialConfiguration = new Shell(getParent(), getStyle());
-		shlInitialConfiguration.setSize(453, 409);
+		shlInitialConfiguration.setSize(454, 409);
 		shlInitialConfiguration.setText("Initial Configuration");
 		shlInitialConfiguration.setLayout(null);
 		
@@ -199,11 +199,12 @@ public class InitialConfigWin extends Dialog {
 		btnRemoteServer.setText("The server runs on another computer");
 		
 		labelHost = new Label(compPage1, SWT.NONE);
-		labelHost.setBounds(10, 160, 192, 18);
+		labelHost.setAlignment(SWT.RIGHT);
+		labelHost.setBounds(10, 160, 239, 18);
 		labelHost.setText("What is the IP address of the server?");
 		
 		textHost = new Text(compPage1, SWT.BORDER);
-		textHost.setBounds(202, 157, 144, 21);
+		textHost.setBounds(254, 157, 144, 21);
 		textHost.setText("127.0.0.1");
 		
 		Label lblByDefaultThe = new Label(compPage1, SWT.WRAP);
@@ -299,19 +300,19 @@ public class InitialConfigWin extends Dialog {
 		compPage3.setBounds(10, 10, 426, 314);
 		
 		Label lblFinallyWeNeed = new Label(compPage3, SWT.WRAP);
-		lblFinallyWeNeed.setBounds(10, 10, 366, 35);
+		lblFinallyWeNeed.setBounds(10, 10, 406, 35);
 		lblFinallyWeNeed.setText("Almost done.  We just need to tell the server how it will communicate with the CoCo.\r\n");
 		
 		Label lblTheServerCan = new Label(compPage3, SWT.WRAP);
-		lblTheServerCan.setBounds(10, 59, 366, 49);
+		lblTheServerCan.setBounds(10, 59, 406, 49);
 		lblTheServerCan.setText("The server can try to detect attached serial devices, but it isn't perfect on every platform.  Press \"Detect\" to give it a shot.  You can also enter the device name manually.");
 		
 		comboSerialDev = new Combo(compPage3, SWT.NONE);
-		comboSerialDev.setBounds(102, 127, 160, 23);
+		comboSerialDev.setBounds(120, 127, 160, 23);
 		
 		Label lblSerialDevice = new Label(compPage3, SWT.NONE);
 		lblSerialDevice.setAlignment(SWT.RIGHT);
-		lblSerialDevice.setBounds(10, 130, 86, 15);
+		lblSerialDevice.setBounds(10, 130, 104, 20);
 		lblSerialDevice.setText("Serial device:");
 		
 		Button btnDetect = new Button(compPage3, SWT.NONE);
@@ -344,21 +345,21 @@ public class InitialConfigWin extends Dialog {
 				
 			}
 		});
-		btnDetect.setBounds(268, 125, 75, 25);
+		btnDetect.setBounds(286, 125, 75, 25);
 		btnDetect.setText("Detect..");
 		
 		Label lblFinallyWeNeed_1 = new Label(compPage3, SWT.WRAP);
-		lblFinallyWeNeed_1.setBounds(10, 178, 366, 35);
+		lblFinallyWeNeed_1.setBounds(10, 178, 406, 56);
 		lblFinallyWeNeed_1.setText("Finally, we need to know what speed to use for communications with the CoCo.   The rate is determined by the type of CoCo you have.");
 		
 		comboCocoModel = new Combo(compPage3, SWT.READ_ONLY);
 		comboCocoModel.setItems(new String[] {"CoCo 1: 38400 bps", "CoCo 2: 57600 bps", "CoCo 3: 115200 bps"});
-		comboCocoModel.setBounds(102, 226, 160, 23);
+		comboCocoModel.setBounds(102, 250, 160, 23);
 		comboCocoModel.select(2);
 		
 		Label lblCocoModel = new Label(compPage3, SWT.NONE);
 		lblCocoModel.setAlignment(SWT.RIGHT);
-		lblCocoModel.setBounds(10, 229, 86, 15);
+		lblCocoModel.setBounds(10, 253, 86, 15);
 		lblCocoModel.setText("CoCo model:");
 
 	}
