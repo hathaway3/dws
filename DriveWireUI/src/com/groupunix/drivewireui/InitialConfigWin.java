@@ -90,7 +90,7 @@ public class InitialConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlInitialConfiguration = new Shell(getParent(), getStyle());
-		shlInitialConfiguration.setSize(415, 409);
+		shlInitialConfiguration.setSize(452, 409);
 		shlInitialConfiguration.setText("Initial Configuration");
 		shlInitialConfiguration.setLayout(null);
 		
@@ -144,7 +144,7 @@ public class InitialConfigWin extends Dialog {
 				
 			}
 		});
-		btnNext.setBounds(164, 346, 75, 25);
+		btnNext.setBounds(183, 346, 75, 25);
 		btnNext.setText("Next >>");
 		
 		Button btnCancel = new Button(shlInitialConfiguration, SWT.NONE);
@@ -155,22 +155,22 @@ public class InitialConfigWin extends Dialog {
 				shlInitialConfiguration.close();
 			}
 		});
-		btnCancel.setBounds(321, 346, 75, 25);
+		btnCancel.setBounds(361, 346, 75, 25);
 		btnCancel.setText("Cancel");
 		
 		compPage1 = new Composite(shlInitialConfiguration, SWT.NONE);
-		compPage1.setBounds(10, 10, 386, 314);
+		compPage1.setBounds(10, 10, 426, 314);
 		
 		Label lblThisWizardWill = new Label(compPage1, SWT.NONE);
-		lblThisWizardWill.setBounds(10, 10, 440, 15);
+		lblThisWizardWill.setBounds(10, 10, 406, 15);
 		lblThisWizardWill.setText("This wizard will help you configure the DriveWire 4 server and client.");
 		
 		Label lblFirstWeNeed = new Label(compPage1, SWT.WRAP);
-		lblFirstWeNeed.setBounds(10, 39, 357, 38);
+		lblFirstWeNeed.setBounds(10, 39, 406, 38);
 		lblFirstWeNeed.setText("First, we need to know how to communicate with the DriveWire server.  Where does the server run?");
 		
 		Composite composite = new Composite(compPage1, SWT.NONE);
-		composite.setBounds(61, 83, 266, 55);
+		composite.setBounds(38, 83, 329, 55);
 		
 		Button btnLocalServer = new Button(composite, SWT.RADIO);
 		btnLocalServer.addSelectionListener(new SelectionAdapter() {
@@ -182,7 +182,7 @@ public class InitialConfigWin extends Dialog {
 			}
 		});
 		btnLocalServer.setSelection(true);
-		btnLocalServer.setBounds(10, 10, 232, 16);
+		btnLocalServer.setBounds(10, 0, 309, 26);
 		btnLocalServer.setText("The server runs on this computer");
 		
 		Button btnRemoteServer = new Button(composite, SWT.RADIO);
@@ -195,11 +195,11 @@ public class InitialConfigWin extends Dialog {
 			
 			}
 		});
-		btnRemoteServer.setBounds(10, 32, 232, 16);
+		btnRemoteServer.setBounds(10, 32, 309, 23);
 		btnRemoteServer.setText("The server runs on another computer");
 		
 		labelHost = new Label(compPage1, SWT.NONE);
-		labelHost.setBounds(10, 160, 192, 15);
+		labelHost.setBounds(10, 160, 192, 18);
 		labelHost.setText("What is the IP address of the server?");
 		
 		textHost = new Text(compPage1, SWT.BORDER);
@@ -207,15 +207,16 @@ public class InitialConfigWin extends Dialog {
 		textHost.setText("127.0.0.1");
 		
 		Label lblByDefaultThe = new Label(compPage1, SWT.WRAP);
-		lblByDefaultThe.setBounds(10, 194, 357, 61);
+		lblByDefaultThe.setBounds(10, 194, 406, 61);
 		lblByDefaultThe.setText("By default, the server listens for clients on TCP port 6800.  \r\n\r\nYou can change this using the client once we have a connection to the server, or by editing the server's configuration file.\r\n");
 		
 		Label lblWhatTcpPort = new Label(compPage1, SWT.NONE);
-		lblWhatTcpPort.setBounds(10, 275, 192, 15);
+		lblWhatTcpPort.setAlignment(SWT.RIGHT);
+		lblWhatTcpPort.setBounds(10, 275, 239, 18);
 		lblWhatTcpPort.setText("What TCP port does the server use?");
 		
 		textPort = new Text(compPage1, SWT.BORDER);
-		textPort.setBounds(202, 272, 55, 21);
+		textPort.setBounds(255, 272, 55, 21);
 		textPort.setText("6800");
 		
 		compPage2 = new Composite(shlInitialConfiguration, SWT.NO_FOCUS);

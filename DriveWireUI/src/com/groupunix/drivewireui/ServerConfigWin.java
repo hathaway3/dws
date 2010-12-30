@@ -383,6 +383,7 @@ public class ServerConfigWin extends Dialog {
 		lblDiskSyncLazy.setText("Disk sync lazy write interval (ms):");
 		
 		textLazyWrite = new Text(grpMiscellaneous, SWT.BORDER);
+		textLazyWrite.setToolTipText("Test test test");
 		textLazyWrite.setBounds(247, 27, 65, 21);
 		
 		textLocalDiskDir = new Text(grpMiscellaneous, SWT.BORDER);
@@ -418,7 +419,7 @@ public class ServerConfigWin extends Dialog {
 				
 			}
 		});
-		btnOk.setBounds(145, 444, 75, 25);
+		btnOk.setBounds(163, 444, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnUndo = new Button(shlServerConfiguration, SWT.NONE);
@@ -441,7 +442,7 @@ public class ServerConfigWin extends Dialog {
 				shlServerConfiguration.close();
 			}
 		});
-		btnCancel.setBounds(279, 444, 75, 25);
+		btnCancel.setBounds(318, 444, 75, 25);
 		btnCancel.setText("Cancel");
 
 	}
