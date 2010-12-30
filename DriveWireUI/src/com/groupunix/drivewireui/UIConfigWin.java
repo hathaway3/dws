@@ -93,7 +93,7 @@ public class UIConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlUserInterfaceConfiguration = new Shell(getParent(), getStyle());
-		shlUserInterfaceConfiguration.setSize(380, 327);
+		shlUserInterfaceConfiguration.setSize(411, 327);
 		shlUserInterfaceConfiguration.setText("User Interface Configuration");
 		
 		spinnerDiskHist = new Spinner(shlUserInterfaceConfiguration, SWT.BORDER);
@@ -106,12 +106,12 @@ public class UIConfigWin extends Dialog {
 		
 		Label lblDiskPathHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblDiskPathHistory.setAlignment(SWT.RIGHT);
-		lblDiskPathHistory.setBounds(30, 148, 117, 15);
+		lblDiskPathHistory.setBounds(10, 148, 137, 15);
 		lblDiskPathHistory.setText("Disk path history:");
 		
 		Label lblServerHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblServerHistory.setAlignment(SWT.RIGHT);
-		lblServerHistory.setBounds(40, 176, 107, 15);
+		lblServerHistory.setBounds(10, 176, 137, 15);
 		lblServerHistory.setText("Server history:");
 		
 		Button btnOk = new Button(shlUserInterfaceConfiguration, SWT.NONE);
@@ -124,7 +124,7 @@ public class UIConfigWin extends Dialog {
 				shlUserInterfaceConfiguration.close();
 			}
 		});
-		btnOk.setBounds(154, 264, 75, 25);
+		btnOk.setBounds(166, 264, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlUserInterfaceConfiguration, SWT.NONE);
@@ -135,7 +135,7 @@ public class UIConfigWin extends Dialog {
 				shlUserInterfaceConfiguration.close();
 			}
 		});
-		btnCancel.setBounds(289, 264, 75, 25);
+		btnCancel.setBounds(316, 264, 75, 25);
 		btnCancel.setText("Cancel");
 		
 		Button btnUndo = new Button(shlUserInterfaceConfiguration, SWT.NONE);
@@ -164,24 +164,24 @@ public class UIConfigWin extends Dialog {
 		        textMainFont.setText(newFont.getName() + " " + newFont.getHeight());
 			}
 		});
-		btnSet.setBounds(283, 64, 47, 25);
+		btnSet.setBounds(344, 64, 47, 25);
 		btnSet.setText("Set...");
 		
 		Label lblMainFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblMainFont.setAlignment(SWT.RIGHT);
-		lblMainFont.setBounds(10, 69, 89, 15);
+		lblMainFont.setBounds(10, 69, 122, 15);
 		lblMainFont.setText("Terminal font:");
 		
 		textMainFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		textMainFont.setBounds(105, 66, 177, 23);
+		textMainFont.setBounds(138, 66, 200, 23);
 		
 		Label lblLogFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblLogFont.setText("Log font:");
 		lblLogFont.setAlignment(SWT.RIGHT);
-		lblLogFont.setBounds(30, 100, 69, 15);
+		lblLogFont.setBounds(30, 100, 102, 15);
 		
 		textLogFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		textLogFont.setBounds(105, 97, 177, 23);
+		textLogFont.setBounds(138, 97, 200, 23);
 		
 		Button button = new Button(shlUserInterfaceConfiguration, SWT.NONE);
 		button.addSelectionListener(new SelectionAdapter() {
@@ -201,29 +201,29 @@ public class UIConfigWin extends Dialog {
 			}
 		});
 		button.setText("Set...");
-		button.setBounds(283, 95, 47, 25);
+		button.setBounds(344, 95, 47, 25);
 		
 		textTCPTimeout = new Text(shlUserInterfaceConfiguration, SWT.BORDER);
-		textTCPTimeout.setBounds(153, 216, 76, 21);
+		textTCPTimeout.setBounds(192, 213, 69, 21);
 		
 		Label lblServerTcpResponse = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblServerTcpResponse.setAlignment(SWT.RIGHT);
-		lblServerTcpResponse.setBounds(10, 219, 137, 15);
+		lblServerTcpResponse.setBounds(10, 216, 176, 15);
 		lblServerTcpResponse.setText("Server response timeout:");
 		
 		Label lblMs = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblMs.setBounds(235, 180, 47, 15);
+		lblMs.setBounds(267, 216, 47, 15);
 		lblMs.setText("ms");
 		
 		Label lblDialogFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblDialogFont.setText("Dialog font:");
 		lblDialogFont.setAlignment(SWT.RIGHT);
-		lblDialogFont.setBounds(30, 38, 69, 15);
+		lblDialogFont.setBounds(30, 38, 102, 15);
 		
 		textDialogFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
 		textDialogFont.setText("<dynamic> 0");
 		textDialogFont.setFont(SWTResourceManager.getFont("<dynamic>", 0, SWT.NORMAL));
-		textDialogFont.setBounds(105, 35, 177, 23);
+		textDialogFont.setBounds(138, 35, 200, 23);
 		
 		Button button_1 = new Button(shlUserInterfaceConfiguration, SWT.NONE);
 		button_1.addSelectionListener(new SelectionAdapter() {
@@ -244,7 +244,7 @@ public class UIConfigWin extends Dialog {
 			}
 		});
 		button_1.setText("Set...");
-		button_1.setBounds(283, 33, 47, 25);
+		button_1.setBounds(344, 33, 47, 25);
 
 	}
 
