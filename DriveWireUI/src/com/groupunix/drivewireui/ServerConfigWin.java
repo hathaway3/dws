@@ -389,7 +389,7 @@ public class ServerConfigWin extends Dialog {
 		textLocalDiskDir.setBounds(25, 73, 331, 21);
 		
 		Label lblLocalDiskDirectory = new Label(grpMiscellaneous, SWT.NONE);
-		lblLocalDiskDirectory.setBounds(25, 54, 171, 21);
+		lblLocalDiskDirectory.setBounds(25, 54, 171, 18);
 		lblLocalDiskDirectory.setText("Local disk directory:");
 		
 		Button btnOk = new Button(shlServerConfiguration, SWT.NONE);
