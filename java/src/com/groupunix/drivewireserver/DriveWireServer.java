@@ -49,6 +49,7 @@ public class DriveWireServer
 	private static DWUIThread uiObj;
 	private static Thread uiT;	
 	
+	private static boolean wanttodie = false;
 
 	
 	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
@@ -168,7 +169,7 @@ public class DriveWireServer
 		
 		logger.info("going to sleep...");	
 		
-		while (true)
+		while (!wanttodie)
     	{
     	
     		try
@@ -177,14 +178,62 @@ public class DriveWireServer
     		} 
     		catch (InterruptedException e)
     		{
-    			logger.warn("Server thread interrupted");
+    			logger.warn("I've been interrupted and now I want to die");
+    			wanttodie = true;
     		}
 
     	}
     	
+		
+		// shut things down as best we can
+
+		
+		logger.warn("server shutting down...");
+		
     		
-    	
-    	
+		logger.debug("stopping protocol handler(s)...");
+		
+		for (int i = 0;i<dwProtoHandlerThreads.length;i++)
+		{
+			if (dwProtoHandlers[i] != null)
+			{
+				dwProtoHandlers[i].shutdown();
+				try {
+					dwProtoHandlerThreads[i].join();
+				} 
+				catch (InterruptedException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		
+		logger.debug("stopping lazy writer...");
+		
+		lazyWriterT.interrupt();
+		try {
+			lazyWriterT.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		logger.debug("stopping UI thread...");
+		uiObj.die();
+		try {
+			uiT.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		logger.warn("server shutdown complete");
+		
+		logger.removeAllAppenders();
+		System.exit(0);
 	}
 
 
@@ -441,5 +490,15 @@ public class DriveWireServer
 	        }
 	        return h;
 	    }
+
+
+
+
+	public static void shutdown() 
+	{
+		logger.warn("server shutdown requested");
+		wanttodie = true;
+		
+	}
 	
 }

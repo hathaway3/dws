@@ -70,10 +70,17 @@ public class DWCmdMidiSynthStatus implements DWCommand {
 			if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiSoundbankFilename() == null)
 			{
 				Soundbank sbank = DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getDefaultSoundbank();
-
-				text += " (default)\r\n";
-				text += sbank.getVendor() + ", " + sbank.getName() + ", " + sbank.getVersion() + "\r\n";
-				text += sbank.getDescription() + "\r\n";
+				
+				if (sbank != null)
+				{
+					text += " (default)\r\n";
+					text += sbank.getVendor() + ", " + sbank.getName() + ", " + sbank.getVersion() + "\r\n";
+					text += sbank.getDescription() + "\r\n";
+				}
+				else
+				{
+					text += " none\r\n";
+				}
 			}
 			else
 			{

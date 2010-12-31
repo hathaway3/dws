@@ -14,6 +14,7 @@ public class UICmdServer implements DWCommand {
 	{
 		commands.addcommand(new UICmdServerShow(dwuiClientThread));
 		commands.addcommand(new UICmdServerConfig(dwuiClientThread));
+		commands.addcommand(new UICmdServerTerminate(dwuiClientThread));
 	}
 
 	

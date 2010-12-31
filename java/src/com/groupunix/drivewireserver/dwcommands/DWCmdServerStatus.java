@@ -52,9 +52,16 @@ public class DWCmdServerStatus implements DWCommand {
 	    
 	    if (DriveWireServer.getHandler(this.handlerno).config.getString("DeviceType","serial").equalsIgnoreCase("serial"))
 	    {
-			text += "\r\n\nDevice:        " + DriveWireServer.getHandler(this.handlerno).config.getString("SerialDevice","unknown");
-			text += " (" + DriveWireServer.getHandler(this.handlerno).getProtoDev().getRate() + " bps)\r\n";
-			text += "CoCo Type:     " + DriveWireServer.getHandler(this.handlerno).config.getInt("CocoModel", 0) + "\r\n";
+	    	if (DriveWireServer.getHandler(this.handlerno).getProtoDev() != null)
+	    	{
+	    		text += "\r\n\nDevice:        " + DriveWireServer.getHandler(this.handlerno).config.getString("SerialDevice","unknown");
+	    		text += " (" + DriveWireServer.getHandler(this.handlerno).getProtoDev().getRate() + " bps)\r\n";
+	    		text += "CoCo Type:     " + DriveWireServer.getHandler(this.handlerno).config.getInt("CocoModel", 0) + "\r\n";
+	    	}
+	    	else
+	    	{
+	    		text += "\r\n\nDevice:        Serial, not started\r\n";
+	    	}
 	    }
 	    else
 	    {

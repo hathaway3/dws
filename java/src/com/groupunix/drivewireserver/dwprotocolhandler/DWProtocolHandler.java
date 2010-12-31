@@ -1283,9 +1283,12 @@ public class DWProtocolHandler implements Runnable
 	
 	public void resetProtocolDevice()
 	{
-		logger.warn("resetting protocol device");
-		// do we need to do anything else here?
-		setupProtocolDevice();
+		if (!this.wanttodie)
+		{
+			logger.warn("resetting protocol device");
+			// 	do we need to do anything else here?
+			setupProtocolDevice();
+		}
 	}
 	
 	
