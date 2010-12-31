@@ -79,6 +79,7 @@ public class InstanceConfigWin extends Dialog {
 	private static Group grpMidiOptions;
 	private static Group grpTelnetOptions;
 	private static Group grpTelnetAuthentication;
+	private Button btnDetect;
 	
 	/**
 	 * Create the dialog.
@@ -236,7 +237,7 @@ public class InstanceConfigWin extends Dialog {
 		values = UIUtils.getInstanceSettings(MainWin.getInstance(),settings);
 		
 		// combos
-		loadCombo("ui server show serialdevs",this.textSerialPort);
+		//loadCombo("ui server show serialdevs",this.textSerialPort);
 		loadCombo("ui server show synthprofiles",this.textMIDIprofile);
 		
 		
@@ -246,8 +247,9 @@ public class InstanceConfigWin extends Dialog {
 	
 	private void loadCombo(String cmd, Combo combo) 
 	{
-		combo.removeAll();
+		String prev = combo.getText();
 		
+		combo.removeAll();
 		try {
 			ArrayList<String> ports = UIUtils.loadArrayList(cmd);
 			
@@ -266,6 +268,7 @@ public class InstanceConfigWin extends Dialog {
 			MainWin.showError("Error loading data", e1.getMessage(), UIUtils.getStackTrace(e1));
 		}
 		
+		combo.setText(prev);
 	}
 
 	private HashMap<String, String> getChangedValues() 
@@ -543,7 +546,19 @@ public class InstanceConfigWin extends Dialog {
 		btnStartAutomatically.setText("Start automatically");
 		
 		textSerialPort = new Combo(compositeP1, SWT.BORDER);
-		textSerialPort.setBounds(168, 148, 182, 21);
+		textSerialPort.setBounds(168, 148, 117, 23);
+		
+		btnDetect = new Button(compositeP1, SWT.NONE);
+		btnDetect.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				
+				loadCombo("ui server show serialdevs",textSerialPort);
+			}
+		});
+		btnDetect.setBounds(290, 146, 60, 25);
+		btnDetect.setText("Detect");
 		
 		TabItem tbtmDevices = new TabItem(tabFolder, SWT.NONE);
 		tbtmDevices.setText("Devices");
@@ -1056,5 +1071,8 @@ public class InstanceConfigWin extends Dialog {
 		
 		
 		return false;
+	}
+	protected Button getBtnDetect() {
+		return btnDetect;
 	}
 }
