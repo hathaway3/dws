@@ -139,9 +139,7 @@ public class MainWin {
 				{
 					display = new Display();
 					
-					Display.setAppName("DriveWire UI");
-					Display.setAppVersion(DWUIVersion);
-					
+			
 					MainWin window = new MainWin();
 					
 					window.open(display);
