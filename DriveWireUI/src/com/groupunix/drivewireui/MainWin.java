@@ -139,6 +139,9 @@ public class MainWin {
 				{
 					display = new Display();
 					
+					Display.setAppName("DriveWire UI");
+					Display.setAppVersion(DWUIVersion);
+					
 					MainWin window = new MainWin();
 					
 					window.open(display);
@@ -269,7 +272,10 @@ public class MainWin {
 			@Override
 			public void shellClosed(ShellEvent e) 
 			{
-				
+				if (config.getBoolean("TermServerOnExit",false))
+				{
+					sendCommand("ui server terminate");
+				}
 			}
 		});
 		shell.setSize(763, 514);
