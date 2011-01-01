@@ -128,6 +128,7 @@ public class MainWin {
 	private static SashForm sashForm;
 	private static SashForm sashForm_1;
 	private static Composite composite;
+
 	
 	
 	public static void main(String[] args) 
@@ -332,6 +333,7 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
+				shell.close();
 				System.exit(0);
 			}
 		});
