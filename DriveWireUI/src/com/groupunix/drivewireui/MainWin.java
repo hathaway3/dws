@@ -925,15 +925,17 @@ public class MainWin {
 		composite.setLayout(null);
 		
 		textDiskURI = new Combo(composite, SWT.BORDER);
+		textDiskURI.setToolTipText("Enter a local file path or any valid URI that points to the disk image you would like to use");
 		textDiskURI.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent arg0) 
 			{
 				toggleApplyButton();
 			}
 		});
-		textDiskURI.setBounds(10, 33, 446, 23);
+		textDiskURI.setBounds(10, 33, 436, 23);
 		
 		btnDiskWriteProtect = new Button(composite, SWT.CHECK);
+		btnDiskWriteProtect.setToolTipText("Cause write operations to fail as if the disk was write protected");
 		btnDiskWriteProtect.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseUp(MouseEvent e) 
@@ -941,10 +943,11 @@ public class MainWin {
 				toggleApplyButton();
 			}
 		});
-		btnDiskWriteProtect.setBounds(10, 71, 145, 16);
+		btnDiskWriteProtect.setBounds(10, 62, 152, 25);
 		btnDiskWriteProtect.setText("Write protect");
 		
 		btnDiskSync = new Button(composite, SWT.CHECK);
+		btnDiskSync.setToolTipText("Commit changes to the source image (if possible)");
 		btnDiskSync.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseUp(MouseEvent e) 
@@ -952,10 +955,11 @@ public class MainWin {
 				toggleApplyButton();
 			}
 		});
-		btnDiskSync.setBounds(10, 93, 145, 16);
-		btnDiskSync.setText("Sync changes to source");
+		btnDiskSync.setBounds(10, 88, 152, 23);
+		btnDiskSync.setText("Sync to source");
 		
 		btnDiskExpand = new Button(composite, SWT.CHECK);
+		btnDiskExpand.setToolTipText("Read and writes beyond the end of the image cause the image to expanded");
 		btnDiskExpand.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseUp(MouseEvent e) 
@@ -963,50 +967,53 @@ public class MainWin {
 				toggleApplyButton();
 			}
 		});
-		btnDiskExpand.setBounds(10, 115, 144, 16);
+		btnDiskExpand.setBounds(10, 114, 152, 23);
 		btnDiskExpand.setText("Allow expansion");
 		
 		textDiskSizeLimit = new Text(composite, SWT.BORDER);
+		textDiskSizeLimit.setToolTipText("Prevent expansion beyond this number of sectors.  -1 disables the limit");
 		textDiskSizeLimit.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent arg0) 
 			{
 				toggleApplyButton();
 			}
 		});
-		textDiskSizeLimit.setBounds(76, 144, 76, 21);
+		textDiskSizeLimit.setBounds(86, 147, 76, 21);
 		
 		lblSizeLimit = new Label(composite, SWT.NONE);
 		lblSizeLimit.setAlignment(SWT.RIGHT);
-		lblSizeLimit.setBounds(10, 147, 60, 15);
+		lblSizeLimit.setBounds(20, 150, 60, 18);
 		lblSizeLimit.setText("Size limit:");
 		
 		lblSectors = new Label(composite, SWT.NONE);
-		lblSectors.setBounds(158, 147, 55, 15);
+		lblSectors.setBounds(168, 150, 55, 23);
 		lblSectors.setText("sectors");
 		
 		lblOffset = new Label(composite, SWT.NONE);
 		lblOffset.setText("Offset:");
 		lblOffset.setAlignment(SWT.RIGHT);
-		lblOffset.setBounds(10, 174, 60, 15);
+		lblOffset.setBounds(20, 175, 60, 18);
 		
 		textDiskOffset = new Text(composite, SWT.BORDER);
+		textDiskOffset.setToolTipText("Add this offset to the sector # of all reads and writes to the image");
 		textDiskOffset.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent arg0) 
 			{
 				toggleApplyButton();
 			}
 		});
-		textDiskOffset.setBounds(76, 171, 76, 21);
+		textDiskOffset.setBounds(86, 172, 76, 21);
 		
 		lblSectors1 = new Label(composite, SWT.NONE);
 		lblSectors1.setText("sectors");
-		lblSectors1.setBounds(158, 174, 55, 15);
+		lblSectors1.setBounds(168, 175, 55, 18);
 		
 		lblDiskUri = new Label(composite, SWT.NONE);
 		lblDiskUri.setBounds(10, 12, 393, 15);
 		lblDiskUri.setText("Disk X URI:");
 		
 		btnApply = new Button(composite, SWT.NONE);
+		btnApply.setToolTipText("Send any changes make in this panel to the server");
 		btnApply.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -1015,10 +1022,11 @@ public class MainWin {
 				
 			}
 		});
-		btnApply.setBounds(409, 211, 75, 25);
+		btnApply.setBounds(399, 211, 85, 25);
 		btnApply.setText("Apply");
 		
 		buttonFile = new Button(composite, SWT.NONE);
+		buttonFile.setToolTipText("Click to browse local files");
 		buttonFile.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -1036,10 +1044,11 @@ public class MainWin {
 		        }
 			}
 		});
-		buttonFile.setBounds(457, 32, 27, 24);
+		buttonFile.setBounds(452, 30, 32, 28);
 		buttonFile.setText("...");
 		
 		btnEject = new Button(composite, SWT.NONE);
+		btnEject.setToolTipText("Eject this image");
 		btnEject.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -1050,10 +1059,11 @@ public class MainWin {
 				
 			}
 		});
-		btnEject.setBounds(10, 211, 60, 25);
+		btnEject.setBounds(10, 211, 71, 25);
 		btnEject.setText("Eject");
 		
 		btnWrite = new Button(composite, SWT.NONE);
+		btnWrite.setToolTipText("Write the current image to an alternate destination");
 		btnWrite.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -1061,10 +1071,11 @@ public class MainWin {
 				sendCmdDiskFile(MainWin.currentDisk.getDrive(), "dw disk write ","Write");
 			}
 		});
-		btnWrite.setBounds(76, 211, 75, 25);
+		btnWrite.setBounds(87, 211, 85, 25);
 		btnWrite.setText("Write to...");
 		
 		btnReload = new Button(composite, SWT.NONE);
+		btnReload.setToolTipText("Reread the source image (losing any unsynced changes)");
 		btnReload.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -1075,59 +1086,69 @@ public class MainWin {
 			}
 		});
 		btnReload.setText("Reload");
-		btnReload.setBounds(158, 211, 60, 25);
+		btnReload.setBounds(178, 211, 75, 25);
 		
 		lblSectors2 = new Label(composite, SWT.RIGHT);
-		lblSectors2.setBounds(179, 71, 81, 15);
+		lblSectors2.setBounds(158, 66, 102, 21);
 		lblSectors2.setText("Total sectors:");
 		
 		lblDirtySectors = new Label(composite, SWT.RIGHT);
 		lblDirtySectors.setText("Dirty sectors:");
-		lblDirtySectors.setBounds(310, 115, 75, 15);
+		lblDirtySectors.setBounds(266, 117, 119, 22);
 		
 		lblCurrentLsn = new Label(composite, SWT.RIGHT);
 		lblCurrentLsn.setText("Current LSN:");
-		lblCurrentLsn.setBounds(179, 93, 81, 15);
+		lblCurrentLsn.setBounds(158, 93, 102, 23);
 		
 		lblReads = new Label(composite, SWT.RIGHT);
 		lblReads.setText("Reads:");
-		lblReads.setBounds(310, 71, 75, 15);
+		lblReads.setBounds(310, 66, 75, 21);
 		
 		lblWrites = new Label(composite, SWT.RIGHT);
 		lblWrites.setText("Writes:");
-		lblWrites.setBounds(310, 93, 75, 15);
+		lblWrites.setBounds(310, 93, 75, 18);
 		
 		btnFilesystemIsWriteable = new Label(composite, SWT.CHECK);
+		btnFilesystemIsWriteable.setToolTipText("The file system where the image resides supports writes");
 		btnFilesystemIsWriteable.setEnabled(false);
-		btnFilesystemIsWriteable.setBounds(317, 145, 152, 16);
+		btnFilesystemIsWriteable.setBounds(299, 145, 170, 16);
 		btnFilesystemIsWriteable.setText("Filesystem is writeable");
 		
 		btnFileIsWriteable = new Label(composite, SWT.CHECK);
+		btnFileIsWriteable.setToolTipText("The file for this disk image is writable (we have permission, etc)");
 		btnFileIsWriteable.setEnabled(false);
 		btnFileIsWriteable.setText("File is writeable");
-		btnFileIsWriteable.setBounds(317, 161, 152, 16);
+		btnFileIsWriteable.setBounds(299, 161, 170, 16);
 		
 		btnFileIsRandom = new Label(composite, SWT.CHECK);
+		btnFileIsRandom.setToolTipText("The source supports random access writes");
 		btnFileIsRandom.setEnabled(false);
 		btnFileIsRandom.setText("File is random writeable");
-		btnFileIsRandom.setBounds(317, 176, 152, 16);
+		btnFileIsRandom.setBounds(299, 176, 170, 16);
 		
 		labelDiskSectors = new Label(composite, SWT.NONE);
-		labelDiskSectors.setBounds(266, 71, 60, 15);
+		labelDiskSectors.setToolTipText("The numbers of sectors that exist in this disk image");
+		labelDiskSectors.setBounds(266, 66, 60, 23);
 		
 		labelDiskLSN = new Label(composite, SWT.NONE);
-		labelDiskLSN.setBounds(266, 93, 60, 15);
+		labelDiskLSN.setToolTipText("The destination sector of the most recent seek operation");
+		labelDiskLSN.setBounds(266, 93, 60, 18);
 		
 		labelDiskReads = new Label(composite, SWT.NONE);
-		labelDiskReads.setBounds(391, 71, 60, 15);
+		labelDiskReads.setToolTipText("The number of read requests made to this image");
+		labelDiskReads.setBounds(391, 66, 60, 23);
 		
 		labelDiskWrites = new Label(composite, SWT.NONE);
-		labelDiskWrites.setBounds(391, 93, 59, 15);
+		labelDiskWrites.setToolTipText("The number of write requests made to this image");
+		labelDiskWrites.setBounds(391, 93, 59, 18);
 		
 		labelDiskDirty = new Label(composite, SWT.NONE);
-		labelDiskDirty.setBounds(391, 115, 60, 15);
+		labelDiskDirty.setToolTipText("The number of sectors which have been changed but not synced to the source image");
+		labelDiskDirty.setBounds(391, 117, 60, 20);
 		
 		buttonRefresh = new Button(composite, SWT.NONE);
+		buttonRefresh.setToolTipText("Reread current information from server");
+		buttonRefresh.setText("Refresh");
 		buttonRefresh.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -1139,8 +1160,8 @@ public class MainWin {
 				}
 			}
 		});
-		buttonRefresh.setImage(SWTResourceManager.getImage(MainWin.class, "/icons/progress/ani/6.png"));
-		buttonRefresh.setBounds(376, 211, 27, 25);
+		buttonRefresh.setImage(null);
+		buttonRefresh.setBounds(317, 211, 76, 25);
 		
 		sashForm_1.setWeights(new int[] {295, 579});
 		
