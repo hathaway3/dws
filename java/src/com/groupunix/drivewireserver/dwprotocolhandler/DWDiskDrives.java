@@ -41,7 +41,7 @@ public class DWDiskDrives
 		if (DriveWireServer.hasDiskset(setname))
 		{
 			
-			EjectAllDisks();
+			
 		
 			DriveWireServer.getHandler(handlerno).config.setProperty("CurrentDiskSet", setname);
 			
@@ -50,6 +50,18 @@ public class DWDiskDrives
 			try 
 			{
 				HierarchicalConfiguration dset = DriveWireServer.getDiskset(setname);
+				
+				// diskset options
+				
+				if (dset.containsKey("HDBDOSMode"))
+				{
+					DriveWireServer.getHandler(handlerno).config.setProperty("HDBDOSMode",dset.getBoolean("HDBDOSMode",false));
+				}
+				
+				if (dset.getBoolean("EjectAllOnLoad",false))
+					EjectAllDisks();
+				
+				
 				
 				List<HierarchicalConfiguration> disks = dset.configurationsAt("disk");
 		    	

@@ -29,8 +29,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.85";
-	public static final String DWServerVersionDate = "12/29/2010";
+	public static final String DWServerVersion = "3.9.86";
+	public static final String DWServerVersionDate = "01/03/2010";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
