@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -19,11 +20,13 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 
 public class StatusWin extends Dialog {
 
 	protected Object result;
-	protected Shell shlServerStatus;
+	protected static Shell shlServerStatus;
 	private Label labelVersion;
 	private Label labelMemory;
 	private Label lblInstances;
@@ -34,7 +37,7 @@ public class StatusWin extends Dialog {
 	private Label lblDFreeMem;
 	private Label lblDConfig;
 	private Label lblDInstances;
-	private Group grpInstance;
+	private static Group grpInstance;
 	private Label lblLastOpcode;
 	private Label lblLastGetstat;
 	private Label lblLastSetstat;
@@ -55,6 +58,7 @@ public class StatusWin extends Dialog {
 	private Thread refreshT;
 	private Display display;
 	private Label lblAutoRefresh;
+	private static Group grpServerStatus;
 	
 	
 	/**
@@ -77,6 +81,8 @@ public class StatusWin extends Dialog {
 	{
 		createContents();
 		
+		applyFont();
+		
 		loadInfo();
 		
 		shlServerStatus.open();
@@ -90,6 +96,40 @@ public class StatusWin extends Dialog {
 		return result;
 	}
 
+	
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shlServerStatus.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlServerStatus.getDisplay(), f));
+			
+		}
+	
+		controls = grpServerStatus.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlServerStatus.getDisplay(), f));
+			
+		}
+		
+		controls = grpInstance.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlServerStatus.getDisplay(), f));
+			
+		}
+		
+	}
+	
+	
+	
 	private void loadInfoAsync()
 	{
 		display.asyncExec(
@@ -284,7 +324,7 @@ public class StatusWin extends Dialog {
 		btnRefresh.setBounds(167, 376, 118, 25);
 		btnRefresh.setText("Refresh now");
 		
-		Group grpServerStatus = new Group(shlServerStatus, SWT.NONE);
+		grpServerStatus = new Group(shlServerStatus, SWT.NONE);
 		grpServerStatus.setText(" Server ");
 		grpServerStatus.setBounds(10, 20, 424, 135);
 		
@@ -302,7 +342,7 @@ public class StatusWin extends Dialog {
 		labelMemory.setText("Total Memory:");
 		
 		lblDTotMem = new Label(grpServerStatus, SWT.NONE);
-		lblDTotMem.setBounds(112, 48, 105, 18);
+		lblDTotMem.setBounds(112, 48, 95, 18);
 		
 		lblFreeMemory = new Label(grpServerStatus, SWT.NONE);
 		lblFreeMemory.setBounds(200, 48, 95, 18);
@@ -502,5 +542,8 @@ public class StatusWin extends Dialog {
 	}
 	protected Combo getComboRefresh() {
 		return comboRefresh;
+	}
+	protected Group getGrpServerStatus() {
+		return grpServerStatus;
 	}
 }
