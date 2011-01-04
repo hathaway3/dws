@@ -35,7 +35,6 @@ public class StatusWin extends Dialog {
 	private Label lblDConfig;
 	private Label lblDInstances;
 	private Group grpInstance;
-	private Label lblDevice;
 	private Label lblLastOpcode;
 	private Label lblLastGetstat;
 	private Label lblLastSetstat;
@@ -290,115 +289,110 @@ public class StatusWin extends Dialog {
 		grpServerStatus.setBounds(10, 20, 424, 135);
 		
 		labelVersion = new Label(grpServerStatus, SWT.NONE);
-		labelVersion.setBounds(10, 24, 95, 22);
+		labelVersion.setBounds(10, 24, 95, 18);
 		labelVersion.setAlignment(SWT.RIGHT);
 		labelVersion.setText("Version:");
 		
 		lblDVersion = new Label(grpServerStatus, SWT.NONE);
-		lblDVersion.setBounds(111, 24, 295, 22);
+		lblDVersion.setBounds(111, 24, 295, 18);
 		
 		labelMemory = new Label(grpServerStatus, SWT.NONE);
-		labelMemory.setBounds(6, 54, 99, 22);
+		labelMemory.setBounds(7, 48, 99, 18);
 		labelMemory.setAlignment(SWT.RIGHT);
 		labelMemory.setText("Total Memory:");
 		
 		lblDTotMem = new Label(grpServerStatus, SWT.NONE);
-		lblDTotMem.setBounds(111, 54, 105, 22);
+		lblDTotMem.setBounds(112, 48, 105, 18);
 		
 		lblFreeMemory = new Label(grpServerStatus, SWT.NONE);
-		lblFreeMemory.setBounds(199, 54, 95, 22);
+		lblFreeMemory.setBounds(200, 48, 95, 18);
 		lblFreeMemory.setAlignment(SWT.RIGHT);
 		lblFreeMemory.setText("Free Memory:");
 		
 		lblDFreeMem = new Label(grpServerStatus, SWT.NONE);
-		lblDFreeMem.setBounds(300, 54, 105, 22);
+		lblDFreeMem.setBounds(301, 48, 105, 18);
 		
 		labelConfigPath = new Label(grpServerStatus, SWT.NONE);
-		labelConfigPath.setBounds(10, 82, 95, 22);
+		labelConfigPath.setBounds(10, 72, 95, 18);
 		labelConfigPath.setAlignment(SWT.RIGHT);
 		labelConfigPath.setText("Config:");
 		
 		lblDConfig = new Label(grpServerStatus, SWT.NONE);
-		lblDConfig.setBounds(111, 82, 295, 22);
+		lblDConfig.setBounds(111, 72, 295, 18);
 		
 		lblInstances = new Label(grpServerStatus, SWT.NONE);
-		lblInstances.setBounds(10, 106, 95, 22);
+		lblInstances.setBounds(10, 96, 95, 18);
 		lblInstances.setAlignment(SWT.RIGHT);
 		lblInstances.setText("Instances:");
 		
 		lblDInstances = new Label(grpServerStatus, SWT.NONE);
-		lblDInstances.setBounds(111, 106, 295, 22);
+		lblDInstances.setBounds(111, 96, 295, 18);
 		
 		grpInstance = new Group(shlServerStatus, SWT.NONE);
 		grpInstance.setText(" Instance ");
-		grpInstance.setBounds(10, 171, 424, 172);
-		
-		lblDevice = new Label(grpInstance, SWT.NONE);
-		lblDevice.setText("Device:");
-		lblDevice.setAlignment(SWT.RIGHT);
-		lblDevice.setBounds(10, 27, 95, 22);
+		grpInstance.setBounds(10, 171, 424, 165);
 		
 		lblLastOpcode = new Label(grpInstance, SWT.NONE);
 		lblLastOpcode.setText("Last OpCode:");
 		lblLastOpcode.setAlignment(SWT.RIGHT);
-		lblLastOpcode.setBounds(10, 55, 95, 22);
+		lblLastOpcode.setBounds(10, 53, 95, 18);
 		
 		lblLastGetstat = new Label(grpInstance, SWT.NONE);
 		lblLastGetstat.setText("Last GetStat:");
 		lblLastGetstat.setAlignment(SWT.RIGHT);
-		lblLastGetstat.setBounds(10, 83, 95, 22);
+		lblLastGetstat.setBounds(10, 77, 95, 18);
 		
 		lblLastSetstat = new Label(grpInstance, SWT.NONE);
 		lblLastSetstat.setText("Last SetStat:");
 		lblLastSetstat.setAlignment(SWT.RIGHT);
-		lblLastSetstat.setBounds(199, 83, 95, 22);
+		lblLastSetstat.setBounds(199, 77, 95, 18);
 		
 		lblLastDrive = new Label(grpInstance, SWT.NONE);
 		lblLastDrive.setText("Last Drive:");
 		lblLastDrive.setAlignment(SWT.RIGHT);
-		lblLastDrive.setBounds(10, 111, 95, 22);
+		lblLastDrive.setBounds(10, 101, 95, 18);
 		
 		lblLastLsn = new Label(grpInstance, SWT.NONE);
 		lblLastLsn.setText("Last LSN:");
 		lblLastLsn.setAlignment(SWT.RIGHT);
-		lblLastLsn.setBounds(199, 111, 95, 22);
+		lblLastLsn.setBounds(199, 101, 95, 18);
 		
 		lblLastError = new Label(grpInstance, SWT.NONE);
 		lblLastError.setText("Last Error:");
 		lblLastError.setAlignment(SWT.RIGHT);
-		lblLastError.setBounds(10, 141, 95, 22);
+		lblLastError.setBounds(10, 125, 95, 18);
 		
 		lblDDevice = new Label(grpInstance, SWT.NONE);
 		lblDDevice.setText("");
-		lblDDevice.setBounds(111, 27, 295, 22);
+		lblDDevice.setBounds(20, 27, 386, 18);
 		
 		lblDOpCode = new Label(grpInstance, SWT.NONE);
 		lblDOpCode.setText("");
-		lblDOpCode.setBounds(111, 55, 295, 22);
+		lblDOpCode.setBounds(111, 53, 295, 18);
 		
 		lblDGetStat = new Label(grpInstance, SWT.NONE);
-		lblDGetStat.setBounds(111, 83, 105, 22);
+		lblDGetStat.setBounds(111, 77, 105, 18);
 		
 		lblDSetStat = new Label(grpInstance, SWT.NONE);
-		lblDSetStat.setBounds(300, 83, 105, 22);
+		lblDSetStat.setBounds(300, 77, 105, 18);
 		
 		lblDDrive = new Label(grpInstance, SWT.NONE);
-		lblDDrive.setBounds(111, 111, 105, 22);
+		lblDDrive.setBounds(111, 101, 105, 18);
 		
 		lblDLSN = new Label(grpInstance, SWT.NONE);
-		lblDLSN.setBounds(300, 111, 105, 22);
+		lblDLSN.setBounds(300, 101, 105, 18);
 		
 		lblDError = new Label(grpInstance, SWT.NONE);
 		lblDError.setText("");
-		lblDError.setBounds(111, 141, 83, 22);
+		lblDError.setBounds(111, 125, 83, 18);
 		
 		lblLastChecksum = new Label(grpInstance, SWT.NONE);
 		lblLastChecksum.setText("Last Checksum:");
 		lblLastChecksum.setAlignment(SWT.RIGHT);
-		lblLastChecksum.setBounds(200, 141, 95, 22);
+		lblLastChecksum.setBounds(200, 125, 95, 18);
 		
 		lblDChecksum = new Label(grpInstance, SWT.NONE);
-		lblDChecksum.setBounds(301, 141, 105, 22);
+		lblDChecksum.setBounds(301, 125, 105, 18);
 		
 		comboRefresh = new Combo(shlServerStatus, SWT.READ_ONLY);
 		comboRefresh.addModifyListener(new ModifyListener() {
