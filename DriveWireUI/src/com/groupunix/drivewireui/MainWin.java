@@ -48,8 +48,8 @@ import org.eclipse.swt.events.MouseEvent;
 
 public class MainWin {
 
-	public static final String DWUIVersion = "3.9.84";
-	public static final String DWUIVersionDate = "12/28/2010";
+	public static final String DWUIVersion = "3.9.86";
+	public static final String DWUIVersionDate = "01/04/2010";
 	
 	public static final String default_Host = "127.0.0.1";
 	public static final int default_Port = 6800;
@@ -136,19 +136,20 @@ public class MainWin {
 		
 		loadConfig();
 		
-			try 
-				{
-					display = new Display();
+		try 
+		{
+			display = new Display();
 					
+		
+			MainWin window = new MainWin();
 			
-					MainWin window = new MainWin();
-					
-					window.open(display);
-				} 
-				catch (Exception e) 
-				{
-					e.printStackTrace();
-				}
+			window.open(display);
+		} 
+		catch (Exception e) 
+		{
+			System.out.println("\nSomething's gone horribly wrong:\n");
+			e.printStackTrace();
+		}
 		
 		
 				
@@ -208,10 +209,27 @@ public class MainWin {
 
 		updateTitlebar();
 
-		for (int i = 0;i<256;i++)
+		if (config.getBoolean("RefreshDisksOnOpen",false))
 		{
-			TableItem item = new TableItem(table, SWT.NONE);
-			item.setText(0,i+"");
+			try 
+			{
+				MainWin.refreshDiskTable();
+			} 
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (DWUIOperationFailedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			for (int i = 0;i<256;i++)
+			{	
+				TableItem item = new TableItem(table, SWT.NONE);
+				item.setText(0,i+"");
+			}
 		}
 		
 		MainWin.currentDisk = new DiskDef();

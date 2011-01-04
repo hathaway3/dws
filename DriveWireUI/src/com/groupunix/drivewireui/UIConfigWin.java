@@ -27,6 +27,8 @@ public class UIConfigWin extends Dialog {
 	private Text textTCPTimeout;
 	private Text textDialogFont;
 	private Button btnTerminateServerOn;
+	private Button btnShowCommandsSent;
+	private Button btnRefreshDisksOn;
 	
 	
 	/**
@@ -72,6 +74,10 @@ public class UIConfigWin extends Dialog {
 		
 		this.btnTerminateServerOn.setSelection(MainWin.config.getBoolean("TermServerOnExit",false));
 		
+		this.btnShowCommandsSent.setSelection(MainWin.config.getBoolean("ShowCommandsSent", false));
+		
+		this.btnRefreshDisksOn.setSelection(MainWin.config.getBoolean("RefreshDisksOnOpen", false));
+		
 	}
 	
 	private void setFonts() 
@@ -96,7 +102,7 @@ public class UIConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlUserInterfaceConfiguration = new Shell(getParent(), getStyle());
-		shlUserInterfaceConfiguration.setSize(411, 366);
+		shlUserInterfaceConfiguration.setSize(411, 448);
 		shlUserInterfaceConfiguration.setText("User Interface Configuration");
 		
 		spinnerDiskHist = new Spinner(shlUserInterfaceConfiguration, SWT.BORDER);
@@ -127,7 +133,7 @@ public class UIConfigWin extends Dialog {
 				shlUserInterfaceConfiguration.close();
 			}
 		});
-		btnOk.setBounds(166, 303, 75, 25);
+		btnOk.setBounds(166, 385, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlUserInterfaceConfiguration, SWT.NONE);
@@ -138,7 +144,7 @@ public class UIConfigWin extends Dialog {
 				shlUserInterfaceConfiguration.close();
 			}
 		});
-		btnCancel.setBounds(316, 303, 75, 25);
+		btnCancel.setBounds(316, 385, 75, 25);
 		btnCancel.setText("Cancel");
 		
 		Button btnUndo = new Button(shlUserInterfaceConfiguration, SWT.NONE);
@@ -149,7 +155,7 @@ public class UIConfigWin extends Dialog {
 				loadSettings();
 			}
 		});
-		btnUndo.setBounds(10, 303, 75, 25);
+		btnUndo.setBounds(10, 385, 75, 25);
 		btnUndo.setText("Undo");
 		
 		Button btnSet = new Button(shlUserInterfaceConfiguration, SWT.NONE);
@@ -250,8 +256,16 @@ public class UIConfigWin extends Dialog {
 		button_1.setBounds(344, 33, 47, 25);
 		
 		btnTerminateServerOn = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
-		btnTerminateServerOn.setBounds(71, 251, 284, 22);
+		btnTerminateServerOn.setBounds(50, 254, 243, 22);
 		btnTerminateServerOn.setText("Terminate server on exit");
+		
+		btnShowCommandsSent = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		btnShowCommandsSent.setBounds(50, 321, 243, 22);
+		btnShowCommandsSent.setText("Show commands sent");
+		
+		btnRefreshDisksOn = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		btnRefreshDisksOn.setText("Refresh disks on open");
+		btnRefreshDisksOn.setBounds(50, 282, 243, 22);
 
 	}
 
@@ -270,8 +284,19 @@ public class UIConfigWin extends Dialog {
 		
 		MainWin.config.setProperty("TermServerOnExit", this.btnTerminateServerOn.getSelection());
 		
+		MainWin.config.setProperty("RefreshDisksOnOpen",this.btnRefreshDisksOn.getSelection());
+		
+		MainWin.config.setProperty("ShowCommandsSent", this.btnShowCommandsSent.getSelection());
+
+		
 	}
 	protected Button getBtnTerminateServerOn() {
 		return btnTerminateServerOn;
+	}
+	protected Button getBtnShowCommandsSent() {
+		return btnShowCommandsSent;
+	}
+	protected Button getBtnRefreshDisksOn() {
+		return btnRefreshDisksOn;
 	}
 }

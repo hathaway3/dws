@@ -109,6 +109,11 @@ public class Connection
 	
 	public ArrayList<String> loadArrayList(String arg) throws IOException 
 	{
+		if (MainWin.config.getBoolean("ShowCommandsSent",false))
+		{
+			addToDisplay(">>> " + arg);
+		}
+		
 		ArrayList<String> res = new ArrayList<String>();
 		
 		sock.getOutputStream().write((arg + "\n").getBytes());
