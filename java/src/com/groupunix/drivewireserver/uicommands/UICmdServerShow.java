@@ -19,6 +19,7 @@ public class UICmdServerShow implements DWCommand {
 		commands.addcommand(new UICmdServerShowSynthProfiles());
 		commands.addcommand(new UICmdServerShowLocalDisks());
 		commands.addcommand(new UICmdServerShowSerialDevs());
+		commands.addcommand(new UICmdServerShowStatus());
 	}
 
 	

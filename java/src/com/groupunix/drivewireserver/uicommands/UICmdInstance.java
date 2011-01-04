@@ -16,6 +16,7 @@ public class UICmdInstance implements DWCommand {
 		commands.addcommand(new UICmdInstanceConfig(dwuiClientThread));
 		commands.addcommand(new UICmdInstanceDisk(dwuiClientThread));
 		commands.addcommand(new UICmdInstanceReset(dwuiClientThread));
+		commands.addcommand(new UICmdInstanceStatus(dwuiClientThread));
 	}
 
 	

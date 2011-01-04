@@ -182,5 +182,19 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 		// doesn't make sense here?
 		return(-1);
 	}
+
+
+	@Override
+	public String getDeviceName() 
+	{
+		return(this.tcphost + ":" + this.tcpport);
+	}
+
+
+	@Override
+	public String getDeviceType() 
+	{
+		return("tcp-client");
+	}
 	
 }

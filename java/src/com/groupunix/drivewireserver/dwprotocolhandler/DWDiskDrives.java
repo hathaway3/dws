@@ -65,49 +65,60 @@ public class DWDiskDrives
 				
 				List<HierarchicalConfiguration> disks = dset.configurationsAt("disk");
 		    	
-				for(Iterator<HierarchicalConfiguration> it = disks.iterator(); it.hasNext();)
+				for(HierarchicalConfiguration disk : disks)
 				{
-				    HierarchicalConfiguration disk = it.next();
+				     
+					// valid disk?
+					if (disk.containsKey("path") && disk.containsKey("drive"))
+					{
+						String filepath = new String();
 				    
-				    String filepath = new String();
-				    
-				    if (disk.getBoolean("relativepath",false))
-				    {
-			    	   File curdir = new File(".");
+						if (disk.getBoolean("relativepath",false))
+						{
+							File curdir = new File(".");
 
-			    	   filepath = curdir.getCanonicalPath() + "/" + disk.getString("path");
-				    }
-				    else
-				    {
-				    	filepath = disk.getString("path"); 
-				    }
+							filepath = curdir.getCanonicalPath() + "/" + disk.getString("path");
+						}
+						else
+						{
+							filepath = disk.getString("path"); 
+						}
 				    
 				    
-				    DWDisk tmpdisk = new DWDisk(filepath);
+						DWDisk tmpdisk = new DWDisk(filepath);
 				    
 				    
-				    //	options
+						//	options
 			    	
-		    		tmpdisk.setSync(disk.getBoolean("sync",true));
-			    	tmpdisk.setExpand(disk.getBoolean("expand",true));
-		    		tmpdisk.setWriteProtect(disk.getBoolean("writeprotect",false));
+						tmpdisk.setSync(disk.getBoolean("sync",true));
+						tmpdisk.setExpand(disk.getBoolean("expand",true));
+						tmpdisk.setWriteProtect(disk.getBoolean("writeprotect",false));
 				    
-		    		tmpdisk.setSizelimit(disk.getInt("sizelimit",-1));
+						tmpdisk.setSizelimit(disk.getInt("sizelimit",-1));
 		    		
-		    		if (disk.containsKey("hdbdiskoffset"))
-		    		{
-		    			tmpdisk.setOffset(disk.getInt("hdbdiskoffset", 0) * 630);
-		    		}
-		    		else
-		    		{
-		    			tmpdisk.setOffset(disk.getInt("offset", 0));
-		    		}
+						if (disk.containsKey("hdbdiskoffset"))
+						{
+							tmpdisk.setOffset(disk.getInt("hdbdiskoffset", 0) * 630);
+						}
+						else
+						{
+							tmpdisk.setOffset(disk.getInt("offset", 0));
+						}
 				    
-				    
-			    	LoadDisk(disk.getInt("drive"), tmpdisk);
+						// 	eject if necessary
+						if (this.diskLoaded(disk.getInt("drive")))
+		    			{
+		    				EjectDisk(disk.getInt("drive"));
+		    			}
+		    		
+						LoadDisk(disk.getInt("drive"), tmpdisk);
 				    
 			    	
-			    	
+					}
+					else
+					{
+						logger.warn("Invalid disk definition in diskset '" + setname + "'");
+					}
 			    	
 			    	
 				}
@@ -128,6 +139,10 @@ public class DWDiskDrives
 			catch (IllegalArgumentException e)
 			{
 				logger.error("IllegalArgumentException: " + e.getMessage());
+			} 
+			catch (DWDriveNotLoadedException e) 
+			{
+				logger.warn("Attempt to eject empty disk?");
 			}
 		}
 		else

@@ -10,12 +10,12 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdDisksetShow implements DWCommand {
+public class UICmdDisksetSet implements DWCommand {
 
 	
 	public String getCommand() 
 	{
-		return "show";
+		return "set";
 	}
 
 	public String getLongHelp() 
@@ -27,18 +27,18 @@ public class UICmdDisksetShow implements DWCommand {
 	
 	public String getShortHelp() 
 	{
-		return "Show disksets or details of [set]";
+		return "Set diskset details";
 	}
 
 
 	public String getUsage() 
 	{
-		return "ui diskset show [set]";
+		return "ui diskset set [set] [item] [value]";
 	}
 
 	public DWCommandResponse parse(String cmdline) 
 	{
-		if (cmdline.length() == 0)
+		if (cmdline.length() < 3)
 		{
 			return(doDiskSetShow());
 		}

@@ -13,6 +13,7 @@ public class UICmdDiskset implements DWCommand {
 	public UICmdDiskset(DWUIClientThread dwuiClientThread)
 	{
 		commands.addcommand(new UICmdDisksetShow());
+		commands.addcommand(new UICmdDisksetSet());
 	}
 
 	

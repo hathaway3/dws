@@ -256,5 +256,19 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 
 	}
+
+
+	@Override
+	public String getDeviceName() 
+	{
+		return(this.serialPort.getName());
+	}
+
+
+	@Override
+	public String getDeviceType() 
+	{
+		return("serial");
+	}
 	
 }
