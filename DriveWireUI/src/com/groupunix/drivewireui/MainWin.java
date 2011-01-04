@@ -346,6 +346,27 @@ public class MainWin {
 		mntmServer.setMenu(menu_4);
 		
 		MenuItem mntmDisksetProperties = new MenuItem(menu_4, SWT.NONE);
+		mntmDisksetProperties.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				DisksetPropWin window = new DisksetPropWin(shell,SWT.DIALOG_TRIM);
+				
+				try 
+				{
+					window.open();
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+				
+			}
+		});
 		
 		mntmDisksetProperties.setText("Diskset properties..");
 		
@@ -368,8 +389,8 @@ public class MainWin {
 			public void widgetSelected(SelectionEvent e) 
 			{
 				CopyDiskToDSKWin window = new CopyDiskToDSKWin(shell,SWT.DIALOG_TRIM);
-				window.open();
 				
+				window.open();
 			
 			}
 		});
@@ -388,9 +409,23 @@ public class MainWin {
 		mntmHdbdosTranslation.setMenu(menu_11);
 		
 		MenuItem mntmOn = new MenuItem(menu_11, SWT.NONE);
+		mntmOn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				sendCommand("ui instance config set HDBDOSMode true");
+			}
+		});
 		mntmOn.setText("On");
 		
 		MenuItem mntmOff = new MenuItem(menu_11, SWT.NONE);
+		mntmOff.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				sendCommand("ui instance config set HDBDOSMode false");
+			}
+		});
 		mntmOff.setText("Off");
 		
 		MenuItem mntmCreateDiskset = new MenuItem(menu_2, SWT.CASCADE);
@@ -402,9 +437,6 @@ public class MainWin {
 		MenuItem mntmMapMultidiskImage = new MenuItem(menu_9, SWT.NONE);
 		mntmMapMultidiskImage.setText("Map multidisk image to individual disks");
 		
-		MenuItem mntmMapMultipleDisks = new MenuItem(menu_9, SWT.NONE);
-		mntmMapMultipleDisks.setText("Map multiple disks to HDBDOS drives");
-		
 		new MenuItem(menu_4, SWT.SEPARATOR);
 		
 		MenuItem mntmStatus = new MenuItem(menu_4, SWT.NONE);
@@ -412,7 +444,21 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCommand("dw server status");
+				StatusWin window = new StatusWin(shell,SWT.DIALOG_TRIM);
+				
+				try
+				{
+					window.open();
+				}
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+				
 			}
 		});
 		mntmStatus.setText("Server status");
@@ -888,11 +934,24 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCommand("dw server status");
+				StatusWin window = new StatusWin(shell,SWT.DIALOG_TRIM);
+				
+				try
+				{
+					window.open();
+				}
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
 			}
 		});
 		tltmShowServer.setImage(SWTResourceManager.getImage(MainWin.class, "/javax/swing/plaf/metal/icons/ocean/computer.gif"));
-		tltmShowServer.setText("Server Status");
+		tltmShowServer.setText("View Status");
 		
 		sashForm = new SashForm(shell, SWT.SMOOTH | SWT.VERTICAL);
 		sashForm.setLayoutData(BorderLayout.CENTER);
