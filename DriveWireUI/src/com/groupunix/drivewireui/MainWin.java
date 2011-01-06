@@ -215,12 +215,13 @@ public class MainWin {
 			{
 				MainWin.refreshDiskTable();
 			} 
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (DWUIOperationFailedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			catch (IOException e) 
+			{
+				MainWin.addToDisplay("IO exception while loading initial disk info: " + e.getMessage());
+			} 
+			catch (DWUIOperationFailedException e) 
+			{
+				MainWin.addToDisplay("DW exception while loading initial disk info: " + e.getMessage());
 			}
 		}
 		else
