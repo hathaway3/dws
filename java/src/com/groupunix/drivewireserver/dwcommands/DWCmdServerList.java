@@ -77,7 +77,7 @@ public class DWCmdServerList implements DWCommand {
 			
 			while (data > 0)
 			{
-				text += new String(buffer);
+				text += new String(buffer).substring(0,data);
 				data = ins.read(buffer);
 						
 			}
@@ -112,6 +112,7 @@ public class DWCmdServerList implements DWCommand {
 			}
 			
 		}
+		
 		
 		return(new DWCommandResponse(text));
 	}

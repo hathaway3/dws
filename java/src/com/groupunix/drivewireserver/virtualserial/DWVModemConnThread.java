@@ -147,7 +147,7 @@ public class DWVModemConnThread implements Runnable {
 			{
 				int data = skt.getInputStream().read();
 				
-				//logger.debug("INDATA: " + data);
+				//logger.debug("INDATA: " + data + "  (" + (char)data + ")");
 				
 				if (data >= 0)
 				{

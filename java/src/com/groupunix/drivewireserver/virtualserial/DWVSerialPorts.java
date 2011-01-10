@@ -33,8 +33,7 @@ public class DWVSerialPorts {
 	public static final int TERM_PORT = 0;
 	public static final int MODE_TERM = 3;
 	public static final int MAX_COCO_PORTS = 15;
-	public static final int MAX_UI_PORTS = 15;
-	public static final int MAX_PORTS = MAX_COCO_PORTS + MAX_UI_PORTS;
+	public static final int MAX_PORTS = MAX_COCO_PORTS;
 	public static final int MIDI_PORT = 14;
 	
 	
@@ -108,8 +107,6 @@ public class DWVSerialPorts {
 	{
 		if (vserialPorts[port] == null)
 		{
-			//this happens in UI and on TERM/headless mode.. guess it doesn't matter
-			//logger.error("WHY IS THIS PORT NULL? RESETING IT.");
 			resetPort(port);
 		}
 		
@@ -133,7 +130,7 @@ public class DWVSerialPorts {
 		}
 		else
 		{
-			return("UI:" + port);
+			return("NA:" + port);
 		}
 	}
 
@@ -625,33 +622,6 @@ public class DWVSerialPorts {
 	}
 
 
-	public synchronized int openUIPort() 
-	{
-		// find first available UI port
-		
-		int uiport = MAX_COCO_PORTS;
-		
-		while (uiport < MAX_PORTS)
-		{
-			if (this.vserialPorts[uiport] == null)
-			{
-				
-				openPort(uiport);
-				return(uiport);
-			}
-			
-			if (this.vserialPorts[uiport].isOpen() == false)
-			{
-				
-				openPort(uiport);
-				return(uiport);
-			}
-			
-			uiport++;
-		}
-		
-		return(-1);
-	}
 	
 	
 	
