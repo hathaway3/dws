@@ -390,6 +390,17 @@ public class MainWin {
 		mntmDisksetProperties.setText("Diskset properties..");
 		
 		MenuItem mntmCreate = new MenuItem(menu_4, SWT.NONE);
+		mntmCreate.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				CreateDiskWin window = new CreateDiskWin(shell,SWT.DIALOG_TRIM);
+	
+				window.open();
+				
+			
+			}
+		});
 		
 				mntmCreate.setText("Create dsk...");
 		
@@ -1557,7 +1568,9 @@ public class MainWin {
 			}
 			
 		}
-	
+		
+		loadSelectedDiskDetails();
+		displayCurrentDisk();
 		
 	}
 

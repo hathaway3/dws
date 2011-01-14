@@ -120,7 +120,7 @@ public class DisksetPropWin extends Dialog {
 	 */
 	private void createContents() {
 		shlDisksetProperties = new Shell(getParent(), getStyle());
-		shlDisksetProperties.setSize(450, 354);
+		shlDisksetProperties.setSize(450, 364);
 		shlDisksetProperties.setText("Diskset Properties");
 		
 		Button btnOk = new Button(shlDisksetProperties, SWT.NONE);
@@ -132,7 +132,7 @@ public class DisksetPropWin extends Dialog {
 				shlDisksetProperties.close();
 			}
 		});
-		btnOk.setBounds(180, 291, 75, 25);
+		btnOk.setBounds(180, 301, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnUndo = new Button(shlDisksetProperties, SWT.NONE);
@@ -153,7 +153,7 @@ public class DisksetPropWin extends Dialog {
 				}
 			}
 		});
-		btnUndo.setBounds(10, 291, 75, 25);
+		btnUndo.setBounds(10, 301, 75, 25);
 		btnUndo.setText("Undo");
 		
 		Button btnCancel = new Button(shlDisksetProperties, SWT.NONE);
@@ -164,7 +164,7 @@ public class DisksetPropWin extends Dialog {
 				shlDisksetProperties.close();
 			}
 		});
-		btnCancel.setBounds(359, 291, 75, 25);
+		btnCancel.setBounds(359, 301, 75, 25);
 		btnCancel.setText("Cancel");
 		
 		btnTrackDiskChanges = new Button(shlDisksetProperties, SWT.CHECK);
