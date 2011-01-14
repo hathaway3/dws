@@ -48,8 +48,8 @@ import org.eclipse.swt.events.MouseEvent;
 
 public class MainWin {
 
-	public static final String DWUIVersion = "3.9.86";
-	public static final String DWUIVersionDate = "01/04/2010";
+	public static final String DWUIVersion = "3.9.87";
+	public static final String DWUIVersionDate = "01/10/2010";
 	
 	public static final String default_Host = "127.0.0.1";
 	public static final int default_Port = 6800;
@@ -285,7 +285,7 @@ public class MainWin {
 	 */
 	protected void createContents() {
 		shell = new Shell();
-		shell.setImage(SWTResourceManager.getImage(MainWin.class, "/dw4logo5.png"));
+		shell.setImage(SWTResourceManager.getImage("E:\\dw4square.jpg"));
 		shell.addShellListener(new ShellAdapter() {
 			@Override
 			public void shellClosed(ShellEvent e) 

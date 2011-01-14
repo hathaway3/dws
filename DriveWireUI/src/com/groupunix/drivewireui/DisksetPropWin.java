@@ -200,6 +200,11 @@ public class DisksetPropWin extends Dialog {
 	{
 		// send settings to server
 		
+		MainWin.sendCommand("ui diskset set " + this.currentdiskset + " Description " + this.textDescription.getText());
+		MainWin.sendCommand("ui diskset set " + this.currentdiskset + " Notes " + this.textNotes.getText());
+		MainWin.sendCommand("ui diskset set " + this.currentdiskset + " SaveChanges " + UIUtils.bTos(this.btnTrackDiskChanges.getSelection()));
+		MainWin.sendCommand("ui diskset set " + this.currentdiskset + " HDBDOSMode " + UIUtils.bTos(this.btnHdbdosTranslation.getSelection()));
+		MainWin.sendCommand("ui diskset set " + this.currentdiskset + " EjectAllOnLoad " + UIUtils.bTos(this.btnEjectAllDisks.getSelection()));
 		
 	}
 
