@@ -143,11 +143,14 @@ public class DWVModemConnThread implements Runnable {
 				
 			int telmode = 0;
 			
+			dwVSerialPorts.getPortInput(vport).write("CONNECT\r\n".getBytes());
+			
 			while (skt.isConnected())
 			{
 				int data = skt.getInputStream().read();
 				
-				//logger.debug("INDATA: " + data + "  (" + (char)data + ")");
+				if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogVPortBytes"))
+					logger.debug("VMODEM to CoCo: " + data + "  (" + (char)data + ")");
 				
 				if (data >= 0)
 				{

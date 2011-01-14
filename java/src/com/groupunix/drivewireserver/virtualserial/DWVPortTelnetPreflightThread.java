@@ -62,7 +62,8 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		try
 		{
 			// hello
-			skt.getOutputStream().write(("DriveWire Telnet Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
+			if (this.telnet)
+				skt.getOutputStream().write(("DriveWire Telnet Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
 
 			// GeoIP
 			

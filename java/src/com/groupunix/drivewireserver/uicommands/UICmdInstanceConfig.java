@@ -15,7 +15,7 @@ public class UICmdInstanceConfig implements DWCommand {
 	{
 
 		commands.addcommand(new UICmdInstanceConfigShow(dwuiClientThread));
-		commands.addcommand(new UICmdServerConfigSet());
+		commands.addcommand(new UICmdInstanceConfigSet(dwuiClientThread));
 	}
 
 	

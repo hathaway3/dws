@@ -1,7 +1,7 @@
 package com.groupunix.drivewireserver.uicommands;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 
@@ -38,84 +38,71 @@ public class UICmdDisksetSet implements DWCommand {
 
 	public DWCommandResponse parse(String cmdline) 
 	{
-		if (cmdline.length() < 3)
+		String[] args = cmdline.split(" ");
+		
+		
+		if (args.length < 2)
 		{
-			return(doDiskSetShow());
+			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"ui diskset set requires additional parameters"));
+		}
+		else if (args.length == 2)
+		{
+			return(doDiskSetClear(args[0],args[1]));
 		}
 		else
 		{
-			return(doDiskSetShow(cmdline));
+			return(doDiskSetSet(cmdline));	
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private DWCommandResponse doDiskSetShow()
+
+	private DWCommandResponse doDiskSetSet(String cmdline) 
 	{
-		String text = new String();
-		
-		List<HierarchicalConfiguration> disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
-    	
-		String[] setnames = new String[disksets.size()];
-		int tmp = 0;
-		
-		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
+		Pattern p_item = Pattern.compile("^(.+?)\\s+(.+?)\\s+(.+)$");
+		Matcher m = p_item.matcher(cmdline);
+	  
+		if (m.find())
 		{
-		    HierarchicalConfiguration dset = (HierarchicalConfiguration) it.next();
-		    
-		    setnames[tmp]=dset.getString("Name","unnamed-" + tmp); 
-		    tmp++;
+			if (DriveWireServer.hasDiskset(m.group(1)))
+			{
+				DriveWireServer.getDiskset(m.group(1)).setProperty(m.group(2), m.group(3));
+				
+				return(new DWCommandResponse("Set item '" + m.group(2) + "' in diskset '" + m.group(1) + "'."));
+			}
+			else
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,"There is no diskset called '" + m.group(1) + "'"));
+			}			
+			
 		}
-    	for (int i=0; i<setnames.length; i++) 
-        {
-        	text += setnames[i]+"\n";
-        	
-        }
-		
-		return(new DWCommandResponse(text));
+		else
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error in ui diskset set command"));
+		}
 	}
-	
-	
-	
-	@SuppressWarnings("unchecked")
-	private DWCommandResponse doDiskSetShow(String setname)
+
+	private DWCommandResponse doDiskSetClear(String setname, String item) 
 	{
-		String text = new String();
-		
 		if (DriveWireServer.hasDiskset(setname))
 		{
-			HierarchicalConfiguration theset = DriveWireServer.getDiskset(setname);
+			HierarchicalConfiguration diskset = DriveWireServer.getDiskset(setname);
 			
-			text = "Description: " + theset.getString("Description","") + "\n";
-			text += "Notes: " + theset.getString("Notes","") + "\n";
-			text += "SaveChanges: " + theset.getBoolean("SaveChanges",false) + "\n";
-			text += "HDBDOSMode: " + theset.getBoolean("HDBDOSMode",false) + "\n";
-			text += "ImageURL: " + theset.getString("ImageURL","") + "\n";
-			text += "EjectAllOnLoad: " + theset.getBoolean("EjectAllOnLoad",false) + "\n";
-			
-			// disks
-			List<HierarchicalConfiguration> disks = theset.configurationsAt("disk");
-	    	
-			for(Iterator<HierarchicalConfiguration> it = disks.iterator(); it.hasNext();)
+			if (diskset.containsKey(item))
 			{
-			    HierarchicalConfiguration disk = (HierarchicalConfiguration) it.next();
-			    text += "path(" + disk.getInt("drive") + "): " + disk.getString("path","") + "\n";
-			    text += "writeprotect(" + disk.getInt("drive") + "): " + disk.getBoolean("writeprotect",false) + "\n";
-			    text += "sync(" + disk.getInt("drive") + "): " + disk.getBoolean("sync",false) + "\n";
-			    text += "expand(" + disk.getInt("drive") + "): " + disk.getBoolean("expand",false) + "\n";
-			    text += "sizelimit(" + disk.getInt("drive") + "): " + disk.getInt("sizelimit",-1) + "\n";
-			    text += "offset(" + disk.getInt("drive") + "): " + disk.getInt("offset",0) + "\n";
-
-			    
+				diskset.clearProperty(item);
 			}
-		
-		
-			return(new DWCommandResponse(text));
+			else
+			{
+				return(new DWCommandResponse("Item '"+item+"' is not set in diskset '"+setname+"'"));
+			}
+			
+			return(new DWCommandResponse("Cleared item '" + item + "' from diskset '" + setname + "'."));
 		}
 		else
 		{
-			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET, "No disk set named '" + setname + "' found"));
+			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,"There is no diskset called '" + setname + "'"));
 		}
-	}	
+	}
 
 	public boolean validate(String cmdline) 
 	{
