@@ -50,11 +50,37 @@ public class DWVPrinter {
 				tmp += Character.toString((char) databyte);
 			}
 			
-			if (DriveWireServer.getHandler(handlerno).config.containsKey("PrinterDir"))
+			if (DriveWireServer.getHandler(handlerno).config.containsKey("PrinterFile"))
+			{
+				if (FileExistsOrCreate(DriveWireServer.getHandler(handlerno).config.getString("PrinterFile")))
+				{
+					// append printer output to file
+					if (DriveWireServer.getHandler(handlerno).config.getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
+					{
+						File theDir = new File(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir"));
+						File theFile = File.createTempFile("dw_print_",".txt",theDir);
+						
+						FileOutputStream theOS = new FileOutputStream(theFile);
+						
+						theOS.write(tmp.getBytes());
+						theOS.close();
+						
+						
+						logger.info("Flushed print buffer to text file: '" + theFile.getAbsolutePath() +"'");
+					}
+					else
+					{
+						logger.error("Only TEXT mode printing is supported if PrinterFile is specified in config");
+					}
+					
+					
+				}
+			} 
+			else if (DriveWireServer.getHandler(handlerno).config.containsKey("PrinterDir"))
 			{
 				if (DirExistsOrCreate(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir")))
 				{
-					// create printer output
+					// create printer output in seperate file
 					
 					if (DriveWireServer.getHandler(handlerno).config.getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
 					{
@@ -65,6 +91,7 @@ public class DWVPrinter {
 						
 						theOS.write(tmp.getBytes());
 						theOS.close();
+						
 						
 						logger.info("Flushed print buffer to text file: '" + theFile.getAbsolutePath() +"'");
 					}
@@ -103,6 +130,22 @@ public class DWVPrinter {
 		  {
 		    logger.info("creating printer directory: " + directoryName);
 		    return(theDir.mkdir());
+		  }
+		  else
+		  {
+			  return(true);
+		  }
+	}
+	
+	private boolean FileExistsOrCreate(String fileName) throws IOException
+	{
+		  File theFile = new File(fileName);
+
+		  // if the directory does not exist, create it
+		  if (!theFile.exists())
+		  {
+		    logger.info("creating printer file: " + fileName);
+		    return(theFile.createNewFile());
 		  }
 		  else
 		  {
