@@ -313,7 +313,15 @@ public class DWVSerialPort {
 	}
 	
 	
-
+	public void writeToCoco(byte[] databytes) 
+	{
+		try {
+			inputBuffer.getOutputStream().write(databytes);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	
 	
@@ -643,6 +651,10 @@ public class DWVSerialPort {
 		
 		
 	}
+
+
+
+
 	
 	
 	

@@ -7,6 +7,8 @@ public class DWCommandResponse {
 	private boolean success;
 	private byte responseCode;
 	private String responseText;
+	private byte[] responseBytes;
+	private boolean usebytes = false;
 	
 	public DWCommandResponse(boolean success, byte responsecode, String responsetext)
 	{
@@ -24,6 +26,14 @@ public class DWCommandResponse {
 		
 	}
 	
+	public DWCommandResponse(byte[] responsebytes)
+	{
+		this.success = true;
+		this.responseCode = DWDefs.RC_SUCCESS;
+		this.responseBytes = responsebytes;
+		this.usebytes = true;
+		
+	}
 	
 	public boolean getSuccess()
 	{
@@ -38,5 +48,14 @@ public class DWCommandResponse {
 	public String getResponseText()
 	{
 		return this.responseText;
+	}
+	
+	public byte[] getResponseBytes()
+	{
+		return this.responseBytes;
+	}
+
+	public boolean isUsebytes() {
+		return usebytes;
 	}
 }

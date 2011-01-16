@@ -53,7 +53,14 @@ public class DWUtilDWThread implements Runnable
 		
 		if (resp.getSuccess())
 		{
-			dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseText());
+			if (resp.isUsebytes())
+			{
+				dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseBytes());
+			}
+			else
+			{
+				dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseText());
+			}
 		}
 		else
 		{

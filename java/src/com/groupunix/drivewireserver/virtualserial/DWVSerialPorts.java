@@ -455,6 +455,14 @@ public class DWVSerialPorts {
 		vserialPorts[vport].writeToCoco(txt);
 	}
 
+	
+	public void sendUtilityOKResponse(int vport, byte[] responseBytes) 
+	{
+		logger.debug("API OK: port " + vport + ": command successful (byte mode)");
+		vserialPorts[vport].sendUtilityOKResponse("command successful");
+		vserialPorts[vport].writeToCoco(responseBytes);
+		
+	}
 
 	public int bytesWaiting(int vport) 
 	{
@@ -913,4 +921,14 @@ public class DWVSerialPorts {
 	{
 		return(this.listenerpool);
 	}
+
+
+
+
+
+
+
+
+
+
 }

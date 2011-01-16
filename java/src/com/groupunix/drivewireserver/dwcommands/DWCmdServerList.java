@@ -1,7 +1,9 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.vfs.FileContent;
 import org.apache.commons.vfs.FileObject;
@@ -52,12 +54,13 @@ public class DWCmdServerList implements DWCommand {
 	
 	private DWCommandResponse doList(String path) 
 	{
-		String text = new String();
-		
 		FileSystemManager fsManager;
 		InputStream ins = null;
 		FileObject fileobj = null;
 		FileContent fc = null;
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		
 		
 		try
 		{
@@ -71,13 +74,16 @@ public class DWCmdServerList implements DWCommand {
 			
 			ins = fc.getInputStream();
 
-			int data;
+			byte[] buffer = new byte[256];
+			int sz = 0;
 			
-			while ((data = ins.read()) >= 0) 
+			while ((sz = ins.read(buffer)) >= 0)
 			{
-				text += (char)((byte)data & 0xFF);
+				baos.write(buffer,0,sz);
 			}
-		} 
+			
+			ins.close();
+		}	
 		catch (FileSystemException e)
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
@@ -108,15 +114,12 @@ public class DWCmdServerList implements DWCommand {
 			
 		}
 		
-		
-		return(new DWCommandResponse(text));
+		return(new DWCommandResponse(baos.toByteArray()));
 	}
 
 	public boolean validate(String cmdline) {
 		return true;
 	}
-	
-	
-	
+
 
 }

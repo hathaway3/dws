@@ -1,5 +1,6 @@
 package com.groupunix.drivewireserver.virtualserial;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -37,7 +38,7 @@ public class DWUtilURLThread implements Runnable {
 	{
 		Thread.currentThread().setName("urlutil-" + Thread.currentThread().getId());
 		
-		String text = new String();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
 		logger.debug("run");
 		
@@ -48,17 +49,20 @@ public class DWUtilURLThread implements Runnable {
 		{
 			url = new URL(this.url);
 			
-			int databyte = -1;
-			
 			DataInputStream theHTML = new DataInputStream(url.openStream());
 			
-			while ((databyte = theHTML.read()) >= 0) 
-		    {
-		        text += (char)databyte; 
-		    } 
+			byte[] buffer = new byte[256];
+			int sz = 0;
 			
-			dwVSerialPorts.sendUtilityOKResponse(this.vport, "");
-			dwVSerialPorts.writeToCoco(this.vport, text);	
+			while ((sz = theHTML.read(buffer)) >= 0)
+			{
+				baos.write(buffer,0,sz);
+			}
+			
+			theHTML.close();
+			
+			dwVSerialPorts.sendUtilityOKResponse(this.vport, baos.toByteArray());
+			
 		} 
 		catch (MalformedURLException e)
 		{
