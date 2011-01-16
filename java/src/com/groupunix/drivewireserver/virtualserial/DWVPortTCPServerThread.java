@@ -35,11 +35,11 @@ public class DWVPortTCPServerThread implements Runnable {
 		logger.debug("init tcp server thread for conn " + conno);	
 		this.vport = vport;
 		this.conno = conno;
-		this.mode = DWVPortListenerPool.getMode(conno);
-		this.skt = DWVPortListenerPool.getConn(conno);
+		
 		this.handlerno = handlerno;
 		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
-		
+		this.mode = this.dwVSerialPorts.getListenerPool().getMode(conno);
+		this.skt = this.dwVSerialPorts.getListenerPool().getConn(conno);
 	}
 	
 
@@ -49,7 +49,7 @@ public class DWVPortTCPServerThread implements Runnable {
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
 		// setup ties
-		DWVPortListenerPool.setConnPort(this.conno, this.vport);
+		this.dwVSerialPorts.getListenerPool().setConnPort(this.conno, this.vport);
 		dwVSerialPorts.setConn(this.vport,this.conno);
 		
 		
@@ -165,7 +165,7 @@ public class DWVPortTCPServerThread implements Runnable {
 				}
 			}
 			
-			DWVPortListenerPool.clearConn(this.conno);	
+			this.dwVSerialPorts.getListenerPool().clearConn(this.conno);	
 		}
 		
 		logger.debug("thread exiting");

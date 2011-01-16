@@ -250,7 +250,7 @@ public class DWVPortHandler
 		}
 		
 
-		if (DWVPortListenerPool.getConn(conno) == null)
+		if (this.dwVSerialPorts.getListenerPool().getConn(conno) == null)
 		{
 			respondFail(101,"invalid connection number");
 		}
@@ -278,7 +278,7 @@ public class DWVPortHandler
 		}
 		
 
-		if (DWVPortListenerPool.getConn(conno) == null)
+		if (this.dwVSerialPorts.getListenerPool().getConn(conno) == null)
 		{
 			respondFail(101,"invalid connection number");
 			return;
@@ -287,7 +287,7 @@ public class DWVPortHandler
 		logger.warn("Killing connection " + conno);
 		
 		// close socket
-		DWVPortListenerPool.killConn(conno);
+		this.dwVSerialPorts.getListenerPool().killConn(conno);
 		
 		respondOk("killed connection " + conno);
 		

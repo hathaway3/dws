@@ -54,11 +54,10 @@ public class DWUtilURLThread implements Runnable {
 			
 			while ((databyte = theHTML.read()) >= 0) 
 		    {
-		        text += Character.toString((char) databyte);
-		        
+		        text += (char)databyte; 
 		    } 
 			
-			dwVSerialPorts.sendUtilityOKResponse(this.vport, "data follows");
+			dwVSerialPorts.sendUtilityOKResponse(this.vport, "");
 			dwVSerialPorts.writeToCoco(this.vport, text);	
 		} 
 		catch (MalformedURLException e)

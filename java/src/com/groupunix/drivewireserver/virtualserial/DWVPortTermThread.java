@@ -100,7 +100,7 @@ public class DWVPortTermThread implements Runnable
 					logger.debug("term connection already in use");
 					try
 					{
-						skt.getOutputStream().write(("The term device is already connected to a session (from " + DWVPortListenerPool.getConn(conno).getInetAddress().getHostName() + ")\r\n" ).getBytes());
+						skt.getOutputStream().write(("The term device is already connected to a session (from " + this.dwVSerialPorts.getListenerPool().getConn(conno).getInetAddress().getHostName() + ")\r\n" ).getBytes());
 						skt.close();
 					} 
 					catch (IOException e)
@@ -167,7 +167,7 @@ public class DWVPortTermThread implements Runnable
 		
 		
 		// pass through till connection is lost
-		conno = DWVPortListenerPool.addConn(this.vport, skt,MODE_TERM);
+		conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt,MODE_TERM);
 		connobj = new DWVPortTCPServerThread(this.handlerno,TERM_PORT, conno);
 		connthread = new Thread(connobj);
 		connthread.start();

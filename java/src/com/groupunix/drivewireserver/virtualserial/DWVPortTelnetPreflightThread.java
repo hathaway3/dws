@@ -223,7 +223,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			logger.debug("Preflight success for " + skt.getInetAddress().getHostName());
 			
 			//add connection to pool
-			int conno = DWVPortListenerPool.addConn(this.vport, skt, 1);
+			int conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt, 1);
 
 			
 			// announce new connection to listener

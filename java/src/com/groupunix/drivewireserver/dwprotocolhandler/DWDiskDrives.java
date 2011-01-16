@@ -55,7 +55,7 @@ public class DWDiskDrives
 				
 				if (dset.containsKey("HDBDOSMode"))
 				{
-					DriveWireServer.getHandler(handlerno).config.setProperty("HDBDOSMode",dset.getBoolean("HDBDOSMode",false));
+					DriveWireServer.getHandler(handlerno).config.setProperty("HDBDOSMode",dset.getString("HDBDOSMode","false"));
 				}
 				
 				if (dset.getBoolean("EjectAllOnLoad",false))

@@ -9,6 +9,7 @@ import org.apache.commons.vfs.VFS;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 
 public class DWCmdDiskCreate implements DWCommand {
@@ -78,6 +79,9 @@ public class DWCmdDiskCreate implements DWCommand {
 		
 			fileobj.createFile();
 			
+			if (DriveWireServer.getHandler(handlerno).getDiskDrives().diskLoaded(driveno))
+				DriveWireServer.getHandler(handlerno).getDiskDrives().EjectDisk(driveno);
+				
 			DriveWireServer.getHandler(handlerno).getDiskDrives().LoadDiskFromFile(driveno, filepath);
 					
 			return(new DWCommandResponse("Disk #" + driveno + " created."));
@@ -100,6 +104,10 @@ public class DWCmdDiskCreate implements DWCommand {
 		catch (DWDriveAlreadyLoadedException e) 
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_ALREADY_LOADED,e.getMessage()));
+		} 
+		catch (DWDriveNotLoadedException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
 		}
 		
 	}

@@ -71,17 +71,12 @@ public class DWCmdServerList implements DWCommand {
 			
 			ins = fc.getInputStream();
 
-			byte[] buffer = new byte[256];
+			int data;
 			
-			int data = ins.read(buffer);
-			
-			while (data > 0)
+			while ((data = ins.read()) >= 0) 
 			{
-				text += new String(buffer).substring(0,data);
-				data = ins.read(buffer);
-						
+				text += (char)((byte)data & 0xFF);
 			}
-			
 		} 
 		catch (FileSystemException e)
 		{

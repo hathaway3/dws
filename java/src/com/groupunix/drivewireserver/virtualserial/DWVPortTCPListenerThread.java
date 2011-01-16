@@ -79,7 +79,7 @@ public class DWVPortTCPListenerThread implements Runnable
 		dwVSerialPorts.writeToCoco(vport, "OK listening on port " + this.tcpport + (char) 0 + (char) 13);
 		
 		// DWVSerialPorts.setSocket(this.vport, srvr);
-		DWVPortListenerPool.addListener(this.vport, srvr);
+		this.dwVSerialPorts.getListenerPool().addListener(this.vport, srvr);
 		
 		
 		while ((wanttodie == false) && dwVSerialPorts.isOpen(this.vport) && (srvr.isClosed() == false))

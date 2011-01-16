@@ -42,6 +42,7 @@ public class DWVSerialPorts {
 	
 	
 	private DWVSerialPort[] vserialPorts = new DWVSerialPort[MAX_PORTS];
+	private DWVPortListenerPool listenerpool = new DWVPortListenerPool();
 	
 	private int[] dataWait = new int[MAX_PORTS];
 	
@@ -475,8 +476,8 @@ public class DWVSerialPorts {
 		
 		for (int i = 0;i<MAX_COCO_PORTS;i++)
 		{
-			DWVPortListenerPool.closePortConnectionSockets(i);
-			DWVPortListenerPool.closePortServerSockets(i);
+			this.listenerpool.closePortConnectionSockets(i);
+			this.listenerpool.closePortServerSockets(i);
 		}
 		
 		logger.debug("Resetting all virtual serial ports - part 2, init all ports");
@@ -590,7 +591,7 @@ public class DWVSerialPorts {
 	{
 		if (vserialPorts[vport] != null)
 		{
-			return(DWVPortListenerPool.getConn(vserialPorts[vport].getConn()).getInetAddress().getHostAddress());
+			return(this.listenerpool.getConn(vserialPorts[vport].getConn()).getInetAddress().getHostAddress());
 		}
 		return(null);
 	}
@@ -600,7 +601,7 @@ public class DWVSerialPorts {
 	{
 		if (vserialPorts[vport] != null)
 		{
-			return(DWVPortListenerPool.getConn(vserialPorts[vport].getConn()).getPort());
+			return(this.listenerpool.getConn(vserialPorts[vport].getConn()).getPort());
 		}
 		return(-1);
 	}
@@ -612,8 +613,8 @@ public class DWVSerialPorts {
 		
 		for (int i = 0;i<MAX_PORTS;i++)
 		{
-			DWVPortListenerPool.closePortConnectionSockets(i);
-			DWVPortListenerPool.closePortServerSockets(i);
+			this.listenerpool.closePortConnectionSockets(i);
+			this.listenerpool.closePortServerSockets(i);
 			if (this.vserialPorts[i] != null)
 			{
 				this.vserialPorts[i].shutdown();
@@ -666,6 +667,11 @@ public class DWVSerialPorts {
 			this.midiDevice.getReceiver().send(mmsg, timestamp);
 		} 
 		catch (MidiUnavailableException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IllegalStateException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -893,5 +899,18 @@ public class DWVSerialPorts {
 	public int getGMInstrumentCache(int chan)
 	{
 		return(this.GMInstrumentCache[chan]);
+	}
+
+
+
+
+
+
+
+
+
+	public DWVPortListenerPool getListenerPool() 
+	{
+		return(this.listenerpool);
 	}
 }

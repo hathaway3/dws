@@ -10,15 +10,15 @@ public class DWVPortListenerPool {
 
 	public static final int MAX_CONN = 256;
 	public static final int MAX_LISTEN = 64;
-	private static Socket[] sockets = new Socket[MAX_CONN];
-	private static ServerSocket[] server_sockets = new ServerSocket[MAX_LISTEN];
-	private static int[] serversocket_ports = new int[MAX_LISTEN];
-	private static int[] socket_ports = new int[MAX_CONN];
-	private static int[] modes = new int[MAX_CONN];
+	private Socket[] sockets = new Socket[MAX_CONN];
+	private ServerSocket[] server_sockets = new ServerSocket[MAX_LISTEN];
+	private int[] serversocket_ports = new int[MAX_LISTEN];
+	private int[] socket_ports = new int[MAX_CONN];
+	private int[] modes = new int[MAX_CONN];
 	
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPortListenerPool");
 	
-	public static int addConn(int port, Socket skt, int mode) 
+	public int addConn(int port, Socket skt, int mode) 
 	{
 		for (int i = 0; i< MAX_CONN;i++)
 		{
@@ -34,17 +34,17 @@ public class DWVPortListenerPool {
 		return(-1);
 	}
 
-	public static Socket getConn(int conno)
+	public Socket getConn(int conno)
 	{
 		return(sockets[conno]);
 	}
 	
-	public static void setConnPort(int conno, int port)
+	public void setConnPort(int conno, int port)
 	{
 		socket_ports[conno] = port;
 	}
 	
-	public static int addListener(int port, ServerSocket srvskt)
+	public int addListener(int port, ServerSocket srvskt)
 	{
 		for (int i = 0; i< MAX_LISTEN;i++)
 		{
@@ -59,37 +59,37 @@ public class DWVPortListenerPool {
 		return(-1);
 	}
 	
-	public static ServerSocket getListener(int conno)
+	public ServerSocket getListener(int conno)
 	{
 		return(server_sockets[conno]);
 	}
 	
 	
-	public static void closePortServerSockets(int port)
+	public void closePortServerSockets(int port)
 	{
 		for (int i = 0;i<MAX_LISTEN;i++)
 		{
-			if (DWVPortListenerPool.getListener(i) != null)
+			if (this.getListener(i) != null)
 			{
 				if (serversocket_ports[i] == port)
 				{
-					DWVPortListenerPool.killListener(i);
+					this.killListener(i);
 				}
 			}
 		}
 	}
 	
-	public static void closePortConnectionSockets(int port)
+	public void closePortConnectionSockets(int port)
 	{
 		for (int i = 0;i<DWVPortListenerPool.MAX_CONN;i++)
 		{
-			if (DWVPortListenerPool.getConn(i) != null)
+			if (this.getConn(i) != null)
 			{
 				// don't reset term
-				if (DWVPortListenerPool.getMode(i) != DWVSerialPorts.MODE_TERM)
+				if (this.getMode(i) != DWVSerialPorts.MODE_TERM)
 				{
 					
-					DWVPortListenerPool.killConn(i);
+					this.killConn(i);
 				}
 			}
 		}
@@ -98,24 +98,24 @@ public class DWVPortListenerPool {
 	}
 	
 	// temporary crap to make telnetd work
-	public static int getMode(int conno)
+	public int getMode(int conno)
 	{
 		return(modes[conno]);
 	}
 	
-	public static void clearConn(int conno)
+	public void clearConn(int conno)
 	{
 		sockets[conno] = null;
 		socket_ports[conno] = -1;
 	}
 
-	public static void clearListener(int conno)
+	public void clearListener(int conno)
 	{
 		server_sockets[conno] = null;
 		serversocket_ports[conno] = -1;
 	}
 	
-	public static void killConn(int conno)
+	public void killConn(int conno)
 	{
 		
 		if (sockets[conno] != null)
@@ -139,7 +139,7 @@ public class DWVPortListenerPool {
 		}
 	}
 
-	public static void killListener(int conno)
+	public void killListener(int conno)
 	{
 		if (server_sockets[conno] != null)
 		{
@@ -162,12 +162,12 @@ public class DWVPortListenerPool {
 		}
 	}
 
-	public static int getListenerPort(int i)
+	public int getListenerPort(int i)
 	{
 		return serversocket_ports[i];
 	}
 
-	public static int getConnPort(int i)
+	public int getConnPort(int i)
 	{
 		return socket_ports[i];
 	}

@@ -51,9 +51,9 @@ public class DWCmdNetShow implements DWCommand {
 		for (int i = 0; i<DWVPortListenerPool.MAX_CONN;i++)
 		{
 				
-			if (DWVPortListenerPool.getConn(i) != null)
+			if (DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConn(i) != null)
 			{
-				text += "Connection " + i + ": " + DWVPortListenerPool.getConn(i).getInetAddress().getHostName() + ":" + DWVPortListenerPool.getConn(i).getPort() + " (connected to port " + DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(DWVPortListenerPool.getConnPort(i)) + ")\r\n";
+				text += "Connection " + i + ": " + DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConn(i).getInetAddress().getHostName() + ":" + DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConn(i).getPort() + " (connected to port " + DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConnPort(i)) + ")\r\n";
 			}
 		}
 			
@@ -61,9 +61,9 @@ public class DWCmdNetShow implements DWCommand {
 			
 		for (int i = 0; i<DWVPortListenerPool.MAX_LISTEN;i++)
 		{
-			if (DWVPortListenerPool.getListener(i) != null)
+			if (DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getListener(i) != null)
 			{
-				text += "Listener " + i + ": TCP port " + DWVPortListenerPool.getListener(i).getLocalPort() + " (control port " + DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(DWVPortListenerPool.getListenerPort(i)) +")\r\n";
+				text += "Listener " + i + ": TCP port " + DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getListener(i).getLocalPort() + " (control port " + DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getListenerPort(i)) +")\r\n";
 			}
 		}
 		
