@@ -1,7 +1,9 @@
 package com.groupunix.drivewireserver.virtualprinter;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
@@ -57,16 +59,13 @@ public class DWVPrinter {
 					// append printer output to file
 					if (DriveWireServer.getHandler(handlerno).config.getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
 					{
-						File theDir = new File(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir"));
-						File theFile = File.createTempFile("dw_print_",".txt",theDir);
+						FileWriter fstream = new FileWriter(DriveWireServer.getHandler(handlerno).config.getString("PrinterFile"),true);
+				        BufferedWriter out = new BufferedWriter(fstream);
+				   	
+						out.write(tmp);
+						out.close();
 						
-						FileOutputStream theOS = new FileOutputStream(theFile);
-						
-						theOS.write(tmp.getBytes());
-						theOS.close();
-						
-						
-						logger.info("Flushed print buffer to text file: '" + theFile.getAbsolutePath() +"'");
+						logger.info("Flushed print buffer to text file: '" + DriveWireServer.getHandler(handlerno).config.getString("PrinterFile") +"'");
 					}
 					else
 					{
