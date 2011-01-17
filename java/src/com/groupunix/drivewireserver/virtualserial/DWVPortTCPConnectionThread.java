@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
@@ -65,9 +66,10 @@ public class DWVPortTCPConnectionThread implements Runnable {
 			logger.debug("Connected to " + this.tcphost + ":" + this.tcpport);
 			dwVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
 			
-			//DWVSerialPorts.setSocket(this.vport, skt);
-
-			dwVSerialPorts.markConnected(vport);	
+			dwVSerialPorts.markConnected(vport);
+			dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPOUT);
+			
+			
 			try 
 			{
 				dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
@@ -75,6 +77,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 			catch (IOException e1) 
 			{
 				logger.error("IO Error setting output: " + e1.getMessage());
+				wanttodie = true;
 			}
 			
 			while ((wanttodie == false) && (skt.isClosed() == false) && (dwVSerialPorts.isOpen(this.vport)))
@@ -98,6 +101,12 @@ public class DWVPortTCPConnectionThread implements Runnable {
 				{
 						logger.debug("IO error reading tcp: " + e.getMessage());
 						wanttodie = true;
+				} 
+				catch (DWPortNotValidException e) 
+				{
+					logger.error(e.getMessage());
+					
+					wanttodie = true;
 				}
 				
 			}
@@ -145,13 +154,17 @@ public class DWVPortTCPConnectionThread implements Runnable {
 				try {
 					while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
 					{
+						logger.debug("pause for the cause: " + dwVSerialPorts.bytesWaiting(this.vport) + " bytes left" );
 						Thread.sleep(100);
 					}
 				} 
 				catch (InterruptedException e) 
 				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error(e.getMessage());
+				} 
+				catch (DWPortNotValidException e) 
+				{
+					logger.error(e.getMessage());
 				}
 		
 				logger.debug("exit stage 2, send peer signal");

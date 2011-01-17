@@ -12,6 +12,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCmdConfig;
 import com.groupunix.drivewireserver.dwcommands.DWCmdDisk;
 import com.groupunix.drivewireserver.dwcommands.DWCmdLog;
@@ -143,7 +144,10 @@ public class DWProtocolHandler implements Runnable
 			// set current to default
 			if (config.containsKey("DefaultDiskSet"))
 			{
-				config.setProperty("CurrentDiskSet", config.getString("DefaultDiskSet"));
+				synchronized (DriveWireServer.serverconfig)
+				{
+					config.setProperty("CurrentDiskSet", config.getString("DefaultDiskSet"));
+				}
 			}
 			
 			// load current disk set

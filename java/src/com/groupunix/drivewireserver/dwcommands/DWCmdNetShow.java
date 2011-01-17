@@ -1,6 +1,7 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.virtualserial.DWVPortListenerPool;
 
 public class DWCmdNetShow implements DWCommand {
@@ -51,9 +52,14 @@ public class DWCmdNetShow implements DWCommand {
 		for (int i = 0; i<DWVPortListenerPool.MAX_CONN;i++)
 		{
 				
-			if (DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConn(i) != null)
+	
+			try 
 			{
 				text += "Connection " + i + ": " + DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConn(i).getInetAddress().getHostName() + ":" + DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConn(i).getPort() + " (connected to port " + DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConnPort(i)) + ")\r\n";
+			} 
+			catch (DWConnectionNotValidException e) 
+			{
+				// text += e.getMessage();
 			}
 		}
 			

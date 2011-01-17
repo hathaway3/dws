@@ -3,7 +3,6 @@ package com.groupunix.drivewireserver.dwcommands;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.vfs.FileContent;
 import org.apache.commons.vfs.FileObject;
@@ -60,7 +59,6 @@ public class DWCmdServerList implements DWCommand {
 		FileContent fc = null;
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		
 		
 		try
 		{
@@ -120,6 +118,5 @@ public class DWCmdServerList implements DWCommand {
 	public boolean validate(String cmdline) {
 		return true;
 	}
-
 
 }

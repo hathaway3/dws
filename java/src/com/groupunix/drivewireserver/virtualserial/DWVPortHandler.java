@@ -5,6 +5,8 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 
 // this replaces the separate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
@@ -250,16 +252,21 @@ public class DWVPortHandler
 		}
 		
 
-		if (this.dwVSerialPorts.getListenerPool().getConn(conno) == null)
+		try 
+		{
+			this.dwVSerialPorts.getListenerPool().validateConn(conno);
+			respondOk("attaching to connection " + conno);
+			
+			// start TCP thread
+			this.utilthread = new Thread(new DWVPortTCPServerThread(this.handlerno, this.vport, conno));
+			this.utilthread.start();
+		} 
+		catch (DWConnectionNotValidException e) 
 		{
 			respondFail(101,"invalid connection number");
 		}
 		
-		respondOk("attaching to connection " + conno);
 		
-		// start TCP thread
-		this.utilthread = new Thread(new DWVPortTCPServerThread(this.handlerno, this.vport, conno));
-		this.utilthread.start();
 		
 	}
 	
@@ -277,19 +284,20 @@ public class DWVPortHandler
 			return;
 		}
 		
-
-		if (this.dwVSerialPorts.getListenerPool().getConn(conno) == null)
-		{
-			respondFail(101,"invalid connection number");
-			return;
-		}
 		
 		logger.warn("Killing connection " + conno);
 		
 		// close socket
-		this.dwVSerialPorts.getListenerPool().killConn(conno);
+		try 
+		{
+			this.dwVSerialPorts.getListenerPool().killConn(conno);
+			respondOk("killed connection " + conno);
+		} 
+		catch (DWConnectionNotValidException e) 
+		{
+			respondFail(101,"invalid connection number");
+		}
 		
-		respondOk("killed connection " + conno);
 		
 	}
 	
@@ -409,7 +417,14 @@ public class DWVPortHandler
 	public void respondOk(String txt) 
 	{
 		logger.debug("command ok: " + txt);
-		dwVSerialPorts.writeToCoco(this.vport, "OK " + txt + (char) 13);
+		try 
+		{
+			dwVSerialPorts.writeToCoco(this.vport, "OK " + txt + (char) 13);
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			logger.error(e.getMessage());
+		}
 	}
 	
 	
@@ -417,12 +432,27 @@ public class DWVPortHandler
 	{
 		String perrno = String.format("%03d", errno);
 		logger.debug("command failed: " + perrno + " " + txt);
-		dwVSerialPorts.writeToCoco(this.vport, "FAIL " + perrno + " " + txt + (char) 13);
+		try 
+		{
+			dwVSerialPorts.writeToCoco(this.vport, "FAIL " + perrno + " " + txt + (char) 13);
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			logger.error(e.getMessage());
+		}
 	}
 	
 	public synchronized void announceConnection(int conno, int localport, String hostaddr)
 	{
-		dwVSerialPorts.writeToCoco(this.vport, conno + " " + localport + " " +  hostaddr + (char) 13);		
+		try 
+		{
+			dwVSerialPorts.writeToCoco(this.vport, conno + " " + localport + " " +  hostaddr + (char) 13);
+		} 
+		catch (DWPortNotValidException e) 
+		{
+		
+			logger.error(e.getMessage());
+		}		
 	}
 	
 }

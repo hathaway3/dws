@@ -5,6 +5,7 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 
 public class DWVModemConnThread implements Runnable {
@@ -137,6 +138,7 @@ public class DWVModemConnThread implements Runnable {
 			skt = new Socket(clientHost,clientPort);
 			
 			dwVSerialPorts.markConnected(vport);
+			dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_VMODEMOUT);
 			dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
 				
 			//int lastbyte = 0;

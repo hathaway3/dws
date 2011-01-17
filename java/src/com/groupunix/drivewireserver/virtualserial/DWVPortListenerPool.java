@@ -6,6 +6,8 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
+
 public class DWVPortListenerPool {
 
 	public static final int MAX_CONN = 256;
@@ -34,13 +36,23 @@ public class DWVPortListenerPool {
 		return(-1);
 	}
 
-	public Socket getConn(int conno)
+	public Socket getConn(int conno) throws DWConnectionNotValidException
 	{
+		validateConn(conno);
 		return(sockets[conno]);
 	}
 	
-	public void setConnPort(int conno, int port)
+	public void validateConn(int conno) throws DWConnectionNotValidException 
 	{
+		if ((conno < 0) || (conno > DWVPortListenerPool.MAX_CONN) || (this.sockets[conno] == null))
+		{
+			throw(new DWConnectionNotValidException("Invalid connection #" + conno));
+		}
+	}
+
+	public void setConnPort(int conno, int port) throws DWConnectionNotValidException
+	{
+		validateConn(conno);
 		socket_ports[conno] = port;
 	}
 	
@@ -73,7 +85,14 @@ public class DWVPortListenerPool {
 			{
 				if (serversocket_ports[i] == port)
 				{
-					this.killListener(i);
+					try 
+					{
+						this.killListener(i);
+					} 
+					catch (DWConnectionNotValidException e) 
+					{
+						logger.error(e.getMessage());
+					}
 				}
 			}
 		}
@@ -81,16 +100,24 @@ public class DWVPortListenerPool {
 	
 	public void closePortConnectionSockets(int port)
 	{
+		
 		for (int i = 0;i<DWVPortListenerPool.MAX_CONN;i++)
 		{
-			if (this.getConn(i) != null)
-			{
-				// don't reset term
-				if (this.getMode(i) != DWVSerialPorts.MODE_TERM)
+	
+			try {
+				if (this.sockets[i] != null)
 				{
-					
-					this.killConn(i);
+					// don't reset term
+					if (this.getMode(i) != DWVSerialPorts.MODE_TERM)
+					{
+						
+						this.killConn(i);
+					}
 				}
+			} 
+			catch (DWConnectionNotValidException e) 
+			{
+				logger.error("close sockets: " + e.getMessage());
 			}
 		}
 
@@ -98,13 +125,15 @@ public class DWVPortListenerPool {
 	}
 	
 	// temporary crap to make telnetd work
-	public int getMode(int conno)
+	public int getMode(int conno) throws DWConnectionNotValidException
 	{
+		validateConn(conno);
 		return(modes[conno]);
 	}
 	
-	public void clearConn(int conno)
+	public void clearConn(int conno) throws DWConnectionNotValidException
 	{
+		validateConn(conno);
 		sockets[conno] = null;
 		socket_ports[conno] = -1;
 	}
@@ -115,51 +144,41 @@ public class DWVPortListenerPool {
 		serversocket_ports[conno] = -1;
 	}
 	
-	public void killConn(int conno)
+	public void killConn(int conno) throws DWConnectionNotValidException
 	{
+		validateConn(conno);
 		
-		if (sockets[conno] != null)
+		try
 		{
-			try
-			{
-				sockets[conno].close();
-				logger.debug("killed conn #" + conno);
-			} 
-			catch (IOException e)
-			{
-				logger.debug("IO error closing conn #" + conno + ": " + e.getMessage());
-			}
+			sockets[conno].close();
+			logger.debug("killed conn #" + conno);
+		} 
+		catch (IOException e)
+		{
+			logger.debug("IO error closing conn #" + conno + ": " + e.getMessage());
+		}
 		
-			clearConn(conno);
-			
-		}
-		else
-		{
-			logger.warn("asked to kill connection " + conno +" which does not exist");
-		}
+		clearConn(conno);
+		
 	}
 
-	public void killListener(int conno)
+	
+	public void killListener(int conno) throws DWConnectionNotValidException
 	{
-		if (server_sockets[conno] != null)
-		{
-			try
-			{
-				server_sockets[conno].close();
-				logger.debug("killed listener #" + conno);
-			} 
-			catch (IOException e)
-			{
-				logger.debug("IO error closing listener #" + conno + ": " + e.getMessage());
-			}
+		validateConn(conno);
 		
-			clearListener(conno);
-			
-		}
-		else
+		try
 		{
-			logger.warn("asked to kill listener " + conno +" which does not exist");
+			server_sockets[conno].close();
+			logger.debug("killed listener #" + conno);
+		} 
+		catch (IOException e)
+		{
+			logger.debug("IO error closing listener #" + conno + ": " + e.getMessage());
 		}
+		
+		clearListener(conno);
+		
 	}
 
 	public int getListenerPort(int i)

@@ -68,7 +68,10 @@ public class UICmdServerConfigSet implements DWCommand {
 		
 		if (DriveWireServer.serverconfig.containsKey(item))
 		{
-			DriveWireServer.serverconfig.clearProperty(item);
+			synchronized(DriveWireServer.serverconfig)
+			{
+				DriveWireServer.serverconfig.clearProperty(item);
+			}
 			return(new DWCommandResponse("Item '" + item + "' removed from config."));
 		}
 		else
@@ -82,7 +85,10 @@ public class UICmdServerConfigSet implements DWCommand {
 	
 	private DWCommandResponse doSetConfig(String item, String value)
 	{
-		DriveWireServer.serverconfig.setProperty(item, value);
+		synchronized(DriveWireServer.serverconfig)
+		{
+			DriveWireServer.serverconfig.setProperty(item, value);
+		}
 		return(new DWCommandResponse("Item '" + item + "' set to '" + value + "'."));
 	}
 	

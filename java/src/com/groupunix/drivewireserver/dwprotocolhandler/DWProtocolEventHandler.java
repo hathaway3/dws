@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 public class DWProtocolEventHandler {
 
@@ -47,7 +48,13 @@ public class DWProtocolEventHandler {
 	private void notifyListener(int vport, String event, String detail) 
 	{
 		//logger.debug("notifying port " + vport + " for event " + event);
-		DriveWireServer.getHandler(this.handlerno).getVPorts().writeToCoco(vport, event + "," + detail + "\r\n");
+		try {
+			DriveWireServer.getHandler(this.handlerno).getVPorts().writeToCoco(vport, event + "," + detail + "\r\n");
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			logger.warn("notifylistener error: " + e.getMessage());
+		}
 	}
 
 

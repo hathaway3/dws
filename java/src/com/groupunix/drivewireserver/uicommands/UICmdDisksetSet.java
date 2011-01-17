@@ -65,7 +65,10 @@ public class UICmdDisksetSet implements DWCommand {
 		{
 			if (DriveWireServer.hasDiskset(m.group(1)))
 			{
-				DriveWireServer.getDiskset(m.group(1)).setProperty(m.group(2), m.group(3));
+				synchronized(DriveWireServer.serverconfig)
+				{
+					DriveWireServer.getDiskset(m.group(1)).setProperty(m.group(2), m.group(3));
+				}
 				
 				return(new DWCommandResponse("Set item '" + m.group(2) + "' in diskset '" + m.group(1) + "'."));
 			}
@@ -89,7 +92,10 @@ public class UICmdDisksetSet implements DWCommand {
 			
 			if (diskset.containsKey(item))
 			{
-				diskset.clearProperty(item);
+				synchronized(DriveWireServer.serverconfig)
+				{
+					diskset.clearProperty(item);
+				}
 			}
 			else
 			{

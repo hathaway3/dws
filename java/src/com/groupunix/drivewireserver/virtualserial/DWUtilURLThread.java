@@ -77,27 +77,25 @@ public class DWUtilURLThread implements Runnable {
 		
 		
 		// wait for output
-		try {
+		try 
+		{
 			while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
 			{
 				Thread.sleep(100);
 			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		try 
-		{
+			
 			dwVSerialPorts.closePort(this.vport);
 		} 
+		catch (InterruptedException e)
+		{
+			logger.error(e.getMessage());
+		}
 		catch (DWPortNotValidException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		
+				
 		logger.debug("exiting");
 	}
 

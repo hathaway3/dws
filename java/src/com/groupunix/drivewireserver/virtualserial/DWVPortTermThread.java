@@ -8,6 +8,7 @@ import java.net.Socket;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 
 public class DWVPortTermThread implements Runnable 
 {
@@ -106,6 +107,10 @@ public class DWVPortTermThread implements Runnable
 					catch (IOException e)
 					{
 						logger.debug("io error closing socket: " + e.getMessage());
+					} 
+					catch (DWConnectionNotValidException e) 
+					{
+						logger.error(e.getMessage());
 					}
 				}
 				else
@@ -157,20 +162,26 @@ public class DWVPortTermThread implements Runnable
 			{
 				skt.getInputStream().read();
 			}
-		} catch (IOException e)
+		} 
+		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 	
+			
+		try 
+		{
+			conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt,MODE_TERM);
+			connobj = new DWVPortTCPServerThread(this.handlerno,TERM_PORT, conno);
+			connthread = new Thread(connobj);
+			connthread.start();
+			
+		} 
+		catch (DWConnectionNotValidException e) 
+		{
+			logger.error(e.getMessage());
+		}
 		
-		
-		
-		// pass through till connection is lost
-		conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt,MODE_TERM);
-		connobj = new DWVPortTCPServerThread(this.handlerno,TERM_PORT, conno);
-		connthread = new Thread(connobj);
-		connthread.start();
 	
 		
 	}

@@ -1,6 +1,5 @@
 package com.groupunix.drivewireserver.uicommands;
 
-import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;

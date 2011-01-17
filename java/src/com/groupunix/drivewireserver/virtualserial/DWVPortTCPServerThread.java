@@ -7,7 +7,9 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 public class DWVPortTCPServerThread implements Runnable {
@@ -22,15 +24,11 @@ public class DWVPortTCPServerThread implements Runnable {
 	private int handlerno;
 	private DWVSerialPorts dwVSerialPorts;
 	
-	
 	private static final int MODE_TELNET = 1;
 	private static final int MODE_TERM = 3;
-	
-	//private String tmpbuf = new String();
 
 	
-	
-	public DWVPortTCPServerThread(int handlerno, int vport, int conno)
+	public DWVPortTCPServerThread(int handlerno, int vport, int conno) throws DWConnectionNotValidException
 	{
 		logger.debug("init tcp server thread for conn " + conno);	
 		this.vport = vport;
@@ -48,35 +46,33 @@ public class DWVPortTCPServerThread implements Runnable {
 		Thread.currentThread().setName("tcpserv-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
-		// setup ties
-		this.dwVSerialPorts.getListenerPool().setConnPort(this.conno, this.vport);
-		dwVSerialPorts.setConn(this.vport,this.conno);
+		try
+		{
+		
+			// setup ties
+			this.dwVSerialPorts.getListenerPool().setConnPort(this.conno, this.vport);
+	
+			dwVSerialPorts.setConn(this.vport,this.conno);
 		
 		
-		logger.debug("run for conn " + this.conno);
+			logger.debug("run for conn " + this.conno);
 				
-		if (skt == null)
-		{
-			logger.warn("got a null socket, bailing out");
-			return;
-		}
-		
-		// set pass through mode
-		dwVSerialPorts.markConnected(vport);	
-		try {
-			dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		int lastbyte = -1;
-		
-		while ((wanttodie == false) && (skt.isClosed() == false) && (dwVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
-		{
-			
-			try 
+			if (skt == null)
 			{
+				logger.warn("got a null socket, bailing out");
+				return;
+			}
+		
+			// 	set pass through mode
+			dwVSerialPorts.markConnected(vport);	
+			dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPIN);
+			dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
+		
+			int lastbyte = -1;
+		
+			while ((wanttodie == false) && (skt.isClosed() == false) && (dwVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
+			{
+			
 				int databyte = skt.getInputStream().read();
 				if (databyte == -1)
 				{
@@ -96,81 +92,84 @@ public class DWVPortTCPServerThread implements Runnable {
 							dwVSerialPorts.writeToCoco(this.vport,(byte)databyte);
 							lastbyte = databyte;
 						}
-						
 					}
 					else
 					{
-						
 						dwVSerialPorts.writeToCoco(this.vport,(byte)databyte);
 					}
-				}
-				
-			} 
-			catch (IOException e) 
-			{
-					logger.debug("IO error reading tcp: " + e.getMessage());
-					wanttodie = true;
+				}				
 			}
-				
-		}
 			
-		dwVSerialPorts.markDisconnected(this.vport);
-		dwVSerialPorts.setPortOutput(vport, null);
+			dwVSerialPorts.markDisconnected(this.vport);
+			dwVSerialPorts.setPortOutput(vport, null);
 			
-		if (skt.isClosed() == false)
-		{
-			// close socket
-			try 
+			if (skt.isClosed() == false)
 			{
 				skt.close();
-			} 
-			catch (IOException e) 
-			{
-				logger.debug("error closing socket: " + e.getMessage());
 			}
-		}
 			
 		
-		// only if we got connected.. and its not term
-		if ((skt != null) && (mode != MODE_TERM))
-		{
-			if (skt.isConnected())
+			// 	only if we got connected.. and its not term
+			if ((skt != null) && (mode != MODE_TERM))
 			{
+				if (skt.isConnected())
+				{
 		
-				logger.debug("exit stage 1, flush buffer");
+					logger.debug("exit stage 1, flush buffer");
 		
-				// 	flush buffer, term port
-				try {
-					while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
+					// 	flush buffer, term port
+					try 
 					{
-						Thread.sleep(100);
+						while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
+						{
+							logger.debug("pause for the cause: " + dwVSerialPorts.bytesWaiting(this.vport) + " bytes left" );
+							Thread.sleep(100);
+						}
+					} 
+					catch (InterruptedException e) 
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				} 
-				catch (InterruptedException e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 		
-				logger.debug("exit stage 2, send peer signal");
+					logger.debug("exit stage 2, send peer signal");
 		
-				try 
-				{
 					dwVSerialPorts.closePort(this.vport);
-				} 
-				catch (DWPortNotValidException e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				
 				}
 			}
 			
-			this.dwVSerialPorts.getListenerPool().clearConn(this.conno);	
+			
 		}
+		 
+		catch (DWPortNotValidException e) 
+		{
+			logger.error(e.getMessage());
+		} 
+		catch (IOException e) 
+		{
+			logger.error(e.getMessage());
+		} 
+		catch (DWConnectionNotValidException e) 
+		{
+			logger.error(e.getMessage());
+		}
+		
+		try 
+		{
+			this.dwVSerialPorts.getListenerPool().clearConn(this.conno);
+		} 
+		catch (DWConnectionNotValidException e) 
+		{
+			logger.error(e.getMessage());
+		}
+		
 		
 		logger.debug("thread exiting");
 	}
 
+		
+		
 
 	public void shutdown()
 	{

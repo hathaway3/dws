@@ -61,6 +61,8 @@ public class DWVSerialPort {
 	private boolean midi_in_sysex = false;
 	private String midi_sysex = new String();
 	
+	private int utilmode = 0;
+	
 	public DWVSerialPort(int handlerno, int port)
 	{
 		logger.debug("New DWVSerialPort for port " + port + " in handler #" + handlerno);
@@ -507,9 +509,13 @@ public class DWVSerialPort {
 	
 	public void setUtilMode(int mode)
 	{
-		//this.utilhandler.setUtilmode(mode);
+		this.utilmode = mode;
 	}
 
+	public int getUtilMode()
+	{
+		return(this.utilmode);
+	}
 
 
 	public void setPD_INT(byte pD_INT) 

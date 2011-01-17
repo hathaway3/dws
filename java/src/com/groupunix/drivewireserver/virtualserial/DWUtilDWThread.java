@@ -2,6 +2,7 @@ package com.groupunix.drivewireserver.virtualserial;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
@@ -49,6 +50,9 @@ public class DWUtilDWThread implements Runnable
 		
 		logger.debug("run for handler #" + handlerno);
 		
+		this.dwVSerialPorts.markConnected(vport);
+		this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_DWCMD);
+		
 		DWCommandResponse resp = commands.parse(DWUtils.dropFirstToken(this.strargs));
 		
 		if (resp.getSuccess())
@@ -68,31 +72,29 @@ public class DWUtilDWThread implements Runnable
 		}
 		
 		// wait for output to flush
-		try {
+		try 
+		{
 			while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
 			{
+				logger.debug("pause for the cause: " + dwVSerialPorts.bytesWaiting(this.vport) + " bytes left" );
 				Thread.sleep(100);
 			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		// dont close UI ports...
-		
-		if (this.vport < DWVSerialPorts.MAX_COCO_PORTS)
-		{
-			try 
+			
+			if (this.vport < DWVSerialPorts.MAX_COCO_PORTS)
 			{
 				dwVSerialPorts.closePort(this.vport);
-			} 
-			catch (DWPortNotValidException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			}	
+			
+		} 
+		catch (InterruptedException e) 
+		{
+			logger.error(e.getMessage());
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			logger.error(e.getMessage());
 		}
+		
 		
 		logger.debug("exiting");
 		

@@ -60,7 +60,10 @@ public class DWCmdConfigSet implements DWCommand {
 		
 		if (DriveWireServer.getHandler(this.handlerno).config.containsKey(item))
 		{
-			DriveWireServer.getHandler(this.handlerno).config.clearProperty(item);
+			synchronized(DriveWireServer.serverconfig)
+			{
+				DriveWireServer.getHandler(this.handlerno).config.clearProperty(item);
+			}
 		}
 		
 		return(new DWCommandResponse("Item '" + item + "' removed from config"));
@@ -70,7 +73,10 @@ public class DWCmdConfigSet implements DWCommand {
 	
 	private DWCommandResponse doSetConfig(String item, String value)
 	{
-		DriveWireServer.getHandler(this.handlerno).config.setProperty(item, value);
+		synchronized(DriveWireServer.serverconfig)
+		{
+			DriveWireServer.getHandler(this.handlerno).config.setProperty(item, value);
+		}
 		return(new DWCommandResponse("Item '" + item + "' set to '" + value + "'"));
 	}
 

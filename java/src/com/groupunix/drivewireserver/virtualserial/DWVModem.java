@@ -3,6 +3,8 @@ package com.groupunix.drivewireserver.virtualserial;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
 
 
@@ -328,7 +330,20 @@ public class DWVModem {
 						write("\n\rDriveWire " + DriveWireServer.DWServerVersion + " Virtual Modem on port " + dwVSerialPorts.prettyPort(this.vport) + "\r\n");
 						break;
 					case 2:
-						write("\n\rConnected to " + dwVSerialPorts.getHostIP(this.vport) + ":" + dwVSerialPorts.getHostPort(this.vport) + "\n\r");
+						try 
+						{
+							write("\n\rConnected to " + dwVSerialPorts.getHostIP(this.vport) + ":" + dwVSerialPorts.getHostPort(this.vport) + "\n\r");
+						} 
+						catch (DWPortNotValidException e) 
+						{
+							logger.error(e.getMessage());
+							write(e.getMessage());
+						} 
+						catch (DWConnectionNotValidException e) 
+						{
+							logger.error(e.getMessage());
+							write(e.getMessage());
+						}
 						break;
 					case 4:
 						doCommandShowProfile();
@@ -563,7 +578,14 @@ public class DWVModem {
 	
 	private void write(String str)
 	{
-		dwVSerialPorts.writeToCoco(this.vport, str);
+		try 
+		{
+			dwVSerialPorts.writeToCoco(this.vport, str);
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			logger.error(e.getMessage());
+		}
 	}
 
 
@@ -575,19 +597,16 @@ public class DWVModem {
 
 	public int getCR() 
 	{
-		// TODO Auto-generated method stub
 		return(this.vmodem_registers[REG_CR]);
 	}
 
 	public int getLF() 
 	{
-		// TODO Auto-generated method stub
 		return(this.vmodem_registers[REG_LF]);
 	}
 	
 	public int getBS() 
 	{
-		// TODO Auto-generated method stub
 		return(this.vmodem_registers[REG_BS]);
 	}
 	

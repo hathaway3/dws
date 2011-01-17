@@ -21,6 +21,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 
@@ -464,15 +465,17 @@ public class DWVSerialPorts {
 		
 	}
 
-	public int bytesWaiting(int vport) 
+	public int bytesWaiting(int vport) throws DWPortNotValidException 
 	{
+		validateport(vport);
 		return(vserialPorts[vport].bytesWaiting());
 	}
 
 	
 
-	public void setDD(byte vport, byte[] devdescr)
+	public void setDD(byte vport, byte[] devdescr) throws DWPortNotValidException
 	{
+		validateport(vport);
 		vserialPorts[vport].setDD(devdescr);
 	}
 
@@ -497,6 +500,11 @@ public class DWVSerialPorts {
 			if (i != TERM_PORT)
 				resetPort(i);
 		}
+		
+		// if term is null, init
+		if (this.vserialPorts[TERM_PORT] == null)
+			resetPort(TERM_PORT);
+		
 	}
 
 	public void resetPort(int i)
@@ -513,19 +521,18 @@ public class DWVSerialPorts {
 	}
 
 
-	public int getOpen(int i) 
+	public int getOpen(int i) throws DWPortNotValidException 
 	{
+		validateport(i);
 		return(vserialPorts[i].getOpen());
 	}
 
 
-	public byte[] getDD(int i)
+	public byte[] getDD(int i) throws DWPortNotValidException
 	{
-		if (vserialPorts[i] != null)
-		{
-			return(vserialPorts[i].getDD());
-		}
-		return(null);
+		validateport(i);
+		return(vserialPorts[i].getDD());
+
 	}
 
 
@@ -536,13 +543,15 @@ public class DWVSerialPorts {
 	//}
 
 
-	public void writeToCoco(int vport, byte databyte) 
+	public void writeToCoco(int vport, byte databyte) throws DWPortNotValidException 
 	{
+		validateport(vport);
 		vserialPorts[vport].writeToCoco(databyte);
 	}
 	
-	public void writeToCoco(int vport, String str) 
+	public void writeToCoco(int vport, String str) throws DWPortNotValidException 
 	{
+		validateport(vport);
 		vserialPorts[vport].writeToCoco(str);
 	}
 
@@ -567,51 +576,62 @@ public class DWVSerialPorts {
 	}
 
 
-	public boolean isValid(byte b)
+	public boolean isValid(int vport)
 	{
-	  if ((b >= 0) && (b < MAX_PORTS))
+	  if ((vport >= 0) && (vport < MAX_PORTS))
 		  return(true);
 	  
 	  return(false);
 		
 	}
-
-
-	public void sendConnectionAnnouncement(int vport, int conno, int localport, String hostaddr)
+	
+	private void validateport(int vport) throws DWPortNotValidException 
 	{
+		if (!isValid(vport) || isNull(vport) )
+		{
+			throw(new DWPortNotValidException("Invalid port #" + vport));
+		}
+	}	
+
+
+	public void sendConnectionAnnouncement(int vport, int conno, int localport, String hostaddr) throws DWPortNotValidException
+	{
+		validateport(vport);
 		vserialPorts[vport].sendConnectionAnnouncement(conno, localport, hostaddr);
 	}
 
 
-	public void setConn(int vport, int conno)
+	public void setConn(int vport, int conno) throws DWPortNotValidException
 	{
+		validateport(vport);
 		vserialPorts[vport].setConn(conno);
 		
 	}
 	
-	public int getConn(int vport)
+
+
+
+
+
+	public int getConn(int vport) throws DWPortNotValidException
 	{
+		validateport(vport);
 		return(vserialPorts[vport].getConn());
 	}
 
 
-	public String getHostIP(int vport)
+	public String getHostIP(int vport) throws DWPortNotValidException, DWConnectionNotValidException
 	{
-		if (vserialPorts[vport] != null)
-		{
-			return(this.listenerpool.getConn(vserialPorts[vport].getConn()).getInetAddress().getHostAddress());
-		}
-		return(null);
+		validateport(vport);
+		return(this.listenerpool.getConn( vserialPorts[vport].getConn() ).getInetAddress().getHostAddress());
+		
 	}
 
 
-	public int getHostPort(int vport)
+	public int getHostPort(int vport) throws DWPortNotValidException, DWConnectionNotValidException
 	{
-		if (vserialPorts[vport] != null)
-		{
-			return(this.listenerpool.getConn(vserialPorts[vport].getConn()).getPort());
-		}
-		return(-1);
+		validateport(vport);
+		return(this.listenerpool.getConn(vserialPorts[vport].getConn()).getPort());
 	}
 
 
@@ -915,11 +935,23 @@ public class DWVSerialPorts {
 
 
 
-
-
 	public DWVPortListenerPool getListenerPool() 
 	{
 		return(this.listenerpool);
+	}
+
+
+
+
+
+
+
+
+
+	public int getUtilMode(int i) throws DWPortNotValidException 
+	{
+		validateport(i);
+		return(this.vserialPorts[i].getUtilMode());
 	}
 
 

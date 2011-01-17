@@ -2,7 +2,6 @@ package com.groupunix.drivewireserver.dwprotocolhandler;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -42,8 +41,10 @@ public class DWDiskDrives
 		{
 			
 			
-		
-			DriveWireServer.getHandler(handlerno).config.setProperty("CurrentDiskSet", setname);
+			synchronized (DriveWireServer.serverconfig)
+			{
+				DriveWireServer.getHandler(handlerno).config.setProperty("CurrentDiskSet", setname);
+			}
 			
 			logger.info("loading diskset '" + setname + "'");
 		
@@ -55,7 +56,10 @@ public class DWDiskDrives
 				
 				if (dset.containsKey("HDBDOSMode"))
 				{
-					DriveWireServer.getHandler(handlerno).config.setProperty("HDBDOSMode",dset.getString("HDBDOSMode","false"));
+					synchronized (DriveWireServer.serverconfig)
+					{
+						DriveWireServer.getHandler(handlerno).config.setProperty("HDBDOSMode",dset.getString("HDBDOSMode","false"));
+					}
 				}
 				
 				if (dset.getBoolean("EjectAllOnLoad",false))

@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.maxmind.geoip.Location;
 import com.maxmind.geoip.LookupService;
 import com.maxmind.geoip.regionName;
@@ -227,7 +228,14 @@ public class DWVPortTelnetPreflightThread implements Runnable
 
 			
 			// announce new connection to listener
-			dwVSerialPorts.sendConnectionAnnouncement(this.vport, conno, skt.getLocalPort(), skt.getInetAddress().getHostAddress());
+			try 
+			{
+				dwVSerialPorts.sendConnectionAnnouncement(this.vport, conno, skt.getLocalPort(), skt.getInetAddress().getHostAddress());
+			} 
+			catch (DWPortNotValidException e) 
+			{
+				logger.error("in announce: " + e.getMessage());
+			}
 					
 		}
 		

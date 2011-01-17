@@ -49,6 +49,16 @@ public class DWDefs
 	// fast writes
 	public static final byte OP_FASTWRITE_BASE = (byte) 128;
 	
+	// util modes
+	public static final int UTILMODE_UNSET = 0;
+	public static final int UTILMODE_DWCMD = 1;
+	public static final int UTILMODE_URL = 2;
+	public static final int UTILMODE_TCPOUT = 3;
+	public static final int UTILMODE_VMODEMOUT = 4;
+	public static final int UTILMODE_TCPIN = 5;
+	public static final int UTILMODE_VMODEMIN = 6;
+	public static final int UTILMODE_TCPLISTEN = 7;
+	
 	
 	// result codes
 	public static final byte RC_SUCCESS = 0;

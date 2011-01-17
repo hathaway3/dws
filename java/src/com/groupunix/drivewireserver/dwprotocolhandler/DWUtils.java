@@ -223,6 +223,38 @@ public class DWUtils
 
 	
 	
+	public static String prettyUtilMode(int mode) 
+	{
+		String res = "unset";
+
+		switch(mode)
+		{
+		case DWDefs.UTILMODE_URL:
+			res = "url";
+			break;
+
+		case DWDefs.UTILMODE_DWCMD:
+			res = "dw cmd";
+			break;
+		case DWDefs.UTILMODE_TCPOUT:
+			res = "tcp out";
+			break;
+		case DWDefs.UTILMODE_VMODEMOUT:
+			res = "vmodem out";
+			break;
+		case DWDefs.UTILMODE_TCPIN:
+			res = "tcp in";
+			break;
+		case DWDefs.UTILMODE_VMODEMIN:
+			res = "vmodem in";
+			break;
+		case DWDefs.UTILMODE_TCPLISTEN:
+			res = "tcp listen";
+			break;
+		}
+		
+		return(res);
+	}
 	
 	public static String prettyOP(byte opcode) 
 	{

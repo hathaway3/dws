@@ -1,6 +1,10 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class DWCmdPortShow implements DWCommand {
@@ -51,33 +55,35 @@ public class DWCmdPortShow implements DWCommand {
 		{
 			text += String.format("%6s", DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(i));
 			
-			if (DriveWireServer.getHandler(handlerno).getVPorts().isOpen(i))
+			try 
 			{
-				text += String.format(" %-10s", "open(" + DriveWireServer.getHandler(handlerno).getVPorts().getOpen(i) + ")");
 				
-				text += String.format(" %-10s", "PD.INT=" + DriveWireServer.getHandler(handlerno).getVPorts().getPD_INT(i));
-				text += String.format(" %-10s", "PD.QUT=" + DriveWireServer.getHandler(handlerno).getVPorts().getPD_QUT(i));
-				text += String.format(" %-17s", "buffer: " + DriveWireServer.getHandler(handlerno).getVPorts().bytesWaiting(i));
+			
+				if (DriveWireServer.getHandler(handlerno).getVPorts().isOpen(i))
+				{
+					text += String.format(" %-8s", "open(" + DriveWireServer.getHandler(handlerno).getVPorts().getOpen(i) + ")");
 				
+					text += String.format(" %-10s", "PD.INT=" + DriveWireServer.getHandler(handlerno).getVPorts().getPD_INT(i));
+					text += String.format(" %-10s", "PD.QUT=" + DriveWireServer.getHandler(handlerno).getVPorts().getPD_QUT(i));
+					text += String.format(" %-15s", "buffer: " + DriveWireServer.getHandler(handlerno).getVPorts().bytesWaiting(i));
+				
+				}
+				else
+				{
+					text += String.format(" %-46s", "closed");
+				}
+			
+			
+				if (DriveWireServer.getHandler(handlerno).getVPorts().getUtilMode(i) != DWDefs.UTILMODE_UNSET)
+					text += " " + DWUtils.prettyUtilMode(DriveWireServer.getHandler(handlerno).getVPorts().getUtilMode(i));
+				
+				//text += " " + DWProtocolHandler.byteArrayToHexString(DWVSerialPorts.getDD(i));	
 			}
-			else
+			catch (DWPortNotValidException e)
 			{
-				text += String.format(" %-50s", "closed");
-			}
-			
-			
-			
-			if (DriveWireServer.getHandler(handlerno).getVPorts().isConnected(i))
-			{
-				text += " " + DriveWireServer.getHandler(handlerno).getVPorts().getHostIP(i) + ":" + DriveWireServer.getHandler(handlerno).getVPorts().getHostPort(i);
-			}
-			else
-			{
-				text += " not connected";
-			}
-			
-			//text += " " + DWProtocolHandler.byteArrayToHexString(DWVSerialPorts.getDD(i));	
-			
+				text += " Error: " + e.getMessage();
+			} 
+
 			
 			text += "\r\n";
 		}
