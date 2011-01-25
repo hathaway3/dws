@@ -2,7 +2,6 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;

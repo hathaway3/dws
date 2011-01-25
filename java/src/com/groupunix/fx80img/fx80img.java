@@ -3,7 +3,7 @@ package com.groupunix.fx80img;
 // emulate an epson fx80.  VERY INCOMPLETE
 
 import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -45,7 +45,7 @@ public class fx80img implements Runnable {
 	private double char_width;
 	
 	private characterset charset = new characterset();
-	private Graphics rGraphic;
+	private Graphics2D rGraphic;
 	
 	private String printText;
 	private File printDir;
@@ -72,27 +72,18 @@ public class fx80img implements Runnable {
 	public void print(String printText, File printDir) throws NumberFormatException, IOException 
 	{
 	
-		// load settings?
-		
 		// load characters
 		
 		loadCharacter(DriveWireServer.getHandler(this.handlerno).config.getString("PrinterCharacterFile","default.chars"));
 
-		//System.out.println("DEF_XSIZE: " + DEF_XSIZE);
-		//System.out.println("DEF_YSIZE: " + DEF_YSIZE);
-		//System.out.println("Line height:" + line_height);
-		//System.out.println("Character width: " + char_width);
-	
-		// first file
-		printFile = File.createTempFile("dw_print_",".png",printDir);
-				
 		// init img
 
 				
-        rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_USHORT_GRAY );
-        rGraphic = rImage.getGraphics();
+        rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_BYTE_INDEXED);
+        //.TYPE_USHORT_GRAY );
+        rGraphic = (Graphics2D) rImage.getGraphics();
 
-       
+        
         rGraphic.setColor(Color.WHITE);	
         rGraphic.fillRect(0, 0, (int) DEF_XSIZE, (int) DEF_YSIZE);
         
@@ -237,12 +228,15 @@ public class fx80img implements Runnable {
 
         try 
         {
-            ImageIO.write(rImage, "PNG", printFile);
+        	printFile = File.createTempFile("dw_print_",getFileExt(DriveWireServer.getHandler(this.handlerno).config.getString("PrinterImageFormat","PNG")),printDir);
+    		
+            ImageIO.write(rImage, DriveWireServer.getHandler(this.handlerno).config.getString("PrinterImageFormat","PNG"), printFile);
             logger.info("wrote last print page image to: " + printFile.getAbsolutePath());
+            
         } 
         catch (IOException ex) 
         {
-            System.out.println("Cannot save result image.");
+            logger.warn("Cannot save print image: " + ex.getMessage());
         }
 
         
@@ -291,24 +285,42 @@ public class fx80img implements Runnable {
 			
 			try 
 		    {
-				ImageIO.write(rImage, "PNG", printFile);
+				printFile = File.createTempFile("dw_print_",getFileExt(DriveWireServer.getHandler(this.handlerno).config.getString("PrinterImageFormat","PNG")),printDir);
+				ImageIO.write(rImage, DriveWireServer.getHandler(this.handlerno).config.getString("PrinterImageFormat","PNG"), printFile);
 				
 				logger.info("wrote print page image to: " + printFile.getAbsolutePath());
 				
-				printFile = File.createTempFile("dw_print_",".png",printDir);
 				rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_USHORT_GRAY );
-				rGraphic = rImage.getGraphics();
+				rGraphic = (Graphics2D) rImage.getGraphics();
 			       
 				rGraphic.setColor(Color.WHITE);	
 			    rGraphic.fillRect(0, 0, (int) DEF_XSIZE, (int) DEF_YSIZE);
 		    } 
 		    catch (IOException ex) 
 		    {
-		    	logger.error("Cannot save result image.");
+		    	 logger.warn("Cannot save print image: " + ex.getMessage());
 		    }
 			
 			
 		}
+	}
+
+	private String getFileExt(String set) 
+	{
+		if (set.equalsIgnoreCase("JPEG") || set.equalsIgnoreCase("JPG") )
+			return(".jpg");
+
+		if (set.equalsIgnoreCase("GIF"))
+			return(".gif");
+
+		if (set.equalsIgnoreCase("BMP"))
+			return(".bmp");
+
+		if (set.equalsIgnoreCase("WBMP"))
+			return(".bmp");
+
+		
+		return ".png";
 	}
 
 	private void drawCharacter(int ch, double xpos, double ypos) 
