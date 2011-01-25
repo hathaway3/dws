@@ -29,8 +29,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.89";
-	public static final String DWServerVersionDate = "01/16/2010";
+	public static final String DWServerVersion = "3.9.90";
+	public static final String DWServerVersionDate = "01/17/2010";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -56,6 +56,10 @@ public class DriveWireServer
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws ConfigurationException
 	{
+		// install clean shutdown handler
+		DWShutdownHandler sh = new DWShutdownHandler();
+        Runtime.getRuntime().addShutdownHook(sh);
+		
 		String configfile = "config.xml";
 		
 		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
@@ -186,11 +190,20 @@ public class DriveWireServer
     	
 		
 		// shut things down as best we can
-
+		serverShutdown();
 		
+		logger.removeAllAppenders();
+		System.exit(0);
+	}
+
+
+
+
+	public static void serverShutdown() 
+	{
 		logger.warn("server shutting down...");
 		
-    		
+		
 		logger.debug("stopping protocol handler(s)...");
 		
 		for (int i = 0;i<dwProtoHandlerThreads.length;i++)
@@ -232,8 +245,6 @@ public class DriveWireServer
 		
 		logger.warn("server shutdown complete");
 		
-		logger.removeAllAppenders();
-		System.exit(0);
 	}
 
 

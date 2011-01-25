@@ -79,6 +79,7 @@ public class DWVPortListenerPool {
 	
 	public void closePortServerSockets(int port)
 	{
+		logger.debug("closing listener sockets for port " + port + "...");
 		for (int i = 0;i<MAX_LISTEN;i++)
 		{
 			if (this.getListener(i) != null)
@@ -165,7 +166,6 @@ public class DWVPortListenerPool {
 	
 	public void killListener(int conno) throws DWConnectionNotValidException
 	{
-		validateConn(conno);
 		
 		try
 		{

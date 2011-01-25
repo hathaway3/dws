@@ -507,7 +507,7 @@ public class DWProtocolHandler implements Runnable
 		
 		// Sync disks??
 		
-		// reset all ports?
+		// reset all ports
 		dwVSerialPorts.resetAllPorts();
 	
 		if (config.getBoolean("LogOpCode", false))

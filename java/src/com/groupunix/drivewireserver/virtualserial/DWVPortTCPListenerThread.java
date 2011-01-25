@@ -59,15 +59,24 @@ public class DWVPortTCPListenerThread implements Runnable
 		{
 			// check for listen address
 			
-			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("ListenAddress"))
+			try
 			{
-				srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(DriveWireServer.getHandler(this.handlerno).config.getString("ListenAddress")) );
+				if (DriveWireServer.getHandler(this.handlerno).config.containsKey("ListenAddress"))
+				{
+					srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(DriveWireServer.getHandler(this.handlerno).config.getString("ListenAddress")) );
+				}
+				else
+				{
+					srvr = new ServerSocket(this.tcpport, BACKLOG);
+				}
+				logger.info("tcp listening on port " + srvr.getLocalPort());
 			}
-			else
+			catch (IOException e2) 
 			{
-				srvr = new ServerSocket(this.tcpport, BACKLOG);
-			}
-			logger.info("tcp listening on port " + srvr.getLocalPort());
+				logger.error(e2.getMessage());
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, 12, e2.getMessage());
+				return;
+			} 
 			
 			dwVSerialPorts.writeToCoco(vport, "OK listening on port " + this.tcpport + (char) 0 + (char) 13);
 
@@ -106,9 +115,6 @@ public class DWVPortTCPListenerThread implements Runnable
 		catch (IOException e2) 
 		{
 			logger.error(e2.getMessage());
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, 12, e2.getMessage());
-			wanttodie = true;
-			return;
 		} 
 		catch (DWPortNotValidException e) 
 		{
