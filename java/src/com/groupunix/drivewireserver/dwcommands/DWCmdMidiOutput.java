@@ -5,15 +5,15 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiOutput implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiOutput(int handlerno)
+	public DWCmdMidiOutput(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -23,7 +23,6 @@ public class DWCmdMidiOutput implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -52,7 +51,7 @@ public class DWCmdMidiOutput implements DWCommand {
 	
 	private DWCommandResponse doMidiOutput(String devstr) 
 	{
-		if (DriveWireServer.getHandler(handlerno).config.getBoolean("UseMIDI",true))
+		if (dwProto.getConfig().getBoolean("UseMIDI",true))
 		{	
 		
 			try
@@ -66,7 +65,7 @@ public class DWCmdMidiOutput implements DWCommand {
 					return(new DWCommandResponse(false,DWDefs.RC_MIDI_INVALID_DEVICE, "Invalid device number for dw midi output."));
 				}
 			
-				DriveWireServer.getHandler(handlerno).getVPorts().setMIDIDevice(MidiSystem.getMidiDevice(infos[devno]));
+				dwProto.getVPorts().setMIDIDevice(MidiSystem.getMidiDevice(infos[devno]));
 			
 				return(new DWCommandResponse("Set MIDI output device: " + MidiSystem.getMidiDevice(infos[devno]).getDeviceInfo().getName()));
 			

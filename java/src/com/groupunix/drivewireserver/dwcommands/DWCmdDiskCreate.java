@@ -7,18 +7,18 @@ import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskCreate implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskCreate(int handlerno)
+	public DWCmdDiskCreate(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -79,10 +79,10 @@ public class DWCmdDiskCreate implements DWCommand {
 		
 			fileobj.createFile();
 			
-			if (DriveWireServer.getHandler(handlerno).getDiskDrives().diskLoaded(driveno))
-				DriveWireServer.getHandler(handlerno).getDiskDrives().EjectDisk(driveno);
+			if (dwProto.getDiskDrives().diskLoaded(driveno))
+				dwProto.getDiskDrives().EjectDisk(driveno);
 				
-			DriveWireServer.getHandler(handlerno).getDiskDrives().LoadDiskFromFile(driveno, filepath);
+			dwProto.getDiskDrives().LoadDiskFromFile(driveno, filepath);
 					
 			return(new DWCommandResponse("Disk #" + driveno + " created."));
 

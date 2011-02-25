@@ -11,6 +11,7 @@ import javax.sound.midi.ShortMessage;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWVSerialPort {
@@ -20,7 +21,7 @@ public class DWVSerialPort {
 	private static final int BUFFER_SIZE = -1;  //infinite
 
 	private int port = -1;
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 	
 	private boolean connected = false;
 	private int opens = 0;
@@ -63,18 +64,18 @@ public class DWVSerialPort {
 	
 	private int utilmode = 0;
 	
-	public DWVSerialPort(int handlerno, int port)
+	public DWVSerialPort(DWProtocolHandler dwProto, int port)
 	{
-		logger.debug("New DWVSerialPort for port " + port + " in handler #" + handlerno);
+		logger.debug("New DWVSerialPort for port " + port + " in handler '" + dwProto.getName() +"'");
 		this.port = port;
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 		
 		if (port != DWVSerialPorts.TERM_PORT)
 		{
-			this.porthandler = new DWVPortHandler(handlerno, port);
+			this.porthandler = new DWVPortHandler(dwProto, port);
 		}
 		
-		if (DriveWireServer.getHandler(handlerno).config.getBoolean("LogMIDIBytes", false))
+		if (dwProto.getConfig().getBoolean("LogMIDIBytes", false))
 		{
 			this.log_midi_bytes = true;
 		}
@@ -182,7 +183,7 @@ public class DWVSerialPort {
 						
 							if ((mmsg_status >= 192) && (databyte < 208)) 
 							{
-								if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiVoicelock())
+								if (dwProto.getVPorts().getMidiVoicelock())
 								{
 									// ignore program change
 									logger.debug("MIDI: ignored program change due to instrument lock.");
@@ -190,13 +191,13 @@ public class DWVSerialPort {
 								else
 								{
 									// translate program changes
-									int xinstr = DriveWireServer.getHandler(handlerno).getVPorts().getGMInstrument(databyte);
+									int xinstr = dwProto.getVPorts().getGMInstrument(databyte);
 									sendMIDI(mmsg_status, xinstr, 0);
 								
 									// sendMIDI(mmsg_status, databyte, 0);
 								
 									// set cache
-									DriveWireServer.getHandler(handlerno).getVPorts().setGMInstrumentCache(mmsg_status - 192, databyte);
+									dwProto.getVPorts().setGMInstrumentCache(mmsg_status - 192, databyte);
 								}
 							}
 							else
@@ -254,7 +255,7 @@ public class DWVSerialPort {
 		{
 			
 			mmsg.setMessage(statusbyte);
-			DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
+			dwProto.getVPorts().sendMIDIMsg(mmsg, -1);
 		} 
 		catch (InvalidMidiDataException e) 
 		{
@@ -278,7 +279,7 @@ public class DWVSerialPort {
 		{
 			
 			mmsg.setMessage(statusbyte, data1, data2);
-			DriveWireServer.getHandler(handlerno).getVPorts().sendMIDIMsg(mmsg, -1);
+			dwProto.getVPorts().sendMIDIMsg(mmsg, -1);
 		} 
 		catch (InvalidMidiDataException e) 
 		{
@@ -306,11 +307,13 @@ public class DWVSerialPort {
 	
 	public void writeToCoco(String str)
 	{
-		try {
+		try 
+		{
 			inputBuffer.getOutputStream().write(str.getBytes());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} 
+		catch (IOException e) 
+		{
+			logger.warn(e.getMessage());
 		}
 	}
 	
@@ -320,8 +323,7 @@ public class DWVSerialPort {
 		try {
 			inputBuffer.getOutputStream().write(databytes);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 	}
 	
@@ -332,8 +334,7 @@ public class DWVSerialPort {
 		try {
 			inputBuffer.getOutputStream().write(databyte);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 	}
 	
@@ -440,8 +441,7 @@ public class DWVSerialPort {
 					try {
 						output.close();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn(e.getMessage());
 					}
 				}
 				
@@ -454,8 +454,7 @@ public class DWVSerialPort {
 					try {
 						this.socket.close();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn(e.getMessage());
 					}
 				
 					this.socket = null;
@@ -558,8 +557,7 @@ public class DWVSerialPort {
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		//this.utilhandler.respondFail(code, txt);
 	}
@@ -572,8 +570,7 @@ public class DWVSerialPort {
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		//this.utilhandler.respondOk(txt);
 	}

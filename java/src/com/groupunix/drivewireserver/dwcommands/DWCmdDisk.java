@@ -1,25 +1,28 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+
 public class DWCmdDisk implements DWCommand {
 
 	static final String command = "disk";
 	private DWCommandList commands = new DWCommandList();
 		
-	public DWCmdDisk(int handlerno)
+	public DWCmdDisk(DWProtocolHandler dwProto)
 	{
-		commands.addcommand(new DWCmdDiskShow(handlerno));
-		commands.addcommand(new DWCmdDiskEject(handlerno));
-		commands.addcommand(new DWCmdDiskInsert(handlerno));
-		commands.addcommand(new DWCmdDiskReload(handlerno));
-		commands.addcommand(new DWCmdDiskWrite(handlerno));
-		commands.addcommand(new DWCmdDiskCreate(handlerno));
-		commands.addcommand(new DWCmdDiskWP(handlerno));
-		commands.addcommand(new DWCmdDiskSync(handlerno));
-		commands.addcommand(new DWCmdDiskExpand(handlerno));
-		commands.addcommand(new DWCmdDiskOffset(handlerno));
-		commands.addcommand(new DWCmdDiskLimit(handlerno));
-		commands.addcommand(new DWCmdDiskSet(handlerno));
-		commands.addcommand(new DWCmdDiskDump(handlerno));
+		commands.addcommand(new DWCmdDiskShow(dwProto));
+		commands.addcommand(new DWCmdDiskEject(dwProto));
+		commands.addcommand(new DWCmdDiskInsert(dwProto));
+		commands.addcommand(new DWCmdDiskReload(dwProto));
+		commands.addcommand(new DWCmdDiskWrite(dwProto));
+		commands.addcommand(new DWCmdDiskCreate(dwProto));
+		commands.addcommand(new DWCmdDiskWP(dwProto));
+		commands.addcommand(new DWCmdDiskSync(dwProto));
+		commands.addcommand(new DWCmdDiskExpand(dwProto));
+		commands.addcommand(new DWCmdDiskOffset(dwProto));
+		commands.addcommand(new DWCmdDiskLimit(dwProto));
+		commands.addcommand(new DWCmdDiskSet(dwProto));
+		commands.addcommand(new DWCmdDiskDump(dwProto));
 	}
 
 	
@@ -36,7 +39,7 @@ public class DWCmdDisk implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
+
 		return null;
 	}
 

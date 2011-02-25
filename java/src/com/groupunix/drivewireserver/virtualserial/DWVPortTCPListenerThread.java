@@ -8,8 +8,8 @@ import java.net.Socket;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVPortTCPListenerThread implements Runnable 
 {
@@ -18,7 +18,7 @@ public class DWVPortTCPListenerThread implements Runnable
 	
 	private int vport;
 	private int tcpport;
-	private int handlerno;
+
 	private DWVSerialPorts dwVSerialPorts;
 	
 	private int mode = 0;
@@ -29,16 +29,16 @@ public class DWVPortTCPListenerThread implements Runnable
 	private boolean wanttodie = false;
 	
 	private static int BACKLOG = 20;
+	private DWProtocolHandler dwProto;
 	
 	
-	
-	public DWVPortTCPListenerThread(int handlerno, int vport, int tcpport)
+	public DWVPortTCPListenerThread(DWProtocolHandler dwProto, int vport, int tcpport)
 	{
 		logger.debug("init tcp listener thread on port "+ tcpport);	
 		this.vport = vport;
 		this.tcpport = tcpport;
-		this.handlerno = handlerno;
-		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+		this.dwProto = dwProto;
+		this.dwVSerialPorts = dwProto.getVPorts();
 		
 	}
 	
@@ -61,9 +61,9 @@ public class DWVPortTCPListenerThread implements Runnable
 			
 			try
 			{
-				if (DriveWireServer.getHandler(this.handlerno).config.containsKey("ListenAddress"))
+				if (dwProto.getConfig().containsKey("ListenAddress"))
 				{
-					srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(DriveWireServer.getHandler(this.handlerno).config.getString("ListenAddress")) );
+					srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(dwProto.getConfig().getString("ListenAddress")) );
 				}
 				else
 				{
@@ -104,7 +104,7 @@ public class DWVPortTCPListenerThread implements Runnable
 				else
 				{
 					// run telnet preflight, let it add the connection to the pool if things work out
-					Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.handlerno, this.vport, skt, this.do_telnet, this.do_auth, this.do_protect, this.do_banner));
+					Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.dwProto, this.vport, skt, this.do_telnet, this.do_auth, this.do_protect, this.do_banner));
 					pfthread.start();
 				}
 			

@@ -47,58 +47,10 @@ public class DWDiskLazyWriter implements Runnable {
 		for (int h = 0;h<DriveWireServer.getNumHandlers();h++)
 		{
 			
-			if (DriveWireServer.handlerIsAlive(h))
+			if (DriveWireServer.handlerIsAlive(h) )
 			{
-				// scan all loaded drives
-				for (int driveno = 0;driveno<DWDiskDrives.MAX_DRIVES;driveno++)
-				{
-					if (DriveWireServer.getHandler(h).getDiskDrives() != null)
-					{
-					
-						if (DriveWireServer.getHandler(h).getDiskDrives().diskLoaded(driveno))
-						{
-							try 
-							{
-								
-								if (DriveWireServer.getHandler(h).getDiskDrives().isSync(driveno))
-								{
-								
-									if (DriveWireServer.getHandler(h).getDiskDrives().isRandomWriteable(driveno))
-									{	 
-
-										if (DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) > 0)
-										{
-											logger.debug("cache for drive " + driveno + " in handler " + h + " has changed, " + DriveWireServer.getHandler(h).getDiskDrives().getDirtySectors(driveno) + " dirty sectors");
-
-											try
-											{
-												DriveWireServer.getHandler(h).getDiskDrives().writeDisk(driveno);
-											} 
-											catch (IOException e)
-											{
-												logger.error("Lazy write failed: " + e.getMessage());
-											} 
-											catch (DWDriveNotLoadedException e) 
-											{
-												logger.error(e.getMessage());
-											}
-										}
-									}
-
-								}
-							} 
-							catch (DWDriveNotLoadedException e) 
-							{
-								e.printStackTrace();
-							}
-						}
-			
-					}
-					else
-					{
-						logger.debug("handler is alive, but disk drive object is null, probably startup taking a while.. skipping");
-					}
-				}
+				DriveWireServer.getHandler(h).syncStorage();
+				
 			}
 			
 		}

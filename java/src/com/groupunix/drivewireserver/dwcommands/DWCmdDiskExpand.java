@@ -1,17 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWCmdDiskExpand implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskExpand(int handlerno)
+	public DWCmdDiskExpand(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -21,7 +21,6 @@ public class DWCmdDiskExpand implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -62,12 +61,12 @@ public class DWCmdDiskExpand implements DWCommand {
 	
 			if (DWUtils.isStringFalse(tf))
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().setExpand(driveno, false);
+				dwProto.getDiskDrives().setExpand(driveno, false);
 				return(new DWCommandResponse("Image in drive " + driveno + " will NOT be automatically expanded."));
 			}
 			else if (DWUtils.isStringTrue(tf))
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().setExpand(driveno, true);
+				dwProto.getDiskDrives().setExpand(driveno, true);
 				return(new DWCommandResponse("Image in drive " + driveno + " will be automatically expanded."));
 			}
 			else

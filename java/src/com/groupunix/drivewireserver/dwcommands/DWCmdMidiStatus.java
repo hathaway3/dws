@@ -5,15 +5,15 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiStatus implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiStatus(int handlerno)
+	public DWCmdMidiStatus(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -50,7 +50,7 @@ public class DWCmdMidiStatus implements DWCommand {
 		
 		text += "\r\nDriveWire MIDI status:\r\n\n";
 
-		if (DriveWireServer.getHandler(handlerno).config.getBoolean("UseMIDI",true))
+		if (dwProto.getConfig().getBoolean("UseMIDI",true))
 		{
 			text +="Devices:\r\n";
 	
@@ -78,14 +78,14 @@ public class DWCmdMidiStatus implements DWCommand {
 
 			text += "\r\nCurrent MIDI output device: ";
         
-			if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiDeviceInfo() == null)
+			if (dwProto.getVPorts().getMidiDeviceInfo() == null)
 			{
         	
 				text += "none\r\n";
 			}
 			else
 			{
-				text += DriveWireServer.getHandler(handlerno).getVPorts().getMidiDeviceInfo().getName() + "\r\n";  
+				text += dwProto.getVPorts().getMidiDeviceInfo().getName() + "\r\n";  
 			}
 		}
 		else

@@ -1,15 +1,15 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiSynthProfile implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthProfile(int handlerno)
+	public DWCmdMidiSynthProfile(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -19,7 +19,6 @@ public class DWCmdMidiSynthProfile implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -49,7 +48,7 @@ public class DWCmdMidiSynthProfile implements DWCommand {
 	private DWCommandResponse doMidiSynthProfile(String path)
 	{
 		
-		if (DriveWireServer.getHandler(handlerno).getVPorts().setMidiProfile(path))
+		if (dwProto.getVPorts().setMidiProfile(path))
 		{
 			return(new DWCommandResponse("Set translation profile to '" + path + "'"));
 		}

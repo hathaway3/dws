@@ -1,17 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWCmdDiskSync implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskSync(int handlerno)
+	public DWCmdDiskSync(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -62,12 +62,12 @@ public class DWCmdDiskSync implements DWCommand {
 	
 			if (DWUtils.isStringFalse(tf))
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().setSync(driveno, false);
+				dwProto.getDiskDrives().setSync(driveno, false);
 				return(new DWCommandResponse("Changes to the disk in drive " + driveno + " will NOT be synced to the source image."));
 			}
 			else if (DWUtils.isStringTrue(tf))
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().setSync(driveno, true);
+				dwProto.getDiskDrives().setSync(driveno, true);
 				return(new DWCommandResponse("Changes to the disk in drive " + driveno + " will be synced to the source image."));
 			}
 			else

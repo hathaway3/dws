@@ -9,15 +9,15 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Soundbank;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiSynthStatus implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthStatus(int handlerno)
+	public DWCmdMidiSynthStatus(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -27,7 +27,6 @@ public class DWCmdMidiSynthStatus implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -55,9 +54,9 @@ public class DWCmdMidiSynthStatus implements DWCommand {
 		// dw midi synth show
 		text = "\r\nInternal synthesizer status:\r\n\n";
 		
-		if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth() != null)
+		if (dwProto.getVPorts().getMidiSynth() != null)
 		{
-			MidiDevice.Info midiinfo = DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getDeviceInfo();
+			MidiDevice.Info midiinfo = dwProto.getVPorts().getMidiSynth().getDeviceInfo();
 
 			text += "Device:\r\n";
 			text += midiinfo.getVendor() + ", " + midiinfo.getName() + ", " + midiinfo.getVersion() + "\r\n";
@@ -67,9 +66,9 @@ public class DWCmdMidiSynthStatus implements DWCommand {
 			
 			text += "Soundbank: ";
 	
-			if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiSoundbankFilename() == null)
+			if (dwProto.getVPorts().getMidiSoundbankFilename() == null)
 			{
-				Soundbank sbank = DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getDefaultSoundbank();
+				Soundbank sbank = dwProto.getVPorts().getMidiSynth().getDefaultSoundbank();
 				
 				if (sbank != null)
 				{
@@ -84,12 +83,12 @@ public class DWCmdMidiSynthStatus implements DWCommand {
 			}
 			else
 			{
-				File file = new File(DriveWireServer.getHandler(handlerno).getVPorts().getMidiSoundbankFilename());
+				File file = new File(dwProto.getVPorts().getMidiSoundbankFilename());
 				try 
 				{
 					Soundbank sbank = MidiSystem.getSoundbank(file);
 			
-					text += " (" + DriveWireServer.getHandler(handlerno).getVPorts().getMidiSoundbankFilename() + ")\r\n";
+					text += " (" + dwProto.getVPorts().getMidiSoundbankFilename() + ")\r\n";
 					text += sbank.getVendor() + ", " + sbank.getName() + ", " + sbank.getVersion() + "\r\n";
 					text += sbank.getDescription() + "\r\n";
 			
@@ -106,11 +105,11 @@ public class DWCmdMidiSynthStatus implements DWCommand {
 			
 			text += "\r\n";
 			
-			text += "Latency:   " + DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getLatency() + "\r\n";
-			text += "Polyphony: " + DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getMaxPolyphony() + "\r\n";
-			text += "Position:  " + DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getMicrosecondPosition() + "\r\n\n";
-			text += "Profile:   " + DriveWireServer.getHandler(handlerno).getVPorts().getMidiProfileName() + "\r\n";
-			text += "Instrlock: " + DriveWireServer.getHandler(handlerno).getVPorts().getMidiVoicelock() + "\r\n";
+			text += "Latency:   " + dwProto.getVPorts().getMidiSynth().getLatency() + "\r\n";
+			text += "Polyphony: " + dwProto.getVPorts().getMidiSynth().getMaxPolyphony() + "\r\n";
+			text += "Position:  " + dwProto.getVPorts().getMidiSynth().getMicrosecondPosition() + "\r\n\n";
+			text += "Profile:   " + dwProto.getVPorts().getMidiProfileName() + "\r\n";
+			text += "Instrlock: " + dwProto.getVPorts().getMidiVoicelock() + "\r\n";
 			
 		}
 		else

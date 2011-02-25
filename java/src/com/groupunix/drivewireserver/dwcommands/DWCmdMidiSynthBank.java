@@ -8,15 +8,15 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Soundbank;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiSynthBank implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthBank(int handlerno)
+	public DWCmdMidiSynthBank(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -26,7 +26,6 @@ public class DWCmdMidiSynthBank implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -57,7 +56,7 @@ public class DWCmdMidiSynthBank implements DWCommand {
 	{
 		Soundbank soundbank = null;
 		
-		if (DriveWireServer.getHandler(handlerno).config.getBoolean("UseMIDI",true))
+		if (dwProto.getConfig().getBoolean("UseMIDI",true))
 		{
 			File file = new File(path);
 			try 
@@ -73,9 +72,9 @@ public class DWCmdMidiSynthBank implements DWCommand {
 				return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
 			}
 		
-			if (DriveWireServer.getHandler(handlerno).getVPorts().isSoundbankSupported(soundbank))
+			if (dwProto.getVPorts().isSoundbankSupported(soundbank))
 			{				
-				if (DriveWireServer.getHandler(handlerno).getVPorts().setMidiSoundbank(soundbank, path))
+				if (dwProto.getVPorts().setMidiSoundbank(soundbank, path))
 				{
 					return(new DWCommandResponse("Soundbank loaded without error"));
 				}

@@ -1,15 +1,15 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskDump implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskDump(int handlerno)
+	public DWCmdDiskDump(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -19,7 +19,6 @@ public class DWCmdDiskDump implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -57,7 +56,7 @@ public class DWCmdDiskDump implements DWCommand {
 			int driveno = Integer.parseInt(drivestr);
 			int sectorno = Integer.parseInt(sectorstr);
 			
-			return(new DWCommandResponse(new String(DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getSector(sectorno).getData())));
+			return(new DWCommandResponse(new String(dwProto.getDiskDrives().getDisk(driveno).getSector(sectorno).getData())));
 
 		}
 		catch (NumberFormatException e)

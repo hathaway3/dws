@@ -19,25 +19,21 @@ public class UICmdInstanceStatus implements DWCommand {
 	@Override
 	public String getCommand() 
 	{
-		// TODO Auto-generated method stub
 		return "status";
 	}
 
 	@Override
 	public String getLongHelp() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public String getShortHelp() {
-		// TODO Auto-generated method stub
 		return "show instance status";
 	}
 
 	@Override
 	public String getUsage() {
-		// TODO Auto-generated method stub
 		return "ui instance status";
 	}
 
@@ -46,9 +42,9 @@ public class UICmdInstanceStatus implements DWCommand {
 	{
 		String txt = "";
 		
-		DWProtocolHandler ph = DriveWireServer.getHandler(clientref.getInstance());   
+		DWProtocolHandler ph = (DWProtocolHandler) DriveWireServer.getHandler(clientref.getInstance());   
 		
-		txt = "name: " + ph.config.getString("Name","not set") + "\n";
+		txt = "name: " + ph.getConfig().getString("Name","not set") + "\n";
 		
 		txt += "connected: " + ph.connected() + "\n";
 		

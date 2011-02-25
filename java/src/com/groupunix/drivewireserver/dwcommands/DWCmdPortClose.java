@@ -1,16 +1,16 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdPortClose implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdPortClose(int handlerno)
+	public DWCmdPortClose(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -20,7 +20,6 @@ public class DWCmdPortClose implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -54,7 +53,7 @@ public class DWCmdPortClose implements DWCommand {
 		{
 			int portno = Integer.parseInt(port);
 			
-			DriveWireServer.getHandler(handlerno).getVPorts().closePort(portno);
+			dwProto.getVPorts().closePort(portno);
 			
 			return(new DWCommandResponse("Port #"+ portno + " closed."));
 

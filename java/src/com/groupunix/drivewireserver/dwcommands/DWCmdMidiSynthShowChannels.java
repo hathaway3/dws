@@ -3,15 +3,15 @@ package com.groupunix.drivewireserver.dwcommands;
 import javax.sound.midi.Instrument;
 import javax.sound.midi.MidiChannel;
 
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiSynthShowChannels implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthShowChannels(int handlerno)
+	public DWCmdMidiSynthShowChannels(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -21,7 +21,6 @@ public class DWCmdMidiSynthShowChannels implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -43,11 +42,11 @@ public class DWCmdMidiSynthShowChannels implements DWCommand {
 		
 		text = "\r\nInternal synthesizer channel status:\r\n\n";
 		
-		if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth() != null)
+		if (dwProto.getVPorts().getMidiSynth() != null)
 		{
-			MidiChannel[] midchans = DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getChannels();
+			MidiChannel[] midchans = dwProto.getVPorts().getMidiSynth().getChannels();
 		
-			Instrument[] instruments = DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getLoadedInstruments();
+			Instrument[] instruments = dwProto.getVPorts().getMidiSynth().getLoadedInstruments();
 		
 			text +="Chan#  Instr#  Orig#   Instrument\r\n";
 			text +="-----------------------------------------------------------------------------\r\n";
@@ -56,7 +55,7 @@ public class DWCmdMidiSynthShowChannels implements DWCommand {
 			{
 				if (midchans[i] != null)
 				{
-					text += String.format(" %2d      %-3d    %-3d    ",(i+1),midchans[i].getProgram(),DriveWireServer.getHandler(handlerno).getVPorts().getGMInstrumentCache(i));
+					text += String.format(" %2d      %-3d    %-3d    ",(i+1),midchans[i].getProgram(),dwProto.getVPorts().getGMInstrumentCache(i));
 				
 					if (midchans[i].getProgram() < instruments.length)
 					{

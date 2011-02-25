@@ -37,7 +37,7 @@ public class DWCmdServerShowHandlers implements DWCommand {
 		{
 			if (DriveWireServer.getHandler(i) != null)
 			{
-				text += "\r\nHandler #" + i + ": Device " + DriveWireServer.getHandler(i).config.getString("SerialDevice") + " CocoModel " + DriveWireServer.getHandler(i).config.getString("CocoModel") + "\r\n"; 
+				text += "\r\nHandler #" + i + ": Device " + DriveWireServer.getHandler(i).getConfig().getString("SerialDevice") + " CocoModel " + DriveWireServer.getHandler(i).getConfig().getString("CocoModel") + "\r\n"; 
 			}
 		}
 		

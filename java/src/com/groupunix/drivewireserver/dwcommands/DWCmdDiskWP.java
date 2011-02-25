@@ -1,17 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWCmdDiskWP implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskWP(int handlerno)
+	public DWCmdDiskWP(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -72,12 +72,12 @@ public class DWCmdDiskWP implements DWCommand {
 	
 			if (DWUtils.isStringFalse(tf))
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().setWriteProtect(driveno, false);
+				dwProto.getDiskDrives().setWriteProtect(driveno, false);
 				return(new DWCommandResponse("Disk in drive " + driveno + " is now writeable."));
 			}
 			else if (DWUtils.isStringTrue(tf))
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().setWriteProtect(driveno, true);
+				dwProto.getDiskDrives().setWriteProtect(driveno, true);
 				return(new DWCommandResponse("Disk in drive " + driveno + " is now write protected."));
 			}
 			else
@@ -103,14 +103,14 @@ public class DWCmdDiskWP implements DWCommand {
 		{
 			int driveno = Integer.parseInt(drivestr);
 	
-			if (DriveWireServer.getHandler(handlerno).getDiskDrives().getWriteProtect(driveno))
+			if (dwProto.getDiskDrives().getWriteProtect(driveno))
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().setWriteProtect(driveno, false);
+				dwProto.getDiskDrives().setWriteProtect(driveno, false);
 				return(new DWCommandResponse("Disk in drive " + driveno + " is now writeable."));
 			}
 			else
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().setWriteProtect(driveno, true);
+				dwProto.getDiskDrives().setWriteProtect(driveno, true);
 				return(new DWCommandResponse("Disk in drive " + driveno + " is now write protected."));
 			}
 			

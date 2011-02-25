@@ -1,13 +1,16 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+
 public class DWCmdNet implements DWCommand {
 
 	static final String command = "net";
 	private DWCommandList commands = new DWCommandList();
 		
-	public DWCmdNet(int handlerno)
+	public DWCmdNet(DWProtocolHandler dwProto)
 	{
-		commands.addcommand(new DWCmdNetShow(handlerno));
+		commands.addcommand(new DWCmdNetShow(dwProto));
 		
 	}
 

@@ -52,20 +52,20 @@ public class DWVPrinter {
 				tmp += Character.toString((char) databyte);
 			}
 			
-			if (DriveWireServer.getHandler(handlerno).config.containsKey("PrinterFile"))
+			if (DriveWireServer.getHandler(handlerno).getConfig().containsKey("PrinterFile"))
 			{
-				if (FileExistsOrCreate(DriveWireServer.getHandler(handlerno).config.getString("PrinterFile")))
+				if (FileExistsOrCreate(DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterFile")))
 				{
 					// append printer output to file
-					if (DriveWireServer.getHandler(handlerno).config.getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
+					if (DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
 					{
-						FileWriter fstream = new FileWriter(DriveWireServer.getHandler(handlerno).config.getString("PrinterFile"),true);
+						FileWriter fstream = new FileWriter(DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterFile"),true);
 				        BufferedWriter out = new BufferedWriter(fstream);
 				   	
 						out.write(tmp);
 						out.close();
 						
-						logger.info("Flushed print buffer to text file: '" + DriveWireServer.getHandler(handlerno).config.getString("PrinterFile") +"'");
+						logger.info("Flushed print buffer to text file: '" + DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterFile") +"'");
 					}
 					else
 					{
@@ -75,15 +75,15 @@ public class DWVPrinter {
 					
 				}
 			} 
-			else if (DriveWireServer.getHandler(handlerno).config.containsKey("PrinterDir"))
+			else if (DriveWireServer.getHandler(handlerno).getConfig().containsKey("PrinterDir"))
 			{
-				if (DirExistsOrCreate(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir")))
+				if (DirExistsOrCreate(DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterDir")))
 				{
 					// create printer output in seperate file
 					
-					if (DriveWireServer.getHandler(handlerno).config.getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
+					if (DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterType","TEXT").equalsIgnoreCase("TEXT"))
 					{
-						File theDir = new File(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir"));
+						File theDir = new File(DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterDir"));
 						File theFile = File.createTempFile("dw_print_",".txt",theDir);
 						
 						FileOutputStream theOS = new FileOutputStream(theFile);
@@ -94,10 +94,10 @@ public class DWVPrinter {
 						
 						logger.info("Flushed print buffer to text file: '" + theFile.getAbsolutePath() +"'");
 					}
-					else if (DriveWireServer.getHandler(handlerno).config.getString("PrinterType","TEXT").equalsIgnoreCase("FX80"))
+					else if (DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterType","TEXT").equalsIgnoreCase("FX80"))
 					{
 						// FX80 simulator output
-						File theDir = new File(DriveWireServer.getHandler(handlerno).config.getString("PrinterDir"));
+						File theDir = new File(DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterDir"));
 						
 						Thread fx80thread = new Thread(new fx80img(handlerno, tmp, theDir));
 						fx80thread.start();
@@ -106,7 +106,7 @@ public class DWVPrinter {
 				}
 				else
 				{
-					logger.error("Could not open or create PrinterDir '" + DriveWireServer.getHandler(handlerno).config.getString("PrinterDir") + "'");
+					logger.error("Could not open or create PrinterDir '" + DriveWireServer.getHandler(handlerno).getConfig().getString("PrinterDir") + "'");
 				}
 			}
 			else

@@ -3,18 +3,18 @@ package com.groupunix.drivewireserver.dwcommands;
 import java.io.IOException;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskReload implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskReload(int handlerno)
+	public DWCmdDiskReload(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -58,7 +58,7 @@ public class DWCmdDiskReload implements DWCommand {
 		{
 			int driveno = Integer.parseInt(drivestr);
 			
-			DriveWireServer.getHandler(handlerno).getDiskDrives().ReLoadDisk(driveno);
+			dwProto.getDiskDrives().ReLoadDisk(driveno);
 	
 			return(new DWCommandResponse("Disk in drive #"+ driveno + " reloaded."));
 

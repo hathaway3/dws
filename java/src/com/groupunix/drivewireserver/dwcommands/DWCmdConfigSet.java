@@ -2,16 +2,17 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class DWCmdConfigSet implements DWCommand {
 
-	private int handlerno;
-
-	public DWCmdConfigSet(int handlerno)
-	{
-		this.handlerno = handlerno;
-	}
+	DWProtocol dwProto;
 	
+	public DWCmdConfigSet(DWProtocol dwProtocol)
+	{
+		this.dwProto = dwProtocol;
+	}
+
 	public String getCommand() 
 	{
 		return "set";
@@ -19,7 +20,6 @@ public class DWCmdConfigSet implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -58,11 +58,11 @@ public class DWCmdConfigSet implements DWCommand {
 	private DWCommandResponse doSetConfig(String item)
 	{
 		
-		if (DriveWireServer.getHandler(this.handlerno).config.containsKey(item))
+		if (dwProto.getConfig().containsKey(item))
 		{
 			synchronized(DriveWireServer.serverconfig)
 			{
-				DriveWireServer.getHandler(this.handlerno).config.clearProperty(item);
+				dwProto.getConfig().clearProperty(item);
 			}
 		}
 		
@@ -75,7 +75,7 @@ public class DWCmdConfigSet implements DWCommand {
 	{
 		synchronized(DriveWireServer.serverconfig)
 		{
-			DriveWireServer.getHandler(this.handlerno).config.setProperty(item, value);
+			dwProto.getConfig().setProperty(item, value);
 		}
 		return(new DWCommandResponse("Item '" + item + "' set to '" + value + "'"));
 	}

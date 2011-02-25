@@ -3,10 +3,10 @@ package com.groupunix.drivewireserver.virtualserial;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWUtilDWThread implements Runnable 
@@ -16,26 +16,24 @@ public class DWUtilDWThread implements Runnable
 	
 	private int vport = -1;
 	private String strargs = null;
-	private int handlerno;
 	private DWVSerialPorts dwVSerialPorts;
 	private boolean protect = false;
 	
 	private DWCommandList commands;
 	
-	public DWUtilDWThread(int handlerno, int vport, String args)
+	public DWUtilDWThread(DWProtocolHandler dwProto, int vport, String args)
 	{
 		this.vport = vport;
 		this.strargs = args;
-		this.handlerno = handlerno;
-		this.dwVSerialPorts = DriveWireServer.getHandler(handlerno).getVPorts();
+		this.dwVSerialPorts = dwProto.getVPorts();
 		
 		if (vport <= DWVSerialPorts.MAX_COCO_PORTS)
 		{
-			this.protect = DriveWireServer.getHandler(handlerno).config.getBoolean("ProtectedMode", false); 
+			this.protect = dwProto.getConfig().getBoolean("ProtectedMode", false); 
 		}
 		
-		// setup command list
-		commands = DriveWireServer.getHandler(handlerno).getDWCmds();
+
+		commands = dwProto.getDWCmds();
 		
 		logger.debug("init dw util thread (protected mode: " + this.protect + ")");	
 	}
@@ -48,7 +46,7 @@ public class DWUtilDWThread implements Runnable
 		Thread.currentThread().setName("dwutil-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
-		logger.debug("run for handler #" + handlerno);
+		logger.debug("run for port " + vport);
 		
 		this.dwVSerialPorts.markConnected(vport);
 		this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_DWCMD);

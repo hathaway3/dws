@@ -6,19 +6,19 @@ import java.io.IOException;
 import org.apache.commons.vfs.FileSystemException;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWCmdDiskInsert implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskInsert(int handlerno)
+	public DWCmdDiskInsert(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -51,17 +51,17 @@ public class DWCmdDiskInsert implements DWCommand {
 		{
 			int driveno = Integer.parseInt(drivestr);
 		
-			DriveWireServer.getHandler(handlerno).getDiskDrives().validateDriveNo(driveno);
+			dwProto.getDiskDrives().validateDriveNo(driveno);
 			
 			// eject any current disk
-			if (DriveWireServer.getHandler(handlerno).getDiskDrives().diskLoaded(driveno))
+			if (dwProto.getDiskDrives().diskLoaded(driveno))
 			{
-				DriveWireServer.getHandler(handlerno).getDiskDrives().EjectDisk(driveno);
+				dwProto.getDiskDrives().EjectDisk(driveno);
 			}
 			
 			// load new disk
 			
-			DriveWireServer.getHandler(handlerno).getDiskDrives().LoadDiskFromFile(driveno, path);
+			dwProto.getDiskDrives().LoadDiskFromFile(driveno, path);
 			
 			return(new DWCommandResponse("Disk inserted in drive " + driveno + "."));
 
@@ -103,7 +103,6 @@ public class DWCmdDiskInsert implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

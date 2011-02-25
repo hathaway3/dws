@@ -8,8 +8,8 @@ import java.net.URL;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWUtilURLThread implements Runnable {
 
@@ -18,18 +18,18 @@ public class DWUtilURLThread implements Runnable {
 	private int vport = -1;
 	private String url = null;
 	private String action = null;
-	private int handlerno;
+
 	private DWVSerialPorts dwVSerialPorts;
 	
 	
-	public DWUtilURLThread(int handlerno, int vport, String theurl, String theaction)
+	public DWUtilURLThread(DWProtocolHandler dwProto, int vport, String theurl, String theaction)
 	{
 		logger.debug("init url thread");	
 		this.vport = vport;
 		this.url = theurl;
 		this.action = theaction;
-		this.handlerno = handlerno;
-		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+	
+		this.dwVSerialPorts = dwProto.getVPorts();
 	}
 	
 

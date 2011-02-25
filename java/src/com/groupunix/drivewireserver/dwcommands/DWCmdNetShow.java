@@ -1,16 +1,16 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVPortListenerPool;
 
 public class DWCmdNetShow implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdNetShow(int handlerno)
+	public DWCmdNetShow(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -20,7 +20,6 @@ public class DWCmdNetShow implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -55,7 +54,7 @@ public class DWCmdNetShow implements DWCommand {
 	
 			try 
 			{
-				text += "Connection " + i + ": " + DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConn(i).getInetAddress().getHostName() + ":" + DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConn(i).getPort() + " (connected to port " + DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getConnPort(i)) + ")\r\n";
+				text += "Connection " + i + ": " + dwProto.getVPorts().getListenerPool().getConn(i).getInetAddress().getHostName() + ":" + dwProto.getVPorts().getListenerPool().getConn(i).getPort() + " (connected to port " + dwProto.getVPorts().prettyPort(dwProto.getVPorts().getListenerPool().getConnPort(i)) + ")\r\n";
 			} 
 			catch (DWConnectionNotValidException e) 
 			{
@@ -67,9 +66,9 @@ public class DWCmdNetShow implements DWCommand {
 			
 		for (int i = 0; i<DWVPortListenerPool.MAX_LISTEN;i++)
 		{
-			if (DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getListener(i) != null)
+			if (dwProto.getVPorts().getListenerPool().getListener(i) != null)
 			{
-				text += "Listener " + i + ": TCP port " + DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getListener(i).getLocalPort() + " (control port " + DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(DriveWireServer.getHandler(this.handlerno).getVPorts().getListenerPool().getListenerPort(i)) +")\r\n";
+				text += "Listener " + i + ": TCP port " + dwProto.getVPorts().getListenerPool().getListener(i).getLocalPort() + " (control port " + dwProto.getVPorts().prettyPort(dwProto.getVPorts().getListenerPool().getListenerPort(i)) +")\r\n";
 			}
 		}
 		

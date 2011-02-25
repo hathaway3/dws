@@ -2,16 +2,16 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import javax.sound.midi.Instrument;
 
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiSynthShowInstr implements DWCommand {
 
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthShowInstr(int handlerno)
+	public DWCmdMidiSynthShowInstr(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -21,7 +21,6 @@ public class DWCmdMidiSynthShowInstr implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -43,9 +42,9 @@ public class DWCmdMidiSynthShowInstr implements DWCommand {
 		
 		text = "\r\nInternal synthesizer instrument list:\r\n\n";
 		
-		if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth() != null)
+		if (dwProto.getVPorts().getMidiSynth() != null)
 		{
-			Instrument[] instruments = DriveWireServer.getHandler(handlerno).getVPorts().getMidiSynth().getLoadedInstruments();
+			Instrument[] instruments = dwProto.getVPorts().getMidiSynth().getLoadedInstruments();
 		
 			if (instruments.length == 0)
 			{

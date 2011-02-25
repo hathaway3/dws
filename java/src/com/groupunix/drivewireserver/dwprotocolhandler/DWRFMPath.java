@@ -38,7 +38,7 @@ public class DWRFMPath
 		logger.debug("new path " + pathno);
 		
 		this.fsManager = VFS.getManager();
-		this.setLocalroot(DriveWireServer.getHandler(this.handlerno).config.getString("RFMRoot","/"));
+		this.setLocalroot(DriveWireServer.getHandler(this.handlerno).getConfig().getString("RFMRoot","/"));
 		
 	}
 
@@ -341,7 +341,7 @@ public class DWRFMPath
 
 	public void setFd(byte[] buf) throws FileSystemException
 	{
-		DWRFMFD fd = new DWRFMFD(DriveWireServer.getHandler(this.handlerno).config.getString("RFMRoot","/") + this.pathstr);
+		DWRFMFD fd = new DWRFMFD(DriveWireServer.getHandler(this.handlerno).getConfig().getString("RFMRoot","/") + this.pathstr);
 		
 		fd.readFD();
 		
@@ -359,7 +359,7 @@ public class DWRFMPath
 	{
 		byte[] b = new byte[size];
 		
-		DWRFMFD fd = new DWRFMFD(DriveWireServer.getHandler(this.handlerno).config.getString("RFMRoot","/") + this.pathstr);
+		DWRFMFD fd = new DWRFMFD(DriveWireServer.getHandler(this.handlerno).getConfig().getString("RFMRoot","/") + this.pathstr);
 		
 		fd.readFD();
 		

@@ -5,6 +5,7 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstanceDiskShow implements DWCommand {
 
@@ -27,15 +28,16 @@ public class UICmdInstanceDiskShow implements DWCommand {
 	{
 		String res = new String();
 		
-		int instance = this.uiref.getInstance();
+		// TODO ASSumes we are using DW protocol
+		DWProtocolHandler dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
 		
 		if (cmdline.length() == 0)
 		{
 			for (int i =0;i<256;i++)
 			{
-				if (DriveWireServer.getHandler(instance).getDiskDrives().diskLoaded(i))
+				if (dwProto.getDiskDrives().diskLoaded(i))
 				{
-					res += i + " " + DriveWireServer.getHandler(instance).getDiskDrives().getDiskFile(i) + "\n";
+					res += i + " " + dwProto.getDiskDrives().getDiskFile(i) + "\n";
 				}
 			}
 		}
@@ -47,25 +49,25 @@ public class UICmdInstanceDiskShow implements DWCommand {
 			
 				int driveno = Integer.parseInt(cmdline);
 				
-				if (DriveWireServer.getHandler(instance).getDiskDrives().diskLoaded(driveno))
+				if (dwProto.getDiskDrives().diskLoaded(driveno))
 				{
 					res += "loaded: true\n"; 
-					res += "path: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getFilePath() + "\n";
-					res += "sizelimit: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getSizelimit() + "\n";
-					res += "offset: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getOffset() + "\n";
-					res += "sync: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).isSync() + "\n";
-					res += "expand: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).isExpand() + "\n";
-					res += "writeprotect: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getWriteProtect() + "\n";
+					res += "path: " + dwProto.getDiskDrives().getDisk(driveno).getFilePath() + "\n";
+					res += "sizelimit: " + dwProto.getDiskDrives().getDisk(driveno).getSizelimit() + "\n";
+					res += "offset: " + dwProto.getDiskDrives().getDisk(driveno).getOffset() + "\n";
+					res += "sync: " + dwProto.getDiskDrives().getDisk(driveno).isSync() + "\n";
+					res += "expand: " + dwProto.getDiskDrives().getDisk(driveno).isExpand() + "\n";
+					res += "writeprotect: " + dwProto.getDiskDrives().getDisk(driveno).getWriteProtect() + "\n";
 					
-					res += "fswriteable: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).isFSWriteable() + "\n";
-					res += "writeable: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).isWriteable() + "\n";
-					res += "randomwriteable: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).isRandomWriteable() + "\n";
+					res += "fswriteable: " + dwProto.getDiskDrives().getDisk(driveno).isFSWriteable() + "\n";
+					res += "writeable: " + dwProto.getDiskDrives().getDisk(driveno).isWriteable() + "\n";
+					res += "randomwriteable: " + dwProto.getDiskDrives().getDisk(driveno).isRandomWriteable() + "\n";
 					
-					res += "sectors: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getDiskSectors() + "\n";
-					res += "dirty: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getDirtySectors() + "\n";
-					res += "lsn: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getLSN() + "\n";
-					res += "reads: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getReads() + "\n";
-					res += "writes: " + DriveWireServer.getHandler(instance).getDiskDrives().getDisk(driveno).getWrites() + "\n";
+					res += "sectors: " + dwProto.getDiskDrives().getDisk(driveno).getDiskSectors() + "\n";
+					res += "dirty: " + dwProto.getDiskDrives().getDisk(driveno).getDirtySectors() + "\n";
+					res += "lsn: " + dwProto.getDiskDrives().getDisk(driveno).getLSN() + "\n";
+					res += "reads: " + dwProto.getDiskDrives().getDisk(driveno).getReads() + "\n";
+					res += "writes: " + dwProto.getDiskDrives().getDisk(driveno).getWrites() + "\n";
 					
 					
 					
@@ -88,7 +90,6 @@ public class UICmdInstanceDiskShow implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

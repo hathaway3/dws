@@ -24,13 +24,15 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskLazyWriter;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.91";
-	public static final String DWServerVersionDate = "01/25/2010";
+	public static final String DWServerVersion = "3.9.93";
+	public static final String DWServerVersionDate = "01/31/2010";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -42,7 +44,7 @@ public class DriveWireServer
 	public static XMLConfiguration serverconfig;
 	
 	private static Thread[] dwProtoHandlerThreads;
-	private static DWProtocolHandler[] dwProtoHandlers;
+	private static DWProtocol[] dwProtoHandlers;
 	private static int numHandlers;
 
 	private static Thread lazyWriterT;
@@ -122,7 +124,7 @@ public class DriveWireServer
     	
     	numHandlers = handlerconfs.size();
     	
-    	dwProtoHandlers = new DWProtocolHandler[numHandlers];
+    	dwProtoHandlers = new DWProtocol[numHandlers];
     	dwProtoHandlerThreads = new Thread[numHandlers];
     	
     	
@@ -147,11 +149,31 @@ public class DriveWireServer
 		{
 		    HierarchicalConfiguration hconf = it.next();
 		      
-		    dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+		    if (hconf.containsKey("Protocol"))
+		    {
+		    	if (hconf.getString("Protocol").equals("DriveWire"))
+		    	{
+		    		dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+		    	}
+		    	else if (hconf.getString("Protocol").equals("MCX"))
+		    	{
+		    		dwProtoHandlers[hno] = new MCXProtocolHandler(hno, hconf);
+		    	}
+		    	else
+		    	{
+		    		logger.error("Unknown protocol '" + hconf.getString("Protocol") + "' in handler #" + hno);
+		    	}
+		    }
+		    else
+		    {
+		    	dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+		    }
+		    
+		    
 		    
 		    if (hconf.getBoolean("AutoStart", true))
 		    {
-		    	logger.info("Starting protocol handler #" + hno + ": " + hconf.getString("Name","unnamed"));
+		    	logger.info("Starting protocol handler #" + hno + ": " + hconf.getString("Name","unnamed") + " (" + dwProtoHandlers[hno].getClass().getSimpleName() + ")");
 		    	dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
 		    	dwProtoHandlerThreads[hno].start();	
     	    }
@@ -211,13 +233,13 @@ public class DriveWireServer
 			if (dwProtoHandlers[i] != null)
 			{
 				dwProtoHandlers[i].shutdown();
-				try {
+				try 
+				{
 					dwProtoHandlerThreads[i].join();
 				} 
 				catch (InterruptedException e) 
 				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.warn(e.getMessage());
 				}
 			}
 		}
@@ -226,21 +248,25 @@ public class DriveWireServer
 		logger.debug("stopping lazy writer...");
 		
 		lazyWriterT.interrupt();
-		try {
+		try 
+		{
 			lazyWriterT.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} 
+		catch (InterruptedException e) 
+		{
+			logger.warn(e.getMessage());
 		}
 		
 		
 		logger.debug("stopping UI thread...");
 		uiObj.die();
-		try {
+		try 
+		{
 			uiT.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} 
+		catch (InterruptedException e) 
+		{
+			logger.warn(e.getMessage());
 		}
 		
 		logger.warn("server shutdown complete");
@@ -271,8 +297,7 @@ public class DriveWireServer
 			} 
 			catch (InterruptedException e) 
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn(e.getMessage());
 			}
 		}
 		
@@ -331,7 +356,7 @@ public class DriveWireServer
 
 
 
-	public static DWProtocolHandler getHandler(int handlerno)
+	public static DWProtocol getHandler(int handlerno)
 	{
 		return(dwProtoHandlers[handlerno]);
 	}
@@ -415,7 +440,7 @@ public class DriveWireServer
 	{
 		if (dwProtoHandlers[h] != null)
 		{
-			if ((!dwProtoHandlers[h].isDying()) && (dwProtoHandlerThreads[h].isAlive() ))
+			if ((!dwProtoHandlers[h].isDying()) && (dwProtoHandlerThreads[h] != null) && (dwProtoHandlerThreads[h].isAlive() ))
 			{
 				return(true);
 			}
@@ -473,7 +498,7 @@ public class DriveWireServer
 	{
 		if (isValidHandlerNo(handlerno))
 		{
-			return(dwProtoHandlers[handlerno].config.getString("Name","unnamed instance " + handlerno));
+			return(dwProtoHandlers[handlerno].getConfig().getString("Name","unnamed instance " + handlerno));
 		}
 		
 		return("null handler " + handlerno);

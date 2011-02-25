@@ -1,17 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskEject implements DWCommand 
 {
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 	
-	public DWCmdDiskEject(int handlerno)
+	public DWCmdDiskEject(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 
 	public String getCommand() 
@@ -38,7 +38,7 @@ public class DWCmdDiskEject implements DWCommand
 		{
 			int driveno = Integer.parseInt(drivestr);
 	
-			DriveWireServer.getHandler(handlerno).getDiskDrives().EjectDisk(driveno);
+			dwProto.getDiskDrives().EjectDisk(driveno);
 		
 			return(new DWCommandResponse("Disk ejected from drive " + driveno + "."));
 			

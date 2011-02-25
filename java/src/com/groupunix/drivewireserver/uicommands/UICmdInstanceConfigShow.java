@@ -36,10 +36,10 @@ public class UICmdInstanceConfigShow implements DWCommand {
 		
 		if (cmdline.length() == 0)
 		{
-			for (Iterator<String> i = DriveWireServer.getHandler(instance).config.getKeys(); i.hasNext();)
+			for (Iterator<String> i = DriveWireServer.getHandler(instance).getConfig().getKeys(); i.hasNext();)
 			{
 				String key = i.next();
-				String value = StringUtils.join(DriveWireServer.getHandler(instance).config.getStringArray(key), ", ");
+				String value = StringUtils.join(DriveWireServer.getHandler(instance).getConfig().getStringArray(key), ", ");
 		
 				res += key + " = " + value + "\r\n";
 		            
@@ -47,9 +47,9 @@ public class UICmdInstanceConfigShow implements DWCommand {
 		}
 		else
 		{
-			if (DriveWireServer.getHandler(instance).config.containsKey(cmdline))
+			if (DriveWireServer.getHandler(instance).getConfig().containsKey(cmdline))
 			{
-				String value = StringUtils.join(DriveWireServer.getHandler(instance).config.getStringArray(cmdline), ", ");
+				String value = StringUtils.join(DriveWireServer.getHandler(instance).getConfig().getStringArray(cmdline), ", ");
 				return(new DWCommandResponse(value));
 			}
 			else

@@ -25,7 +25,7 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 		this.tcpport = tcpport;
 		this.tcphost = tcphost;
 		
-		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogDeviceBytes",false);
+		bytelog = DriveWireServer.getHandler(this.handlerno).getConfig().getBoolean("LogDeviceBytes",false);
 		
 		logger.debug("init tcp device client to " + tcphost + " port " + tcpport + " for handler #" + handlerno + " (logging bytes: " + bytelog + ")");
 		
@@ -51,8 +51,7 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		
 	}

@@ -1,14 +1,16 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+
 public class DWCmdPort implements DWCommand {
 
 	static final String command = "port";
 	private DWCommandList commands = new DWCommandList();
 		
-	public DWCmdPort(int handlerno)
+	public DWCmdPort(DWProtocolHandler dwProto)
 	{
-		commands.addcommand(new DWCmdPortShow(handlerno));
-		commands.addcommand(new DWCmdPortClose(handlerno));
+		commands.addcommand(new DWCmdPortShow(dwProto));
+		commands.addcommand(new DWCmdPortClose(dwProto));
 		
 	}
 

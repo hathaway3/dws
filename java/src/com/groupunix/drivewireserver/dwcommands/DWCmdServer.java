@@ -1,13 +1,15 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+
 public class DWCmdServer implements DWCommand {
 
 	static final String command = "server";
 	private DWCommandList commands = new DWCommandList();
 		
-	public DWCmdServer(int handlerno)
+	public DWCmdServer(DWProtocol dwProto)
 	{
-		commands.addcommand(new DWCmdServerStatus(handlerno));
+		commands.addcommand(new DWCmdServerStatus(dwProto));
 		commands.addcommand(new DWCmdServerShow());
 		commands.addcommand(new DWCmdServerList());
 		commands.addcommand(new DWCmdServerDir());
@@ -28,7 +30,6 @@ public class DWCmdServer implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

@@ -1,15 +1,15 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiSynthInstr implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthInstr(int handlerno)
+	public DWCmdMidiSynthInstr(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -19,7 +19,6 @@ public class DWCmdMidiSynthInstr implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -58,7 +57,7 @@ public class DWCmdMidiSynthInstr implements DWCommand {
 			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw midi synth instr requires a channel # and an instrument # as arguments"));
 		}
 		
-		if (DriveWireServer.getHandler(handlerno).getVPorts().setMIDIInstr(channel,instr)) 
+		if (dwProto.getVPorts().setMIDIInstr(channel,instr)) 
 		{
 			return(new DWCommandResponse("Set MIDI channel " + (channel + 1) + " to instrument " + instr));
 		}

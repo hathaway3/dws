@@ -29,7 +29,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		this.device = device;
 		this.handlerno = handlerno;
 		
-		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogDeviceBytes", false);
+		bytelog = DriveWireServer.getHandler(this.handlerno).getConfig().getBoolean("LogDeviceBytes", false);
 		
 		logger.debug("init " + device + " for handler #" + handlerno + " (logging bytes: " + bytelog + ")");
 		
@@ -71,8 +71,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		} 
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		this.serialPort.close();
 		
@@ -126,9 +125,9 @@ public class DWSerialDevice implements DWProtocolDevice
 	{
 		int rate;
 		
-		if (DriveWireServer.getHandler(this.handlerno).config.containsKey("RateOverride"))
+		if (DriveWireServer.getHandler(this.handlerno).getConfig().containsKey("RateOverride"))
 		{
-			rate = DriveWireServer.getHandler(this.handlerno).config.getInt("RateOverride");
+			rate = DriveWireServer.getHandler(this.handlerno).getConfig().getInt("RateOverride");
 		}
 		else
 		{

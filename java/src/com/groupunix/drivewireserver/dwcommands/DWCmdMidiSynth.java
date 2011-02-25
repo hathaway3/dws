@@ -1,18 +1,20 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+
 public class DWCmdMidiSynth implements DWCommand {
 
 	static final String command = "synth";
 	private DWCommandList commands = new DWCommandList();
 		
-	public DWCmdMidiSynth(int handlerno)
+	public DWCmdMidiSynth(DWProtocolHandler dwProto)
 	{
-		commands.addcommand(new DWCmdMidiSynthStatus(handlerno));
-		commands.addcommand(new DWCmdMidiSynthShow(handlerno));
-		commands.addcommand(new DWCmdMidiSynthBank(handlerno));
-		commands.addcommand(new DWCmdMidiSynthProfile(handlerno));
-		commands.addcommand(new DWCmdMidiSynthLock(handlerno));
-		commands.addcommand(new DWCmdMidiSynthInstr(handlerno));
+		commands.addcommand(new DWCmdMidiSynthStatus(dwProto));
+		commands.addcommand(new DWCmdMidiSynthShow(dwProto));
+		commands.addcommand(new DWCmdMidiSynthBank(dwProto));
+		commands.addcommand(new DWCmdMidiSynthProfile(dwProto));
+		commands.addcommand(new DWCmdMidiSynthLock(dwProto));
+		commands.addcommand(new DWCmdMidiSynthInstr(dwProto));
 	}
 
 	
@@ -29,7 +31,6 @@ public class DWCmdMidiSynth implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

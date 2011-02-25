@@ -1,5 +1,6 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+
 public interface DWCommand {
 
 	String getCommand();

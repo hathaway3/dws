@@ -1,15 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+
 
 public class DWCmdMidiSynthShow implements DWCommand 
 {
 
 	private DWCommandList commands = new DWCommandList();
 	
-	public DWCmdMidiSynthShow(int handlerno)
+	public DWCmdMidiSynthShow(DWProtocolHandler dwProto)
 	{
-		commands.addcommand(new DWCmdMidiSynthShowChannels(handlerno));
-		commands.addcommand(new DWCmdMidiSynthShowInstr(handlerno));
+		commands.addcommand(new DWCmdMidiSynthShowChannels(dwProto));
+		commands.addcommand(new DWCmdMidiSynthShowInstr(dwProto));
 		commands.addcommand(new DWCmdMidiSynthShowProfiles());
 	}
 	
@@ -20,7 +22,6 @@ public class DWCmdMidiSynthShow implements DWCommand
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

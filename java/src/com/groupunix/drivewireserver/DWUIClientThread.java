@@ -20,13 +20,11 @@ public class DWUIClientThread implements Runnable {
 
 	private Socket skt;
 	private boolean wanttodie = false;
-	private int uiport;
 	private int instance = -1;
 	
 	private DWCommandList uiCmds = new DWCommandList();
 	
 	
-	private int ourHandler = 0;
 	
 	public DWUIClientThread(Socket skt) 
 	{
@@ -99,7 +97,7 @@ public class DWUIClientThread implements Runnable {
 		}
 
 		
-		DriveWireServer.getHandler(ourHandler).getEventHandler().unregisterAllEvents(this.uiport);
+		//DriveWireServer.getHandler(ourHandler).getEventHandler().unregisterAllEvents(this.uiport);
 		
 		logger.debug("exit");
 	}
@@ -142,20 +140,9 @@ public class DWUIClientThread implements Runnable {
 			{
 				if (DriveWireServer.handlerIsAlive(instance))
 				{
-			
-					DWCommandResponse resp = DriveWireServer.getHandler(instance).getDWCmds().parse(DWUtils.dropFirstToken(cmd));
-			
-					if (resp.getSuccess())
-					{
-
-						sendUIresponse(skt.getOutputStream(),resp.getResponseText());
-					}
-					else
-					{
-
-						sendUIresponse(skt.getOutputStream(),"FAIL " + resp.getResponseCode() + " " + resp.getResponseText());
-					}
-			
+					
+					DriveWireServer.getHandler(instance).doCmd(DWUtils.dropFirstToken(cmd), skt.getOutputStream());
+						
 				}
 				else
 				{
@@ -181,7 +168,7 @@ public class DWUIClientThread implements Runnable {
 		
 		if (cmd.startsWith("ui"))
 		{
-			DWCommandResponse resp = uiCmds.parse(DWUtils.dropFirstToken(cmd));
+			DWCommandResponse resp = uiCmds.parse( DWUtils.dropFirstToken(cmd));
 			
 			if (resp.getSuccess())
 			{

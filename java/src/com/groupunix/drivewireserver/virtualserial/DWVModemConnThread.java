@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVModemConnThread implements Runnable {
 
@@ -123,7 +124,7 @@ public class DWVModemConnThread implements Runnable {
  		this.clientHost = host;
 		this.clientPort = tcpport;
 		this.handlerno = handlerno;
-		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+		this.dwVSerialPorts = ((DWProtocolHandler) DriveWireServer.getHandler(this.handlerno)).getVPorts();
 		
 	}
 
@@ -151,7 +152,7 @@ public class DWVModemConnThread implements Runnable {
 			{
 				int data = skt.getInputStream().read();
 				
-				if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogVPortBytes"))
+				if (DriveWireServer.getHandler(this.handlerno).getConfig().getBoolean("LogVPortBytes"))
 					logger.debug("VMODEM to CoCo: " + data + "  (" + (char)data + ")");
 				
 				if (data >= 0)
@@ -237,11 +238,13 @@ public class DWVModemConnThread implements Runnable {
 			{
 				dwVSerialPorts.markDisconnected(this.vport);
 				// TODO: this is all wrong
-				try {
+				try 
+				{
 					dwVSerialPorts.getPortInput(vport).write("\r\n\r\nNO CARRIER\r\n".getBytes());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				} 
+				catch (IOException e) 
+				{
+					logger.warn(e.getMessage());
 				}
 			}
 			logger.debug("thread exiting");

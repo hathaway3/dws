@@ -25,15 +25,15 @@ public class DWTCPDevice implements DWProtocolDevice {
 		this.handlerno = handlerno;
 		this.tcpport = tcpport;
 		
-		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogDeviceBytes",false);
+		bytelog = DriveWireServer.getHandler(this.handlerno).getConfig().getBoolean("LogDeviceBytes",false);
 		
 		logger.debug("init tcp device server on port " + tcpport + " for handler #" + handlerno + " (logging bytes: " + bytelog + ")");
 		
 		// check for listen address
 			
-		if (DriveWireServer.getHandler(this.handlerno).config.containsKey("ListenAddress"))
+		if (DriveWireServer.getHandler(this.handlerno).getConfig().containsKey("ListenAddress"))
 		{
-			srvr = new ServerSocket(this.tcpport, 0, InetAddress.getByName(DriveWireServer.getHandler(this.handlerno).config.getString("ListenAddress")) );
+			srvr = new ServerSocket(this.tcpport, 0, InetAddress.getByName(DriveWireServer.getHandler(this.handlerno).getConfig().getString("ListenAddress")) );
 		}
 		else
 		{
@@ -57,8 +57,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		
 	}
@@ -77,8 +76,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 			} 
 			catch (IOException e) 
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn(e.getMessage());
 			}
 		}
 		
@@ -225,8 +223,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 		} 
 		catch (SocketException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 	}
 	

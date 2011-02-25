@@ -1,16 +1,16 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskOffset implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskOffset(int handlerno)
+	public DWCmdDiskOffset(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -20,7 +20,6 @@ public class DWCmdDiskOffset implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -60,7 +59,7 @@ public class DWCmdDiskOffset implements DWCommand {
 			int driveno = Integer.parseInt(drivestr);
 			int offset = Integer.parseInt(ofs);
 			
-			DriveWireServer.getHandler(handlerno).getDiskDrives().setOffset(driveno, offset);
+			dwProto.getDiskDrives().setOffset(driveno, offset);
 			return(new DWCommandResponse("Offset for drive " + driveno + " set to " + offset + " sectors."));
 			
 		}

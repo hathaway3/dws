@@ -1,15 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+
 public class DWCmdDiskSet implements DWCommand 
 {
 
 	static final String command = "set";
 	private DWCommandList commands = new DWCommandList();
 		
-	public DWCmdDiskSet(int handlerno)
+	public DWCmdDiskSet(DWProtocolHandler dwProto)
 	{
 		commands.addcommand(new DWCmdDiskSetShow());
-		commands.addcommand(new DWCmdDiskSetLoad(handlerno));
+		commands.addcommand(new DWCmdDiskSetLoad(dwProto));
 		
 	}
 

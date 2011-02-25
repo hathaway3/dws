@@ -1,15 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+
 public class DWCmdMidi implements DWCommand {
 
 	static final String command = "midi";
 	private DWCommandList commands = new DWCommandList();
 		
-	public DWCmdMidi(int handlerno)
+	public DWCmdMidi(DWProtocolHandler dwProto)
 	{
-		commands.addcommand(new DWCmdMidiStatus(handlerno));
-		commands.addcommand(new DWCmdMidiOutput(handlerno));
-		commands.addcommand(new DWCmdMidiSynth(handlerno));	
+		commands.addcommand(new DWCmdMidiStatus(dwProto));
+		commands.addcommand(new DWCmdMidiOutput(dwProto));
+		commands.addcommand(new DWCmdMidiSynth(dwProto));	
 		
 	}
 
@@ -27,7 +29,6 @@ public class DWCmdMidi implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

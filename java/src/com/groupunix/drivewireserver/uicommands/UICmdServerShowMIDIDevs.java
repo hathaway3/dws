@@ -14,25 +14,21 @@ public class UICmdServerShowMIDIDevs implements DWCommand {
 	@Override
 	public String getCommand() 
 	{
-		// TODO Auto-generated method stub
 		return "mididevs";
 	}
 
 	@Override
 	public String getLongHelp() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public String getShortHelp() {
-		// TODO Auto-generated method stub
 		return "show available MIDI devices";
 	}
 
 	@Override
 	public String getUsage() {
-		// TODO Auto-generated method stub
 		return "ui server show mididevs";
 	}
 
@@ -42,7 +38,7 @@ public class UICmdServerShowMIDIDevs implements DWCommand {
 		String res = new String();
 	
 		// hack.. should look at current instance but I just don't care
-		if (DriveWireServer.getHandler(0).config.getBoolean("UseMIDI",true))
+		if (DriveWireServer.getHandler(0).getConfig().getBoolean("UseMIDI",true))
 		{	
 		
 			MidiDevice device;

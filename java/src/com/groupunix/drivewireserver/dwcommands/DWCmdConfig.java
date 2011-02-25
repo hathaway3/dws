@@ -1,16 +1,18 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+
 public class DWCmdConfig implements DWCommand
 {
 
 	static final String command = "config";
 	private DWCommandList commands = new DWCommandList();
 		
-	public DWCmdConfig(int handlerno)
+	public DWCmdConfig(DWProtocol dwProtocol)
 	{
-		commands.addcommand(new DWCmdConfigShow(handlerno));
-		commands.addcommand(new DWCmdConfigSet(handlerno));
-		commands.addcommand(new DWCmdConfigSave(handlerno));
+		commands.addcommand(new DWCmdConfigShow(dwProtocol));
+		commands.addcommand(new DWCmdConfigSet(dwProtocol));
+		commands.addcommand(new DWCmdConfigSave(dwProtocol));
 		// save/load not implemented here
 	} 
 

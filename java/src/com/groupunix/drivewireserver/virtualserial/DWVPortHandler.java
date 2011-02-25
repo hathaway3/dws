@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 
 // this replaces the separate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
@@ -19,17 +19,16 @@ public class DWVPortHandler
 	private int vport;
 	private DWVModem vModem;
 	private Thread utilthread;
-	private int handlerno;
 	private DWVSerialPorts dwVSerialPorts;
 	private	DWVSerialCircularBuffer inputBuffer = new DWVSerialCircularBuffer(1024, true);
+	private DWProtocolHandler dwProto;
 	
-	
-	public DWVPortHandler(int handlerno, int port) 
+	public DWVPortHandler(DWProtocolHandler dwProto, int port) 
 	{
 		this.vport = port;	
-		this.vModem = new DWVModem(handlerno, port);
-		this.handlerno = handlerno;
-		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+		this.vModem = new DWVModem(dwProto, port);
+		this.dwProto = dwProto;
+		this.dwVSerialPorts = dwProto.getVPorts();
 		
 		//logger.debug("init handler for port " + port);
 	}
@@ -85,16 +84,16 @@ public class DWVPortHandler
 					{
 						this.inputBuffer.getOutputStream().write("MThd".getBytes());
 					} 
-					catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					catch (IOException e) 
+					{
+						logger.warn(e.getMessage());
 					}
-					DriveWireServer.getHandler(handlerno).getVPorts().setPortOutput(vport, this.inputBuffer.getOutputStream());
-					DriveWireServer.getHandler(handlerno).getVPorts().markConnected(vport);
+					dwProto.getVPorts().setPortOutput(vport, this.inputBuffer.getOutputStream());
+					dwProto.getVPorts().markConnected(vport);
 					
-					logger.info("MIDI file detected on handler # " + this.handlerno + " port " + this.vport);
+					logger.info("MIDI file detected on handler # " + this.dwProto.getHandlerNo() + " port " + this.vport);
 					
-					this.utilthread = new Thread(new DWVPortMIDIPlayerThread(this.handlerno, this.vport, this.inputBuffer));
+					this.utilthread = new Thread(new DWVPortMIDIPlayerThread(this.dwProto, this.vport, this.inputBuffer));
 					this.utilthread.start();
 					
 					this.port_command = new String();
@@ -195,7 +194,7 @@ public class DWVPortHandler
 			{
 				// start DWcmd thread
 				
-				this.utilthread = new Thread(new DWUtilDWThread(this.handlerno, this.vport, cmd));
+				this.utilthread = new Thread(new DWUtilDWThread(this.dwProto, this.vport, cmd));
 				this.utilthread.start();
 			}
 			else if (cmdparts[0].equalsIgnoreCase("log"))
@@ -258,7 +257,7 @@ public class DWVPortHandler
 			respondOk("attaching to connection " + conno);
 			
 			// start TCP thread
-			this.utilthread = new Thread(new DWVPortTCPServerThread(this.handlerno, this.vport, conno));
+			this.utilthread = new Thread(new DWVPortTCPServerThread(this.dwProto, this.vport, conno));
 			this.utilthread.start();
 		} 
 		catch (DWConnectionNotValidException e) 
@@ -304,7 +303,7 @@ public class DWVPortHandler
 
 	private void doURL(String action,String url) 
 	{
-		this.utilthread = new Thread(new DWUtilURLThread(this.handlerno, this.vport, url, action));
+		this.utilthread = new Thread(new DWUtilURLThread(this.dwProto, this.vport, url, action));
 		this.utilthread.start();
 	}
 
@@ -326,7 +325,7 @@ public class DWVPortHandler
 		// respondOk("connecting");
 		
 		// start TCP thread
-		this.utilthread = new Thread(new DWVPortTCPConnectionThread(this.handlerno, this.vport, tcphost, tcpport));
+		this.utilthread = new Thread(new DWVPortTCPConnectionThread(this.dwProto, this.vport, tcphost, tcpport));
 		this.utilthread.start();
 		
 	}
@@ -345,7 +344,7 @@ public class DWVPortHandler
 			respondFail(2,"non-numeric port in tcp listen command");
 			return;
 		}
-		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.handlerno, this.vport, tcpport);
+		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.dwProto, this.vport, tcpport);
 		
 		
 		// simulate old behavior
@@ -375,7 +374,7 @@ public class DWVPortHandler
 			respondFail(2,"non-numeric port in tcp listen command");
 			return;
 		}
-		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.handlerno, this.vport, tcpport);
+		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.dwProto, this.vport, tcpport);
 				
 		// parse options
 		if (cmdparts.length > 3)

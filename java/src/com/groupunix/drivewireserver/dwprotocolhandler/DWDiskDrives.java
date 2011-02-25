@@ -17,6 +17,8 @@ import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException
 
 
 
+
+
 public class DWDiskDrives 
 {
 	public static final int MAX_DRIVES = 256;
@@ -24,13 +26,13 @@ public class DWDiskDrives
 	private DWDisk[] diskDrives = new DWDisk[MAX_DRIVES];
 	private static final Logger logger = Logger.getLogger("DWServer.DWDiskDrives");
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 	private int hdbdrive;
 	
-	public DWDiskDrives(int hno)
+	public DWDiskDrives(DWProtocolHandler dwProto)
 	{
-		logger.debug("disk drives init for handler #" + hno);
-		this.handlerno = hno;
+		logger.debug("disk drives init for handler #" + dwProto.getHandlerNo());
+		this.dwProto = dwProto;
 	}
 	
 	
@@ -43,7 +45,7 @@ public class DWDiskDrives
 			
 			synchronized (DriveWireServer.serverconfig)
 			{
-				DriveWireServer.getHandler(handlerno).config.setProperty("CurrentDiskSet", setname);
+				dwProto.getConfig().setProperty("CurrentDiskSet", setname);
 			}
 			
 			logger.info("loading diskset '" + setname + "'");
@@ -58,7 +60,7 @@ public class DWDiskDrives
 				{
 					synchronized (DriveWireServer.serverconfig)
 					{
-						DriveWireServer.getHandler(handlerno).config.setProperty("HDBDOSMode",dset.getString("HDBDOSMode","false"));
+						dwProto.getConfig().setProperty("HDBDOSMode",dset.getString("HDBDOSMode","false"));
 					}
 				}
 				
@@ -189,9 +191,9 @@ public class DWDiskDrives
 	@SuppressWarnings("unchecked")
 	private void updateCurrentDiskSet(int driveno) 
 	{
-		if (DriveWireServer.getHandler(this.handlerno).config.containsKey("CurrentDiskSet"))
+		if (dwProto.getConfig().containsKey("CurrentDiskSet"))
 		{
-			HierarchicalConfiguration diskset = DriveWireServer.getDiskset(DriveWireServer.getHandler(handlerno).config.getString("CurrentDiskSet"));
+			HierarchicalConfiguration diskset = DriveWireServer.getDiskset(dwProto.getConfig().getString("CurrentDiskSet"));
 		
 			if (diskset.getBoolean("SaveChanges",false))
 			{
@@ -263,13 +265,11 @@ public class DWDiskDrives
 				} 
 				catch (DWDriveNotValidException e) 
 				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.warn(e.getMessage());
 				} 
 				catch (DWDriveNotLoadedException e) 
 				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.warn(e.getMessage());
 				}
 			}
 		}
@@ -278,7 +278,7 @@ public class DWDiskDrives
 	
 	public void seekSector(int driveno, int lsn) throws DWDriveNotLoadedException, DWDriveNotValidException, DWInvalidSectorException, DWSeekPastEndOfDeviceException
 	{
-		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("HDBDOSMode",false))
+		if (dwProto.getConfig().getBoolean("HDBDOSMode",false))
 		{
 			// every 630 sectors is drive + 1, lsn to remainder
 			
@@ -295,13 +295,13 @@ public class DWDiskDrives
 
 		diskDrives[driveno].seekSector(lsn);
 		
-		DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("seek",driveno+","+lsn);
+		// DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("seek",driveno+","+lsn);
 		
 	}
 	
 	public void writeSector(int driveno, byte[] data) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDriveWriteProtectedException, IOException
 	{
-		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("HDBDOSMode",false))
+		if (dwProto.getConfig().getBoolean("HDBDOSMode",false))
 		{
 			driveno = this.hdbdrive;
 			logger.debug("HDBDOSMode write: mapped to drive " + driveno );
@@ -312,13 +312,13 @@ public class DWDiskDrives
 		
 		diskDrives[driveno].writeSector(data);
 		
-		DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("write", driveno +"");
+		// DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("write", driveno +"");
 		
 	}
 	
 	public byte[] readSector(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException
 	{
-		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("HDBDOSMode",false))
+		if (dwProto.getConfig().getBoolean("HDBDOSMode",false))
 		{
 			driveno = this.hdbdrive;
 			logger.debug("HDB read: mapped to drive " + driveno );
@@ -327,7 +327,7 @@ public class DWDiskDrives
 		
 		checkLoadedDriveNo(driveno);
 		
-		DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("read",driveno +"");
+		// DriveWireServer.getHandler(this.handlerno).getEventHandler().notifyEvent("read",driveno +"");
 		
 		return(diskDrives[driveno].readSector());
 	
@@ -563,5 +563,56 @@ public class DWDiskDrives
 
 		this.diskDrives[driveno].setSizelimit(limit);
 	}
+
+
+	public void sync() 
+	{
+		// scan all loaded drives
+		for (int driveno = 0;driveno<DWDiskDrives.MAX_DRIVES;driveno++)
+		{
 	
-}
+			if (diskLoaded(driveno))
+			{
+				try 
+				{
+						
+					if (isSync(driveno))
+					{
+						
+						if (isRandomWriteable(driveno))
+						{	 
+
+							if (getDirtySectors(driveno) > 0)
+							{
+								logger.debug("cache for drive " + driveno + " in handler " + this.dwProto.getHandlerNo() + " has changed, " + getDirtySectors(driveno) + " dirty sectors");
+
+									try
+									{
+										writeDisk(driveno);
+									} 
+									catch (IOException e)
+									{
+										logger.error("Lazy write failed: " + e.getMessage());
+									} 
+									catch (DWDriveNotLoadedException e) 
+									{
+										logger.error(e.getMessage());
+									}
+								}
+							}
+
+						}
+					} 
+					catch (DWDriveNotLoadedException e) 
+					{
+						e.printStackTrace();
+					}
+			
+				}
+			}
+	
+		}
+		
+	}
+	
+

@@ -5,17 +5,17 @@ import java.util.Iterator;
 import org.apache.commons.lang.StringUtils;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class DWCmdConfigShow implements DWCommand {
 
-	private int handlerno;
-
-	public DWCmdConfigShow(int handlerno)
-	{
-		this.handlerno = handlerno;
-	}
+	DWProtocol dwProto;
 	
+	public DWCmdConfigShow(DWProtocol dwProtocol) 
+	{
+		this.dwProto = dwProtocol;
+	}
+
 	public String getCommand() 
 	{
 		return "show";
@@ -52,10 +52,10 @@ public class DWCmdConfigShow implements DWCommand {
 	{
 		String text = new String();
 		
-		if (DriveWireServer.getHandler(this.handlerno).config.containsKey(item))
+		if (dwProto.getConfig().containsKey(item))
 		{
 			String key = item;
-			String value = StringUtils.join(DriveWireServer.getHandler(this.handlerno).config.getStringArray(key), ", ");
+			String value = StringUtils.join(dwProto.getConfig().getStringArray(key), ", ");
 		
 			text += key + " = " + value;
 			return(new DWCommandResponse(text));
@@ -83,10 +83,10 @@ public class DWCmdConfigShow implements DWCommand {
 		
 		text += "Current protocol handler configuration:\r\n\n";
 		
-		for (Iterator<String> i = DriveWireServer.getHandler(this.handlerno).config.getKeys(); i.hasNext();)
+		for (Iterator<String> i = dwProto.getConfig().getKeys(); i.hasNext();)
 		{
 			String key = i.next();
-			String value = StringUtils.join(DriveWireServer.getHandler(this.handlerno).config.getStringArray(key), ", ");
+			String value = StringUtils.join(dwProto.getConfig().getStringArray(key), ", ");
 		
 			text += key + " = " + value + "\r\n";
 		            

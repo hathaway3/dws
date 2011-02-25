@@ -1,16 +1,16 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskLimit implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskLimit(int handlerno)
+	public DWCmdDiskLimit(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -20,7 +20,6 @@ public class DWCmdDiskLimit implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -60,7 +59,7 @@ public class DWCmdDiskLimit implements DWCommand {
 			int driveno = Integer.parseInt(drivestr);
 			int limit = Integer.parseInt(ofs);
 			
-			DriveWireServer.getHandler(handlerno).getDiskDrives().setLimit(driveno, limit);
+			dwProto.getDiskDrives().setLimit(driveno, limit);
 			
 			if (limit == -1)
 				return(new DWCommandResponse("Size limit for drive " + driveno + " disabled."));

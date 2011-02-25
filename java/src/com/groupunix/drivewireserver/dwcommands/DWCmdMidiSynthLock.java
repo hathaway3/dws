@@ -1,14 +1,14 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdMidiSynthLock implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthLock(int handlerno)
+	public DWCmdMidiSynthLock(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -18,7 +18,6 @@ public class DWCmdMidiSynthLock implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -42,14 +41,14 @@ public class DWCmdMidiSynthLock implements DWCommand {
 	
 	private DWCommandResponse doMidiSynthLock()
 	{
-		if (DriveWireServer.getHandler(handlerno).getVPorts().getMidiVoicelock())
+		if (dwProto.getVPorts().getMidiVoicelock())
 		{
-			DriveWireServer.getHandler(handlerno).getVPorts().setMidiVoicelock(false);
+			dwProto.getVPorts().setMidiVoicelock(false);
 			return(new DWCommandResponse("Unlocked MIDI instruments, program changes will be processed"));
 		}
 		else
 		{
-			DriveWireServer.getHandler(handlerno).getVPorts().setMidiVoicelock(true);
+			dwProto.getVPorts().setMidiVoicelock(true);
 			return(new DWCommandResponse("Locked MIDI instruments, progam changes will be ignored"));
 		}
 	}

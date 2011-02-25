@@ -7,8 +7,8 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVPortTermThread implements Runnable 
 {
@@ -26,17 +26,17 @@ public class DWVPortTermThread implements Runnable
 	private Thread connthread;
 	private DWVPortTCPServerThread connobj;
 	private int conno;
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 	private DWVSerialPorts dwVSerialPorts;
 	private ServerSocket srvr;
 	
 	
-	public DWVPortTermThread(int handlerno, int tcpport)
+	public DWVPortTermThread(DWProtocolHandler dwProto, int tcpport)
 	{
 		logger.debug("init term device thread on port "+ tcpport);	
 		this.tcpport = tcpport;
-		this.handlerno = handlerno;
-		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+		this.dwProto = dwProto;
+		this.dwVSerialPorts = dwProto.getVPorts();
 		
 	}
 	
@@ -57,9 +57,9 @@ public class DWVPortTermThread implements Runnable
 		{
 			// check for listen address
 			
-			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("ListenAddress"))
+			if (dwProto.getConfig().containsKey("ListenAddress"))
 			{
-				srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(DriveWireServer.getHandler(this.handlerno).config.getString("ListenAddress")) );
+				srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(dwProto.getConfig().getString("ListenAddress")) );
 			}
 			else
 			{
@@ -172,7 +172,7 @@ public class DWVPortTermThread implements Runnable
 		try 
 		{
 			conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt,MODE_TERM);
-			connobj = new DWVPortTCPServerThread(this.handlerno,TERM_PORT, conno);
+			connobj = new DWVPortTCPServerThread(dwProto,TERM_PORT, conno);
 			connthread = new Thread(connobj);
 			connthread.start();
 			

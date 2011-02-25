@@ -4,16 +4,18 @@ import org.apache.commons.configuration.ConfigurationException;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class DWCmdConfigSave implements DWCommand {
 
-	private int handlerno;
-
-	public DWCmdConfigSave(int handlerno)
-	{
-		this.setHandlerno(handlerno);
-	}
+	DWProtocol dwProto;
 	
+	
+	public DWCmdConfigSave(DWProtocol dwProtocol) 
+	{
+		this.dwProto = dwProtocol;
+	}
+
 	public String getCommand() 
 	{
 		return "save";
@@ -60,15 +62,6 @@ public class DWCmdConfigSave implements DWCommand {
 		return true;
 	}
 
-	public void setHandlerno(int handlerno) {
-		this.handlerno = handlerno;
-	}
-
-	public int getHandlerno() {
-		return handlerno;
-	}
-	
-	
 	
 
 }

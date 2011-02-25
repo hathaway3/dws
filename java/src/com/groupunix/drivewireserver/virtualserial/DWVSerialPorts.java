@@ -24,6 +24,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVSerialPorts {
 
@@ -38,7 +39,7 @@ public class DWVSerialPorts {
 	public static final int MIDI_PORT = 14;
 	
 	
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 	private boolean bytelog = false;
 	
 	
@@ -56,13 +57,13 @@ public class DWVSerialPorts {
 	private int[] GMInstrumentCache;
 	
 	
-	public DWVSerialPorts(int handlerno)
+	public DWVSerialPorts(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
-		bytelog = DriveWireServer.getHandler(this.handlerno).config.getBoolean("LogVPortBytes", false);
+		this.dwProto = dwProto;
+		bytelog = dwProto.getConfig().getBoolean("LogVPortBytes", false);
 		
 		
-		if (DriveWireServer.getHandler(this.handlerno).config.getBoolean("UseMIDI", true))
+		if (dwProto.getConfig().getBoolean("UseMIDI", true))
 		{
 			// initialize MIDI device to internal synth
 			logger.debug("initialize internal midi synth");
@@ -74,9 +75,9 @@ public class DWVSerialPorts {
 				midiSynth = MidiSystem.getSynthesizer();
 				setMIDIDevice(midiSynth);
 			
-				if (DriveWireServer.getHandler(this.handlerno).config.containsKey("MIDISynthDefaultSoundbank"))
+				if (dwProto.getConfig().containsKey("MIDISynthDefaultSoundbank"))
 				{
-					loadSoundbank(DriveWireServer.getHandler(this.handlerno).config.getString("MIDISynthDefaultSoundbank"));
+					loadSoundbank(dwProto.getConfig().getString("MIDISynthDefaultSoundbank"));
 				}
 			
 			} 
@@ -85,9 +86,9 @@ public class DWVSerialPorts {
 				logger.warn("MIDI is not available");
 			}
 		
-			if (DriveWireServer.getHandler(this.handlerno).config.containsKey("MIDISynthDefaultProfile"))
+			if (dwProto.getConfig().containsKey("MIDISynthDefaultProfile"))
 			{
-				if (!setMidiProfile(DriveWireServer.getHandler(this.handlerno).config.getString("MIDISynthDefaultProfile")))
+				if (!setMidiProfile(dwProto.getConfig().getString("MIDISynthDefaultProfile")))
 				{
 					logger.warn("Invalid MIDI profile specified in config file.");
 				}
@@ -172,7 +173,7 @@ public class DWVSerialPorts {
 					
 					logger.debug("sending terminated status to coco for port " + i);
 					
-					vserialPorts[i] = new DWVSerialPort(this.handlerno, i);
+					vserialPorts[i] = new DWVSerialPort(this.dwProto, i);
 					
 					return(response);
 				}
@@ -509,7 +510,7 @@ public class DWVSerialPorts {
 
 	public void resetPort(int i)
 	{
-		vserialPorts[i] = new DWVSerialPort(this.handlerno, i);
+		vserialPorts[i] = new DWVSerialPort(this.dwProto, i);
 	}
 	
 	public boolean isOpen(int vport) 
@@ -680,9 +681,9 @@ public class DWVSerialPorts {
 			this.midiDevice.open();
 			logger.info("midi: opened " + this.midiDevice.getDeviceInfo().getName());
 		} 
-		catch (MidiUnavailableException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		catch (MidiUnavailableException e) 
+		{
+			logger.warn(e.getMessage());
 		}
 		
 	}
@@ -696,13 +697,11 @@ public class DWVSerialPorts {
 		} 
 		catch (MidiUnavailableException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		catch (IllegalStateException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		
 	}

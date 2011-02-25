@@ -8,9 +8,9 @@ import java.net.Socket;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVPortTCPServerThread implements Runnable {
 
@@ -21,21 +21,19 @@ public class DWVPortTCPServerThread implements Runnable {
 	private int conno;
 	private boolean wanttodie = false;
 	private int mode = 0;
-	private int handlerno;
 	private DWVSerialPorts dwVSerialPorts;
 	
 	private static final int MODE_TELNET = 1;
 	private static final int MODE_TERM = 3;
 
 	
-	public DWVPortTCPServerThread(int handlerno, int vport, int conno) throws DWConnectionNotValidException
+	public DWVPortTCPServerThread(DWProtocolHandler dwProto, int vport, int conno) throws DWConnectionNotValidException
 	{
 		logger.debug("init tcp server thread for conn " + conno);	
 		this.vport = vport;
 		this.conno = conno;
-		
-		this.handlerno = handlerno;
-		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+
+		this.dwVSerialPorts = dwProto.getVPorts();
 		this.mode = this.dwVSerialPorts.getListenerPool().getMode(conno);
 		this.skt = this.dwVSerialPorts.getListenerPool().getConn(conno);
 	}

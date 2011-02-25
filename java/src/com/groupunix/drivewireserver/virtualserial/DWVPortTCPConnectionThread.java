@@ -7,8 +7,8 @@ import java.net.UnknownHostException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVPortTCPConnectionThread implements Runnable {
 
@@ -19,18 +19,18 @@ public class DWVPortTCPConnectionThread implements Runnable {
 	private String tcphost = null;
 	private Socket skt; 
 	private boolean wanttodie = false;
-	private int handlerno;
+
 	private DWVSerialPorts dwVSerialPorts;
 	
 	
-	public DWVPortTCPConnectionThread(int handlerno, int vport, String tcphostin, int tcpportin)
+	public DWVPortTCPConnectionThread(DWProtocolHandler dwProto, int vport, String tcphostin, int tcpportin)
 	{
 		logger.debug("init tcp connection thread");	
 		this.vport = vport;
 		this.tcpport = tcpportin;
 		this.tcphost = tcphostin;
-		this.handlerno = handlerno;
-		this.dwVSerialPorts = DriveWireServer.getHandler(this.handlerno).getVPorts();
+
+		this.dwVSerialPorts = dwProto.getVPorts();
 		
 	}
 	

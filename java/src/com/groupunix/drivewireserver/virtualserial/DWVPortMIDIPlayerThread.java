@@ -11,25 +11,24 @@ import javax.sound.midi.Transmitter;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVPortMIDIPlayerThread implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPortMIDIPlayerThread");
 		
 	private int vport = -1;
-	private int handlerno;
 	private	DWVSerialCircularBuffer inputBuffer = new DWVSerialCircularBuffer(1024, true);
 	private static Sequencer	sm_sequencer = null;
 
+	private DWProtocolHandler dwProto;
 	
-	
-	public DWVPortMIDIPlayerThread(int handlerno, int vport, DWVSerialCircularBuffer inputBuffer) 
+	public DWVPortMIDIPlayerThread(DWProtocolHandler dwProto, int vport, DWVSerialCircularBuffer inputBuffer) 
 	{
 		this.vport = vport;
-		this.handlerno = handlerno;
 		this.inputBuffer = inputBuffer;
+		this.dwProto = dwProto;
 	}
 
 	public void run() 
@@ -50,12 +49,11 @@ public class DWVPortMIDIPlayerThread implements Runnable {
 		}
 		catch (InvalidMidiDataException e)
 		{
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 			
 		
@@ -66,7 +64,7 @@ public class DWVPortMIDIPlayerThread implements Runnable {
 		}
 		catch (MidiUnavailableException e)
 		{
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 
 		
@@ -83,7 +81,7 @@ public class DWVPortMIDIPlayerThread implements Runnable {
 		}
 		catch (MidiUnavailableException e)
 		{
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		
 		try
@@ -92,7 +90,7 @@ public class DWVPortMIDIPlayerThread implements Runnable {
 		}
 		catch (InvalidMidiDataException e)
 		{
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 
 
@@ -102,11 +100,11 @@ public class DWVPortMIDIPlayerThread implements Runnable {
 
 		
 			Transmitter	seqTransmitter = sm_sequencer.getTransmitter();
-			seqTransmitter.setReceiver(DriveWireServer.getHandler(handlerno).getVPorts().getMidiReceiver());
+			seqTransmitter.setReceiver(dwProto.getVPorts().getMidiReceiver());
 		}
 		catch (MidiUnavailableException e)
 		{
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 
 		sm_sequencer.start();
@@ -114,12 +112,11 @@ public class DWVPortMIDIPlayerThread implements Runnable {
 		
 		try 
 		{
-			DriveWireServer.getHandler(handlerno).getVPorts().closePort(vport);
+			dwProto.getVPorts().closePort(vport);
 		} 
 		catch (DWPortNotValidException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		
 		logger.debug("exit");

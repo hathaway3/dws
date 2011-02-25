@@ -1,19 +1,19 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskShow implements DWCommand 
 {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskShow(int handlerno)
+	public DWCmdDiskShow(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -57,42 +57,42 @@ public class DWCmdDiskShow implements DWCommand
 		{
 			int driveno = Integer.parseInt(drivestr);
 			
-			DriveWireServer.getHandler(handlerno).getDiskDrives().checkLoadedDriveNo(driveno);
+			dwProto.getDiskDrives().checkLoadedDriveNo(driveno);
 			
 			text = "Details for disk in drive #" + driveno + ":\r\n\n";
 			
-			text += "Path: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getFilePath() + "\r\n";
-			text += "Name: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getDiskName() + "\r\n\n";
+			text += "Path: " + dwProto.getDiskDrives().getDisk(driveno).getFilePath() + "\r\n";
+			text += "Name: " + dwProto.getDiskDrives().getDisk(driveno).getDiskName() + "\r\n\n";
 			
 			text += "Sectors  LSN      WP       Reads    Writes   Dirty \r\n";
 			
-			text += String.format("%-9d", DriveWireServer.getHandler(handlerno).getDiskDrives().getDiskSectors(driveno));
-			text += String.format("%-9d", DriveWireServer.getHandler(handlerno).getDiskDrives().getLSN(driveno));
-			text += String.format("%-9s", DriveWireServer.getHandler(handlerno).getDiskDrives().getWriteProtect(driveno));
-			text += String.format("%-9d", DriveWireServer.getHandler(handlerno).getDiskDrives().getReads(driveno));
-			text += String.format("%-9d", DriveWireServer.getHandler(handlerno).getDiskDrives().getWrites(driveno));
-			text += String.format("%-9d", DriveWireServer.getHandler(handlerno).getDiskDrives().getDirtySectors(driveno));
+			text += String.format("%-9d", dwProto.getDiskDrives().getDiskSectors(driveno));
+			text += String.format("%-9d", dwProto.getDiskDrives().getLSN(driveno));
+			text += String.format("%-9s", dwProto.getDiskDrives().getWriteProtect(driveno));
+			text += String.format("%-9d", dwProto.getDiskDrives().getReads(driveno));
+			text += String.format("%-9d", dwProto.getDiskDrives().getWrites(driveno));
+			text += String.format("%-9d", dwProto.getDiskDrives().getDirtySectors(driveno));
 			text += "\r\n\n";
 			
-			text += "Filesystem supports write: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isFSWriteable() + "\r\n";
-		    text += " FS supports random write: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isRandomWriteable() + "\r\n";
-			text += "      File can be written: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isWriteable() + "\r\n";     
+			text += "Filesystem supports write: " + dwProto.getDiskDrives().getDisk(driveno).isFSWriteable() + "\r\n";
+		    text += " FS supports random write: " + dwProto.getDiskDrives().getDisk(driveno).isRandomWriteable() + "\r\n";
+			text += "      File can be written: " + dwProto.getDiskDrives().getDisk(driveno).isWriteable() + "\r\n";     
 			text += "\r\n";
-			text += "  Disk is write protected: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getWriteProtect() + "\r\n";
-			text += "     Sync to file allowed: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isSync() + "\r\n";
-			text += "   Disk expansion allowed: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).isExpand() + "\r\n";
+			text += "  Disk is write protected: " + dwProto.getDiskDrives().getDisk(driveno).getWriteProtect() + "\r\n";
+			text += "     Sync to file allowed: " + dwProto.getDiskDrives().getDisk(driveno).isSync() + "\r\n";
+			text += "   Disk expansion allowed: " + dwProto.getDiskDrives().getDisk(driveno).isExpand() + "\r\n";
 			
 			text += "          Disk size limit: ";
-			if (DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getSizelimit() < 0)
+			if (dwProto.getDiskDrives().getDisk(driveno).getSizelimit() < 0)
 			{
 				text += "none\r\n";
 			}
 			else
 			{
-				text += DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getSizelimit() + " sectors\r\n";
+				text += dwProto.getDiskDrives().getDisk(driveno).getSizelimit() + " sectors\r\n";
 			}
 				
-			text += "  File/disk sector offset: " + DriveWireServer.getHandler(handlerno).getDiskDrives().getDisk(driveno).getOffset() + "\r\n";
+			text += "  File/disk sector offset: " + dwProto.getDiskDrives().getDisk(driveno).getOffset() + "\r\n";
 			
 			
 			return(new DWCommandResponse(text));
@@ -127,11 +127,11 @@ public class DWCmdDiskShow implements DWCommand
 		{
 
 			
-			if (DriveWireServer.getHandler(handlerno).getDiskDrives().diskLoaded(i))
+			if (dwProto.getDiskDrives().diskLoaded(i))
 			{
-				String df = DriveWireServer.getHandler(handlerno).getDiskDrives().getDiskFile(i);
+				String df = dwProto.getDiskDrives().getDiskFile(i);
 			
-				if (DriveWireServer.getHandler(handlerno).getDiskDrives().getWriteProtect(i))
+				if (dwProto.getDiskDrives().getWriteProtect(i))
 				{
 					df = df + "*";
 				}

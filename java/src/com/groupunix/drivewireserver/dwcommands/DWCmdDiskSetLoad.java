@@ -2,14 +2,15 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskSetLoad implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskSetLoad(int handlerno)
+	public DWCmdDiskSetLoad(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -19,7 +20,6 @@ public class DWCmdDiskSetLoad implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -49,7 +49,7 @@ public class DWCmdDiskSetLoad implements DWCommand {
 	{
 		if (DriveWireServer.hasDiskset(setname))
 		{
-			DriveWireServer.getHandler(handlerno).getDiskDrives().LoadDiskSet(setname);
+			dwProto.getDiskDrives().LoadDiskSet(setname);
 			return(new DWCommandResponse("Loaded disk set '" + setname +"'.  Check log for errors."));
 		}
 		else

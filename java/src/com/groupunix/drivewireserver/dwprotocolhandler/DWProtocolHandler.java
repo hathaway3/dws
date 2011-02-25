@@ -5,6 +5,7 @@ import gnu.io.PortInUseException;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -21,6 +22,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCmdNet;
 import com.groupunix.drivewireserver.dwcommands.DWCmdPort;
 import com.groupunix.drivewireserver.dwcommands.DWCmdServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
+import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
@@ -35,7 +37,7 @@ import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 
 
-public class DWProtocolHandler implements Runnable
+public class DWProtocolHandler implements Runnable, DWProtocol
 {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWProtocolHandler");
@@ -74,13 +76,10 @@ public class DWProtocolHandler implements Runnable
 	private DWRFMHandler rfmhandler;
 	
 	private int handlerno;
-	public HierarchicalConfiguration config;
+	private HierarchicalConfiguration config;
 	private Thread termT;
 	private DWVSerialPorts dwVSerialPorts;
 	private DWVPortTermThread termHandler;
-	
-	// Event handler
-	private DWProtocolEventHandler protocolEventHandler;
 	
 	// DW commands
 	private DWCommandList dwcommands;
@@ -90,13 +89,17 @@ public class DWProtocolHandler implements Runnable
 	{
 		this.handlerno = handlerno;
 		this.config = hconf;
-		this.protocolEventHandler = new DWProtocolEventHandler(handlerno);
-		this.dwcommands = createDWCmds(handlerno); 
+		this.dwcommands = createDWCmds(); 
 		
 		//config.addConfigurationListener(new DWProtocolConfigListener());   
 		
 	}
 
+	
+	public HierarchicalConfiguration getConfig()
+	{
+		return(this.config);
+	}
 	
 
 	public void reset()
@@ -139,7 +142,7 @@ public class DWProtocolHandler implements Runnable
 			logger.info("handler #" + handlerno + ": starting...");
 
 			// setup drives
-			diskDrives = new DWDiskDrives(this.handlerno);
+			diskDrives = new DWDiskDrives(this);
 
 			// set current to default
 			if (config.containsKey("DefaultDiskSet"))
@@ -158,7 +161,7 @@ public class DWProtocolHandler implements Runnable
 				
 			
 			// setup virtual ports
-			this.dwVSerialPorts = new DWVSerialPorts(this.handlerno);	
+			this.dwVSerialPorts = new DWVSerialPorts(this);	
 			dwVSerialPorts.resetAllPorts();
 
 			// setup printer
@@ -171,7 +174,7 @@ public class DWProtocolHandler implements Runnable
 			if (config.containsKey("TermPort"))
 			{
 				logger.info("handler #" + handlerno + ": starting term device listener thread");
-				this.termHandler = new DWVPortTermThread(this.handlerno, config.getInt("TermPort"));
+				this.termHandler = new DWVPortTermThread(this, config.getInt("TermPort"));
 				this.termT = new Thread(termHandler);
 				this.termT.start();
 			}
@@ -1078,11 +1081,13 @@ public class DWProtocolHandler implements Runnable
 			
 			if (config.getBoolean("LogOpCode", false))
 			{
-				try {
-				logger.debug("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0] + " (" + dwVSerialPorts.getPortOutput(cmdpacket[0]).available() + " bytes in buffer)");
-				} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				try 
+				{
+					logger.debug("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0] + " (" + dwVSerialPorts.getPortOutput(cmdpacket[0]).available() + " bytes in buffer)");
+				} 
+				catch (IOException e) 
+				{
+					logger.warn("While logging: " + e.getMessage());
 				}
 			}
 			
@@ -1226,7 +1231,7 @@ public class DWProtocolHandler implements Runnable
 		
 
 	
-	public GregorianCalendar getDWInitTime()
+	public GregorianCalendar getInitTime()
 	{
 		return(dwinitTime);
 	}
@@ -1251,11 +1256,6 @@ public class DWProtocolHandler implements Runnable
 	}
 
 
-
-	public DWProtocolEventHandler getEventHandler() 
-	{
-		return this.protocolEventHandler;
-	}
 	
 	public DWProtocolDevice getProtoDev()
 	{
@@ -1269,17 +1269,17 @@ public class DWProtocolHandler implements Runnable
 		return this.dwcommands;
 	}
 	
-	private DWCommandList createDWCmds(int handlerno)
+	private DWCommandList createDWCmds()
 	{
 		DWCommandList commands = new DWCommandList();
 		
-		commands.addcommand(new DWCmdDisk(handlerno));
-		commands.addcommand(new DWCmdServer(handlerno));
-		commands.addcommand(new DWCmdConfig(handlerno));
-		commands.addcommand(new DWCmdPort(handlerno));
+		commands.addcommand(new DWCmdDisk(this));
+		commands.addcommand(new DWCmdServer(this));
+		commands.addcommand(new DWCmdConfig(this));
+		commands.addcommand(new DWCmdPort(this));
 		commands.addcommand(new DWCmdLog());
-		commands.addcommand(new DWCmdNet(handlerno));
-		commands.addcommand(new DWCmdMidi(handlerno));
+		commands.addcommand(new DWCmdNet(this));
+		commands.addcommand(new DWCmdMidi(this));
 		
 		return(commands);
 	}
@@ -1378,6 +1378,95 @@ public class DWProtocolHandler implements Runnable
 			}
 			
 		}	
+	}
+
+
+	@Override
+	public String getStatusText() 
+	{
+		String text = new String();
+		
+		text += "Last OpCode:   " + DWUtils.prettyOP(getLastOpcode()) + "\r\n";
+		text += "Last GetStat:  " + DWUtils.prettySS(getLastGetStat()) + "\r\n";
+		text += "Last SetStat:  " + DWUtils.prettySS(getLastSetStat()) + "\r\n";
+		text += "Last Drive:    " + getLastDrive() + "\r\n";
+		text += "Last LSN:      " + getLastLSN() + "\r\n";
+		text += "Last Error:    " + ((int) getLastError() & 0xFF) + "\r\n";
+	
+		text += "\r\n";
+		
+		// TODO:  include read and write retries per disk
+		// text += "Total Read Sectors:  " + String.format("%6d",DriveWireServer.getHandler(handlerno).getSectorsRead()) + "  (" + DriveWireServer.getHandler(handlerno).getReadRetries() + " retries)\r\n";
+		//text += "Total Write Sectors: " + String.format("%6d",DriveWireServer.getHandler(handlerno).getSectorsWritten()) + "  (" + DriveWireServer.getHandler(handlerno).getWriteRetries() + " retries)\r\n";
+	
+		text += "\r\n";
+	
+		text += "D#     Sectors        LSN   WP       Reads  Writes  Dirty \r\n";
+	
+		for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
+		{
+			if (this.getDiskDrives().diskLoaded(i))
+			{
+			 
+				text += "X"+ String.format("%-3d ",i);
+				text += String.format("%9d ", this.getDiskDrives().getDiskSectors(i));
+				text += String.format(" %9d ", this.getDiskDrives().getLSN(i));
+				text += String.format("  %5s  ", this.getDiskDrives().getWriteProtect(i));
+				text += String.format(" %6d ", this.getDiskDrives().getReads(i));
+				text += String.format(" %6d ", this.getDiskDrives().getWrites(i));
+				text += String.format(" %5d ", this.getDiskDrives().getDirtySectors(i));
+				text += "\r\n";
+			}
+		}
+		
+		return(text);
+	}
+
+
+	@Override
+	public void doCmd(String cmd, OutputStream outs) throws IOException 
+	{
+		
+		
+		DWCommandResponse resp = this.dwcommands.parse(DWUtils.dropFirstToken(cmd));
+		
+		if (resp.getSuccess())
+		{
+			outs.write(resp.getResponseText().getBytes());
+		}
+		else
+		{
+			
+			outs.write(("FAIL " + resp.getResponseCode() + " " + resp.getResponseText()).getBytes() );
+		}
+		
+	}
+
+
+	public String getName()
+	{
+		return (this.config.getString("Name","Unnamed #" + this.handlerno));
+			
+	}
+	
+	public int getHandlerNo()
+	{
+		return this.handlerno;
+	}
+
+
+	@Override
+	public void syncStorage() 
+	{
+		if (this.diskDrives != null)
+		{
+			this.diskDrives.sync();
+		}
+		else
+		{
+			logger.debug("handler is alive, but disk drive object is null, probably startup taking a while.. skipping");
+		}
+		
 	}
 	
 }

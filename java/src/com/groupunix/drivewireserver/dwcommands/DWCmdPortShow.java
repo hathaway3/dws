@@ -1,18 +1,18 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class DWCmdPortShow implements DWCommand {
 
-	private int handlerno;
+	private DWProtocolHandler dwProto;
 
-	public DWCmdPortShow(int handlerno)
+	public DWCmdPortShow(DWProtocolHandler dwProto)
 	{
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
@@ -22,7 +22,6 @@ public class DWCmdPortShow implements DWCommand {
 
 	public String getLongHelp() 
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -52,19 +51,19 @@ public class DWCmdPortShow implements DWCommand {
 		
 		for (int i = 0;i<DWVSerialPorts.MAX_PORTS;i++)
 		{
-			text += String.format("%6s", DriveWireServer.getHandler(handlerno).getVPorts().prettyPort(i));
+			text += String.format("%6s", dwProto.getVPorts().prettyPort(i));
 			
 			try 
 			{
 				
 			
-				if (DriveWireServer.getHandler(handlerno).getVPorts().isOpen(i))
+				if (dwProto.getVPorts().isOpen(i))
 				{
-					text += String.format(" %-8s", "open(" + DriveWireServer.getHandler(handlerno).getVPorts().getOpen(i) + ")");
+					text += String.format(" %-8s", "open(" + dwProto.getVPorts().getOpen(i) + ")");
 				
-					text += String.format(" %-10s", "PD.INT=" + DriveWireServer.getHandler(handlerno).getVPorts().getPD_INT(i));
-					text += String.format(" %-10s", "PD.QUT=" + DriveWireServer.getHandler(handlerno).getVPorts().getPD_QUT(i));
-					text += String.format(" %-15s", "buffer: " + DriveWireServer.getHandler(handlerno).getVPorts().bytesWaiting(i));
+					text += String.format(" %-10s", "PD.INT=" + dwProto.getVPorts().getPD_INT(i));
+					text += String.format(" %-10s", "PD.QUT=" + dwProto.getVPorts().getPD_QUT(i));
+					text += String.format(" %-15s", "buffer: " + dwProto.getVPorts().bytesWaiting(i));
 				
 				}
 				else
@@ -73,8 +72,8 @@ public class DWCmdPortShow implements DWCommand {
 				}
 			
 			
-				if (DriveWireServer.getHandler(handlerno).getVPorts().getUtilMode(i) != DWDefs.UTILMODE_UNSET)
-					text += " " + DWUtils.prettyUtilMode(DriveWireServer.getHandler(handlerno).getVPorts().getUtilMode(i));
+				if (dwProto.getVPorts().getUtilMode(i) != DWDefs.UTILMODE_UNSET)
+					text += " " + DWUtils.prettyUtilMode(dwProto.getVPorts().getUtilMode(i));
 				
 				//text += " " + DWProtocolHandler.byteArrayToHexString(DWVSerialPorts.getDD(i));	
 			}
