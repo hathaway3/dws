@@ -22,13 +22,11 @@ public class fx80img implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("fx80img");
 	
-	// 300 dpi
-	public static final double DEF_XSIZE = 300 * 8.5;
-	public static final double DEF_YSIZE = 300 * 11;
-	
-	private static final double SZ_PICA = DEF_XSIZE / 80;
-	private static final double SZ_ELITE = DEF_XSIZE / 96;
-	private static final double SZ_COMPRESSED = DEF_XSIZE / 132;
+	private double DEF_XSIZE;
+	private double DEF_YSIZE;
+	private double SZ_PICA;
+	private double SZ_ELITE;
+	private double SZ_COMPRESSED;
 
 	
 	private boolean m_expanded = false;
@@ -63,8 +61,12 @@ public class fx80img implements Runnable {
 		this.printDir = dir;
 		this.printText = text;
 		this.handlerno = handlerno;
-		this.line_height = DEF_YSIZE / DriveWireServer.getHandler(this.handlerno).config.getInt("PrinterLines", 66);
-		// this.char_width = DEF_XSIZE / DriveWireServer.config.getInt("PrinterColumns", 80);
+		this.DEF_XSIZE = DriveWireServer.getHandler(handlerno).getConfig().getDouble("PrinterDPI",300) * 8.5;
+		this.DEF_YSIZE = DriveWireServer.getHandler(handlerno).getConfig().getDouble("PrinterDPI",300) * 11;
+		this.SZ_PICA = DEF_XSIZE / 80;
+		this.SZ_ELITE = DEF_XSIZE / 96;
+		this.SZ_COMPRESSED = DEF_XSIZE / 132;
+		this.line_height = DEF_YSIZE / DriveWireServer.getHandler(this.handlerno).getConfig().getInt("PrinterLines", 66);
 		
 		
 	}
@@ -74,7 +76,7 @@ public class fx80img implements Runnable {
 	
 		// load characters
 		
-		loadCharacter(DriveWireServer.getHandler(this.handlerno).config.getString("PrinterCharacterFile","default.chars"));
+		loadCharacter(DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterCharacterFile","default.chars"));
 
 		// init img
 
@@ -228,9 +230,9 @@ public class fx80img implements Runnable {
 
         try 
         {
-        	printFile = File.createTempFile("dw_print_",getFileExt(DriveWireServer.getHandler(this.handlerno).config.getString("PrinterImageFormat","PNG")),printDir);
+        	printFile = File.createTempFile("dw_print_",getFileExt(DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterImageFormat","PNG")),printDir);
     		
-            ImageIO.write(rImage, DriveWireServer.getHandler(this.handlerno).config.getString("PrinterImageFormat","PNG"), printFile);
+            ImageIO.write(rImage, DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterImageFormat","PNG"), printFile);
             logger.info("wrote last print page image to: " + printFile.getAbsolutePath());
             
         } 
@@ -285,8 +287,8 @@ public class fx80img implements Runnable {
 			
 			try 
 		    {
-				printFile = File.createTempFile("dw_print_",getFileExt(DriveWireServer.getHandler(this.handlerno).config.getString("PrinterImageFormat","PNG")),printDir);
-				ImageIO.write(rImage, DriveWireServer.getHandler(this.handlerno).config.getString("PrinterImageFormat","PNG"), printFile);
+				printFile = File.createTempFile("dw_print_",getFileExt(DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterImageFormat","PNG")),printDir);
+				ImageIO.write(rImage, DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterImageFormat","PNG"), printFile);
 				
 				logger.info("wrote print page image to: " + printFile.getAbsolutePath());
 				
@@ -594,13 +596,12 @@ public class fx80img implements Runnable {
 		} 
 		catch (NumberFormatException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
+			
 		} 
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage());
 		}
 		
 		logger.debug("exiting");
