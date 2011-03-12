@@ -5,16 +5,9 @@
 
   <path id="project.class.path">
     <pathelement location="war/WEB-INF/classes"/>
-    <pathelement location="${env.GWT_HOME}/gwt-user.jar"/>
-    <fileset dir="${env.GWT_HOME}" includes="gwt-dev*.jar"/>
     <fileset dir="lib" includes="*.jar"/>
   </path>
 
-  <target name="libs" description="Copy libs to WEB-INF/lib">
-    <mkdir dir="war/WEB-INF/lib" />
-    <copy todir="war/WEB-INF/lib" file="${env.GWT_HOME}/gwt-servlet.jar" />
-    <!-- Add any additional server libs that need to be copied -->
-  </target>
 
   <target name="javac" description="Compile java source">
     <mkdir dir="war/WEB-INF/classes"/>
@@ -60,7 +53,7 @@
 
 	<target name="hosted" depends="devmode" description="Run development mode (NOTE: the 'hosted' target is deprecated)" />
 
-	<target name="build" depends="gwtc" description="Build this project" />
+	<target name="build" depends="javac" description="Build this project" />
 
 	<target name="clean" description="Cleans this project">
 		<delete dir="war/WEB-INF/classes" failonerror="false" />
