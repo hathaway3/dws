@@ -141,7 +141,7 @@ public class DWUIClientThread implements Runnable {
 				if (DriveWireServer.handlerIsAlive(instance))
 				{
 					
-					DriveWireServer.getHandler(instance).doCmd(DWUtils.dropFirstToken(cmd), skt.getOutputStream());
+					DriveWireServer.getHandler(instance).doCmd(cmd, skt.getOutputStream());
 						
 				}
 				else
