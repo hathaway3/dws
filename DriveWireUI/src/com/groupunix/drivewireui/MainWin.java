@@ -48,8 +48,8 @@ import org.eclipse.swt.events.MouseEvent;
 
 public class MainWin {
 
-	public static final String DWUIVersion = "3.9.87";
-	public static final String DWUIVersionDate = "01/10/2010";
+	public static final String DWUIVersion = "3.9.94";
+	public static final String DWUIVersionDate = "03/13/2011";
 	
 	public static final String default_Host = "127.0.0.1";
 	public static final int default_Port = 6800;
@@ -404,28 +404,6 @@ public class MainWin {
 		
 				mntmCreate.setText("Create dsk...");
 		
-		MenuItem mntmdskDisk = new MenuItem(menu_4, SWT.CASCADE);
-		mntmdskDisk.setText(".dsk <-> disk");
-		
-		Menu menu_10 = new Menu(mntmdskDisk);
-		mntmdskDisk.setMenu(menu_10);
-		
-		MenuItem mntmTransferdskTo = new MenuItem(menu_10, SWT.NONE);
-		mntmTransferdskTo.setText("Copy .dsk to floppy disk");
-		
-		MenuItem mntmTransferFloppyDisk = new MenuItem(menu_10, SWT.NONE);
-		mntmTransferFloppyDisk.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				CopyDiskToDSKWin window = new CopyDiskToDSKWin(shell,SWT.DIALOG_TRIM);
-				
-				window.open();
-			
-			}
-		});
-		mntmTransferFloppyDisk.setText("Copy floppy disk to .dsk");
-		
 		MenuItem mntmHdbdos = new MenuItem(menu_4, SWT.CASCADE);
 		mntmHdbdos.setText("HDBDOS");
 		
@@ -457,15 +435,6 @@ public class MainWin {
 			}
 		});
 		mntmOff.setText("Off");
-		
-		MenuItem mntmCreateDiskset = new MenuItem(menu_2, SWT.CASCADE);
-		mntmCreateDiskset.setText("Create diskset");
-		
-		Menu menu_9 = new Menu(mntmCreateDiskset);
-		mntmCreateDiskset.setMenu(menu_9);
-		
-		MenuItem mntmMapMultidiskImage = new MenuItem(menu_9, SWT.NONE);
-		mntmMapMultidiskImage.setText("Map multidisk image to individual disks");
 		
 		new MenuItem(menu_4, SWT.SEPARATOR);
 		
