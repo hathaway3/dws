@@ -63,7 +63,7 @@ public class AboutWin extends Dialog {
 		lblVersion.setFont(SWTResourceManager.getFont("Segoe UI", 8, SWT.NORMAL));
 		lblVersion.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
 		lblVersion.setBounds(10, 65, 411, 15);
-		lblVersion.setText(" DriveWire User Interface version 3.9.83 (12/27/2010)");
+		lblVersion.setText(" DriveWire User Interface version " + MainWin.DWUIVersion + " (" + MainWin.DWUIVersionDate + ")");
 		
 		txtGnuGeneralPublic = new Text(shell, SWT.V_SCROLL);
 		txtGnuGeneralPublic.setFont(SWTResourceManager.getFont("Segoe UI", 8, SWT.NORMAL));
