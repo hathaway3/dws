@@ -285,7 +285,7 @@ public class MainWin {
 	 */
 	protected void createContents() {
 		shell = new Shell();
-		shell.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/dw4square.jpg"));
+		shell.setImage(SWTResourceManager.getImage(MainWin.class, "/dw4square.jpg"));
 		shell.addShellListener(new ShellAdapter() {
 			@Override
 			public void shellClosed(ShellEvent e) 
