@@ -83,41 +83,45 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 		//logger.info("Note: RXTX Version mismatch here is not a problem...");
 		
-        CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
-        if ( portIdentifier.isCurrentlyOwned() )
-        {
-            logger.error("Port is already in use");
-        }
-        else
-        {
-            CommPort commPort = portIdentifier.open("DWProtocolHandler",2000);
+		try
+		{
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
+        
+        
+			if ( portIdentifier.isCurrentlyOwned() )
+			{
+				logger.error("Port is already in use");
+			}
+			else
+			{
+				CommPort commPort = portIdentifier.open("DWProtocolHandler",2000);
             
-            if ( commPort instanceof SerialPort )
-            {
+				if ( commPort instanceof SerialPort )
+				{
             	
-                serialPort = (SerialPort) commPort;
+					serialPort = (SerialPort) commPort;
 
-                // these settings seem to solve the lost bytes problems on my usb adapter
-                serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
-                serialPort.enableReceiveThreshold(1);
-                serialPort.enableReceiveTimeout(3000);
+					// these settings seem to solve the lost bytes problems on my usb adapter
+					serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+					serialPort.enableReceiveThreshold(1);
+					serialPort.enableReceiveTimeout(3000);
                 
-                setSerialParams(serialPort, cocomodel);               
-                  
-                // try this..
+					setSerialParams(serialPort, cocomodel);               
                 
-               /* readerthread = new Thread(new DWProtoReader(serialPort.getInputStream(), serialInputBuf.getOutputStream() ));
-                readerthread.start();
-                */
-                
-                logger.info("succesfully opened " + portName);
-                
-            }
-            else
-            {
-                logger.error("Only serial devices are allowed.");
-            }
-        } 
+					logger.info("succesfully opened " + portName);
+				}
+				else
+				{
+					logger.error("Only serial devices are allowed.");
+				}
+			}
+        }
+		catch (Error e)
+		{
+			logger.error(e.getMessage());
+			logger.error("Due to the serious error above, the server will be terminated.");
+			System.exit(1);
+		}
 	}
 	
 	
