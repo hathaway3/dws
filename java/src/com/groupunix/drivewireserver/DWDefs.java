@@ -35,6 +35,9 @@ public class DWDefs
 	public static final byte OP_SERTERM = (byte) ('E'+128);
 	public static final byte OP_RFM = (byte) ('V'+128);
 	
+	public static final byte OP_230K230K = (byte) 230;
+	public static final byte OP_230K115K = (byte) 253;
+	
 	// response codes
 	public static final byte DWERROR_WP = (byte) 0xF2;
 	public static final byte DWERROR_CRC = (byte) 0xF3;
@@ -93,6 +96,14 @@ public class DWDefs
 	public static final byte RC_MIDI_INVALID_PROFILE = (byte)155;
 
 	public static final byte RC_MIDI_ERROR = (byte)156;
+
+	public static final int DISK_MAXDRIVES = 256;
+
+	public static final int DISK_MAXSECTORS = 16777215;
+	
+	public static final int DISK_SECTORSIZE = 256;
+
+	
 	
 	
 
