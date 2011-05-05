@@ -11,7 +11,6 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWSerialDevice implements DWProtocolDevice
@@ -20,18 +19,27 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 	private SerialPort serialPort;
 	private boolean wanttodie = false;
-	private int handlerno;
 	private boolean bytelog = false;
 	private String device;
+	private DWProtocol dwProto;
+	private boolean DATurboMode = false; 
+	private byte[] prefix;
 	
-	public DWSerialDevice(int handlerno, String device, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
+	
+	public DWSerialDevice(DWProtocol dwProto, String device, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
 		this.device = device;
-		this.handlerno = handlerno;
+		this.dwProto = dwProto;
 		
-		bytelog = DriveWireServer.getHandler(this.handlerno).getConfig().getBoolean("LogDeviceBytes", false);
+		prefix = new byte[1];
+		//prefix[0] = (byte) 0xFF;
+		prefix[0] = (byte) 0xC0;
+
 		
-		logger.debug("init " + device + " for handler #" + handlerno + " (logging bytes: " + bytelog + ")");
+		
+		bytelog = dwProto.getConfig().getBoolean("LogDeviceBytes", false);
+		
+		logger.debug("init " + device + " for handler #" + dwProto.getHandlerNo() + " (logging bytes: " + bytelog + ")");
 		
 		connect(device, cocomodel);
 				
@@ -54,7 +62,7 @@ public class DWSerialDevice implements DWProtocolDevice
 
 	public void close()
 	{
-		logger.info("closing serial device " +  this.device + " in handler #" + this.handlerno);
+		logger.info("closing serial device " +  this.device + " in handler #" + dwProto.getHandlerNo());
 		this.serialPort.close();
 	
 	}
@@ -128,10 +136,13 @@ public class DWSerialDevice implements DWProtocolDevice
 	private void setSerialParams(SerialPort sport, int cocomodel) throws UnsupportedCommOperationException 
 	{
 		int rate;
+		int parity = 0;
+		int stopbits = 1;
+		int databits = 8;
 		
-		if (DriveWireServer.getHandler(this.handlerno).getConfig().containsKey("RateOverride"))
+		if (dwProto.getConfig().containsKey("RateOverride"))
 		{
-			rate = DriveWireServer.getHandler(this.handlerno).getConfig().getInt("RateOverride");
+			rate = dwProto.getConfig().getInt("RateOverride");
 		}
 		else
 		{
@@ -148,8 +159,23 @@ public class DWSerialDevice implements DWProtocolDevice
 			}
 		}
 		
-		logger.debug("setting port params to " + rate +" 8N1" );
-		sport.setSerialPortParams(rate,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
+		if (dwProto.getConfig().containsKey("DatabitsOverride"))
+		{
+			databits = dwProto.getConfig().getInt("DatabitsOverride");
+		}
+		
+		if (dwProto.getConfig().containsKey("StopbitsOverride"))
+		{
+			stopbits = dwProto.getConfig().getInt("StopbitsOverride");
+		}
+		
+		if (dwProto.getConfig().containsKey("ParityOverride"))
+		{
+			parity = dwProto.getConfig().getInt("ParityOverride");
+		}
+		
+		logger.debug("setting port params to " + rate + " " + databits + ":" + parity + ":" + stopbits );
+		sport.setSerialPortParams(rate, databits, stopbits, parity);
 		
 		
 	}
@@ -162,11 +188,28 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 
 	
-	public void comWrite(byte[] data, int len)
+	
+	public void comWrite(byte[] data, int len, boolean pfix)
 	{	
 		try 
 		{
-			serialPort.getOutputStream().write(data, 0, len);
+			if (dwProto.getConfig().getBoolean("ProtocolFlipOutputBits", false)  || this.DATurboMode) 
+				data = DWUtils.reverseByteArray(data);
+				
+			
+			if (pfix && (dwProto.getConfig().getBoolean("ProtocolResponsePrefix", false)  || this.DATurboMode))
+			{
+				byte[] out = new byte[this.prefix.length + len];
+				System.arraycopy(this.prefix, 0, out, 0, this.prefix.length);
+				System.arraycopy(data, 0, out, this.prefix.length, len);
+				
+				serialPort.getOutputStream().write(out);
+			}
+			else
+			{
+				serialPort.getOutputStream().write(data, 0, len);
+			}
+			
 			
 			// extreme cases only
 			
@@ -193,11 +236,30 @@ public class DWSerialDevice implements DWProtocolDevice
 	}	
 	
 	
-	public void comWrite1(int data)
+
+
+	public void comWrite1(int data, boolean pfix)
 	{
+		
+		
 		try 
 		{
-			serialPort.getOutputStream().write((byte) data);
+			if (dwProto.getConfig().getBoolean("ProtocolFlipOutputBits", false) || this.DATurboMode) 
+				data = DWUtils.reverseByte(data);
+				
+			
+			if (pfix && (dwProto.getConfig().getBoolean("ProtocolResponsePrefix", false)  || this.DATurboMode))
+			{
+				byte[] out = new byte[this.prefix.length + 1];
+				out[out.length - 1] = (byte)data;
+				System.arraycopy(this.prefix, 0, out, 0, this.prefix.length);
+				
+				serialPort.getOutputStream().write(out);
+			}
+			else
+			{
+				serialPort.getOutputStream().write((byte) data);
+			}
 			
 			if (bytelog)
 				logger.debug("WRITE1: " + data);
@@ -213,26 +275,46 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 	
 	
-	public byte[] comRead(int len) throws DWCommTimeOutException 
+	public byte[] comRead(int len) throws IOException 
 	{
 	
 		byte[] buf = new byte[len];
+		
+		int sofar = 0;
+
+		
+		// we never got more than 1 byte at a time even at 230k, so
+		// went back to 1 by one method
+		
+		/*
+		while (sofar < len)
+		{
+			sofar += serialPort.getInputStream().read(buf, sofar, (len-sofar));
+			
+			if (bytelog)
+				logger.debug("READ " + len + ": " + " got " + sofar);
+		
+			
+		}
+		*/
+		
 		
 		for (int i = 0;i<len;i++)
 		{
 			buf[i] = (byte) comRead1(true);
 		}
 		
+		
 		return(buf);
 	}
 	
 	
 	
-	public int comRead1(boolean timeout) throws DWCommTimeOutException 
+	public int comRead1(boolean timeout) throws IOException 
 	{
 		int retdata = -1;
 		
-		try {
+	
 
 			while ((retdata == -1) && (!this.wanttodie) && (serialPort != null))
 			{
@@ -249,14 +331,7 @@ public class DWSerialDevice implements DWProtocolDevice
 			}
 			
 			return(retdata);
-		} 
-		catch (IOException e) 
-		{
-			logger.error("error reading byte, I want to die: " + e.getMessage());
-			this.wanttodie = true;
-			return(-1);
-		}
-		
+	
 
 	}
 
@@ -272,6 +347,13 @@ public class DWSerialDevice implements DWProtocolDevice
 	public String getDeviceType() 
 	{
 		return("serial");
+	}
+
+
+	public void enableDATurbo() throws UnsupportedCommOperationException
+	{
+		this.serialPort.setSerialPortParams(230400, 8, 2, 0);
+		this.DATurboMode = true;
 	}
 	
 }

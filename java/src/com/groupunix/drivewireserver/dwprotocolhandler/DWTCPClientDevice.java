@@ -6,7 +6,6 @@ import java.net.Socket;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 
 public class DWTCPClientDevice implements DWProtocolDevice {
@@ -59,7 +58,7 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 	
 	
 
-	public byte[] comRead(int len) throws DWCommTimeOutException 
+	public byte[] comRead(int len) throws IOException 
 	{
 
 		byte[] buf = new byte[len];
@@ -74,7 +73,7 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 	}
 
 	
-	public int comRead1(boolean timeout) throws DWCommTimeOutException 
+	public int comRead1(boolean timeout) throws IOException  
 	{
 		int data = -1;
 		
@@ -107,7 +106,7 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 
 	
 	
-	public void comWrite(byte[] data, int len) 
+	public void comWrite(byte[] data, int len, boolean prefix) 
 	{
 		try 
 		{
@@ -135,7 +134,7 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 	}
 
 	
-	public void comWrite1(int data) 
+	public void comWrite1(int data, boolean prefix) 
 	{
 		try 
 		{
@@ -195,5 +194,11 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 	{
 		return("tcp-client");
 	}
+
+
+	
+
+
+
 	
 }

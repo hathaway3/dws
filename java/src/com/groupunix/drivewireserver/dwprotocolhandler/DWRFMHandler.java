@@ -1,10 +1,11 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
+import java.io.IOException;
+
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.OS9Defs;
-import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWRFMHandler
 {
@@ -104,10 +105,10 @@ public class DWRFMHandler
 			}
 			
 			// send response
-			protodev.comWrite1(0);
+			protodev.comWrite1(0, true);
 			
 		} 
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -138,7 +139,7 @@ public class DWRFMHandler
 			}
 			
 		}
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -171,7 +172,7 @@ public class DWRFMHandler
 			
 			
 		}
-		catch (DWCommTimeOutException e)
+		catch (IOException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -201,11 +202,11 @@ public class DWRFMHandler
 			}
 			
 			
-			protodev.comWrite(buf,size);
+			protodev.comWrite(buf,size, true);
 			
 			logger.debug("sent " + size +" bytes of FD for path " + pathno);
 		} 
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -238,7 +239,7 @@ public class DWRFMHandler
 			
 			logger.debug("read " + size +" bytes of FD for path " + pathno);
 		} 
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -275,7 +276,7 @@ public class DWRFMHandler
 			
 			logger.debug("writln on path " + pathno + " bytes: " + maxbytes);
 		} 
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -321,17 +322,18 @@ public class DWRFMHandler
 			
 			logger.debug("adjusted AB: " + availbytes);
 			
-			protodev.comWrite1(availbytes);
+			protodev.comWrite1(availbytes, true);
 			
 			if (availbytes > 0)
 			{
-				protodev.comWrite(buf, availbytes);
+				// possible prefix needed?
+				protodev.comWrite(buf, availbytes, false);
 				this.paths[pathno].incSeekpos(availbytes);
 			}
 			
 			logger.debug("readln on path " + pathno + " maxbytes: " + maxbytes + " availbytes: " + availbytes );
 		} 
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -374,11 +376,12 @@ public class DWRFMHandler
 			
 			System.arraycopy(this.paths[pathno].getBytes(maxbytes),0, buf, 0, maxbytes);
 			
-			protodev.comWrite1(maxbytes);
+			protodev.comWrite1(maxbytes, true);
 			
 			if (maxbytes > 0)
 			{
-				protodev.comWrite(buf, maxbytes);
+				// possible prefix needed
+				protodev.comWrite(buf, maxbytes, false);
 				this.paths[pathno].incSeekpos(maxbytes);
 				
 				logger.debug("buf: " + DWUtils.byteArrayToHexString(buf));
@@ -387,7 +390,7 @@ public class DWRFMHandler
 			
 			logger.debug("read on path " + pathno + " maxbytes: " + maxbytes );
 		} 
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -414,10 +417,10 @@ public class DWRFMHandler
 			this.paths[pathno].setSeekpos(DWUtils.int4(seekpos));
 			
 			// assume it worked, for now
-			protodev.comWrite1(0);
+			protodev.comWrite1(0, true);
 			
 		}
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -474,19 +477,16 @@ public class DWRFMHandler
 			
 			int result = this.paths[pathno].createFile();
 			
-			protodev.comWrite1(result);
+			protodev.comWrite1(result, true);
 			
 			logger.debug("create path " + pathno + " mode " + modebyte + ", to " + pathstr + ": result " + result);
 		} 
-		catch (DWCommTimeOutException e)
+		catch (IOException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (FileSystemException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
 		
+		}
 	}
 
 
@@ -520,19 +520,15 @@ public class DWRFMHandler
 			this.paths[pathno].setPathstr(pathstr);
 			
 			int result = this.paths[pathno].openFile(modebyte);
-			protodev.comWrite1(result);
+			protodev.comWrite1(result, true);
 				
 			logger.debug("open path " + pathno + " mode " + modebyte + ", to " + pathstr + ": result " + result);
 			
 		} 
-		catch (DWCommTimeOutException e)
+		catch (IOException  e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (FileSystemException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} 
-		
 	}
 }

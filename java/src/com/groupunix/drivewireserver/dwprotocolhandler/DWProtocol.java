@@ -24,5 +24,6 @@ public interface DWProtocol extends Runnable
 	void resetProtocolDevice();
 	void doCmd(String cmd, OutputStream outputStream) throws IOException;
 	void syncStorage();
+	int getHandlerNo();
 	
 }

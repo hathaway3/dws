@@ -13,7 +13,6 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.MCXDefs;
-import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
@@ -194,7 +193,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 					
 					
 				} 
-				catch (DWCommTimeOutException e) 
+				catch (IOException  e) 
 				{
 					// this should not actually ever get thrown, since we call comRead1 with timeout = false..
 					logger.error(e.getMessage());
@@ -325,18 +324,18 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 			//respond
 			if (flag == 0)
 			{
-				protodev.comWrite1(0);
-				protodev.comWrite1(4);
+				protodev.comWrite1(0, false);
+				protodev.comWrite1(4, false);
 			}
 			else
 			{
-				protodev.comWrite1(0);
-				protodev.comWrite1(0);
+				protodev.comWrite1(0, false);
+				protodev.comWrite1(0, false);
 			}
 			
 			
 		} 
-		catch (DWCommTimeOutException e) 
+		catch (IOException  e) 
 		{
 			logger.warn(e.getMessage());
 		}
@@ -359,14 +358,14 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 			
 			if (arglen == 4)
 			{
-				protodev.comWrite1('T');
-				protodev.comWrite1('e');
-				protodev.comWrite1('s');
-				protodev.comWrite1('2');
+				protodev.comWrite1('T', false);
+				protodev.comWrite1('e', false);
+				protodev.comWrite1('s', false);
+				protodev.comWrite1('2', false);
 			}
 			
 		} 
-		catch (DWCommTimeOutException e) 
+		catch (IOException e) 
 		{
 			logger.warn(e.getMessage());
 		}
@@ -446,10 +445,10 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 			
 			
 		} 
-		catch (DWCommTimeOutException e1) 
+		catch (IOException e1) 
 		{
 			// Timed out reading data from Coco
-			logger.error("DoOP_WRITE: " + e1.getMessage());
+			logger.error("DoOP_WRITE error: " + e1.getMessage());
 			
 			// reset, abort
 			return;
@@ -461,7 +460,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 		if (lastChecksum != DWUtils.int2(cocosum))
 		{
 			// checksums do not match, tell Coco
-			protodev.comWrite1(DWDefs.DWERROR_CRC);
+			protodev.comWrite1(DWDefs.DWERROR_CRC, false);
 			
 			logger.warn("DoOP_WRITE: Bad checksum, drive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN) + " CocoSum: " + DWUtils.int2(cocosum) + " ServerSum: " + lastChecksum);
 			
@@ -519,7 +518,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 			lastError = response;
 		
 		// send response
-		protodev.comWrite1(response);
+		protodev.comWrite1(response, false);
 		
 		// Increment sectorsWritten count
 		if (response == DWDefs.DWOK)
@@ -566,9 +565,9 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 			
 			vprinter.addByte((byte) tmpint);
 		} 
-		catch (DWCommTimeOutException e) 
+		catch (IOException e) 
 		{
-			logger.error("Timeout reading print byte");
+			logger.error("IO exception reading print byte: " + e.getMessage());
 		}
 		
 		
@@ -704,7 +703,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 				try 
 				{
 					// set cocomodel to 1 = 38400
-					protodev = new DWSerialDevice(this.handlerno, config.getString("SerialDevice"), 1);
+					protodev = new DWSerialDevice(this, config.getString("SerialDevice"), 1);
 				}
 				catch (NoSuchPortException e1)
 				{
@@ -803,6 +802,13 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	public void syncStorage() {
 		// TODO Auto-generated method stub
 		
+	}
+
+
+	@Override
+	public int getHandlerNo() {
+		// TODO Auto-generated method stub
+		return this.handlerno;
 	}
 	
 }

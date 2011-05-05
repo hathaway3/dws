@@ -37,8 +37,11 @@ public class DWDisk {
 	private int reads = 0;
 	private int writes = 0;
 	
+	private int readErrors = 0;
+	
 	private FileSystemManager fsManager;
 	private FileObject fileobj;
+	
 	
 	
 	
@@ -684,6 +687,20 @@ public void shutdown()
 		
 		
 		return(config);
+	}
+
+
+
+	public void readError() 
+	{
+		this.readErrors++;
+	}
+
+
+
+	public int getReadErrors() 
+	{
+		return this.readErrors;
 	}
 
 

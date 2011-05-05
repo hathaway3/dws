@@ -26,6 +26,7 @@ import org.apache.log4j.PatternLayout;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 
@@ -39,7 +40,7 @@ public class DriveWireServer
 	private static ConsoleAppender consoleAppender;
 	private static DWLogAppender dwAppender;
 	private static FileAppender fileAppender;
-	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
+	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
 	
 	public static XMLConfiguration serverconfig;
 	
@@ -58,6 +59,7 @@ public class DriveWireServer
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws ConfigurationException
 	{
+		
 		// install clean shutdown handler
 		DWShutdownHandler sh = new DWShutdownHandler();
         Runtime.getRuntime().addShutdownHook(sh);
@@ -233,14 +235,20 @@ public class DriveWireServer
 			if (dwProtoHandlers[i] != null)
 			{
 				dwProtoHandlers[i].shutdown();
-				try 
+				
+				/*
+				if (dwProtoHandlerThreads[i].isAlive())
 				{
-					dwProtoHandlerThreads[i].join();
-				} 
-				catch (InterruptedException e) 
-				{
-					logger.warn(e.getMessage());
+					try 
+					{
+						dwProtoHandlerThreads[i].join();
+					} 
+					catch (InterruptedException e) 
+					{
+						logger.warn(e.getMessage());
+					}
 				}
+				*/
 			}
 		}
 		

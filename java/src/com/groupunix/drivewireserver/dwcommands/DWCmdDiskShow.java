@@ -72,6 +72,8 @@ public class DWCmdDiskShow implements DWCommand
 			text += String.format("%-9d", dwProto.getDiskDrives().getReads(driveno));
 			text += String.format("%-9d", dwProto.getDiskDrives().getWrites(driveno));
 			text += String.format("%-9d", dwProto.getDiskDrives().getDirtySectors(driveno));
+			text += "\r\n";
+			text += "Read Errors: " + dwProto.getDiskDrives().getReadErrors(driveno);
 			text += "\r\n\n";
 			
 			text += "Filesystem supports write: " + dwProto.getDiskDrives().getDisk(driveno).isFSWriteable() + "\r\n";

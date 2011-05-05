@@ -612,6 +612,13 @@ public class DWDiskDrives
 			}
 	
 		}
+
+
+	public int getReadErrors(int driveno) 
+	{
+		return this.diskDrives[driveno].getReadErrors();
+		
+	}
 		
 	}
 	

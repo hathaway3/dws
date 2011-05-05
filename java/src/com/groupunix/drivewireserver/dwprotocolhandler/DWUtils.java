@@ -28,6 +28,40 @@ public class DWUtils
 	}
 	
 	
+	public static byte reverseByte(int b)
+	{
+		return (byte) Integer.reverseBytes(Integer.reverse(b)); 
+		
+	}
+	
+	public static byte[] reverseByteArray(byte[] data) 
+	{
+		byte[] revdata = new byte[data.length];
+		
+		for (int i = 0;i<data.length;i++)
+			revdata[i] = reverseByte(data[i]);
+		
+		return(revdata);
+	}
+	
+	public static byte[] hexStringToByteArray(String hexs)
+	{
+		if (hexs.length() > 0) 
+		{
+			if ((hexs.length() % 2) == 0 )
+			{
+				byte[] res = new byte[hexs.length()/2];
+				for (int i = 0;i<(hexs.length()/2);i++)
+				{
+					res[i] = (byte) Integer.parseInt(hexs.substring(i*2, i*2+1),16);
+				}
+				
+				return(res);
+			}
+		}
+		
+		return null;
+	}
 	
 	public static String byteArrayToHexString(byte in[]) {
 
@@ -524,5 +558,7 @@ public class DWUtils
 		
 		return false;
 	}
+
+
 	
 }

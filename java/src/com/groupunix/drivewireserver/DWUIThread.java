@@ -28,7 +28,10 @@ public class DWUIThread implements Runnable {
 		this.wanttodie = true;
 		try 
 		{
-			this.srvr.close();
+			if (this.srvr != null)
+			{
+				this.srvr.close();
+			}
 		} 
 		catch (IOException e) 
 		{
