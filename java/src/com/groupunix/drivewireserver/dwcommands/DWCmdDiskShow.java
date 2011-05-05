@@ -125,7 +125,7 @@ public class DWCmdDiskShow implements DWCommand
 		text += "D#   DSK URI or file path (* = write protected)\r\n";
 		text += "---- --------------------------------------------------------------------------\r\n";
 	
-		for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
+		for (int i = 0;i<dwProto.getDiskDrives().getMaxDrives();i++)
 		{
 
 			

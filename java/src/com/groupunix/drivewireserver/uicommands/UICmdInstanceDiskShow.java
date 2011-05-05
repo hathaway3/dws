@@ -33,7 +33,7 @@ public class UICmdInstanceDiskShow implements DWCommand {
 		
 		if (cmdline.length() == 0)
 		{
-			for (int i =0;i<256;i++)
+			for (int i =0;i<dwProto.getDiskDrives().getMaxDrives();i++)
 			{
 				if (dwProto.getDiskDrives().diskLoaded(i))
 				{

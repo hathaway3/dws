@@ -210,22 +210,15 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			{
 				lastOpcode = (byte) opcodeint;
 				
-				if (!processDATdetect(lastOpcode))
-				{
-					
-				
 				// fast writes
 				if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_COCO_PORTS - 1)))
 				{
-					resetDATdetect();
 					DoOP_FASTSERWRITE(lastOpcode);
 				}
-				// DATurbo detect
 				else
 				{
 					// regular OP decode
-					
-					resetDATdetect();
+
 					
 					switch(lastOpcode)
 					{
@@ -308,19 +301,24 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 							break;	
 									
 						case DWDefs.OP_NOP:
+						case DWDefs.OP_230K230K:
 							DoOP_NOP();
 							break;
 								
 						case DWDefs.OP_RFM:
 							DoOP_RFM();
 							break;
-									
+								
+						case DWDefs.OP_230K115K:
+							DoOP_230K115K();
+							break;
+							
 						default:
 							logger.warn("UNKNOWN OPCODE: " + opcodeint);
 							break;
 					}	
 				}
-				}
+	
 				
 			}
 			else
@@ -330,13 +328,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				// take a break, reset, hope things work themselves out
 				try 
 				{
-					Thread.sleep(config.getInt("FailedPortRetryTime",1000));
+					Thread.sleep(config.getInt("FailedPortRetryTime",3000));
 					resetProtocolDevice();
 					
 				} 
 				catch (InterruptedException e) 
 				{
-					logger.error("Interrupted during failed port delay.. giving up on this situation");
+					logger.error("Interrupted during failed port delay.. giving up on this crazy situation");
 					wanttodie = true;
 				}
 				
@@ -372,77 +370,28 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	}
 
 	
-	private boolean processDATdetect(byte data) 
+
+	
+	
+	private void DoOP_230K115K() 
 	{
-		// look for sequence indicating CoCo has gone to 230k/DATurbo mode
-		
 		if (config.getBoolean("DetectDATurbo", false))
 		{
-			switch(this.DATdetect)
+			try 
 			{
-			case 0:
-				
-				if ((data == 29) || (data == 25) || (data == 31))
-				{
-					this.DATdetect = 1;
-					logger.info("DATurbo byte 1");
-					return true;
-				}
-				
-				break;
-				
-			case 1:
-				
-				if ((data == 16) || (data == 33))
-				{
-					this.DATdetect = 2;
-					logger.info("DATurbo byte 2");
-					return true;
-				}
-				
-				break;
-				
-			case 2:
-				
-				if ((data == (byte) 240) || (data == (byte) 130))
-				{
-					this.DATdetect = 0;
-					logger.warn("DATurbo sequence detected");
-					
-					// switch to DATurbo mode...
-					
-					DWSerialDevice serdev = (DWSerialDevice) this.protodev;
-					
-					try 
-					{
-						serdev.enableDATurbo();
-						logger.warn("Device is now in DATurbo mode");
-					} 
-					catch (UnsupportedCommOperationException e) 
-					{
-						logger.error("Failed to enable DATurbo mode: " + e.getMessage());
-					}
-					
-					
-					
-					return true;
-				}
-				
-				break;
+				((DWSerialDevice) protodev).enableDATurbo();
+				logger.info("Detected switch to 230k mode");
+			} 
+			catch (UnsupportedCommOperationException e) 
+			{
+				logger.error("comm port did not make the switch to 230k mode: " + e.getMessage());
+				logger.error("bail out!");
+				this.wanttodie = true;
+			}
 		}
-		}
-		
-		return false;
 	}
 
 
-	private void resetDATdetect()
-	{
-		this.DATdetect = 0;
-	}
-	
-	
-	
 	private void DoOP_FASTSERWRITE(byte opcode) 
 	{
 		int databyte;
@@ -606,23 +555,23 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private void DoOP_WRITE(byte opcode)
 	{
 		byte[] cocosum = new byte[2];
-		byte[] responsebuf = new byte[262];
+		byte[] responsebuf = new byte[getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE) + 6];
 		byte response = 0;
-		byte[] sector = new byte[256];
+		byte[] sector = new byte[getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE)];
 		
 		try 
 		{
 			// read rest of packet
-			responsebuf = protodev.comRead(262);
+			responsebuf = protodev.comRead(getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE) + 6);
 
 			lastDrive = responsebuf[0];
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
-			System.arraycopy( responsebuf, 4, sector, 0, 256 );
-			System.arraycopy( responsebuf, 260, cocosum, 0, 2 );
+			System.arraycopy( responsebuf, 4, sector, 0, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE) );
+			System.arraycopy( responsebuf, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE) + 4, cocosum, 0, 2 );
 
 			
 			// Compute Checksum on sector received - NOTE: no V1 version checksum
-			lastChecksum = computeChecksum(sector, 256);
+			lastChecksum = computeChecksum(sector, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE));
 			
 			
 			
@@ -753,7 +702,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		byte[] cocosum = new byte[2];
 		byte[] mysum = new byte[2];
 		byte[] responsebuf = new byte[4];
-		byte[] sector = new byte[256];
+		byte[] sector = new byte[getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE)];
 		
 		try 
 		{
@@ -815,12 +764,12 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		}
 		
 		// write out response sector
-		protodev.comWrite(sector, 256, true);
+		protodev.comWrite(sector, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE), true);
 		
 		if (!config.getBoolean("ProtocolDisableReadChecksum",false))
 		{
 			// calc checksum
-			lastChecksum = computeChecksum(sector, 256);
+			lastChecksum = computeChecksum(sector, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE));
 
 			mysum[0] = (byte) ((lastChecksum >> 8) & 0xFF);
 			mysum[1] = (byte) ((lastChecksum << 0) & 0xFF);
@@ -1482,7 +1431,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	
 		text += "D#     Sectors        LSN   WP       Reads  Writes  Dirty \r\n";
 	
-		for (int i = 0;i<DWDiskDrives.MAX_DRIVES;i++)
+		for (int i = 0;i<this.diskDrives.getMaxDrives();i++)
 		{
 			if (this.getDiskDrives().diskLoaded(i))
 			{

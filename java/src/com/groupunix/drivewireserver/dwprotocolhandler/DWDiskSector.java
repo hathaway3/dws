@@ -1,21 +1,21 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
 
-// import org.apache.log4j.Logger;
-
 public class DWDiskSector 
 {
 	private int LSN;
-	private byte[] data = new byte[256];
-	private byte[] dirtydata = new byte[256];
+	private byte[] data;
+	private byte[] dirtydata;
 	private boolean dirty = false;
+	private DWDisk disk;
+	
 
-	
-	// private static final Logger logger = Logger.getLogger("DWServer.DWDiskSector");
-	
-	public DWDiskSector(int lsn)
+	public DWDiskSector(DWDisk disk, int lsn)
 	{
 		this.LSN = lsn;
+		this.disk = disk;
+		this.data = new byte[disk.getSectorSize()];
+		this.dirtydata = new byte[disk.getSectorSize()];
 	}
 
 	public synchronized int getLSN() {
@@ -26,7 +26,7 @@ public class DWDiskSector
 	{
 
 		this.dirty = true;
-		System.arraycopy(newdata, 0, this.dirtydata, 0, 256);
+		System.arraycopy(newdata, 0, this.dirtydata, 0, disk.getSectorSize());
 	}
 
 	public synchronized void setData(byte[] newdata, boolean dirty) 
@@ -36,11 +36,11 @@ public class DWDiskSector
 		
 		if (dirty == true)
 		{
-			System.arraycopy(newdata, 0, this.dirtydata, 0, 256);
+			System.arraycopy(newdata, 0, this.dirtydata, 0, disk.getSectorSize());
 		}
 		else
 		{
-			System.arraycopy(newdata, 0, this.data, 0, 256);
+			System.arraycopy(newdata, 0, this.data, 0, disk.getSectorSize());
 		}
 	}
 	
@@ -61,7 +61,7 @@ public class DWDiskSector
 	{
 		if (this.dirty)
 		{
-			System.arraycopy(this.dirtydata, 0, this.data, 0, 256);
+			System.arraycopy(this.dirtydata, 0, this.data, 0, disk.getSectorSize());
 			this.dirty = false;
 		}
 	}

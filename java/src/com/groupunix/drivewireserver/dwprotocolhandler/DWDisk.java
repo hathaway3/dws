@@ -14,6 +14,7 @@ import org.apache.commons.vfs.VFS;
 import org.apache.commons.vfs.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
@@ -22,8 +23,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException
 public class DWDisk {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
-	
-	public static final int MAX_SECTORS = 16777215; // what is coco's max? 24 bits?
+
 	private int LSN = 0;
 	private boolean	wrProt = false;
 	private boolean expand = true;
@@ -42,14 +42,16 @@ public class DWDisk {
 	private FileSystemManager fsManager;
 	private FileObject fileobj;
 	
+	private DWDiskDrives diskDrives;
 	
 	
-	
-	public DWDisk(String path) throws IOException
+	public DWDisk(DWDiskDrives diskDrives, String path) throws IOException
 	{
 		this.fsManager = VFS.getManager();
 		fileobj = fsManager.resolveFile(path);
 
+		this.diskDrives = diskDrives;
+		
 		logger.info("New DWDisk for '" + path + "'");
 		
 	
@@ -215,7 +217,7 @@ public class DWDisk {
 	{
 	
 		
-		if ((newLSN < 0) || (newLSN > MAX_SECTORS))
+		if ((newLSN < 0) || (newLSN > this.diskDrives.getConfig().getInt("DiskMaxSectors", DWDefs.DISK_MAXSECTORS)))
 		{
 			throw new DWInvalidSectorException("Sector " + newLSN + " is not valid");
 			
@@ -277,20 +279,22 @@ public class DWDisk {
 	
 	    int sector = 0;
 	    int bytesRead = 0;
-	    byte[] buffer = new byte[256];
+	    byte[] buffer = new byte[getSectorSize()];
 	   		    
 	    int databyte = fis.read();
-	    	    
+	    	 
+	    //TODO - use multibyte reads for fsck sake
+	    
 		while (databyte != -1)
 		{
 			
 			buffer[bytesRead] = (byte)databyte;
 			bytesRead++;
 			
-		   	if (bytesRead == 256)
+		   	if (bytesRead == getSectorSize())
 		   	{
 		   		
-		   		this.sectors.add(sector, new DWDiskSector(sector));
+		   		this.sectors.add(sector, new DWDiskSector(this, sector));
 		   		this.sectors.get(sector).setData(buffer, false);
 		   		sector++;
 		   		bytesRead = 0;
@@ -331,7 +335,7 @@ public class DWDisk {
 			
 			// expand disk
 			expandDisk(effLSN);
-			this.sectors.add(effLSN, new DWDiskSector(effLSN));
+			this.sectors.add(effLSN, new DWDiskSector(this, effLSN));
 		}
 		
 		return(this.sectors.get(effLSN).getData());	
@@ -343,7 +347,7 @@ public class DWDisk {
 	{
 		for (int i = this.sectors.size();i < target;i++)
 		{
-			this.sectors.add(i, new DWDiskSector(i));
+			this.sectors.add(i, new DWDiskSector(this, i));
 		}
 	}
 
@@ -365,7 +369,7 @@ public class DWDisk {
 			{
 				// expand disk / add sector
 				expandDisk(effLSN);
-				this.sectors.add(effLSN, new DWDiskSector(effLSN));
+				this.sectors.add(effLSN, new DWDiskSector(this, effLSN));
 				logger.debug("new sector " + effLSN);
 			}
 			
@@ -498,7 +502,7 @@ public class DWDisk {
 				{
 					if (getSector(i).isDirty())
 					{
-						long pos = i * 256;
+						long pos = i * getSectorSize();
 						raf.seek(pos);
 						raf.write(getSector(i).getData());
 						logger.debug("wrote sector " + i + " in " + getFilePath() );
@@ -540,7 +544,7 @@ public class DWDisk {
 	   while (sector < this.sectors.size()) 
 	   {
 	    
-		   fos.write(this.sectors.get(sector).getData(), 0, 256);
+		   fos.write(this.sectors.get(sector).getData(), 0, getSectorSize());
 		   this.sectors.get(sector).makeClean();
 		   sector++;
 	   }
@@ -676,19 +680,14 @@ public void shutdown()
 
 	public HierarchicalConfiguration getConfig() 
 	{
-		HierarchicalConfiguration config = new HierarchicalConfiguration();
-		
-		config.addProperty("disk.path", this.getFilePath());
-		config.addProperty("disk.TEST", "blah");
-		
-		
-		
-		
-		
-		
-		return(config);
+		return(diskDrives.getConfig());
 	}
 
+	
+	public int getSectorSize()
+	{
+		return getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE);
+	}
 
 
 	public void readError() 
@@ -702,6 +701,8 @@ public void shutdown()
 	{
 		return this.readErrors;
 	}
+
+
 
 
 

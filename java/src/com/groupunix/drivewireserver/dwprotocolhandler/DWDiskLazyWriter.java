@@ -1,11 +1,8 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
-import java.io.IOException;
-
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 
 public class DWDiskLazyWriter implements Runnable {
 

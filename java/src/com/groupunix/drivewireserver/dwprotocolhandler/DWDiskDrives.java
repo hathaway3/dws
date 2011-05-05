@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
@@ -21,9 +22,9 @@ import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException
 
 public class DWDiskDrives 
 {
-	public static final int MAX_DRIVES = 256;
+
 	
-	private DWDisk[] diskDrives = new DWDisk[MAX_DRIVES];
+	private DWDisk[] diskDrives;
 	private static final Logger logger = Logger.getLogger("DWServer.DWDiskDrives");
 
 	private DWProtocolHandler dwProto;
@@ -33,6 +34,7 @@ public class DWDiskDrives
 	{
 		logger.debug("disk drives init for handler #" + dwProto.getHandlerNo());
 		this.dwProto = dwProto;
+		this.diskDrives = new DWDisk[getMaxDrives()];
 	}
 	
 	
@@ -91,7 +93,7 @@ public class DWDiskDrives
 						}
 				    
 				    
-						DWDisk tmpdisk = new DWDisk(filepath);
+						DWDisk tmpdisk = new DWDisk(this,filepath);
 				    
 				    
 						//	options
@@ -162,7 +164,7 @@ public class DWDiskDrives
 	
 	public void LoadDiskFromFile(int driveno, String path) throws DWDriveNotValidException, DWDriveAlreadyLoadedException, IOException
 	{
-		DWDisk tmpdisk = new DWDisk(path);
+		DWDisk tmpdisk = new DWDisk(this,path);
     	
     	LoadDisk(driveno, tmpdisk);
 	}
@@ -255,7 +257,7 @@ public class DWDiskDrives
 	
 	public void EjectAllDisks()
 	{
-		for (int i=0;i<MAX_DRIVES;i++)
+		for (int i=0;i<getMaxDrives();i++)
 		{
 			if (diskDrives[i] != null)
 			{
@@ -336,9 +338,9 @@ public class DWDiskDrives
 	
 	public void validateDriveNo(int driveno) throws DWDriveNotValidException
 	{
-		if ((driveno < 0) || (driveno >= MAX_DRIVES))
+		if ((driveno < 0) || (driveno >= getMaxDrives()))
 		{
-			throw new DWDriveNotValidException("There is no drive " + driveno + ". Valid drives numbers are 0 - "  + (MAX_DRIVES - 1));
+			throw new DWDriveNotValidException("There is no drive " + driveno + ". Valid drives numbers are 0 - "  + (dwProto.getConfig().getInt("DiskMaxDrives", DWDefs.DISK_MAXDRIVES) - 1));
 		}
 	}
 	
@@ -384,9 +386,9 @@ public class DWDiskDrives
 
 	public byte[] nullSector() 
 	{
-		byte[] tmp = new byte[256];
+		byte[] tmp = new byte[getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE)];
 		
-		for (int i = 0;i<256;i++)
+		for (int i = 0;i<getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE);i++)
 			tmp[i] = (byte) 0;
 		
 		return(tmp);
@@ -568,7 +570,7 @@ public class DWDiskDrives
 	public void sync() 
 	{
 		// scan all loaded drives
-		for (int driveno = 0;driveno<DWDiskDrives.MAX_DRIVES;driveno++)
+		for (int driveno = 0;driveno<getMaxDrives();driveno++)
 		{
 	
 			if (diskLoaded(driveno))
@@ -619,7 +621,20 @@ public class DWDiskDrives
 		return this.diskDrives[driveno].getReadErrors();
 		
 	}
-		
+
+
+	public HierarchicalConfiguration getConfig() 
+	{
+		return this.dwProto.getConfig();
+	}
+
+
+	public int getMaxDrives() 
+	{
+		return dwProto.getConfig().getInt("DiskMaxDrives", DWDefs.DISK_MAXDRIVES);
 	}
 	
-
+	
+	
+}
+	
