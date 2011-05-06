@@ -280,7 +280,7 @@ public class InitialConfigWin extends Dialog {
 				
 			}
 		});
-		btnTestConnection.setBounds(140, 200, 114, 25);
+		btnTestConnection.setBounds(140, 200, 135, 25);
 		btnTestConnection.setText("Test Connection");
 		
 		labelOK = new Label(compPage2, SWT.SHADOW_NONE);

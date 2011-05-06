@@ -21,6 +21,9 @@ public class ErrorWin extends Dialog {
 	private Text txtDetail;
 	private Text txtSummary;
 
+	private Button btnClose;
+	private Button btnDetail;
+	
 	private String title;
 	private String summary;
 	private String detail;
@@ -77,10 +80,10 @@ public class ErrorWin extends Dialog {
 	 */
 	private void createContents() {
 		shlAnErrorHas = new Shell(getParent(), getStyle());
-		shlAnErrorHas.setSize(441, 293);
+		shlAnErrorHas.setSize(441, 119);
 		shlAnErrorHas.setText(title);
 		
-		Button btnClose = new Button(shlAnErrorHas, SWT.NONE);
+		btnClose = new Button(shlAnErrorHas, SWT.NONE);
 		btnClose.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -89,20 +92,37 @@ public class ErrorWin extends Dialog {
 			
 			}
 		});
-		btnClose.setBounds(173, 230, 75, 25);
+		btnClose.setBounds(187, 57, 75, 25);
 		btnClose.setText("Close");
 		
-		txtDetail = new Text(shlAnErrorHas, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
-		txtDetail.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
-		txtDetail.setEditable(false);
-		txtDetail.setBounds(21, 60, 392, 156);
-		txtDetail.setText(detail);
+		
 		
 		txtSummary = new Text(shlAnErrorHas, SWT.NONE);
 		txtSummary.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 		txtSummary.setEditable(false);
 		txtSummary.setBounds(21, 20, 392, 21);
 		txtSummary.setText(summary);
+		
+		btnDetail = new Button(shlAnErrorHas, SWT.NONE);
+		btnDetail.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				shlAnErrorHas.setSize(441, 500);
+				
+				txtDetail = new Text(shlAnErrorHas, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+				txtDetail.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+				txtDetail.setEditable(false);
+				txtDetail.setBounds(21, 40, 385, 390);
+				txtDetail.setText(detail);
+			
+				btnClose.setBounds(187, 440, 75, 25);
+				btnDetail.setBounds(21,440,85,25);
+				btnDetail.setVisible(false);
+				
+			}
+		});
+		btnDetail.setBounds(21, 57, 85, 25);
+		btnDetail.setText("Show Detail");
 	}
-
 }
