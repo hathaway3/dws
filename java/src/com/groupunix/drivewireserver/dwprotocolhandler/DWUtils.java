@@ -559,6 +559,17 @@ public class DWUtils
 		return false;
 	}
 
+	   public static boolean testClassPath(String fullClassName) {
+		      boolean result = false;
+		      try {
+		         Class.forName(fullClassName);
+		         result = true;
+		      } catch (Throwable e) 
+		      {
+		    	  //e.printStackTrace();
+		      }
 
+		      return result;
+		   }    
 	
 }
