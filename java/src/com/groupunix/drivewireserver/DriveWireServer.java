@@ -32,8 +32,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.95";
-	public static final String DWServerVersionDate = "05/05/2011";
+	public static final String DWServerVersion = "3.9.95.1";
+	public static final String DWServerVersionDate = "05/06/2011";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -59,6 +59,8 @@ public class DriveWireServer
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws ConfigurationException
 	{
+		
+		
 		
 		// install clean shutdown handler
 		DWShutdownHandler sh = new DWShutdownHandler();
@@ -116,6 +118,19 @@ public class DriveWireServer
     		System.out.println("Fatal - Could not process config file '" + configfile + "'.  Please consult the documentation.");
     		System.exit(-1);
 		}
+    	
+    	
+    	// Bail out if no RXTX
+		if (serverconfig.getBoolean("TestForRXTX",true) && !DWUtils.testClassPath("gnu.io.RXTXCommDriver"))
+		{
+			
+			logger.fatal("Fatal - RXTX native libraries not found!");
+			logger.fatal("Please see http://sourceforge.net/apps/mediawiki/drivewireserver/index.php?title=Installation");
+			
+			System.exit(1);
+		}
+		
+    	
     	
     	
     	// server config listener
@@ -227,14 +242,15 @@ public class DriveWireServer
 	{
 		logger.warn("server shutting down...");
 		
-		
-		logger.debug("stopping protocol handler(s)...");
-		
-		for (int i = 0;i<dwProtoHandlerThreads.length;i++)
+		if (dwProtoHandlerThreads != null)
 		{
-			if (dwProtoHandlers[i] != null)
+			logger.debug("stopping protocol handler(s)...");
+		
+			for (int i = 0;i<dwProtoHandlerThreads.length;i++)
 			{
-				dwProtoHandlers[i].shutdown();
+				if (dwProtoHandlers[i] != null)
+				{
+					dwProtoHandlers[i].shutdown();
 				
 				/*
 				if (dwProtoHandlerThreads[i].isAlive())
@@ -249,33 +265,42 @@ public class DriveWireServer
 					}
 				}
 				*/
+				}
+			}
+		
+		}
+		
+		
+		if (lazyWriterT != null)
+		{
+			logger.debug("stopping lazy writer...");
+		
+			lazyWriterT.interrupt();
+			try 
+			{
+				lazyWriterT.join();
+			} 
+			catch (InterruptedException e) 
+			{
+				logger.warn(e.getMessage());
 			}
 		}
 		
 		
-		logger.debug("stopping lazy writer...");
-		
-		lazyWriterT.interrupt();
-		try 
+		if (uiObj != null)
 		{
-			lazyWriterT.join();
-		} 
-		catch (InterruptedException e) 
-		{
-			logger.warn(e.getMessage());
+			logger.debug("stopping UI thread...");
+			uiObj.die();
+			try 
+			{
+				uiT.join();
+			} 
+			catch (InterruptedException e) 
+			{
+				logger.warn(e.getMessage());
+			}
 		}
 		
-		
-		logger.debug("stopping UI thread...");
-		uiObj.die();
-		try 
-		{
-			uiT.join();
-		} 
-		catch (InterruptedException e) 
-		{
-			logger.warn(e.getMessage());
-		}
 		
 		logger.warn("server shutdown complete");
 		
