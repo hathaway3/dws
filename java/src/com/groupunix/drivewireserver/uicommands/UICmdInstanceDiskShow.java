@@ -49,7 +49,7 @@ public class UICmdInstanceDiskShow implements DWCommand {
 			
 				int driveno = Integer.parseInt(cmdline);
 				
-				if (dwProto.getDiskDrives().diskLoaded(driveno))
+				if ((!(dwProto.getDiskDrives() == null)) && (dwProto.getDiskDrives().diskLoaded(driveno)))
 				{
 					res += "loaded: true\n"; 
 					res += "path: " + dwProto.getDiskDrives().getDisk(driveno).getFilePath() + "\n";
