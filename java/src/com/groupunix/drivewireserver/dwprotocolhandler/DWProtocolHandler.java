@@ -823,7 +823,8 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				}
 				else
 				{
-					this.diskDrives.getDisk(lastDrive).readError();
+					if (this.diskDrives.diskLoaded(lastDrive))
+						this.diskDrives.getDisk(lastDrive).readError();
 					logger.warn("DoOP_READEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 				}
 			
