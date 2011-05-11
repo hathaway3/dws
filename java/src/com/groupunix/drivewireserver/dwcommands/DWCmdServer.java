@@ -1,9 +1,6 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import gnu.io.UnsupportedCommOperationException;
-
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWSerialDevice;
 
 public class DWCmdServer implements DWCommand {
 
@@ -17,6 +14,7 @@ public class DWCmdServer implements DWCommand {
 		commands.addcommand(new DWCmdServerList());
 		commands.addcommand(new DWCmdServerDir());
 		commands.addcommand(new DWCmdServerTurbo(dwProto));
+		commands.addcommand(new DWCmdServerPrint(dwProto));
 		
 	//	commands.addcommand(new DWCmdServerRestart(handlerno));
 	}
