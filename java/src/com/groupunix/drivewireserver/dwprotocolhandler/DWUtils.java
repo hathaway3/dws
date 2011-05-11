@@ -2,6 +2,8 @@ package com.groupunix.drivewireserver.dwprotocolhandler;
 
 import gnu.io.CommPortIdentifier;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -572,4 +574,35 @@ public class DWUtils
 		      return result;
 		   }    
 	
+	   
+		public static boolean DirExistsOrCreate(String directoryName)
+		{
+			  File theDir = new File(directoryName);
+
+			  // if the directory does not exist, create it
+			  if (!theDir.exists())
+			  {
+			    return(theDir.mkdir());
+			  }
+			  else
+			  {
+				  return(true);
+			  }
+		}
+		
+		public static boolean FileExistsOrCreate(String fileName) throws IOException
+		{
+			  File theFile = new File(fileName);
+
+			  // if the directory does not exist, create it
+			  if (!theFile.exists())
+			  {
+			    return(theFile.createNewFile());
+			  }
+			  else
+			  {
+				  return(true);
+			  }
+		}
+	   
 }

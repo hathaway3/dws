@@ -39,7 +39,7 @@ import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 public class DWProtocolHandler implements Runnable, DWProtocol
 {
 
-	private static final Logger logger = Logger.getLogger("DWServer.DWProtocolHandler");
+	private final Logger logger = Logger.getLogger("DWServer.DWProtocolHandler");
 	  
 
 	
@@ -168,7 +168,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			dwVSerialPorts.resetAllPorts();
 
 			// setup printer
-			vprinter = new DWVPrinter(handlerno);
+			vprinter = new DWVPrinter(this);
 				
 			// setup RFM handler
 			rfmhandler = new DWRFMHandler(handlerno);
@@ -875,18 +875,24 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private void DoOP_TIME()
 	{
 		GregorianCalendar c = (GregorianCalendar) Calendar.getInstance();
+		byte[] buf = new byte[7];
 		
-
-		protodev.comWrite1(c.get(Calendar.YEAR)-108, true);
-		protodev.comWrite1(c.get(Calendar.MONTH)+1, false);
-		protodev.comWrite1(c.get(Calendar.DAY_OF_MONTH), false);
-		protodev.comWrite1(c.get(Calendar.HOUR_OF_DAY), false);
-		protodev.comWrite1(c.get(Calendar.MINUTE), false);
-		protodev.comWrite1(c.get(Calendar.SECOND), false);
+		buf[0] = (byte) (c.get(Calendar.YEAR)-108);
+		buf[1] = (byte) (c.get(Calendar.MONTH)+1);
+		buf[2] = (byte) c.get(Calendar.DAY_OF_MONTH);
+		buf[3] = (byte) c.get(Calendar.HOUR_OF_DAY);
+		buf[4] = (byte) c.get(Calendar.MINUTE);
+		buf[5] = (byte) c.get(Calendar.SECOND);
+		buf[6] = (byte) c.get(Calendar.DAY_OF_WEEK);
+		
 		
 		if (config.getBoolean("OpTimeSendsDOW", false))
 		{
-			protodev.comWrite1(c.get(Calendar.DAY_OF_WEEK), false);
+			protodev.comWrite(buf, 7, true);
+		}
+		else
+		{
+			protodev.comWrite(buf, 6, true);
 		}
 		
 		
@@ -1497,6 +1503,17 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		}
 		
 	}
+	
+	public DWVPrinter getVPrinter()
+	{
+		return(this.vprinter);
+	}
+	
+	public Logger getLogger()
+	{
+		return this.logger;
+	}
+
 	
 }
 	

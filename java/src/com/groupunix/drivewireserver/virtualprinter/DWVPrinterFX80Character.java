@@ -1,12 +1,12 @@
-package com.groupunix.fx80img;
+package com.groupunix.drivewireserver.virtualprinter;
 
-public class character 
+public class DWVPrinterFX80Character 
 {
 
 	private int[] bits;
 	private int len;
 	
-	public character(int[] bits, int len)
+	public DWVPrinterFX80Character(int[] bits, int len)
 	{
 		this.bits = bits;
 		this.len = len;

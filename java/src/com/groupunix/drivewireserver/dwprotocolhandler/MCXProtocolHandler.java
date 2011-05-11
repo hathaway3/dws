@@ -25,7 +25,7 @@ import com.groupunix.drivewireserver.virtualprinter.DWVPrinter;
 public class MCXProtocolHandler implements Runnable, DWProtocol
 {
 
-	private static final Logger logger = Logger.getLogger("DWServer.MCXProtocolHandler");
+	private final Logger logger = Logger.getLogger("DWServer.MCXProtocolHandler");
 	  
 
 	
@@ -116,7 +116,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 
 		
 			// setup printer
-			vprinter = new DWVPrinter(handlerno);
+			vprinter = new DWVPrinter(this);
 				
 		}			
 
@@ -809,6 +809,13 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	public int getHandlerNo() {
 		// TODO Auto-generated method stub
 		return this.handlerno;
+	}
+
+
+	@Override
+	public Logger getLogger() {
+		// TODO Auto-generated method stub
+		return this.logger;
 	}
 	
 }

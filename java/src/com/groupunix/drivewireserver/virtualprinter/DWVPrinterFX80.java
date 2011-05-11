@@ -1,6 +1,4 @@
-package com.groupunix.fx80img;
-
-// emulate an epson fx80.  VERY INCOMPLETE
+package com.groupunix.drivewireserver.virtualprinter;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -14,13 +12,18 @@ import java.io.InputStreamReader;
 
 import javax.imageio.ImageIO;
 
-import org.apache.log4j.Logger;
+import com.groupunix.drivewireserver.dwexceptions.DWPrinterFileError;
+import com.groupunix.drivewireserver.dwexceptions.DWPrinterNotDefinedException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
+import com.groupunix.drivewireserver.virtualserial.DWVSerialCircularBuffer;
 
-import com.groupunix.drivewireserver.DriveWireServer;
+public class DWVPrinterFX80 implements DWVPrinterDriver {
 
-public class fx80img implements Runnable {
+	
+	private DWVSerialCircularBuffer printBuffer = new DWVSerialCircularBuffer(-1, true);
 
-	private static final Logger logger = Logger.getLogger("fx80img");
+	private DWVPrinter vprinter;
+	
 	
 	private double DEF_XSIZE;
 	private double DEF_YSIZE;
@@ -30,7 +33,6 @@ public class fx80img implements Runnable {
 
 	
 	private boolean m_expanded = false;
-	@SuppressWarnings("unused")
 	private boolean m_pica = true;
 	private boolean m_elite = false;
 	private boolean m_compressed = false;
@@ -42,10 +44,9 @@ public class fx80img implements Runnable {
 	private double line_height;
 	private double char_width;
 	
-	private characterset charset = new characterset();
+	private DWVPrinterFX80CharacterSet charset = new DWVPrinterFX80CharacterSet();
 	private Graphics2D rGraphic;
 	
-	private String printText;
 	private File printDir;
 	private File printFile;
 	
@@ -53,30 +54,41 @@ public class fx80img implements Runnable {
 	private double ypos;
 	
 	private BufferedImage rImage;
-	private int handlerno;
 	
 	
-	public fx80img(int handlerno, String text, File dir)
+	
+	public DWVPrinterFX80(DWVPrinter dwvPrinter) 
 	{
-		this.printDir = dir;
-		this.printText = text;
-		this.handlerno = handlerno;
-		this.DEF_XSIZE = DriveWireServer.getHandler(handlerno).getConfig().getDouble("PrinterDPI",300) * 8.5;
-		this.DEF_YSIZE = DriveWireServer.getHandler(handlerno).getConfig().getDouble("PrinterDPI",300) * 11;
+		this.vprinter = dwvPrinter;
+		this.DEF_XSIZE = vprinter.getConfig().getDouble("PrinterDPI",300) * 8.5;
+		this.DEF_YSIZE = vprinter.getConfig().getDouble("PrinterDPI",300) * 11;
 		this.SZ_PICA = DEF_XSIZE / 80;
 		this.SZ_ELITE = DEF_XSIZE / 96;
 		this.SZ_COMPRESSED = DEF_XSIZE / 132;
-		this.line_height = DEF_YSIZE / DriveWireServer.getHandler(this.handlerno).getConfig().getInt("PrinterLines", 66);
-		
-		
+		this.line_height = DEF_YSIZE / vprinter.getConfig().getInt("PrinterLines", 66);
+	
 	}
-	
-	public void print(String printText, File printDir) throws NumberFormatException, IOException 
+
+	@Override
+	public void addByte(byte data) throws IOException 
 	{
-	
-		// load characters
+		this.printBuffer.getOutputStream().write(data);
+	}
+
+	@Override
+	public String getDriverName() 
+	{
+
+		return("FX80");
+	}
+
+	@Override
+	public void flush() throws NumberFormatException, IOException, DWPrinterNotDefinedException, DWPrinterFileError 
+	{
 		
-		loadCharacter(DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterCharacterFile","default.chars"));
+// load characters
+		
+		loadCharacter(vprinter.getConfig().getString("PrinterCharacterFile","default.chars"));
 
 		// init img
 
@@ -98,9 +110,9 @@ public class fx80img implements Runnable {
 	    xpos = 0;
 	    ypos = line_height;
 	    
-	    for (int i = 0;i<printText.length();i++)
+	    while (this.printBuffer.getAvailable() > 0)
 	    {
-	    	char c = printText.charAt(i);
+	    	char c = (char) this.printBuffer.getInputStream().read();
 	    	
 	    	int cc = (int) c;
 	    	
@@ -230,20 +242,24 @@ public class fx80img implements Runnable {
 
         try 
         {
-        	printFile = File.createTempFile("dw_print_",getFileExt(DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterImageFormat","PNG")),printDir);
+        	printFile = this.getPrinterFile();
     		
-            ImageIO.write(rImage, DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterImageFormat","PNG"), printFile);
-            logger.info("wrote last print page image to: " + printFile.getAbsolutePath());
+            ImageIO.write(rImage, vprinter.getConfig().getString("PrinterImageFormat","PNG"), printFile);
+            vprinter.getLogger().info("wrote last print page image to: " + printFile.getAbsolutePath());
             
         } 
         catch (IOException ex) 
         {
-            logger.warn("Cannot save print image: " + ex.getMessage());
+            vprinter.getLogger().warn("Cannot save print image: " + ex.getMessage());
         }
 
-        
+		
+		
+		
 	}
 
+	
+	
 	private void reset_printer()
 	{
 		this.m_expanded = false;
@@ -276,7 +292,7 @@ public class fx80img implements Runnable {
 	}
 
 	
-	private void newline()
+	private void newline() throws DWPrinterNotDefinedException, DWPrinterFileError
 	{
 		ypos += line_height;
 		
@@ -287,10 +303,10 @@ public class fx80img implements Runnable {
 			
 			try 
 		    {
-				printFile = File.createTempFile("dw_print_",getFileExt(DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterImageFormat","PNG")),printDir);
-				ImageIO.write(rImage, DriveWireServer.getHandler(this.handlerno).getConfig().getString("PrinterImageFormat","PNG"), printFile);
+				printFile = this.getPrinterFile();
+				ImageIO.write(rImage, vprinter.getConfig().getString("PrinterImageFormat","PNG"), printFile);
 				
-				logger.info("wrote print page image to: " + printFile.getAbsolutePath());
+				vprinter.getLogger().info("wrote print page image to: " + printFile.getAbsolutePath());
 				
 				rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_USHORT_GRAY );
 				rGraphic = (Graphics2D) rImage.getGraphics();
@@ -300,14 +316,14 @@ public class fx80img implements Runnable {
 		    } 
 		    catch (IOException ex) 
 		    {
-		    	 logger.warn("Cannot save print image: " + ex.getMessage());
+		    	 vprinter.getLogger().warn("Cannot save print image: " + ex.getMessage());
 		    }
 			
 			
 		}
 	}
 
-	private String getFileExt(String set) 
+	private String getFileExtension(String set) 
 	{
 		if (set.equalsIgnoreCase("JPEG") || set.equalsIgnoreCase("JPG") )
 			return(".jpg");
@@ -583,29 +599,37 @@ public class fx80img implements Runnable {
 		}*/	
 	}
 
-	public void run()
+
+	public File getPrinterFile() throws IOException, DWPrinterNotDefinedException, DWPrinterFileError 
 	{
-		
-		Thread.currentThread().setName("fx80img-" + Thread.currentThread().getId());
-		Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-		logger.debug("run");
-		
-		try
+		if (vprinter.getConfig().containsKey("PrinterFile"))
 		{
-			print(this.printText, this.printDir);
-		} 
-		catch (NumberFormatException e)
-		{
-			logger.warn(e.getMessage());
+			if (DWUtils.FileExistsOrCreate(vprinter.getConfig().getString("PrinterFile")))
+			{
+				return(new File(vprinter.getConfig().getString("PrinterFile")));
+			}
+			else
+			{
+				throw new DWPrinterFileError("Cannot find or create the output file '" + vprinter.getConfig().getString("PrinterFile") + "'");
+			}
 			
 		} 
-		catch (IOException e)
+		else if (vprinter.getConfig().containsKey("PrinterDir"))
 		{
-			logger.warn(e.getMessage());
+			if (DWUtils.DirExistsOrCreate(vprinter.getConfig().getString("PrinterDir")))
+			{
+				return(File.createTempFile("dw_fx80_",getFileExtension(vprinter.getConfig().getString("PrinterImageFormat","PNG")), new File(vprinter.getConfig().getString("PrinterDir"))));
+			}
+			else
+			{
+				throw new DWPrinterFileError("Cannot find or create the output directory '" + vprinter.getConfig().getString("PrinterDir") + "'");
+			}
+		
 		}
-		
-		logger.debug("exiting");
-		
+		else
+		{
+			throw new DWPrinterFileError("No PrinterFile or PrinterDir defined in config");
+		}
 	}
 
 }
