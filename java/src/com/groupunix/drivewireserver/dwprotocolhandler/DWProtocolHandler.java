@@ -703,6 +703,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		byte[] mysum = new byte[2];
 		byte[] responsebuf = new byte[4];
 		byte[] sector = new byte[getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE)];
+		byte result = DWDefs.DWOK; 
 		
 		try 
 		{
@@ -724,29 +725,34 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		{
 			// zero sector
 			sector = diskDrives.nullSector();
-			logger.warn("DoOP_READEX: " + e1.getMessage());	
+			logger.warn("DoOP_READEX: " + e1.getMessage());
+			result = DWDefs.DWERROR_NOTREADY;
 		} 
 		catch (DWDriveNotValidException e2) 
 		{
 			// zero sector
 			sector = diskDrives.nullSector();
 			logger.warn("DoOP_READEX: " + e2.getMessage());
+			result = DWDefs.DWERROR_NOTREADY;
 		} 
 		catch (IOException e3) 
 		{
 			// zero sector
 			sector = diskDrives.nullSector();
 			logger.warn("DoOP_READEX: " + e3.getMessage());
+			result = DWDefs.DWERROR_READ;
 		} 
 		catch (DWInvalidSectorException e5) 
 		{
 			sector = diskDrives.nullSector();
 			logger.error("DoOP_READEX: " + e5.getMessage());
+			result = DWDefs.DWERROR_READ;
 		} 
 		catch (DWSeekPastEndOfDeviceException e6) 
 		{
 			sector = diskDrives.nullSector();
 			logger.error("DoOP_READEX: " + e6.getMessage());
+			result = DWDefs.DWERROR_READ;
 		} 
 				
 		// artificial delay test
@@ -793,8 +799,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			{
 				// Good checksum, all is well
 				sectorsRead++;
-
-				protodev.comWrite1(DWDefs.DWOK, true);
 		
 				if (opcode == DWDefs.OP_REREADEX)
 				{
@@ -814,7 +818,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				// checksum mismatch
 				// 	sectorsRead++;  should we increment this?
 
-				protodev.comWrite1(DWDefs.DWERROR_CRC, true);
+				result = DWDefs.DWERROR_CRC;
 			
 				if (opcode == DWDefs.OP_REREADEX)
 				{
@@ -829,7 +833,11 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				}
 			
 			}
+			
 		}
+		// send result byte
+		protodev.comWrite1(result, true);
+
 	}
 
 	
