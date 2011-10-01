@@ -44,7 +44,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 
 	
 	// record keeping portion of dwTransferData
-	private byte lastDrive = 0;
+	private int lastDrive = 0;
 	private int readRetries = 0;
 	private int writeRetries = 0;
 	private int sectorsRead = 0;
@@ -136,7 +136,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		// this thread has got to run a LOT or we might lose bytes on the serial port
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		
-		
 		setupProtocolDevice();
 		
 		// setup environment and get started
@@ -147,6 +146,8 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			// setup drives
 			diskDrives = new DWDiskDrives(this);
 
+			
+			
 			// set current to default
 			if (config.containsKey("DefaultDiskSet"))
 			{
@@ -312,6 +313,11 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 						case DWDefs.OP_230K115K:
 							DoOP_230K115K();
 							break;
+						
+						case DWDefs.OP_NAMEOBJ_MOUNT:
+							DoOP_NAMEOBJ_MOUNT();
+							break;
+							
 							
 						default:
 							logger.warn("UNKNOWN OPCODE: " + opcodeint);
@@ -370,7 +376,48 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	}
 
 	
-
+	private void DoOP_NAMEOBJ_MOUNT()
+	{
+		long starttime = System.currentTimeMillis();
+		
+		try
+		{
+			int namesize = protodev.comRead1(true);
+			byte[] namebuf = new byte[namesize];
+			namebuf = protodev.comRead(namesize);
+			String objname = new String(namebuf);
+			
+			
+			int result = diskDrives.nameObjMount(objname);
+			
+			// artificial delay test
+			if (config.containsKey("NameObjMountDelay"))
+			{
+				try 
+				{
+					logger.debug("named object mount delay " + config.getLong("NameObjMountDelay") + " ms...");
+					Thread.sleep(config.getLong("NameObjMountDelay"));
+				} 
+				catch (InterruptedException e) 
+				{
+					logger.warn("Interrupted during mount delay");	
+				}
+			}
+			
+			protodev.comWrite1(result, false);
+			
+			if (config.getBoolean("LogOpCode", false))
+			{
+				long delay = System.currentTimeMillis() - starttime;
+				logger.info("DoOP_NAMEOBJ_MOUNT for '" + objname  + "' result: " + result + ", call took " + delay + "ms");
+			}
+			
+		} 
+		catch (IOException e)
+		{
+			logger.error(e.getMessage());
+		}
+	}
 	
 	
 	private void DoOP_230K115K() 
@@ -564,7 +611,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			// read rest of packet
 			responsebuf = protodev.comRead(getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE) + 6);
 
-			lastDrive = responsebuf[0];
+			lastDrive = responsebuf[0] & 0xff;
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
 			System.arraycopy( responsebuf, 4, sector, 0, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE) );
 			System.arraycopy( responsebuf, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE) + 4, cocosum, 0, 2 );
@@ -660,14 +707,14 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			writeRetries++;
 			if (config.getBoolean("LogOpCode", false))
 			{
-				logger.info("DoOP_REWRITE lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+				logger.info("DoOP_REWRITE lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 			}
 		}
 		else
 		{
 			if (config.getBoolean("LogOpCode", false))
 			{
-				logger.info("DoOP_WRITE lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+				logger.info("DoOP_WRITE lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 			}
 		}
 		
@@ -711,7 +758,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			
 			responsebuf = protodev.comRead(4);
 			
-			lastDrive = responsebuf[0];
+			lastDrive = responsebuf[0] & 0xff;
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
 					
 			// seek to requested LSN
@@ -803,13 +850,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				if (opcode == DWDefs.OP_REREADEX)
 				{
 					readRetries++;
-					logger.warn("DoOP_REREADEX lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+					logger.warn("DoOP_REREADEX lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 				}
 				else
 				{
 					if (config.getBoolean("LogOpCode", false))
 					{
-						logger.info("DoOP_READEX lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+						logger.info("DoOP_READEX lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 					}
 				}
 			}
@@ -823,13 +870,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				if (opcode == DWDefs.OP_REREADEX)
 				{
 					readRetries++;
-					logger.warn("DoOP_REREADEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+					logger.warn("DoOP_REREADEX CRC check failed, lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 				}
 				else
 				{
 					if (this.diskDrives.diskLoaded(lastDrive))
 						this.diskDrives.getDisk(lastDrive).readError();
-					logger.warn("DoOP_READEX CRC check failed, lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+					logger.warn("DoOP_READEX CRC check failed, lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 				}
 			
 			}
@@ -851,7 +898,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			// drive # and stat
 			responsebuf = protodev.comRead(2);
 			
-			lastDrive = responsebuf[0];
+			lastDrive = responsebuf[0] & 0xff;
 			
 		} 
 		catch (IOException e1) 
@@ -866,7 +913,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			lastGetStat = responsebuf[1];
 			if (config.getBoolean("LogOpCode", false))
 			{
-				logger.info("DoOP_GETSTAT: " + DWUtils.prettySS(responsebuf[1]) + " lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+				logger.info("DoOP_GETSTAT: " + DWUtils.prettySS(responsebuf[1]) + " lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 			}
 		}
 		else
@@ -874,7 +921,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			lastSetStat = responsebuf[1];
 			if (config.getBoolean("LogOpCode", false))
 			{
-				logger.info("DoOP_SETSTAT " + DWUtils.prettySS(responsebuf[1]) + " lastDrive: " + (int) lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+				logger.info("DoOP_SETSTAT " + DWUtils.prettySS(responsebuf[1]) + " lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 			}
 		}
 	}
@@ -1218,7 +1265,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 
 
 
-	public byte getLastDrive() {
+	public int getLastDrive() {
 		return lastDrive;
 	}
 

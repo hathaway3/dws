@@ -3,7 +3,6 @@ package com.groupunix.drivewireserver.dwcommands;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskDrives;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskShow implements DWCommand 
@@ -80,8 +79,10 @@ public class DWCmdDiskShow implements DWCommand
 		    text += " FS supports random write: " + dwProto.getDiskDrives().getDisk(driveno).isRandomWriteable() + "\r\n";
 			text += "      File can be written: " + dwProto.getDiskDrives().getDisk(driveno).isWriteable() + "\r\n";     
 			text += "\r\n";
+			text += "  Loaded via named object: " + dwProto.getDiskDrives().getDisk(driveno).isNamedObj() + "\r\n";
 			text += "  Disk is write protected: " + dwProto.getDiskDrives().getDisk(driveno).getWriteProtect() + "\r\n";
-			text += "     Sync to file allowed: " + dwProto.getDiskDrives().getDisk(driveno).isSync() + "\r\n";
+			text += "   Sync to source allowed: " + dwProto.getDiskDrives().getDisk(driveno).isSync() + "\r\n";
+			text += " Sync from source enabled: " + dwProto.getDiskDrives().getDisk(driveno).isSyncFromSource() + "\r\n";
 			text += "   Disk expansion allowed: " + dwProto.getDiskDrives().getDisk(driveno).isExpand() + "\r\n";
 			
 			text += "          Disk size limit: ";
@@ -95,6 +96,9 @@ public class DWCmdDiskShow implements DWCommand
 			}
 				
 			text += "  File/disk sector offset: " + dwProto.getDiskDrives().getDisk(driveno).getOffset() + "\r\n";
+			
+			text += "       Last modified time: " + dwProto.getDiskDrives().getDisk(driveno).getLastModifiedTime() + "\r\n";
+			
 			
 			
 			return(new DWCommandResponse(text));

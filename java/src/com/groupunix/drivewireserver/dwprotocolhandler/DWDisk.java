@@ -28,6 +28,8 @@ public class DWDisk {
 	private boolean	wrProt = false;
 	private boolean expand = true;
 	private boolean sync = true;
+	private boolean namedobj = false;
+	private boolean syncFromSource = false;
 	
 	private int offset = 0;
 	private int sizelimit = -1;
@@ -43,6 +45,8 @@ public class DWDisk {
 	private FileObject fileobj;
 	
 	private DWDiskDrives diskDrives;
+
+	private long lastModifiedTime = 0;
 	
 	
 	public DWDisk(DWDiskDrives diskDrives, String path) throws IOException
@@ -274,35 +278,52 @@ public class DWDisk {
 		// load file into sector array
 	    InputStream fis;
 	
-
-	    fis = this.fileobj.getContent().getInputStream();
-	
-	    int sector = 0;
-	    int bytesRead = 0;
-	    byte[] buffer = new byte[getSectorSize()];
-	   		    
-	    int databyte = fis.read();
-	    	 
-	    //TODO - use multibyte reads for fsck sake
 	    
-		while (databyte != -1)
+	    fis = this.fileobj.getContent().getInputStream();
+	    
+	    this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
+	    
+	    int sector = 0;
+	    int sectorsize = getSectorSize();
+	    int readres = 0;
+	    int bytesRead = 0;
+	    byte[] buffer = new byte[sectorsize];
+	   		    
+	    readres = fis.read(buffer, 0, sectorsize);
+	    
+		while (readres > -1)
 		{
+			bytesRead += readres; 
 			
-			buffer[bytesRead] = (byte)databyte;
-			bytesRead++;
-			
-		   	if (bytesRead == getSectorSize())
+		   	if (bytesRead == sectorsize)
 		   	{
 		   		
 		   		this.sectors.add(sector, new DWDiskSector(this, sector));
 		   		this.sectors.get(sector).setData(buffer, false);
 		   		sector++;
 		   		bytesRead = 0;
+		   		buffer = new byte[sectorsize];
 		   	}	
 		   	
-		   	databyte = fis.read();
+		   	readres = fis.read(buffer, bytesRead, (sectorsize - bytesRead));
 		}
-		   
+		
+		if (bytesRead > 0)
+		{
+			
+			if (getConfig().getBoolean("DiskPadPartialSectors", false))
+			{
+				this.sectors.add(sector, new DWDiskSector(this, sector));
+		   		this.sectors.get(sector).setData(buffer, false);
+		   		sector++;
+		   		logger.info("File length doesn't match current sector size of " + sectorsize + ", the last " + bytesRead + " bytes were padded to form a full sector.");
+			}
+			else
+			{
+				logger.warn("File length doesn't match current sector size of " + sectorsize + ", the last " + bytesRead + " bytes are ignored and may be overwritten.");
+			}
+		}
+		
 		
 		logger.debug("read " + sector +" sectors from '" + this.fileobj.getName() + "'");
 			
@@ -325,6 +346,27 @@ public class DWDisk {
 	{
 		// logger.debug("Read sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
 		this.reads++;
+		
+		// check source for changes...
+		if (getConfig().getBoolean("DiskSyncFromSource", false) || (this.syncFromSource) || ( (this.namedobj) && (getConfig().getBoolean("NamedObjectSyncFromSource", false)) ) )
+		{
+			if (this.fileobj.getContent().getLastModifiedTime() != this.lastModifiedTime)
+			{
+				// source has changed.. have we?
+				if (this.getDirtySectors() > 0)
+				{
+					// doh
+					logger.warn("Sync conflict on " + getFilePath() + ", both the source and our cached image have changed.  Source will be overwritten!");
+					this.writeDisk();
+				}
+				else
+				{
+					logger.info("Disk source " + getFilePath() + " has changed, reloading");
+					this.reload();
+				}
+			}
+		}
+		
 		
 		int effLSN = this.LSN + this.offset;
 		
@@ -514,7 +556,7 @@ public class DWDisk {
 		
 			raf.close();
 			fileobj.close();
-	
+			this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
 		} 
 		catch (IOException e) 
 		{
@@ -550,7 +592,8 @@ public class DWDisk {
 	   }
 		   
 	   fos.close();
-		
+	   
+	   this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
    }
 
    
@@ -602,7 +645,7 @@ public FileObject getFileObject()
 
 public void reload() throws IOException
 {
-	logger.debug("reloading sectors from path");
+	logger.debug("reloading disk sectors");
 
 	this.sectors.clear();
 	
@@ -652,7 +695,9 @@ public void shutdown()
 		return sync;
 	}
 
-
+	public boolean isSyncFromSource() {
+		return this.syncFromSource;
+	}
 
 	public void setOffset(int offset) {
 		this.offset = offset;
@@ -700,6 +745,37 @@ public void shutdown()
 	public int getReadErrors() 
 	{
 		return this.readErrors;
+	}
+
+
+
+	public void setNamedObj(boolean namedobj) {
+		this.namedobj = namedobj;
+	}
+
+
+
+	public boolean isNamedObj() {
+		return namedobj;
+	}
+
+
+
+	public void setLastModifiedTime(long lastModifiedTime) {
+		this.lastModifiedTime = lastModifiedTime;
+	}
+
+
+
+	public long getLastModifiedTime() {
+		return lastModifiedTime;
+	}
+
+
+
+	public void setSyncFromSource(boolean sync) {
+		this.syncFromSource = sync;
+		
 	}
 
 

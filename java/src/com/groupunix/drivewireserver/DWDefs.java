@@ -9,6 +9,11 @@ public class DWDefs
 	// DW protocol op codes
 	
 	public static final byte OP_NOP = 0;
+	
+	public static final byte OP_NAMEOBJ_MOUNT = 1;
+	public static final byte OP_NAMEOBJ_CREATE = 2;
+	
+	
 	public static final byte OP_GETSTAT = 'G';
 	public static final byte OP_SETSTAT = 'S';
 	public static final byte OP_READ = 'R';

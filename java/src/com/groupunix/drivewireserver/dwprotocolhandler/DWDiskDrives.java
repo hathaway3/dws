@@ -101,8 +101,11 @@ public class DWDiskDrives
 						tmpdisk.setSync(disk.getBoolean("sync",true));
 						tmpdisk.setExpand(disk.getBoolean("expand",true));
 						tmpdisk.setWriteProtect(disk.getBoolean("writeprotect",false));
-				    
+						
 						tmpdisk.setSizelimit(disk.getInt("sizelimit",-1));
+						tmpdisk.setNamedObj(disk.getBoolean("namedobj", false));
+						tmpdisk.setSyncFromSource(disk.getBoolean("syncfromsource", false));
+						
 		    		
 						if (disk.containsKey("hdbdiskoffset"))
 						{
@@ -225,6 +228,8 @@ public class DWDiskDrives
 					diskset.addProperty("disk.expand", this.diskDrives[driveno].isExpand());
 					diskset.addProperty("disk.sizelimit", this.diskDrives[driveno].getSizelimit());
 					diskset.addProperty("disk.offset", this.diskDrives[driveno].getOffset());
+					diskset.addProperty("disk.syncfromsource", this.diskDrives[driveno].isSyncFromSource());
+					diskset.addProperty("disk.namedobj", this.diskDrives[driveno].isNamedObj());
 				}
 			}
 		}		
@@ -632,6 +637,63 @@ public class DWDiskDrives
 	public int getMaxDrives() 
 	{
 		return dwProto.getConfig().getInt("DiskMaxDrives", DWDefs.DISK_MAXDRIVES);
+	}
+
+
+	public int getFreeDriveNo()
+	{
+		int res = 255;
+		
+		while (this.diskLoaded(res) && (res > 0))
+		{
+			res--;
+		}
+		
+		return res;
+	}
+	
+	
+	public int nameObjMount(String objname) 
+	{
+		int result = 0;
+		// get a free drive #.. maybe expire old name objects at some point
+		int drive = this.getFreeDriveNo();
+		
+		if (drive > 0)
+		{
+			String filename = objname;
+			// try to find object
+			if (dwProto.getConfig().containsKey("NamedObjectDir"))
+			{
+				filename = dwProto.getConfig().getString("NamedObjectDir") + '/' + filename;
+			}
+			
+			
+			try 
+			{
+				this.LoadDiskFromFile(drive, filename);
+				this.diskDrives[drive].setNamedObj(true);
+				result = drive;
+			} 
+			catch (DWDriveNotValidException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			catch (DWDriveAlreadyLoadedException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		return result;
 	}
 	
 	
