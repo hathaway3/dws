@@ -48,8 +48,8 @@ import org.eclipse.swt.events.MouseEvent;
 
 public class MainWin {
 
-	public static final String DWUIVersion = "3.9.94";
-	public static final String DWUIVersionDate = "03/13/2011";
+	public static final String DWUIVersion = "3.9.97";
+	public static final String DWUIVersionDate = "10/03/2011";
 	
 	public static final String default_Host = "127.0.0.1";
 	public static final int default_Port = 6800;
