@@ -10,6 +10,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.TabItem;
@@ -23,6 +24,8 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.ModifyEvent;
 
 public class InstanceConfigWin extends Dialog {
 
@@ -50,19 +53,16 @@ public class InstanceConfigWin extends Dialog {
 	private Text textGeoIPfile;
 	private Text textIPBannedCities;
 	private Text textIPBannedCountries;
-	private Text textRateOverride;
+	private Combo textRateOverride;
 	private Text textMIDIsoundbank;
 	private Combo textMIDIprofile;
-	private Text textDefaultDiskSet;
+	private Combo cmbDefaultDiskSet;
 	private Combo comboDevType;
 	private Combo textSerialPort;
 	private Combo comboCocoModel;
 	private Button btnStartAutomatically;
 	private Combo comboPrinterType;
 	private Button btnUseGeoipLookups;
-	
-	
-	private Button btnOptimeSendsDow;
 	private Button btnLogOpcodes;
 	private Button btnLogProtocolDevice;
 	private Button btnEvenOppoll;
@@ -80,6 +80,16 @@ public class InstanceConfigWin extends Dialog {
 	private static Group grpTelnetOptions;
 	private static Group grpTelnetAuthentication;
 	private Button btnDetect;
+	private Group grpProtocol;
+	private Button btnDetectTurbo;
+	private Group grpDisk;
+	private Text textDiskMaxSectors;
+	private Text textDiskSectorSize;
+	private Text textDiskMaxDrives;
+	private Text textNameObjectDir;
+	private Label lblNamedObjDir;
+	private Button btnPadPartialSectors;
+	private Button buttonGeoipDB;
 	
 	/**
 	 * Create the dialog.
@@ -102,6 +112,7 @@ public class InstanceConfigWin extends Dialog {
 		applyFont();
 		loadSettings();
 		applySettings();
+		updateToggledStuff();
 		
 		shlInstanceConfiguration.open();
 		shlInstanceConfiguration.layout();
@@ -232,14 +243,21 @@ public class InstanceConfigWin extends Dialog {
 		settings.add("LogOpCode");
 		settings.add("LogOpCodePolls");
 		settings.add("RateOverride");
-		settings.add("OpTimeSendsDOW");
+		settings.add("DetectDATurbo");
+		settings.add("NamedObjectDir");
+		settings.add("DiskMaxSectors");
+		settings.add("DiskSectorSize");
+		settings.add("DiskMaxDrives");
+		settings.add("DiskPadPartialSectors");
+		
+		
 		
 		values = UIUtils.getInstanceSettings(MainWin.getInstance(),settings);
 		
 		// combos
 		//loadCombo("ui server show serialdevs",this.textSerialPort);
 		loadCombo("ui server show synthprofiles",this.textMIDIprofile);
-		
+		loadCombo("ui diskset show", this.cmbDefaultDiskSet);
 		
 		
 	}
@@ -312,15 +330,22 @@ public class InstanceConfigWin extends Dialog {
 		
 		// advanced page
 		addIfChanged(res,"RateOverride",this.textRateOverride.getText());
-		addIfChanged(res,"DefaultDiskSet",this.textDefaultDiskSet.getText());
+		addIfChanged(res,"DefaultDiskSet",this.cmbDefaultDiskSet.getText());
 		
 		addIfChanged(res,"DW3Only",UIUtils.bTos(this.btnDrivewireMode.getSelection()));
-		addIfChanged(res,"OpTimeSendsDOW",UIUtils.bTos(this.btnOptimeSendsDow.getSelection()));
+
 		addIfChanged(res,"LogDeviceBytes",UIUtils.bTos(this.btnLogProtocolDevice.getSelection()));
 		addIfChanged(res,"LogVPortBytes",UIUtils.bTos(this.btnLogVirtualDevice.getSelection()));
 		addIfChanged(res,"LogMIDIBytes",UIUtils.bTos(this.btnLogMidiDevice.getSelection()));
 		addIfChanged(res,"LogOpCode",UIUtils.bTos(this.btnLogOpcodes.getSelection()));
 		addIfChanged(res,"LogOpCodePolls",UIUtils.bTos(this.btnEvenOppoll.getSelection()));
+		
+		addIfChanged(res,"DetectDATurbo",UIUtils.bTos(this.btnDetectTurbo.getSelection()));
+		addIfChanged(res,"DiskMaxSectors",this.textDiskMaxSectors.getText());
+		addIfChanged(res,"DiskSectorSize",this.textDiskSectorSize.getText());
+		addIfChanged(res,"DiskMaxDrives",this.textDiskMaxDrives.getText());
+		addIfChanged(res,"DiskPadPartialSectors",UIUtils.bTos(this.btnPadPartialSectors.getSelection()));
+		addIfChanged(res,"NamedObjectDir",this.textNameObjectDir.getText());
 		
 		return(res);
 	}
@@ -412,16 +437,24 @@ public class InstanceConfigWin extends Dialog {
 		
 		// advanced page
 		
-		setTextValue("RateOverride", this.textRateOverride);
-		setTextValue("DefaultDiskSet", this.textDefaultDiskSet);
+		setComboValue("RateOverride", this.textRateOverride);
+		
+		
+		setComboValue("DefaultDiskSet", this.cmbDefaultDiskSet);
 		
 		setBooleanValue("DW3Only", this.btnDrivewireMode, false);
-		setBooleanValue("OpTimeSendsDOW", this.btnOptimeSendsDow, false);
 		setBooleanValue("LogDeviceBytes", this.btnLogProtocolDevice, false);
 		setBooleanValue("LogVPortBytes", this.btnLogVirtualDevice, false);
 		setBooleanValue("LogMIDIBytes", this.btnLogMidiDevice, true);
 		setBooleanValue("LogOpCode", this.btnLogOpcodes, false);
 		setBooleanValue("LogOpCodePolls", this.btnEvenOppoll, false);
+		
+		setBooleanValue("DetectDATurbo", this.btnDetectTurbo, false);
+		setBooleanValue("DiskPadPartialSectors", this.btnPadPartialSectors, false);
+		setTextValue("DiskMaxSectors", this.textDiskMaxSectors);
+		setTextValue("DiskMaxDrives", this.textDiskMaxDrives);
+		setTextValue("DiskSectorSize", this.textDiskSectorSize);
+		setTextValue("NamedObjectDir", this.textNameObjectDir);
 		
 		
 	}
@@ -471,12 +504,12 @@ public class InstanceConfigWin extends Dialog {
 	 */
 	private void createContents() {
 		shlInstanceConfiguration = new Shell(getParent(), getStyle());
-		shlInstanceConfiguration.setSize(426, 459);
+		shlInstanceConfiguration.setSize(426, 474);
 		shlInstanceConfiguration.setText("Instance Configuration");
 		shlInstanceConfiguration.setLayout(null);
 		
 		TabFolder tabFolder = new TabFolder(shlInstanceConfiguration, SWT.NONE);
-		tabFolder.setBounds(10, 9, 400, 385);
+		tabFolder.setBounds(10, 9, 400, 396);
 		
 		TabItem tbtmConnection = new TabItem(tabFolder, SWT.NONE);
 		tbtmConnection.setText("Connection");
@@ -492,10 +525,7 @@ public class InstanceConfigWin extends Dialog {
 		lblInstanceName.setBounds(14, 33, 148, 18);
 		lblInstanceName.setText("Instance name:");
 		
-		comboDevType = new Combo(compositeP1, SWT.READ_ONLY);
-		comboDevType.setItems(new String[] {"serial", "tcp", "tcpclient"});
-		comboDevType.setBounds(168, 107, 91, 23);
-		comboDevType.select(0);
+		
 		
 		Label lblDeviceType = new Label(compositeP1, SWT.NONE);
 		lblDeviceType.setAlignment(SWT.RIGHT);
@@ -583,11 +613,10 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
+				 DirectoryDialog fd = new DirectoryDialog(shlInstanceConfiguration, SWT.OPEN);
 			        fd.setText("Choose printer output directory...");
 			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
+
 			        String selected = fd.open();
 			        
 			        if (selected != null)
@@ -866,9 +895,7 @@ public class InstanceConfigWin extends Dialog {
 		lblBannedIpAddresses.setBounds(10, 23, 247, 21);
 		lblBannedIpAddresses.setText("Banned IP Addresses:");
 		
-		btnUseGeoipLookups = new Button(compositeP4, SWT.CHECK);
-		btnUseGeoipLookups.setBounds(10, 132, 230, 24);
-		btnUseGeoipLookups.setText("Use GeoIP lookups");
+
 		
 		textGeoIPfile = new Text(compositeP4, SWT.BORDER);
 		textGeoIPfile.setBounds(135, 162, 218, 21);
@@ -878,8 +905,8 @@ public class InstanceConfigWin extends Dialog {
 		lblDatabaseFile.setBounds(10, 165, 119, 18);
 		lblDatabaseFile.setText("Database file:");
 		
-		Button button_7 = new Button(compositeP4, SWT.NONE);
-		button_7.addSelectionListener(new SelectionAdapter() {
+		buttonGeoipDB = new Button(compositeP4, SWT.NONE);
+		buttonGeoipDB.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
@@ -896,8 +923,8 @@ public class InstanceConfigWin extends Dialog {
 			        }
 			}
 		});
-		button_7.setBounds(355, 160, 27, 25);
-		button_7.setText("...");
+		buttonGeoipDB.setBounds(355, 160, 27, 25);
+		buttonGeoipDB.setText("...");
 		
 		textIPBannedCities = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
 		textIPBannedCities.setBounds(10, 220, 372, 46);
@@ -913,65 +940,170 @@ public class InstanceConfigWin extends Dialog {
 		lblBannedCountries.setBounds(10, 280, 197, 21);
 		lblBannedCountries.setText("Banned Countries:");
 		
+		
+		btnUseGeoipLookups = new Button(compositeP4, SWT.CHECK);
+		btnUseGeoipLookups.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				updateToggledStuff();
+			}
+		});
+		btnUseGeoipLookups.setBounds(10, 132, 230, 24);
+		btnUseGeoipLookups.setText("Use GeoIP lookups");
+		
+		
 		TabItem tbtmAdvanced_1 = new TabItem(tabFolder, SWT.NONE);
 		tbtmAdvanced_1.setText("Advanced");
 		
 		compositeP5 = new Composite(tabFolder, SWT.NONE);
 		tbtmAdvanced_1.setControl(compositeP5);
 		
-		btnDrivewireMode = new Button(compositeP5, SWT.CHECK);
+		Group grpLogging = new Group(compositeP5, SWT.NONE);
+		grpLogging.setText("Logging");
+		grpLogging.setBounds(10, 10, 372, 111);
+		
+		btnLogProtocolDevice = new Button(grpLogging, SWT.CHECK);
+		btnLogProtocolDevice.setBounds(166, 25, 184, 21);
+		btnLogProtocolDevice.setText("Log protocol device bytes");
+		
+		btnLogVirtualDevice = new Button(grpLogging, SWT.CHECK);
+		btnLogVirtualDevice.setBounds(166, 52, 196, 21);
+		btnLogVirtualDevice.setText("Log virtual port bytes");
+		
+		btnLogMidiDevice = new Button(grpLogging, SWT.CHECK);
+		btnLogMidiDevice.setBounds(166, 79, 184, 21);
+		btnLogMidiDevice.setText("Log MIDI device bytes");
+		
+		btnEvenOppoll = new Button(grpLogging, SWT.CHECK);
+		btnEvenOppoll.setBounds(38, 52, 126, 20);
+		btnEvenOppoll.setText("Even OP_POLL");
+		
+		btnLogOpcodes = new Button(grpLogging, SWT.CHECK);
+		btnLogOpcodes.setBounds(10, 25, 126, 21);
+		btnLogOpcodes.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				updateToggledStuff();
+			}
+		});
+		btnLogOpcodes.setText("Log opcodes");
+		
+		grpProtocol = new Group(compositeP5, SWT.NONE);
+		grpProtocol.setText("Protocol");
+		grpProtocol.setBounds(10, 127, 372, 94);
+		
+		textRateOverride = new Combo(grpProtocol, SWT.BORDER);
+		textRateOverride.setBounds(165, 59, 97, 23);
+		textRateOverride.setItems(new String[] {"38400", "57600", "115200", "230400", "460800", "921600"});
+		
+		Label lblBaudRateOverride = new Label(grpProtocol, SWT.NONE);
+		lblBaudRateOverride.setBounds(43, 62, 116, 18);
+		lblBaudRateOverride.setAlignment(SWT.RIGHT);
+		lblBaudRateOverride.setText("Baud rate override:");
+		
+		btnDrivewireMode = new Button(grpProtocol, SWT.CHECK);
+		btnDrivewireMode.setBounds(166, 24, 155, 21);
 		btnDrivewireMode.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 			}
 		});
-		btnDrivewireMode.setBounds(21, 101, 224, 21);
 		btnDrivewireMode.setText("DriveWire 3 mode");
 		
-		textRateOverride = new Text(compositeP5, SWT.BORDER);
-		textRateOverride.setBounds(148, 20, 97, 21);
-		
-		Label lblBaudRateOverride = new Label(compositeP5, SWT.NONE);
-		lblBaudRateOverride.setAlignment(SWT.RIGHT);
-		lblBaudRateOverride.setBounds(10, 23, 132, 18);
-		lblBaudRateOverride.setText("Baud rate override:");
-		
-		btnOptimeSendsDow = new Button(compositeP5, SWT.CHECK);
-		btnOptimeSendsDow.setBounds(21, 289, 224, 21);
-		btnOptimeSendsDow.setText("OP_TIME sends DOW");
-		
-		btnLogOpcodes = new Button(compositeP5, SWT.CHECK);
-		btnLogOpcodes.addSelectionListener(new SelectionAdapter() {
+		btnDetectTurbo = new Button(grpProtocol, SWT.CHECK);
+		btnDetectTurbo.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 			}
 		});
-		btnLogOpcodes.setBounds(21, 141, 186, 21);
-		btnLogOpcodes.setText("Log opcodes");
+		btnDetectTurbo.setBounds(12, 24, 148, 21);
+		btnDetectTurbo.setText("Detect 230k mode");
 		
-		btnLogProtocolDevice = new Button(compositeP5, SWT.CHECK);
-		btnLogProtocolDevice.setBounds(21, 194, 224, 21);
-		btnLogProtocolDevice.setText("Log protocol device bytes");
+		grpDisk = new Group(compositeP5, SWT.NONE);
+		grpDisk.setText("Disk");
+		grpDisk.setBounds(10, 227, 372, 134);
 		
-		btnEvenOppoll = new Button(compositeP5, SWT.CHECK);
-		btnEvenOppoll.setBounds(41, 168, 160, 20);
-		btnEvenOppoll.setText("Even OP_POLL");
+		cmbDefaultDiskSet = new Combo(grpDisk, SWT.BORDER);
+		cmbDefaultDiskSet.setBounds(266, 21, 96, 21);
 		
-		btnLogVirtualDevice = new Button(compositeP5, SWT.CHECK);
-		btnLogVirtualDevice.setBounds(21, 221, 186, 21);
-		btnLogVirtualDevice.setText("Log virtual port bytes");
-		
-		btnLogMidiDevice = new Button(compositeP5, SWT.CHECK);
-		btnLogMidiDevice.setBounds(21, 248, 205, 21);
-		btnLogMidiDevice.setText("Log MIDI device bytes");
-		
-		textDefaultDiskSet = new Text(compositeP5, SWT.BORDER);
-		textDefaultDiskSet.setBounds(148, 54, 97, 21);
-		
-		Label lblDefaultDiskset = new Label(compositeP5, SWT.NONE);
+		Label lblDefaultDiskset = new Label(grpDisk, SWT.NONE);
+		lblDefaultDiskset.setBounds(163, 24, 97, 18);
 		lblDefaultDiskset.setAlignment(SWT.RIGHT);
-		lblDefaultDiskset.setBounds(10, 57, 132, 18);
 		lblDefaultDiskset.setText("Default diskset:");
+		
+		textDiskMaxSectors = new Text(grpDisk, SWT.BORDER);
+		textDiskMaxSectors.setBounds(97, 21, 60, 21);
+		
+		textDiskSectorSize = new Text(grpDisk, SWT.BORDER);
+		textDiskSectorSize.setBounds(97, 48, 60, 21);
+		
+		textDiskMaxDrives = new Text(grpDisk, SWT.BORDER);
+		textDiskMaxDrives.setBounds(97, 75, 60, 21);
+		
+		Label lblMaxSectors = new Label(grpDisk, SWT.NONE);
+		lblMaxSectors.setBounds(10, 24, 81, 15);
+		lblMaxSectors.setText("Max sectors:");
+		
+		Label lblSectorSize = new Label(grpDisk, SWT.NONE);
+		lblSectorSize.setText("Sector size:");
+		lblSectorSize.setBounds(10, 51, 81, 15);
+		
+		Label lblMaxDrives = new Label(grpDisk, SWT.NONE);
+		lblMaxDrives.setText("Max drives:");
+		lblMaxDrives.setBounds(10, 78, 81, 15);
+		
+		btnPadPartialSectors = new Button(grpDisk, SWT.CHECK);
+		btnPadPartialSectors.setBounds(182, 50, 139, 16);
+		btnPadPartialSectors.setText("Pad partial sectors");
+		
+		textNameObjectDir = new Text(grpDisk, SWT.BORDER);
+		textNameObjectDir.setBounds(134, 105, 187, 21);
+		
+		lblNamedObjDir = new Label(grpDisk, SWT.NONE);
+		lblNamedObjDir.setText("Named object path:");
+		lblNamedObjDir.setBounds(10, 108, 118, 15);
+		
+		Button buttonChooseNODir = new Button(grpDisk, SWT.NONE);
+		buttonChooseNODir.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+
+				 DirectoryDialog fd = new DirectoryDialog(shlInstanceConfiguration, SWT.OPEN);
+			        fd.setText("Choose named object directory...");
+			        fd.setFilterPath("");
+			      
+			        String selected = fd.open();
+			        
+			        if (selected != null)
+			        {
+			        	textNameObjectDir.setText(selected);
+			        }
+			}
+		});
+		buttonChooseNODir.setBounds(324, 105, 27, 21);
+		buttonChooseNODir.setText("...");
+		
+		
+		comboDevType = new Combo(compositeP1, SWT.READ_ONLY);
+		comboDevType.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) 
+			{
+				if (comboDevType.getSelectionIndex() > -1)
+				{
+					enableDevOptions(comboDevType.getItem(comboDevType.getSelectionIndex()));
+				}
+				
+			}
+
+
+		});
+		comboDevType.setItems(new String[] {"serial", "tcp", "tcpclient"});
+		comboDevType.setBounds(168, 107, 91, 23);
+		comboDevType.select(0);
+		
+		
 		
 		Button btnUndo = new Button(shlInstanceConfiguration, SWT.NONE);
 		btnUndo.addSelectionListener(new SelectionAdapter() {
@@ -981,7 +1113,7 @@ public class InstanceConfigWin extends Dialog {
 				applySettings();
 			}
 		});
-		btnUndo.setBounds(10, 400, 75, 25);
+		btnUndo.setBounds(10, 411, 75, 25);
 		btnUndo.setText("Undo");
 	
 		Button btnOk = new Button(shlInstanceConfiguration, SWT.NONE);
@@ -1030,7 +1162,7 @@ public class InstanceConfigWin extends Dialog {
 				}
 			}
 		});
-		btnOk.setBounds(177, 400, 75, 25);
+		btnOk.setBounds(177, 411, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlInstanceConfiguration, SWT.NONE);
@@ -1041,10 +1173,64 @@ public class InstanceConfigWin extends Dialog {
 				shlInstanceConfiguration.close();
 			}
 		});
-		btnCancel.setBounds(335, 400, 75, 25);
+		btnCancel.setBounds(335, 411, 75, 25);
 		btnCancel.setText("Cancel");
 
 		
+		
+	}
+
+	protected void updateToggledStuff() 
+	{
+		if (btnLogOpcodes.getSelection())
+		{
+			btnEvenOppoll.setEnabled(true);
+		}
+		else
+		{
+			btnEvenOppoll.setEnabled(false);
+		}
+		
+		if (btnUseGeoipLookups.getSelection())
+		{
+			textGeoIPfile.setEnabled(true);
+			buttonGeoipDB.setEnabled(true);
+			textIPBannedCities.setEnabled(true);
+			textIPBannedCountries.setEnabled(true);
+			
+		}
+		else
+		{
+			textGeoIPfile.setEnabled(false);
+			buttonGeoipDB.setEnabled(false);
+			textIPBannedCities.setEnabled(false);
+			textIPBannedCountries.setEnabled(false);
+			
+		}
+	}
+
+	protected void enableDevOptions(String item) 
+	{
+		this.btnDetect.setEnabled(false);
+		this.textSerialPort.setEnabled(false);
+		this.textTCPClientHost.setEnabled(false);
+		this.textTCPClientPort.setEnabled(false);
+		this.textTCPServerPort.setEnabled(false);
+		
+		if (item.equals("serial"))
+		{
+			this.textSerialPort.setEnabled(true);
+			this.btnDetect.setEnabled(true);
+		}
+		else if (item.equals("tcp"))
+		{
+			this.textTCPServerPort.setEnabled(true);
+		}
+		else if (item.equals("tcpclient"))
+		{
+			this.textTCPClientPort.setEnabled(true);
+			this.textTCPClientHost.setEnabled(true);
+		}
 		
 	}
 
@@ -1068,11 +1254,20 @@ public class InstanceConfigWin extends Dialog {
 		if (changes.containsKey("TCPClientHost"))
 			return true;
 		
+		if (changes.containsKey("RateOverride"))
+			return true;
+		
 		
 		
 		return false;
 	}
 	protected Button getBtnDetect() {
 		return btnDetect;
+	}
+	protected Button getBtnPadPartialSectors() {
+		return btnPadPartialSectors;
+	}
+	protected Button getButtonGeoipDB() {
+		return buttonGeoipDB;
 	}
 }
