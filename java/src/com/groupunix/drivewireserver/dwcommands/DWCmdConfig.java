@@ -4,12 +4,14 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class DWCmdConfig implements DWCommand
 {
-
+	
 	static final String command = "config";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 		
+	
 	public DWCmdConfig(DWProtocol dwProtocol)
 	{
+		commands = new DWCommandList(dwProtocol);
 		commands.addcommand(new DWCmdConfigShow(dwProtocol));
 		commands.addcommand(new DWCmdConfigSet(dwProtocol));
 		commands.addcommand(new DWCmdConfigSave(dwProtocol));
@@ -37,7 +39,7 @@ public class DWCmdConfig implements DWCommand
 
 	public String getShortHelp() 
 	{
-		return "Commands that manipulate the configuration";
+		return "Commands that manipulate the config";
 	}
 
 

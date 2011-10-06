@@ -1074,12 +1074,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			responsebuf = protodev.comRead(1);
 			
 			int portnum = responsebuf[0];
-			// int portmode = responsebuf[1];
+			
 			
 			if (config.getBoolean("LogOpCode", false))
 			{
 				logger.info("DoOP_SERINIT for port " + dwVSerialPorts.prettyPort(portnum));
 			}
+	
 			
 			
 		} 
@@ -1361,13 +1362,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	
 	private DWCommandList createDWCmds()
 	{
-		DWCommandList commands = new DWCommandList();
+		DWCommandList commands = new DWCommandList(this);
 		
 		commands.addcommand(new DWCmdDisk(this));
 		commands.addcommand(new DWCmdServer(this));
 		commands.addcommand(new DWCmdConfig(this));
 		commands.addcommand(new DWCmdPort(this));
-		commands.addcommand(new DWCmdLog());
+		commands.addcommand(new DWCmdLog(this));
 		commands.addcommand(new DWCmdNet(this));
 		commands.addcommand(new DWCmdMidi(this));
 		

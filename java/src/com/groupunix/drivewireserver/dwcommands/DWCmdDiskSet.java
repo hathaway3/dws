@@ -6,10 +6,11 @@ public class DWCmdDiskSet implements DWCommand
 {
 
 	static final String command = "set";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 		
 	public DWCmdDiskSet(DWProtocolHandler dwProto)
 	{
+		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdDiskSetShow());
 		commands.addcommand(new DWCmdDiskSetLoad(dwProto));
 		

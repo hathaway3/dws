@@ -5,10 +5,11 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 public class DWCmdMidiSynth implements DWCommand {
 
 	static final String command = "synth";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 		
 	public DWCmdMidiSynth(DWProtocolHandler dwProto)
 	{
+		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdMidiSynthStatus(dwProto));
 		commands.addcommand(new DWCmdMidiSynthShow(dwProto));
 		commands.addcommand(new DWCmdMidiSynthBank(dwProto));
@@ -37,7 +38,7 @@ public class DWCmdMidiSynth implements DWCommand {
 
 	public String getShortHelp() 
 	{
-		return "Commands that manage the MIDI synthesizer";
+		return "Commands that manage the MIDI synth";
 	}
 
 

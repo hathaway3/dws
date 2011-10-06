@@ -6,10 +6,11 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 public class DWCmdDisk implements DWCommand {
 
 	static final String command = "disk";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 		
 	public DWCmdDisk(DWProtocolHandler dwProto)
 	{
+		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdDiskShow(dwProto));
 		commands.addcommand(new DWCmdDiskEject(dwProto));
 		commands.addcommand(new DWCmdDiskInsert(dwProto));

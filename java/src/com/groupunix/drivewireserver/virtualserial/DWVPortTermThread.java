@@ -8,6 +8,7 @@ import java.net.Socket;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVPortTermThread implements Runnable 
@@ -49,12 +50,13 @@ public class DWVPortTermThread implements Runnable
 		
 		// setup port
 		dwVSerialPorts.resetPort(TERM_PORT);
-		dwVSerialPorts.openPort(TERM_PORT);
+		
 		// startup server 
 		srvr = null;
 		
 		try 
 		{
+			dwVSerialPorts.openPort(TERM_PORT);
 			// check for listen address
 			
 			if (dwProto.getConfig().containsKey("ListenAddress"))
@@ -71,6 +73,11 @@ public class DWVPortTermThread implements Runnable
 		catch (IOException e2) 
 		{
 			logger.error("Error opening socket on port " + this.tcpport +": " + e2.getMessage());
+			return;
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			logger.error("Error opening term port: " + e.getMessage());
 			return;
 		}
 		

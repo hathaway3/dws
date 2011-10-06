@@ -9,7 +9,7 @@ public class UICmdServerShow implements DWCommand {
 
 	static final String command = "show";
 	
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands = new DWCommandList(null);
 		
 	public UICmdServerShow(DWUIClientThread dwuiClientThread)
 	{

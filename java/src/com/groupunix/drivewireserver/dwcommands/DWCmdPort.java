@@ -5,13 +5,14 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 public class DWCmdPort implements DWCommand {
 
 	static final String command = "port";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 		
 	public DWCmdPort(DWProtocolHandler dwProto)
 	{
+		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdPortShow(dwProto));
 		commands.addcommand(new DWCmdPortClose(dwProto));
-		
+		commands.addcommand(new DWCmdPortOpen(dwProto));
 	}
 
 	

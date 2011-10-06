@@ -31,13 +31,13 @@ public class DWDefs
 	public static final byte OP_DWINIT = (byte) 'Z';
 	public static final byte OP_PRINT = 'P';
 	public static final byte OP_PRINTFLUSH = 'F';
-	public static final byte OP_SERREAD = 'C';
-	public static final byte OP_SERREADM = 'c';
-	public static final byte OP_SERWRITE = (byte) ('C'+128);
-	public static final byte OP_SERSETSTAT = (byte) ('D'+128);
-	public static final byte OP_SERGETSTAT = 'D';
-	public static final byte OP_SERINIT = 'E';
-	public static final byte OP_SERTERM = (byte) ('E'+128);
+	public static final byte OP_SERREAD = 'C';  // 67 43
+	public static final byte OP_SERREADM = 'c'; // 99 63
+	public static final byte OP_SERWRITE = (byte) ('C'+128); // 195 C3
+	public static final byte OP_SERSETSTAT = (byte) ('D'+128); // 196 C4
+	public static final byte OP_SERGETSTAT = 'D'; // 68 44
+	public static final byte OP_SERINIT = 'E'; // 69 45
+	public static final byte OP_SERTERM = (byte) ('E'+128); // 197 C5
 	public static final byte OP_RFM = (byte) ('V'+128);
 	
 	public static final byte OP_230K230K = (byte) 230;

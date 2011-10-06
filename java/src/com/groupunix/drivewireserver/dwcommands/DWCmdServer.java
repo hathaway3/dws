@@ -5,12 +5,13 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 public class DWCmdServer implements DWCommand {
 
 	static final String command = "server";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 		
 	public DWCmdServer(DWProtocol dwProto)
 	{
+		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdServerStatus(dwProto));
-		commands.addcommand(new DWCmdServerShow());
+		commands.addcommand(new DWCmdServerShow(dwProto));
 		commands.addcommand(new DWCmdServerList());
 		commands.addcommand(new DWCmdServerDir());
 		commands.addcommand(new DWCmdServerTurbo(dwProto));
@@ -43,7 +44,7 @@ public class DWCmdServer implements DWCommand {
 
 	public String getShortHelp() 
 	{
-		return "Commands that interface with the server";
+		return "Commands for the server";
 	}
 
 

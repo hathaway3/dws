@@ -25,7 +25,7 @@ public class DWCmdMidiSynthInstr implements DWCommand {
 	
 	public String getShortHelp() 
 	{
-		return "Manually set channel X to instrument Y";
+		return "Manually set chan X to instrument Y";
 	}
 
 

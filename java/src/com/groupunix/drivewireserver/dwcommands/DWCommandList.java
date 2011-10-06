@@ -4,13 +4,23 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
+
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 
 public class DWCommandList {
 
+	DWProtocol dwProto;
+	
 	private List<DWCommand> commands = new ArrayList<DWCommand>();
+	
+	public DWCommandList(DWProtocol dwProto)
+	{
+		this.dwProto = dwProto;
+	}
 	
 	public void addcommand(DWCommand dwCommand) 
 	{
@@ -57,7 +67,12 @@ public class DWCommandList {
 		for (Iterator<DWCommand> it = this.commands.iterator(); it.hasNext(); )
 		{
 			DWCommand cmd = it.next();
-			txt = txt + String.format("  %-31s - %-31s\r\n", cmd.getUsage(), cmd.getShortHelp() );
+			txt = txt + String.format("  %-37s", cmd.getUsage());
+			if ((this.dwProto == null) || (this.dwProto.getConfig().getBoolean("CommandShortHelp", true)))
+			{
+				txt = txt + String.format("- %-31s", cmd.getShortHelp() );
+			}
+			txt = txt + "\r\n";
 		}
 		
 		return(txt);

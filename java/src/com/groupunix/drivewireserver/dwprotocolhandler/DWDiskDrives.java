@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -642,7 +646,7 @@ public class DWDiskDrives
 
 	public int getFreeDriveNo()
 	{
-		int res = 255;
+		int res = getMaxDrives() - 1;
 		
 		while (this.diskLoaded(res) && (res > 0))
 		{
@@ -656,44 +660,85 @@ public class DWDiskDrives
 	public int nameObjMount(String objname) 
 	{
 		int result = 0;
-		// get a free drive #.. maybe expire old name objects at some point
-		int drive = this.getFreeDriveNo();
 		
-		if (drive > 0)
+		String filename = objname;
+		
+		if (dwProto.getConfig().containsKey("NamedObjectDir"))
 		{
-			String filename = objname;
-			// try to find object
-			if (dwProto.getConfig().containsKey("NamedObjectDir"))
+			filename = dwProto.getConfig().getString("NamedObjectDir") + '/' + filename;
+		}
+		
+		// is object loaded..
+		
+		result = getDriveForNamedObject(filename);
+		
+		if (result == 0) 
+		{
+			// get a free drive #.. maybe expire old name objects at some point
+			int drive = this.getFreeDriveNo();
+		
+			if (drive > 0)
 			{
-				filename = dwProto.getConfig().getString("NamedObjectDir") + '/' + filename;
+				try 
+				{
+					this.LoadDiskFromFile(drive, filename);
+					this.diskDrives[drive].setNamedObj(true);
+					result = drive;
+				} 
+				catch (DWDriveNotValidException e) 
+				{
+					logger.warn(e.getMessage());
+				} 
+				catch (DWDriveAlreadyLoadedException e) 
+				{
+					logger.warn(e.getMessage());
+				} 
+				catch (IOException e) 
+				{
+					logger.warn(e.getMessage());
+				}
 			}
-			
-			
-			try 
-			{
-				this.LoadDiskFromFile(drive, filename);
-				this.diskDrives[drive].setNamedObj(true);
-				result = drive;
-			} 
-			catch (DWDriveNotValidException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-			catch (DWDriveAlreadyLoadedException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-			catch (IOException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
 		}
 		
 		return result;
+	}
+
+
+	private int getDriveForNamedObject(String filename)
+	{
+		int res = 0;
+		int drv = getMaxDrives() - 1;
+		FileObject fileobj = null;
+		
+		FileSystemManager fsManager;
+		try 
+		{
+			fsManager = VFS.getManager();
+			fileobj = fsManager.resolveFile(filename);
+		}
+		catch (FileSystemException e) 
+		{
+			drv = 0;
+		}
+		
+		
+			
+		while ((res == 0) && (drv > 0) && (fileobj != null))
+		{
+			if (this.diskLoaded(drv))
+			{
+				if (this.diskDrives[drv].isNamedObj())
+				{
+					if (this.diskDrives[drv].getFilePath().equals(fileobj.getName().toString()))
+					{
+						res = drv;
+					}
+				}	
+			}
+			drv--;
+		}
+		
+		return res;
 	}
 	
 	

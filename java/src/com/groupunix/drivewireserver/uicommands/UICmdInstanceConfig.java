@@ -9,7 +9,7 @@ public class UICmdInstanceConfig implements DWCommand {
 
 	static final String command = "config";
 	
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands = new DWCommandList(null);
 		
 	public UICmdInstanceConfig(DWUIClientThread dwuiClientThread)
 	{

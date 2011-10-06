@@ -6,10 +6,11 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 public class DWCmdMidiSynthShow implements DWCommand 
 {
 
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 	
 	public DWCmdMidiSynthShow(DWProtocolHandler dwProto)
 	{
+		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdMidiSynthShowChannels(dwProto));
 		commands.addcommand(new DWCmdMidiSynthShowInstr(dwProto));
 		commands.addcommand(new DWCmdMidiSynthShowProfiles());

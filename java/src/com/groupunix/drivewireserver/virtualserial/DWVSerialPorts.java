@@ -106,8 +106,9 @@ public class DWVSerialPorts {
 
 
 
-	public void openPort(int port)
+	public void openPort(int port) throws DWPortNotValidException
 	{
+		this.validateport(port);
 		if (vserialPorts[port] == null)
 		{
 			resetPort(port);

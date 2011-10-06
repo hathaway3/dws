@@ -102,18 +102,7 @@ public class DWUtilDWThread implements Runnable
 	
 
 
-	// total crap hack.  does user management even belong in dw?
-/*
-	private void doMakePass(String pw)
-	{
-		dwVSerialPorts.sendUtilityOKResponse(this.vport, "encrypted pw follows");
-		
-		BasicPasswordEncryptor bpe = new BasicPasswordEncryptor();
-				
-		dwVSerialPorts.writeToCoco(this.vport, "Encypted form of '" + pw + "' is: " + bpe.encryptPassword(pw));
 
-	}
-*/
 
 
 	

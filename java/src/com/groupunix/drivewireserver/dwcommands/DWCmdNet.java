@@ -6,10 +6,11 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 public class DWCmdNet implements DWCommand {
 
 	static final String command = "net";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 		
 	public DWCmdNet(DWProtocolHandler dwProto)
 	{
+		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdNetShow(dwProto));
 		
 	}

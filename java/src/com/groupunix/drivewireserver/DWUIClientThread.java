@@ -22,7 +22,7 @@ public class DWUIClientThread implements Runnable {
 	private boolean wanttodie = false;
 	private int instance = -1;
 	
-	private DWCommandList uiCmds = new DWCommandList();
+	private DWCommandList uiCmds;
 	
 	
 	
@@ -30,6 +30,7 @@ public class DWUIClientThread implements Runnable {
 	{
 		this.skt = skt;
 		
+		uiCmds = new DWCommandList(null);
 		uiCmds.addcommand(new UICmdInstance(this));
 		uiCmds.addcommand(new UICmdServer(this));
 		uiCmds.addcommand(new UICmdDiskset(this));

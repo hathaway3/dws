@@ -1,12 +1,15 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+
 public class DWCmdLog implements DWCommand {
 
 	static final String command = "log";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands;
 		
-	public DWCmdLog()
+	public DWCmdLog(DWProtocol dwProto)
 	{
+		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdLogShow());
 		
 	}
