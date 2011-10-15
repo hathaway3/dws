@@ -96,7 +96,7 @@ public class ErrorWin extends Dialog {
 		
 		textDetail = new Text(shlAnErrorHas, SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
 		textDetail.setEditable(false);
-		textDetail.setBounds(21, 60, 392, 134);
+		textDetail.setBounds(21, 67, 392, 127);
 		textDetail.setText(detail);
 		textDetail.setFont(new Font(shlAnErrorHas.getDisplay(), f));
 		
