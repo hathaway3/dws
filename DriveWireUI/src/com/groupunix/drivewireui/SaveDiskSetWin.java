@@ -13,45 +13,39 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-public class ChooseDiskSetWin extends Dialog {
+public class SaveDiskSetWin extends Dialog {
 
-	protected Object result;
+
 	protected Shell shell;
 
 	protected Combo cmbDiskSet;
 
-	private String pre;
-	private String post;
+
 	
-	
-	/**
-	 * Create the dialog.
-	 * @param parent
-	 * @param style
-	 * @param post 
-	 * @param pre 
-	 */
-	public ChooseDiskSetWin(Shell parent, int style, String pre, String post) {
+
+	public SaveDiskSetWin(Shell parent, int style) {
 		super(parent, style);
-		this.pre = pre;
-		this.post = post;
+
 		
-		setText("Choose a disk set...");
+		setText("Choose a diskset name to save as...");
 	}
 
-	/**
-	 * Open the dialog.
-	 * @return the result
-	 * @throws DWUIOperationFailedException 
-	 * @throws IOException 
-	 */
-	public Object open() throws IOException, DWUIOperationFailedException {
+
+	public void open() throws IOException, DWUIOperationFailedException {
 		createContents();
 		
 		UIUtils.getDWConfigSerial();
 		
 		loadDiskSets(cmbDiskSet);
-		cmbDiskSet.select(0);
+		
+		if (MainWin.getInstanceConfig().containsKey("CurrentDiskSet") && (cmbDiskSet.indexOf(MainWin.getInstanceConfig().getString("CurrentDiskSet")) > -1))
+		{
+			cmbDiskSet.select(cmbDiskSet.indexOf(MainWin.getInstanceConfig().getString("CurrentDiskSet")));
+		}
+		else
+		{
+			cmbDiskSet.select(0);
+		}
 		
 		shell.open();
 		shell.layout();
@@ -61,7 +55,7 @@ public class ChooseDiskSetWin extends Dialog {
 				display.sleep();
 			}
 		}
-		return result;
+		
 	}
 
 	private void loadDiskSets(Combo cmb) throws IOException, DWUIOperationFailedException 
@@ -78,9 +72,6 @@ public class ChooseDiskSetWin extends Dialog {
 
 
 
-	/**
-	 * Create contents of the dialog.
-	 */
 	private void createContents() {
 		shell = new Shell(getParent(), getStyle());
 		shell.setSize(251, 100);
@@ -91,12 +82,15 @@ public class ChooseDiskSetWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				MainWin.sendCommand(pre + " " + cmbDiskSet.getText() + " " + post);
-				shell.close();
+				if (!cmbDiskSet.getText().equals(""))
+				{
+					MainWin.sendCommand("dw disk set save " + cmbDiskSet.getText());
+					shell.close();
+				}
 			}
 		});
 		btnChoose.setBounds(74, 39, 75, 25);
-		btnChoose.setText("Ok");
+		btnChoose.setText("Save");
 		
 		Button btnCancel = new Button(shell, SWT.NONE);
 		btnCancel.addSelectionListener(new SelectionAdapter() {
@@ -109,7 +103,7 @@ public class ChooseDiskSetWin extends Dialog {
 		btnCancel.setBounds(157, 39, 75, 25);
 		btnCancel.setText("Cancel");
 		
-		cmbDiskSet = new Combo(shell, SWT.READ_ONLY);
+		cmbDiskSet = new Combo(shell, SWT.NONE);
 		cmbDiskSet.setVisibleItemCount(10);
 		cmbDiskSet.setBounds(10, 10, 222, 23);
 

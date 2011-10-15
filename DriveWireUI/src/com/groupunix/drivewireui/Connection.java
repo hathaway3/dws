@@ -1,6 +1,7 @@
 package com.groupunix.drivewireui;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -104,6 +105,46 @@ public class Connection
 		return instance;
 	}
 	
+	
+	public StringReader loadReader(String arg) throws IOException 
+	{
+		if (MainWin.config.getBoolean("ShowCommandsSent",false))
+		{
+			addToDisplay(">>> " + arg);
+		}
+		
+		String strres = new String();
+		
+		sock.getOutputStream().write((arg + "\n").getBytes());
+			
+		String line = readLine(sock);
+			
+		// eat welcome
+		while ((!sock.isClosed()) && (!line.equals(">>")))
+		{
+			line = readLine(sock);
+		}
+			
+		// data
+		line = readLine(sock);
+		
+		while ((!sock.isClosed()) && (!line.endsWith("<<")))
+		{
+			strres += line;
+			
+			line = readLine(sock);
+		}
+		
+		if  ((line.length() > 2) && (line.endsWith("<<")))
+		{
+			strres += (line.substring(0, line.length() - 2));
+		}
+		
+		StringReader res = new StringReader(strres);
+		
+		return res;
+	}
+
 	
 	
 	

@@ -13,6 +13,8 @@ public class DiskDef
 	private boolean fswriteable = false;
 	private boolean writeable = false;
 	private boolean randomwriteable = false;
+	private boolean namedobject = false;
+	private boolean syncfromsource = false;
 	
 	private int sectors = 0;
 	private int dirty = 0;
@@ -119,6 +121,21 @@ public class DiskDef
 	public boolean isLoaded() {
 		return loaded;
 	}
+
+	public void setNamedobject(boolean namedobject) {
+		this.namedobject = namedobject;
+	}
+	public boolean isNamedobject() {
+		return namedobject;
+	}
+	public void setSyncfromsource(boolean syncfromsource) {
+		this.syncfromsource = syncfromsource;
+	}
+	public boolean isSyncfromsource() {
+		return syncfromsource;
+	}
+
+
 	
 	
 }

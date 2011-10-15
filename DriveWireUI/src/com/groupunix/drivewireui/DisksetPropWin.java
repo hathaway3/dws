@@ -169,15 +169,15 @@ public class DisksetPropWin extends Dialog {
 		
 		btnTrackDiskChanges = new Button(shlDisksetProperties, SWT.CHECK);
 		btnTrackDiskChanges.setBounds(37, 216, 226, 25);
-		btnTrackDiskChanges.setText("Track disk changes");
+		btnTrackDiskChanges.setText("Save disk changes automatically");
 		
 		btnHdbdosTranslation = new Button(shlDisksetProperties, SWT.CHECK);
-		btnHdbdosTranslation.setText("HDBDOS translation");
-		btnHdbdosTranslation.setBounds(37, 247, 226, 25);
+		btnHdbdosTranslation.setText("Enable HDBDOS translation when this set is loaded");
+		btnHdbdosTranslation.setBounds(37, 247, 364, 25);
 		
 		btnEjectAllDisks = new Button(shlDisksetProperties, SWT.CHECK);
-		btnEjectAllDisks.setText("Eject all disks on load");
-		btnEjectAllDisks.setBounds(37, 185, 226, 25);
+		btnEjectAllDisks.setText("Eject all disks before loading this set");
+		btnEjectAllDisks.setBounds(37, 185, 303, 25);
 		
 		textDescription = new Text(shlDisksetProperties, SWT.BORDER);
 		textDescription.setBounds(37, 46, 364, 21);

@@ -28,7 +28,11 @@ public class UIConfigWin extends Dialog {
 	private Text textDialogFont;
 	private Button btnTerminateServerOn;
 	private Button btnShowCommandsSent;
-	private Button btnRefreshDisksOn;
+	private Spinner spinnerCommandHistory;
+	private Text textServerSyncInterval;
+	private Button btnServerSync;
+	private Label lblServerSyncInterval;
+	private Label lblServerSyncIntervalMs;
 	
 	
 	/**
@@ -49,6 +53,7 @@ public class UIConfigWin extends Dialog {
 		createContents();
 		
 		loadSettings();
+		toggleStuff();
 		
 		
 		shlUserInterfaceConfiguration.open();
@@ -63,21 +68,41 @@ public class UIConfigWin extends Dialog {
 	}
 
 
+	private void toggleStuff() 
+	{
+		if (btnServerSync.getSelection())
+		{
+			lblServerSyncInterval.setEnabled(true);
+			lblServerSyncIntervalMs.setEnabled(true);
+			textServerSyncInterval.setEnabled(true);
+			
+		}
+		else
+		{
+			lblServerSyncInterval.setEnabled(false);
+			lblServerSyncIntervalMs.setEnabled(false);
+			textServerSyncInterval.setEnabled(false);
+			
+		}
+	}
+
 	private void loadSettings()
 	{
 		setFonts();
 		
 		this.spinnerDiskHist.setSelection(MainWin.config.getInt("DiskHistorySize",MainWin.default_DiskHistorySize));
 		this.spinnerServerHist.setSelection(MainWin.config.getInt("ServerHistorySize",MainWin.default_ServerHistorySize));
+		this.spinnerCommandHistory.setSelection(MainWin.config.getInt("CmdHistorySize",MainWin.default_CmdHistorySize));
+		
 		
 		this.textTCPTimeout.setText(MainWin.config.getInt("TCPTimeout",MainWin.default_TCPTimeout) +"");
 		
 		this.btnTerminateServerOn.setSelection(MainWin.config.getBoolean("TermServerOnExit",false));
 		
 		this.btnShowCommandsSent.setSelection(MainWin.config.getBoolean("ShowCommandsSent", false));
-		
-		this.btnRefreshDisksOn.setSelection(MainWin.config.getBoolean("RefreshDisksOnOpen", false));
-		
+	
+		this.btnServerSync.setSelection(MainWin.config.getBoolean("ServerSync", true));
+		this.textServerSyncInterval.setText(MainWin.config.getInt("ServerSyncInterval",MainWin.default_ServerSyncInterval) + "");
 	}
 	
 	private void setFonts() 
@@ -213,15 +238,15 @@ public class UIConfigWin extends Dialog {
 		button.setBounds(344, 95, 47, 25);
 		
 		textTCPTimeout = new Text(shlUserInterfaceConfiguration, SWT.BORDER);
-		textTCPTimeout.setBounds(192, 213, 69, 21);
+		textTCPTimeout.setBounds(192, 217, 69, 21);
 		
 		Label lblServerTcpResponse = new Label(shlUserInterfaceConfiguration, SWT.NONE);
 		lblServerTcpResponse.setAlignment(SWT.RIGHT);
-		lblServerTcpResponse.setBounds(10, 216, 176, 18);
+		lblServerTcpResponse.setBounds(10, 220, 176, 18);
 		lblServerTcpResponse.setText("Server response timeout:");
 		
 		Label lblMs = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblMs.setBounds(267, 216, 47, 15);
+		lblMs.setBounds(267, 220, 47, 15);
 		lblMs.setText("ms");
 		
 		Label lblDialogFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
@@ -256,16 +281,49 @@ public class UIConfigWin extends Dialog {
 		button_1.setBounds(344, 33, 47, 25);
 		
 		btnTerminateServerOn = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
-		btnTerminateServerOn.setBounds(50, 254, 243, 22);
+		btnTerminateServerOn.setBounds(58, 309, 243, 22);
 		btnTerminateServerOn.setText("Terminate server on exit");
 		
 		btnShowCommandsSent = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
-		btnShowCommandsSent.setBounds(50, 321, 243, 22);
+		btnShowCommandsSent.setBounds(58, 337, 243, 22);
 		btnShowCommandsSent.setText("Show commands sent");
 		
-		btnRefreshDisksOn = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
-		btnRefreshDisksOn.setText("Refresh disks on open");
-		btnRefreshDisksOn.setBounds(50, 282, 243, 22);
+		Label lblCommandHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
+		lblCommandHistory.setText("Command history:");
+		lblCommandHistory.setAlignment(SWT.RIGHT);
+		lblCommandHistory.setBounds(206, 148, 122, 22);
+		
+		spinnerCommandHistory = new Spinner(shlUserInterfaceConfiguration, SWT.BORDER);
+		spinnerCommandHistory.setBounds(334, 145, 47, 22);
+		
+
+		
+		lblServerSyncInterval = new Label(shlUserInterfaceConfiguration, SWT.NONE);
+		lblServerSyncInterval.setText("Server sync interval:");
+		lblServerSyncInterval.setAlignment(SWT.RIGHT);
+		lblServerSyncInterval.setBounds(10, 280, 176, 18);
+		
+		lblServerSyncIntervalMs = new Label(shlUserInterfaceConfiguration, SWT.NONE);
+		lblServerSyncIntervalMs.setText("ms");
+		lblServerSyncIntervalMs.setBounds(267, 280, 47, 15);
+		
+		textServerSyncInterval = new Text(shlUserInterfaceConfiguration, SWT.BORDER);
+		textServerSyncInterval.setText("0");
+		textServerSyncInterval.setBounds(192, 277, 69, 21);
+		
+		btnServerSync = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		btnServerSync.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				toggleStuff();
+			}
+		});
+		
+		btnServerSync.setBounds(58, 255, 159, 16);
+		btnServerSync.setText("Sync with server");
+		
+
 
 	}
 
@@ -278,17 +336,19 @@ public class UIConfigWin extends Dialog {
 		
 		MainWin.config.setProperty("DiskHistorySize", this.spinnerDiskHist.getSelection());
 		MainWin.config.setProperty("ServerHistorySize", this.spinnerServerHist.getSelection());
+		MainWin.config.setProperty("CmdHistorySize", this.spinnerCommandHistory.getSelection());
 		
 		if (UIUtils.validateNum(this.textTCPTimeout.getText(), 0))
 				MainWin.config.setProperty("TCPTimeout", this.textTCPTimeout.getText());
 		
 		MainWin.config.setProperty("TermServerOnExit", this.btnTerminateServerOn.getSelection());
 		
-		MainWin.config.setProperty("RefreshDisksOnOpen",this.btnRefreshDisksOn.getSelection());
-		
 		MainWin.config.setProperty("ShowCommandsSent", this.btnShowCommandsSent.getSelection());
 
+		MainWin.config.setProperty("ServerSync", this.btnServerSync.getSelection());
+		MainWin.config.setProperty("ServerSyncInterval", this.textServerSyncInterval.getText());
 		
+		MainWin.applyServerSync();
 	}
 	protected Button getBtnTerminateServerOn() {
 		return btnTerminateServerOn;
@@ -296,7 +356,20 @@ public class UIConfigWin extends Dialog {
 	protected Button getBtnShowCommandsSent() {
 		return btnShowCommandsSent;
 	}
-	protected Button getBtnRefreshDisksOn() {
-		return btnRefreshDisksOn;
+
+	protected Spinner getSpinnerCommandHistory() {
+		return spinnerCommandHistory;
+	}
+	protected Button getBtnServerSync() {
+		return btnServerSync;
+	}
+	protected Label getLblServerSyncInterval() {
+		return lblServerSyncInterval;
+	}
+	protected Text getTextServerSyncInterval() {
+		return textServerSyncInterval;
+	}
+	protected Label getLblServerSyncIntervalMs() {
+		return lblServerSyncIntervalMs;
 	}
 }

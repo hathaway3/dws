@@ -22,7 +22,7 @@ public class LogInputThread implements Runnable
 		{
 			data = this.input.read();
 			
-			while (data != -1)
+			while ((data != -1) && (!MainWin.shell.isDisposed()))
 			{
 				
 				if (data != 10)

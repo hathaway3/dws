@@ -1,6 +1,7 @@
 package com.groupunix.drivewireui;
 
 
+
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -8,23 +9,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
@@ -33,23 +47,14 @@ import org.eclipse.swt.widgets.ToolItem;
 import swing2swt.layout.BorderLayout;
 
 import com.swtdesigner.SWTResourceManager;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MenuAdapter;
+import org.eclipse.swt.events.MenuEvent;
 
 
 public class MainWin {
 
-	public static final String DWUIVersion = "3.9.97";
-	public static final String DWUIVersionDate = "10/03/2011";
+	public static final String DWUIVersion = "3.9.99";
+	public static final String DWUIVersionDate = "10/15/2011";
 	
 	public static final String default_Host = "127.0.0.1";
 	public static final int default_Port = 6800;
@@ -57,6 +62,7 @@ public class MainWin {
 	
 	public static final int default_DiskHistorySize = 10;
 	public static final int default_ServerHistorySize = 10;
+	public static final int default_CmdHistorySize = 10;
 	
 	public static final String default_MainFont = "Lucida Console";
 	public static final int default_MainFontSize = 9;
@@ -70,15 +76,19 @@ public class MainWin {
 	public static final int default_DialogFontStyle = 0;
 	
 	public static final int default_TCPTimeout = 15000;
+	public static final int default_ServerSyncInterval = 2000;
+	
 	
 	public static XMLConfiguration config;
+	public static HierarchicalConfiguration dwconfig;
 	public static final String configfile = "drivewireUI.xml";
 	
 	private static DiskDef currentDisk = new DiskDef();
 	
 	protected static Shell shell;
 
-	private Text text;
+	private Text txtYouCanEnter;
+	private static int cmdhistpos = 0;
 	private static Display display;
 	private static LogViewerWin logViewerWin;
 	
@@ -86,20 +96,12 @@ public class MainWin {
 	private static int port;
 	private static int instance;
 	
+	
+	
 	private static boolean firsttimer = false;
 	private static Text textDWOutput;
 	private static Table table;
 	private static Combo textDiskURI;
-	private static Text textDiskSizeLimit;
-	private static Text textDiskOffset;
-	
-	private static Button btnDiskWriteProtect;
-	private static Button btnDiskSync;
-	private static Button btnDiskExpand;
-	
-	private static Label btnFilesystemIsWriteable;
-	private static Label btnFileIsWriteable;
-	private static Label btnFileIsRandom;
 	private static Label labelDiskSectors;
 	private static Label labelDiskLSN;
 	private static Label labelDiskReads;
@@ -110,11 +112,6 @@ public class MainWin {
 	private static Button btnEject;
 	private static Button btnWrite;
 	private static Button btnReload;
-	
-	private static Label lblSizeLimit;
-	private static Label lblSectors;
-	private static Label lblOffset;
-	private static Label lblSectors1;
 	private static Label lblSectors2;
 	private static Label lblDirtySectors;
 	private static Label lblCurrentLsn;
@@ -128,8 +125,12 @@ public class MainWin {
 	private static SashForm sashForm;
 	private static SashForm sashForm_1;
 	private static Composite composite;
+	private static Button btnAdvanced;
 
+	private static MenuItem mntmHdbdosTranslation;
 	
+	private static Thread syncThread = null;
+	public static int dwconfigserial = -1;
 	
 	public static void main(String[] args) 
 	{
@@ -138,21 +139,40 @@ public class MainWin {
 		
 		try 
 		{
+			applyServerSync();
+			
 			display = new Display();
 					
 		
 			MainWin window = new MainWin();
 			
+			
+			
 			window.open(display);
+			
+			
 		} 
 		catch (Exception e) 
 		{
 			System.out.println("\nSomething's gone horribly wrong:\n");
 			e.printStackTrace();
+		
 		}
 		
-		
+		host = null;
 				
+	}
+
+	public static void applyServerSync() 
+	{
+		if (config.getBoolean("ServerSync",true))
+		{
+			if ((syncThread == null) || (syncThread.isAlive() == false))
+			{
+				syncThread = new Thread(new SyncThread());
+				syncThread.start();
+			}
+		}
 	}
 
 	private static void loadConfig() 
@@ -207,30 +227,12 @@ public class MainWin {
 		shell.open();
 		shell.layout();
 
-		updateTitlebar();
+		if (MainWin.getHost() != null) syncConfig(); 
 
-		if (config.getBoolean("RefreshDisksOnOpen",false))
-		{
-			try 
-			{
-				MainWin.refreshDiskTable();
-			} 
-			catch (IOException e) 
-			{
-				MainWin.addToDisplay("IO exception while loading initial disk info: " + e.getMessage());
-			} 
-			catch (DWUIOperationFailedException e) 
-			{
-				MainWin.addToDisplay("DW exception while loading initial disk info: " + e.getMessage());
-			}
-		}
-		else
-		{
-			for (int i = 0;i<256;i++)
-			{	
-				TableItem item = new TableItem(table, SWT.NONE);
-				item.setText(0,i+"");
-			}
+		for (int i = 0;i<256;i++)
+		{	
+			TableItem item = new TableItem(table, SWT.NONE);
+			item.setText(0,i+"");
 		}
 		
 		MainWin.currentDisk = new DiskDef();
@@ -243,8 +245,8 @@ public class MainWin {
 		{
 		 MessageBox messageBox = new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES | SWT.NO);
 		        
-		 messageBox.setMessage("It looks like this is the first time the client has been run.\n\nWould you like to run the simple configuration wizard now?");
-		 messageBox.setText("New Installation");
+		 messageBox.setMessage("It looks like this is the first time the client has been started.\n\nWould you like to go through a simple, step by step configuration wizard now?");
+		 messageBox.setText("No client configuration found... but that's OK!");
 		        int response = messageBox.open();
 		        if (response == SWT.YES)
 		        {
@@ -277,7 +279,12 @@ public class MainWin {
 
 	private static void updateTitlebar() 
 	{
-		shell.setText("DriveWire User Interface - " + host + ":" + port + " [" + instance + "]");
+		String txt = "DW4 UI - " + host + ":" + port + " [" + instance + "]";
+		if ((MainWin.dwconfig != null) && (MainWin.getInstanceConfig() != null) && (MainWin.getInstanceConfig().containsKey("CurrentDiskSet")))
+		{
+			txt += " - Diskset: " + MainWin.getInstanceConfig().getString("CurrentDiskSet");
+		}
+		shell.setText(txt);
 	}
 
 	/**
@@ -319,7 +326,7 @@ public class MainWin {
 				
 			}
 		});
-		mntmChooseServer.setText("Choose Server...");
+		mntmChooseServer.setText("Choose server...");
 		
 		MenuItem mntmChooseInstance = new MenuItem(menu_1, SWT.NONE);
 		mntmChooseInstance.addSelectionListener(new SelectionAdapter() {
@@ -343,7 +350,7 @@ public class MainWin {
 			
 			}
 		});
-		mntmChooseInstance.setText("Choose Instance...");
+		mntmChooseInstance.setText("Choose instance...");
 		
 		new MenuItem(menu_1, SWT.SEPARATOR);
 		
@@ -359,9 +366,17 @@ public class MainWin {
 		mntmExit.setText("Exit");
 		
 		MenuItem mntmServer = new MenuItem(menu, SWT.CASCADE);
+
 		mntmServer.setText("Tools");
 		
 		Menu menu_4 = new Menu(mntmServer);
+		menu_4.addMenuListener(new MenuAdapter() {
+			@Override
+			public void menuShown(MenuEvent e) 
+			{
+				MainWin.syncConfig();
+			}
+		});
 		mntmServer.setMenu(menu_4);
 		
 		MenuItem mntmDisksetProperties = new MenuItem(menu_4, SWT.NONE);
@@ -404,37 +419,34 @@ public class MainWin {
 		
 				mntmCreate.setText("Create dsk...");
 		
-		MenuItem mntmHdbdos = new MenuItem(menu_4, SWT.CASCADE);
-		mntmHdbdos.setText("HDBDOS");
-		
-		Menu menu_2 = new Menu(mntmHdbdos);
-		mntmHdbdos.setMenu(menu_2);
-		
-		MenuItem mntmHdbdosTranslation = new MenuItem(menu_2, SWT.CASCADE);
+		mntmHdbdosTranslation = new MenuItem(menu_4, SWT.CHECK);
+		mntmHdbdosTranslation.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				if (mntmHdbdosTranslation.getSelection())
+				{
+					MainWin.sendCommand("dw config set HDBDOSMode true");
+				}
+				else
+				{
+					MainWin.sendCommand("dw config set HDBDOSMode false");
+				}
+				
+	
+			}
+		});
 		mntmHdbdosTranslation.setText("HDBDOS translation");
 		
-		Menu menu_11 = new Menu(mntmHdbdosTranslation);
-		mntmHdbdosTranslation.setMenu(menu_11);
-		
-		MenuItem mntmOn = new MenuItem(menu_11, SWT.NONE);
-		mntmOn.addSelectionListener(new SelectionAdapter() {
+		MenuItem mntmEjectAllDisks = new MenuItem(menu_4, SWT.NONE);
+		mntmEjectAllDisks.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				sendCommand("ui instance config set HDBDOSMode true");
+				MainWin.sendCommand("dw disk eject all");
 			}
 		});
-		mntmOn.setText("On");
-		
-		MenuItem mntmOff = new MenuItem(menu_11, SWT.NONE);
-		mntmOff.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				sendCommand("ui instance config set HDBDOSMode false");
-			}
-		});
-		mntmOff.setText("Off");
+		mntmEjectAllDisks.setText("Eject all disks");
 		
 		new MenuItem(menu_4, SWT.SEPARATOR);
 		
@@ -521,7 +533,7 @@ public class MainWin {
 				
 			}
 		});
-		mntmLogViewer.setText("Log Viewer");
+		mntmLogViewer.setText("Log viewer");
 		
 		MenuItem mntmMidi = new MenuItem(menu, SWT.CASCADE);
 		mntmMidi.setText("MIDI");
@@ -686,7 +698,7 @@ public class MainWin {
 				window.open();
 			}
 		});
-		mntmInitialConfig.setText("Simple Config...");
+		mntmInitialConfig.setText("Simple config wizard...");
 		
 		new MenuItem(menu_5, SWT.SEPARATOR);
 		
@@ -748,7 +760,7 @@ public class MainWin {
 			
 			}
 		});
-		mntmUserInterface.setText("User Interface...");
+		mntmUserInterface.setText("User interface...");
 		
 		new MenuItem(menu_5, SWT.SEPARATOR);
 		
@@ -761,7 +773,7 @@ public class MainWin {
 				
 			}
 		});
-		mntmResetInstanceDevice.setText("Reset Instance Device");
+		mntmResetInstanceDevice.setText("Reset instance device");
 		
 		MenuItem mntmHelp = new MenuItem(menu, SWT.CASCADE);
 		mntmHelp.setText("Help");
@@ -774,11 +786,22 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				// open wiki in browser
+				// open wiki in browser.. works for some
 				org.eclipse.swt.program.Program.launch("http://sourceforge.net/apps/mediawiki/drivewireserver/index.php");
 			}
 		});
 		mntmDocumentation.setText("Documentation");
+		
+		MenuItem mntmSubmitBugReport = new MenuItem(menu_3, SWT.NONE);
+		mntmSubmitBugReport.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				BugReportWin brwin = new BugReportWin(shell,SWT.DIALOG_TRIM,"User generated","User generated", "User generated");
+				brwin.open();
+			}
+		});
+		mntmSubmitBugReport.setText("Submit bug report...");
 		
 		new MenuItem(menu_3, SWT.SEPARATOR);
 		
@@ -794,8 +817,19 @@ public class MainWin {
 		});
 		mntmAbout.setText("About...");
 		
-		text = new Text(shell, SWT.BORDER);
-		text.setLayoutData(BorderLayout.SOUTH);
+		txtYouCanEnter = new Text(shell, SWT.BORDER);
+		txtYouCanEnter.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				if (txtYouCanEnter.getText().equals("Hint: You can enter 'dw' commands here.  Enter dw by itself for help."))
+				{
+					txtYouCanEnter.setText("");
+				}
+			}
+		});
+		
+		txtYouCanEnter.setText("Hint: You can enter 'dw' commands here.  Enter dw by itself for help.");
+		txtYouCanEnter.setLayoutData(BorderLayout.SOUTH);
 		
 		
 		
@@ -837,6 +871,26 @@ public class MainWin {
 		tltmLoadDiskSet.setText("Load Diskset");
 		
 		ToolItem tltmSaveDiskSet = new ToolItem(toolBar, SWT.NONE);
+		tltmSaveDiskSet.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				SaveDiskSetWin window = new SaveDiskSetWin(shell,SWT.DIALOG_TRIM);
+				try 
+				{
+					window.open();
+				} 
+				catch (IOException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+				}
+				
+			}
+		});
 		tltmSaveDiskSet.setImage(SWTResourceManager.getImage(MainWin.class, "/javax/swing/plaf/metal/icons/ocean/hardDrive.gif"));
 		tltmSaveDiskSet.setText("Save Diskset");
 		
@@ -992,82 +1046,8 @@ public class MainWin {
 		});
 		textDiskURI.setBounds(10, 33, 436, 23);
 		
-		btnDiskWriteProtect = new Button(composite, SWT.CHECK);
-		btnDiskWriteProtect.setToolTipText("Cause write operations to fail as if the disk was write protected");
-		btnDiskWriteProtect.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) 
-			{
-				toggleApplyButton();
-			}
-		});
-		btnDiskWriteProtect.setBounds(10, 62, 152, 25);
-		btnDiskWriteProtect.setText("Write protect");
-		
-		btnDiskSync = new Button(composite, SWT.CHECK);
-		btnDiskSync.setToolTipText("Commit changes to the source image (if possible)");
-		btnDiskSync.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) 
-			{
-				toggleApplyButton();
-			}
-		});
-		btnDiskSync.setBounds(10, 88, 152, 23);
-		btnDiskSync.setText("Sync to source");
-		
-		btnDiskExpand = new Button(composite, SWT.CHECK);
-		btnDiskExpand.setToolTipText("Read and writes beyond the end of the image cause the image to expanded");
-		btnDiskExpand.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) 
-			{
-				toggleApplyButton();
-			}
-		});
-		btnDiskExpand.setBounds(10, 114, 152, 23);
-		btnDiskExpand.setText("Allow expansion");
-		
-		textDiskSizeLimit = new Text(composite, SWT.BORDER);
-		textDiskSizeLimit.setToolTipText("Prevent expansion beyond this number of sectors.  -1 disables the limit");
-		textDiskSizeLimit.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent arg0) 
-			{
-				toggleApplyButton();
-			}
-		});
-		textDiskSizeLimit.setBounds(86, 147, 76, 21);
-		
-		lblSizeLimit = new Label(composite, SWT.NONE);
-		lblSizeLimit.setAlignment(SWT.RIGHT);
-		lblSizeLimit.setBounds(20, 150, 60, 18);
-		lblSizeLimit.setText("Size limit:");
-		
-		lblSectors = new Label(composite, SWT.NONE);
-		lblSectors.setBounds(168, 150, 55, 23);
-		lblSectors.setText("sectors");
-		
-		lblOffset = new Label(composite, SWT.NONE);
-		lblOffset.setText("Offset:");
-		lblOffset.setAlignment(SWT.RIGHT);
-		lblOffset.setBounds(20, 175, 60, 18);
-		
-		textDiskOffset = new Text(composite, SWT.BORDER);
-		textDiskOffset.setToolTipText("Add this offset to the sector # of all reads and writes to the image");
-		textDiskOffset.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent arg0) 
-			{
-				toggleApplyButton();
-			}
-		});
-		textDiskOffset.setBounds(86, 172, 76, 21);
-		
-		lblSectors1 = new Label(composite, SWT.NONE);
-		lblSectors1.setText("sectors");
-		lblSectors1.setBounds(168, 175, 55, 18);
-		
 		lblDiskUri = new Label(composite, SWT.NONE);
-		lblDiskUri.setBounds(10, 12, 393, 15);
+		lblDiskUri.setBounds(10, 12, 345, 15);
 		lblDiskUri.setText("Disk X URI:");
 		
 		btnApply = new Button(composite, SWT.NONE);
@@ -1080,7 +1060,7 @@ public class MainWin {
 				
 			}
 		});
-		btnApply.setBounds(399, 211, 85, 25);
+		btnApply.setBounds(399, 156, 85, 25);
 		btnApply.setText("Apply");
 		
 		buttonFile = new Button(composite, SWT.NONE);
@@ -1117,7 +1097,7 @@ public class MainWin {
 				
 			}
 		});
-		btnEject.setBounds(10, 211, 71, 25);
+		btnEject.setBounds(10, 156, 71, 25);
 		btnEject.setText("Eject");
 		
 		btnWrite = new Button(composite, SWT.NONE);
@@ -1129,7 +1109,7 @@ public class MainWin {
 				sendCmdDiskFile(MainWin.currentDisk.getDrive(), "dw disk write ","Write");
 			}
 		});
-		btnWrite.setBounds(87, 211, 85, 25);
+		btnWrite.setBounds(87, 156, 85, 25);
 		btnWrite.setText("Write to...");
 		
 		btnReload = new Button(composite, SWT.NONE);
@@ -1144,65 +1124,47 @@ public class MainWin {
 			}
 		});
 		btnReload.setText("Reload");
-		btnReload.setBounds(178, 211, 75, 25);
+		btnReload.setBounds(178, 156, 75, 25);
 		
 		lblSectors2 = new Label(composite, SWT.RIGHT);
-		lblSectors2.setBounds(158, 66, 102, 21);
+		lblSectors2.setBounds(10, 72, 102, 21);
 		lblSectors2.setText("Total sectors:");
 		
 		lblDirtySectors = new Label(composite, SWT.RIGHT);
 		lblDirtySectors.setText("Dirty sectors:");
-		lblDirtySectors.setBounds(266, 117, 119, 22);
+		lblDirtySectors.setBounds(141, 123, 96, 22);
 		
 		lblCurrentLsn = new Label(composite, SWT.RIGHT);
 		lblCurrentLsn.setText("Current LSN:");
-		lblCurrentLsn.setBounds(158, 93, 102, 23);
+		lblCurrentLsn.setBounds(10, 99, 102, 23);
 		
 		lblReads = new Label(composite, SWT.RIGHT);
 		lblReads.setText("Reads:");
-		lblReads.setBounds(310, 66, 75, 21);
+		lblReads.setBounds(162, 72, 75, 21);
 		
 		lblWrites = new Label(composite, SWT.RIGHT);
 		lblWrites.setText("Writes:");
-		lblWrites.setBounds(310, 93, 75, 18);
-		
-		btnFilesystemIsWriteable = new Label(composite, SWT.CHECK);
-		btnFilesystemIsWriteable.setToolTipText("The file system where the image resides supports writes");
-		btnFilesystemIsWriteable.setEnabled(false);
-		btnFilesystemIsWriteable.setBounds(299, 145, 170, 16);
-		btnFilesystemIsWriteable.setText("Filesystem is writeable");
-		
-		btnFileIsWriteable = new Label(composite, SWT.CHECK);
-		btnFileIsWriteable.setToolTipText("The file for this disk image is writable (we have permission, etc)");
-		btnFileIsWriteable.setEnabled(false);
-		btnFileIsWriteable.setText("File is writeable");
-		btnFileIsWriteable.setBounds(299, 161, 170, 16);
-		
-		btnFileIsRandom = new Label(composite, SWT.CHECK);
-		btnFileIsRandom.setToolTipText("The source supports random access writes");
-		btnFileIsRandom.setEnabled(false);
-		btnFileIsRandom.setText("File is random writeable");
-		btnFileIsRandom.setBounds(299, 176, 170, 16);
+		lblWrites.setBounds(162, 99, 75, 18);
 		
 		labelDiskSectors = new Label(composite, SWT.NONE);
 		labelDiskSectors.setToolTipText("The numbers of sectors that exist in this disk image");
-		labelDiskSectors.setBounds(266, 66, 60, 23);
+		labelDiskSectors.setBounds(118, 72, 60, 23);
 		
 		labelDiskLSN = new Label(composite, SWT.NONE);
 		labelDiskLSN.setToolTipText("The destination sector of the most recent seek operation");
-		labelDiskLSN.setBounds(266, 93, 60, 18);
+		labelDiskLSN.setBounds(118, 99, 60, 18);
 		
 		labelDiskReads = new Label(composite, SWT.NONE);
 		labelDiskReads.setToolTipText("The number of read requests made to this image");
-		labelDiskReads.setBounds(391, 66, 60, 23);
+		labelDiskReads.setBounds(243, 72, 60, 23);
 		
 		labelDiskWrites = new Label(composite, SWT.NONE);
 		labelDiskWrites.setToolTipText("The number of write requests made to this image");
-		labelDiskWrites.setBounds(391, 93, 59, 18);
+		labelDiskWrites.setBounds(243, 99, 59, 18);
 		
 		labelDiskDirty = new Label(composite, SWT.NONE);
 		labelDiskDirty.setToolTipText("The number of sectors which have been changed but not synced to the source image");
-		labelDiskDirty.setBounds(391, 117, 60, 20);
+		labelDiskDirty.setBounds(243, 123, 60, 20);
 		
 		buttonRefresh = new Button(composite, SWT.NONE);
 		buttonRefresh.setToolTipText("Reread current information from server");
@@ -1219,23 +1181,93 @@ public class MainWin {
 			}
 		});
 		buttonRefresh.setImage(null);
-		buttonRefresh.setBounds(317, 211, 76, 25);
+		buttonRefresh.setBounds(317, 156, 76, 25);
+		
+		btnAdvanced = new Button(composite, SWT.NONE);
+		btnAdvanced.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				DiskAdvancedWin window = new DiskAdvancedWin(shell,SWT.DIALOG_TRIM);
+				try 
+				{
+					window.open();
+					
+					loadSelectedDiskDetails();
+					displayCurrentDisk();
+					
+				} 
+				catch (Exception e1)
+				{
+					
+				}
+			}
+		});
+		btnAdvanced.setBounds(318, 125, 166, 25);
+		btnAdvanced.setText("Advanced options...");
 		
 		sashForm_1.setWeights(new int[] {295, 579});
 		
 		textDWOutput = new Text(sashForm, SWT.BORDER | SWT.READ_ONLY | SWT.V_SCROLL | SWT.MULTI);
 		textDWOutput.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
-		sashForm.setWeights(new int[] {247, 161});
-		text.addKeyListener(new KeyAdapter() {
+		sashForm.setWeights(new int[] {195, 213});
+		
+		
+		txtYouCanEnter.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) 
 			{
 				if (e.character == 13)
 				{
+					if (!txtYouCanEnter.getText().equals(""))
+					{
+						MainWin.sendCommand(txtYouCanEnter.getText());
+						MainWin.addCommandToHistory(txtYouCanEnter.getText());
+						txtYouCanEnter.setText("");
+						MainWin.cmdhistpos = 0;
+					}
+				}
+				else if (e.keyCode == 16777217)
+				{
+
+				
+					if (config.getInt("CmdHistorySize",default_CmdHistorySize) > 0)
+					{
+						
+						@SuppressWarnings("unchecked")
+						List<String> cmdhist = config.getList("CmdHistory",null);
+						
+						if (cmdhist != null)
+						{
+							if (cmdhist.size() > MainWin.cmdhistpos)
+							{
+								MainWin.cmdhistpos++;
+								txtYouCanEnter.setText(cmdhist.get(cmdhist.size() - MainWin.cmdhistpos));
+								
+							}
+						}
+						
+					}
+				}
+				else if (e.keyCode == 16777218)
+				{
 					
-					MainWin.sendCommand(text.getText());
-					
-					text.setText("");
+					if (config.getInt("CmdHistorySize",default_CmdHistorySize) > 0)
+					{
+						@SuppressWarnings("unchecked")
+						List<String> cmdhist = config.getList("CmdHistory",null);
+						
+						if (MainWin.cmdhistpos > 1)
+						{
+							MainWin.cmdhistpos--;
+							txtYouCanEnter.setText(cmdhist.get(cmdhist.size() - MainWin.cmdhistpos));
+							
+						}
+						else if (MainWin.cmdhistpos == 1)
+						{
+							MainWin.cmdhistpos--;
+							txtYouCanEnter.setText("");
+						}
+					}
 				}
 			}
 		});
@@ -1243,6 +1275,55 @@ public class MainWin {
 	}
 
 
+
+	protected static void syncConfig() 
+	{
+		try 
+		{
+			UIUtils.getDWConfigSerial();
+			MainWin.updateTitlebar();
+			
+			if ((MainWin.dwconfig != null) && (MainWin.getInstanceConfig() != null))
+			{
+				MainWin.mntmHdbdosTranslation.setSelection(MainWin.getInstanceConfig().getBoolean("HDBDOSMode", false));
+			}
+		} 
+		catch (IOException e) 
+		{
+			// ignore..
+		} 
+		catch (DWUIOperationFailedException e) 
+		{
+			// ignore..?
+		}
+		
+	}
+
+	@SuppressWarnings("unchecked")
+	protected static void addCommandToHistory(String cmd) 
+	{
+
+		List<String> cmdhist = config.getList("CmdHistory",null);
+		
+		if (config.getInt("CmdHistorySize",default_CmdHistorySize) > 0)
+		{
+			if (cmdhist == null)
+			{
+			
+				config.addProperty("CmdHistory", cmd);
+				cmdhist = config.getList("CmdHistory",null);
+			}
+		
+			
+			if (cmdhist.size() >= config.getInt("CmdHistorySize",default_CmdHistorySize))
+			{	
+				cmdhist.remove(0);
+			}
+				
+			cmdhist.add(cmd);
+			config.setProperty("CmdHistory", cmdhist);
+		}	
+	}
 
 	protected void toggleApplyButton() 
 	{
@@ -1253,22 +1334,7 @@ public class MainWin {
 		
 			if (!MainWin.textDiskURI.getText().equals(MainWin.currentDisk.getPath()))
 				MainWin.btnApply.setEnabled(true);
-		
-			if (Integer.parseInt(MainWin.textDiskOffset.getText()) != (MainWin.currentDisk.getOffset()))
-				MainWin.btnApply.setEnabled(true);
-		
-			if (Integer.parseInt(MainWin.textDiskSizeLimit.getText()) != (MainWin.currentDisk.getSizelimit()))
-				MainWin.btnApply.setEnabled(true);
-		
-		
-			if (MainWin.btnDiskWriteProtect.getSelection() != MainWin.currentDisk.isWriteprotect())
-				MainWin.btnApply.setEnabled(true);
-		
-			if (MainWin.btnDiskExpand.getSelection() != MainWin.currentDisk.isExpand())
-				MainWin.btnApply.setEnabled(true);
-		
-			if (MainWin.btnDiskSync.getSelection() != MainWin.currentDisk.isSync())
-				MainWin.btnApply.setEnabled(true);
+
 		}
 		catch (NumberFormatException e)
 		{
@@ -1290,56 +1356,6 @@ public class MainWin {
 			}
 		}
 		
-		if (!MainWin.textDiskOffset.getText().equals(""))
-		{
-			if (UIUtils.validateNum(MainWin.textDiskOffset.getText(), 0))
-			{
-				int offset = Integer.parseInt(MainWin.textDiskOffset.getText());
-				if (!(offset == MainWin.currentDisk.getOffset()))
-				{
-					sendCommand("dw disk offset " + MainWin.currentDisk.getDrive() + " " + offset);
-				}
-			}
-			else
-			{
-				showError("Invalid Offset","Disk offset must be numeric and >= 0","Enter the offset for read and write operations in sectors.\r\nThe default is 0.");
-				return;
-			}
-		}
-		
-		if (!MainWin.textDiskSizeLimit.getText().equals(""))
-		{
-			if (UIUtils.validateNum(MainWin.textDiskSizeLimit.getText(), -1))
-			{
-				int limit = Integer.parseInt(MainWin.textDiskSizeLimit.getText());
-				if (!(limit == MainWin.currentDisk.getSizelimit()))
-				{
-					sendCommand("dw disk limit " + MainWin.currentDisk.getDrive() + " " + limit);
-				}
-			}
-			else
-			{
-				showError("Invalid Size Limit","Disk size limit must be numeric and >= -1","Enter the size limit for this disk in sectors.\r\nTo disable the limit, enter -1.");
-				return;
-			}
-		}
-		
-		
-		if (MainWin.btnDiskWriteProtect.getSelection() != MainWin.currentDisk.isWriteprotect())
-		{
-			sendCommand("dw disk wp " + MainWin.currentDisk.getDrive() + " " + MainWin.btnDiskWriteProtect.getSelection());
-		}
-		
-		if (MainWin.btnDiskSync.getSelection() != MainWin.currentDisk.isSync())
-		{
-			sendCommand("dw disk sync " + MainWin.currentDisk.getDrive() + " " + MainWin.btnDiskSync.getSelection());
-		}
-
-		if (MainWin.btnDiskExpand.getSelection() != MainWin.currentDisk.isExpand())
-		{
-			sendCommand("dw disk expand " + MainWin.currentDisk.getDrive() + " " + MainWin.btnDiskExpand.getSelection());
-		}
-
 		
 		// update display
 		loadSelectedDiskDetails();
@@ -1347,7 +1363,79 @@ public class MainWin {
 	}
 
 
+	public static void displayCurrentDiskAsync() 
+	{
+		display.asyncExec(
+				  new Runnable() {
+					  public void run()
+					  {
+						  // did disk change..
+						  MainWin.displayCurrentDiskStats(true);
+					  }
+				  });
+	}
 
+	public static void displayCurrentDiskStats(Boolean highlight) 
+	{
+		
+		if (highlight)
+		{
+			// highlight changes..
+			if (MainWin.labelDiskLSN.getText().equals(MainWin.currentDisk.getLsn()+""))
+			{
+				MainWin.labelDiskLSN.setForeground(new Color(display, 0,0,0));
+			}
+			else
+			{
+				MainWin.labelDiskLSN.setForeground(new Color(display, 0,0,255));
+			}
+		
+			if (MainWin.labelDiskDirty.getText().equals(MainWin.currentDisk.getDirty()+""))
+			{
+				MainWin.labelDiskDirty.setForeground(new Color(display, 0,0,0));
+			}
+			else
+			{
+				MainWin.labelDiskDirty.setForeground(new Color(display, 0,0,255));
+			}
+		
+			if (MainWin.labelDiskReads.getText().equals(MainWin.currentDisk.getReads()+""))
+			{
+				MainWin.labelDiskReads.setForeground(new Color(display, 0,0,0));
+			}
+			else
+			{
+				MainWin.labelDiskReads.setForeground(new Color(display, 0,0,255));
+			}
+		
+			if (MainWin.labelDiskWrites.getText().equals(MainWin.currentDisk.getWrites()+""))
+			{
+				MainWin.labelDiskWrites.setForeground(new Color(display, 0,0,0));
+			}
+			else
+			{
+				MainWin.labelDiskWrites.setForeground(new Color(display, 0,0,255));
+			}
+		
+			if (MainWin.labelDiskSectors.getText().equals(MainWin.currentDisk.getSectors()+""))
+			{
+				MainWin.labelDiskSectors.setForeground(new Color(display, 0,0,0));
+			}
+			else
+			{
+				MainWin.labelDiskSectors.setForeground(new Color(display, 0,0,255));
+			}
+		}
+		
+		// set values
+		MainWin.labelDiskSectors.setText(MainWin.currentDisk.getSectors()+"");
+		MainWin.labelDiskLSN.setText(MainWin.currentDisk.getLsn()+"");
+		MainWin.labelDiskReads.setText(MainWin.currentDisk.getReads()+"");
+		MainWin.labelDiskWrites.setText(MainWin.currentDisk.getWrites()+"");
+		MainWin.labelDiskDirty.setText(MainWin.currentDisk.getDirty()+"");
+	}
+	
+	
 	public static void displayCurrentDisk() 
 	{
 		if (MainWin.currentDisk.getDrive() > -1)
@@ -1378,7 +1466,7 @@ public class MainWin {
 			{
 				MainWin.textDiskURI.add(fh.get(i));
 			}
-			
+		
 		}
 			
 	
@@ -1392,32 +1480,13 @@ public class MainWin {
 			MainWin.textDiskURI.setText(MainWin.currentDisk.getPath() );
 		}
 		
-		MainWin.textDiskOffset.setText(MainWin.currentDisk.getOffset() + "");
-		MainWin.textDiskSizeLimit.setText(MainWin.currentDisk.getSizelimit() + "");
 		
-		MainWin.btnDiskExpand.setSelection(MainWin.currentDisk.isExpand());
-		MainWin.btnDiskSync.setSelection(MainWin.currentDisk.isSync());
-		MainWin.btnDiskWriteProtect.setSelection(MainWin.currentDisk.isWriteprotect());
-		
-		MainWin.btnFilesystemIsWriteable.setEnabled(MainWin.currentDisk.isFswriteable());
-		MainWin.btnFileIsWriteable.setEnabled(MainWin.currentDisk.isWriteable());
-		MainWin.btnFileIsRandom.setEnabled(MainWin.currentDisk.isRandomwriteable());
-		
-		MainWin.labelDiskSectors.setText(MainWin.currentDisk.getSectors()+"");
-		MainWin.labelDiskLSN.setText(MainWin.currentDisk.getLsn()+"");
-		MainWin.labelDiskReads.setText(MainWin.currentDisk.getReads()+"");
-		MainWin.labelDiskWrites.setText(MainWin.currentDisk.getWrites()+"");
-		MainWin.labelDiskDirty.setText(MainWin.currentDisk.getDirty()+"");
+		MainWin.displayCurrentDiskStats(false);
 		
 		
 		if (MainWin.currentDisk.isLoaded())
 		{
-			MainWin.textDiskOffset.setEnabled(true);
-			MainWin.textDiskSizeLimit.setEnabled(true);
-			
-			MainWin.btnDiskExpand.setEnabled(true);
-			MainWin.btnDiskSync.setEnabled(true);
-			MainWin.btnDiskWriteProtect.setEnabled(true);
+
 			
 			MainWin.labelDiskSectors.setEnabled(true);
 			MainWin.labelDiskLSN.setEnabled(true);
@@ -1429,30 +1498,18 @@ public class MainWin {
 			MainWin.btnWrite.setEnabled(true);
 			MainWin.btnReload.setEnabled(true);
 			
-			MainWin.lblSizeLimit.setEnabled(true);
-			MainWin.lblSectors.setEnabled(true);
-			MainWin.lblOffset.setEnabled(true);
-			MainWin.lblSectors1.setEnabled(true);
+
 			MainWin.lblSectors2.setEnabled(true);
 			MainWin.lblDirtySectors.setEnabled(true);
 			MainWin.lblCurrentLsn.setEnabled(true);
 			MainWin.lblReads.setEnabled(true);
 			MainWin.lblWrites.setEnabled(true);
 			
-			
+			MainWin.btnAdvanced.setEnabled(true);
 		}
 		else
 		{
-			MainWin.textDiskOffset.setEnabled(false);
-			MainWin.textDiskSizeLimit.setEnabled(false);
-			
-			MainWin.btnDiskExpand.setEnabled(false);
-			MainWin.btnDiskSync.setEnabled(false);
-			MainWin.btnDiskWriteProtect.setEnabled(false);
-			
-			MainWin.btnFilesystemIsWriteable.setEnabled(false);
-			MainWin.btnFileIsWriteable.setEnabled(false);
-			MainWin.btnFileIsRandom.setEnabled(false);
+
 			
 			MainWin.labelDiskSectors.setEnabled(false);
 			MainWin.labelDiskLSN.setEnabled(false);
@@ -1463,16 +1520,14 @@ public class MainWin {
 			MainWin.btnEject.setEnabled(false);
 			MainWin.btnWrite.setEnabled(false);
 			MainWin.btnReload.setEnabled(false);
-			
-			MainWin.lblSizeLimit.setEnabled(false);
-			MainWin.lblSectors.setEnabled(false);
-			MainWin.lblOffset.setEnabled(false);
-			MainWin.lblSectors1.setEnabled(false);
+
 			MainWin.lblSectors2.setEnabled(false);
 			MainWin.lblDirtySectors.setEnabled(false);
 			MainWin.lblCurrentLsn.setEnabled(false);
 			MainWin.lblReads.setEnabled(false);
 			MainWin.lblWrites.setEnabled(false);
+			
+			MainWin.btnAdvanced.setEnabled(false);
 			
 		}
 		
@@ -1514,14 +1569,48 @@ public class MainWin {
 		}
 	}
 
+	public static void refreshDiskTableAsync() throws IOException, DWUIOperationFailedException 
+	{
+		display.asyncExec(
+				  new Runnable() {
+					  public void run()
+					  {
+						try 
+						{
+							MainWin.refreshDiskTable();
+						} 
+						catch (IOException e) 
+						{
+							MainWin.addToDisplay("Error while refreshing disk table: " + e.getMessage());
+						} 
+						catch (DWUIOperationFailedException e) 
+						{
+							MainWin.addToDisplay("Error while refreshing disk table: " + e.getMessage());
+						}
+						  
+					  }
+				  });
+		
+	}
+	
 	public static void refreshDiskTable() throws IOException, DWUIOperationFailedException 
 	{
-		MainWin.table.removeAll();
+		//MainWin.table.removeAll();
 		
 		for (int i = 0;i<256;i++)
 		{
-			TableItem item = new TableItem(table, SWT.NONE);
+			TableItem item;
+			if (table.getItemCount() < i+1)
+			{
+				item = new TableItem(table, SWT.NONE);
+			}
+			else
+			{
+				item = table.getItem(i);
+			}
+			
 			item.setText(0,i+"");
+			item.setText(1,"");
 		}
 				
 		ArrayList<String> disks = UIUtils.loadArrayList(MainWin.instance, "ui instance disk show");
@@ -1538,6 +1627,7 @@ public class MainWin {
 			
 		}
 		
+		MainWin.syncConfig();
 		loadSelectedDiskDetails();
 		displayCurrentDisk();
 		
@@ -1715,18 +1805,23 @@ public class MainWin {
 	{
 		List<String> diskhist = config.getList("DiskHistory",null);
 		
-		if (diskhist == null)
+		
+		if (config.getInt("DiskHistorySize",default_DiskHistorySize) > 0)
 		{
-			if (config.getInt("DiskHistorySize",default_DiskHistorySize) > 0)
+			if (diskhist == null)
 			{
+			
 				config.addProperty("DiskHistory", filename);
+				diskhist = config.getList("DiskHistory",null);
 			}
-		}
-		else if (!diskhist.contains(filename))
-		{
-			if (diskhist.size() >= config.getInt("DiskHistorySize",default_DiskHistorySize))
+		
+		
+			if (!diskhist.contains(filename))
 			{
-				diskhist.remove(0);
+				if (diskhist.size() >= config.getInt("DiskHistorySize",default_DiskHistorySize))
+				{
+					diskhist.remove(0);
+				}	
 			}
 			
 			diskhist.add(filename);
@@ -1812,5 +1907,21 @@ public class MainWin {
         
         applyFont();
 	
+	}
+	protected Button getBtnAdvanced() {
+		return btnAdvanced;
+	}
+	
+	public static DiskDef getCurrentDisk()
+	{
+		return(MainWin.currentDisk);
+	}
+
+	public static HierarchicalConfiguration getInstanceConfig() 
+	{
+		@SuppressWarnings("unchecked")
+		List<HierarchicalConfiguration> handlerconfs = (List<HierarchicalConfiguration>)MainWin.dwconfig.configurationsAt("instance");
+
+		return handlerconfs.get(MainWin.getInstance());
 	}
 }

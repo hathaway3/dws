@@ -4,33 +4,33 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.TabFolder;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.TabItem;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.swt.widgets.Text;
 
 public class InstanceConfigWin extends Dialog {
 
-	private HashMap<String,String> values = new HashMap<String,String>();
-
+	
 	
 	protected Object result;
 	protected static Shell shlInstanceConfiguration;
@@ -91,6 +91,9 @@ public class InstanceConfigWin extends Dialog {
 	private Button btnPadPartialSectors;
 	private Button buttonGeoipDB;
 	
+
+	private HierarchicalConfiguration iconf;
+	
 	/**
 	 * Create the dialog.
 	 * @param parent
@@ -110,7 +113,11 @@ public class InstanceConfigWin extends Dialog {
 	public Object open() throws DWUIOperationFailedException, IOException {
 		createContents();
 		applyFont();
-		loadSettings();
+		
+		UIUtils.getDWConfigSerial();
+		
+		this.iconf = MainWin.getInstanceConfig();
+		
 		applySettings();
 		updateToggledStuff();
 		
@@ -204,63 +211,9 @@ public class InstanceConfigWin extends Dialog {
 		
 	}
 	
-	private void loadSettings() throws DWUIOperationFailedException, IOException 
-	{
-		ArrayList<String> settings = new ArrayList<String>();
+	
 		
-		settings.add("Name");
-		settings.add("DeviceType");
-		settings.add("SerialDevice");
-		settings.add("CocoModel");
-		settings.add("AutoStart");
-		settings.add("DefaultDiskSet");
-		settings.add("TCPDevicePort");
-		settings.add("TCPClientPort");
-		settings.add("TCPClientHost");
-		settings.add("TermPort");
-		settings.add("ListenAddress");
-		settings.add("TelnetBannerFile");
-		settings.add("TelnetBannedFile");
-		settings.add("TelnetNoPortsBannerFile");
-		settings.add("TelnetPreAuthFile");
-		settings.add("TelnetPasswdFile");
-		settings.add("GeoIPLookup");
-		settings.add("GeoIPDatabaseFile");
-		settings.add("TelnetBanned");
-		settings.add("GeoIPBannedCities");
-		settings.add("GeoIPBannedCountries");
-		settings.add("PrinterDir");
-		settings.add("PrinterType");
-		settings.add("PrinterCharacterFile");
-		settings.add("PrinterColumns");
-		settings.add("PrinterLines");
-		settings.add("MIDISynthDefaultSoundbank");
-		settings.add("MIDISynthDefaultProfile");
-		settings.add("DW3Only");
-		settings.add("LogDeviceBytes");
-		settings.add("LogVPortBytes");
-		settings.add("LogMIDIBytes");
-		settings.add("LogOpCode");
-		settings.add("LogOpCodePolls");
-		settings.add("RateOverride");
-		settings.add("DetectDATurbo");
-		settings.add("NamedObjectDir");
-		settings.add("DiskMaxSectors");
-		settings.add("DiskSectorSize");
-		settings.add("DiskMaxDrives");
-		settings.add("DiskPadPartialSectors");
-		
-		
-		
-		values = UIUtils.getInstanceSettings(MainWin.getInstance(),settings);
-		
-		// combos
-		//loadCombo("ui server show serialdevs",this.textSerialPort);
-		loadCombo("ui server show synthprofiles",this.textMIDIprofile);
-		loadCombo("ui diskset show", this.cmbDefaultDiskSet);
-		
-		
-	}
+
 
 	
 	private void loadCombo(String cmd, Combo combo) 
@@ -289,6 +242,8 @@ public class InstanceConfigWin extends Dialog {
 		combo.setText(prev);
 	}
 
+	
+	
 	private HashMap<String, String> getChangedValues() 
 	{
 		HashMap<String,String> res = new HashMap<String,String>();
@@ -352,33 +307,27 @@ public class InstanceConfigWin extends Dialog {
 
 	private void addIfChanged(HashMap<String, String> map, String key, String value) 
 	{
-		if (values.get(key) == null)
-		{
-			if (!value.equals(""))
-				map.put(key, value);
-		}
-		else if (!values.get(key).equals(value))
-		{
+		if (!iconf.getString(key,"").equals(value))
+		{ 
 			map.put(key, value);
 		}
 	}
 
 	private boolean validateValues() 
 	{
-	/*	if (!UIUtils.validateNum(this.textLazyWrite.getText(),0))
+		//TODO: more
+		
+		if (!UIUtils.validateNum(this.textTCPClientPort.getText(),1,65535))
 		{
-			MainWin.showError("Invalid value entered", "Data entered for DiskLazyWriteInterval is not valid" , "Valid range is positive integers");
+			MainWin.showError("Invalid value entered", "Data entered for TCP client port is not valid" , "Valid range is TCP port numbers, 1-65535.");
 			return false;
 		}
 		
-		
-		if (!UIUtils.validateNum(this.textUIPort.getText(),1,65535))
+		if (!UIUtils.validateNum(this.textTCPServerPort.getText(),1,65535))
 		{
-			MainWin.showError("Invalid value entered", "Data entered for UI Port is not valid" , "Valid range is TCP port numbers, 1-65535.");
+			MainWin.showError("Invalid value entered", "Data entered for TCP server port is not valid" , "Valid range is TCP port numbers, 1-65535.");
 			return false;
 		}
-		
-		*/
 		
 		return true;
 	}
@@ -413,6 +362,7 @@ public class InstanceConfigWin extends Dialog {
 		
 		setTextValue("MIDISynthDefaultSoundbank", this.textMIDIsoundbank);
 		
+		loadCombo("ui server show synthprofiles",textMIDIprofile);
 		setComboValue("MIDISynthDefaultProfile", this.textMIDIprofile);
 		
 		// networking page
@@ -439,7 +389,7 @@ public class InstanceConfigWin extends Dialog {
 		
 		setComboValue("RateOverride", this.textRateOverride);
 		
-		
+		loadCombo("ui diskset show",cmbDefaultDiskSet);
 		setComboValue("DefaultDiskSet", this.cmbDefaultDiskSet);
 		
 		setBooleanValue("DW3Only", this.btnDrivewireMode, false);
@@ -463,25 +413,20 @@ public class InstanceConfigWin extends Dialog {
 	
 	private void setBooleanValue(String key, Button btn, boolean def) 
 	{
-		
-		if (values.get(key) != null)
-			btn.setSelection(UIUtils.sTob(values.get(key)));
-		else
-			btn.setSelection(def);
-	
+		btn.setSelection(iconf.getBoolean(key, def));
 	}
 
 	private void setComboValue(String key, Combo combo) 
 	{
-		if (values.get(key) != null)
+		if (iconf.containsKey(key))
 		{
-			if (combo.indexOf(values.get(key)) > -1)
+			if (combo.indexOf(iconf.getString(key)) > -1)
 			{
-				combo.select(combo.indexOf(values.get(key)));
+				combo.select(combo.indexOf(iconf.getString(key)));
 			}
 			else
 			{
-				combo.setText(values.get(key));
+				combo.setText(iconf.getString(key));
 			}
 		}
 		else
@@ -493,10 +438,7 @@ public class InstanceConfigWin extends Dialog {
 
 	private void setTextValue(String key, Text textObj) 
 	{
-		if (values.get(key) != null)
-			textObj.setText(values.get(key));
-		else
-			textObj.setText("");	
+		textObj.setText(iconf.getString(key, ""));
 	}
 
 	/**

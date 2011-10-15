@@ -2,6 +2,7 @@ package com.groupunix.drivewireui;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.UnknownHostException;
@@ -11,6 +12,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration.XMLConfiguration;
 
 public class UIUtils {
 
@@ -288,6 +293,23 @@ public class UIUtils {
 		
 	}
 
+	public static void writeDiskDef(int instance, int diskno, DiskDef ddef) throws IOException, DWUIOperationFailedException
+	{
+		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
+		
+		conn.Connect();
+		
+		conn.sendCommand("dw disk offset " + diskno + " " + ddef.getOffset(), instance);
+		conn.sendCommand("dw disk limit " + diskno + " " + ddef.getSizelimit(), instance);
+		conn.sendCommand("dw disk sync " + diskno + " " + ddef.isSync(), instance);
+		conn.sendCommand("dw disk expand " + diskno + " " + ddef.isExpand(), instance);
+		conn.sendCommand("dw disk wp " + diskno + " " + ddef.isWriteprotect(), instance);
+		conn.sendCommand("dw disk namedobject " + diskno + " " + ddef.isNamedobject(), instance);
+		conn.sendCommand("dw disk ssync " + diskno + " " + ddef.isSyncfromsource(), instance);
+		
+		conn.close();
+	}
+	
 	public static DiskDef getDiskDef(int instance,int diskno) throws IOException, DWUIOperationFailedException
 	{
 		
@@ -352,6 +374,12 @@ public class UIUtils {
 					if (m.group(1).equals("loaded"))
 						disk.setLoaded(UIUtils.sTob(m.group(2)));
 					
+					if (m.group(1).equals("namedobject"))
+						disk.setNamedobject(UIUtils.sTob(m.group(2)));
+					
+					if (m.group(1).equals("syncfromsource"))
+						disk.setSyncfromsource(UIUtils.sTob(m.group(2)));
+					
 				}
 				
 			}
@@ -365,4 +393,96 @@ public class UIUtils {
 		return(disk);
 		
 	}
+
+	public static HierarchicalConfiguration getServerConfig() throws UnknownHostException, IOException, ConfigurationException 
+	{
+		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
+		
+		conn.Connect();
+		
+		StringReader sr = conn.loadReader("ui server config write");
+		conn.close();
+		
+		XMLConfiguration res = new XMLConfiguration();
+		res.load(sr);
+		
+		// TODO Auto-generated method stub
+		return (HierarchicalConfiguration) res.clone();
+	}
+
+	public static int getDWConfigSerial() throws IOException, DWUIOperationFailedException 
+	{
+		int ser = -1;
+		
+		ArrayList<String> res = UIUtils.loadArrayList("ui server config serial");
+		if (res.size() != 1)
+		{
+			throw new DWUIOperationFailedException("invalid response size: " + res.size());
+		}
+		
+		try
+		{
+			ser = Integer.parseInt(res.get(0));
+			
+			if (ser != MainWin.dwconfigserial)
+			{
+				MainWin.dwconfig = UIUtils.getServerConfig();
+				MainWin.dwconfigserial = ser;
+			}
+			
+		}
+		catch (NumberFormatException e)
+		{
+			throw new DWUIOperationFailedException("invalid response: '" + res.get(0) + "'");
+		} 
+		catch (ConfigurationException e) 
+		{
+			throw new DWUIOperationFailedException("returned config did not work!: " + e.getMessage());
+		}
+		
+		return(ser);
+	}
+
+	public static DiskStatus getDiskStatus(int instance, int drive) throws IOException, DWUIOperationFailedException 
+	{
+		DiskStatus res = new DiskStatus();
+		
+		ArrayList<String> dstat = UIUtils.loadArrayList(instance, "ui instance disk status " + drive);
+	
+		Pattern p_item = Pattern.compile("^(.+):\\s(.+)");
+		
+						
+		for (int i = 0;i<dstat.size();i++)
+		{
+			Matcher m = p_item.matcher(dstat.get(i));
+		  
+			if (m.find())
+			{
+				if (m.group(1).equals("serial"))
+					res.setSerial(Integer.parseInt(m.group(2)));
+				
+				if (m.group(1).equals("loaded"))
+					res.setLoaded(UIUtils.sTob(m.group(2)));
+				
+				if (m.group(1).equals("sectors"))
+					res.setSectors(Integer.parseInt(m.group(2)));
+				
+				if (m.group(1).equals("dirty"))
+					res.setDirty(Integer.parseInt(m.group(2)));
+				
+				if (m.group(1).equals("lsn"))
+					res.setLsn(Integer.parseInt(m.group(2)));
+				
+				if (m.group(1).equals("reads"))
+					res.setReads(Integer.parseInt(m.group(2)));
+				
+				if (m.group(1).equals("writes"))
+					res.setWrites(Integer.parseInt(m.group(2)));
+				
+			}
+		}
+		
+		return(res);
+	}
+
 }

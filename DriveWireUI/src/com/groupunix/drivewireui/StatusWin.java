@@ -220,7 +220,7 @@ public class StatusWin extends Dialog {
 			if (m.find())
 			{
 				if (m.group(1).equals("name"))
-					this.grpInstance.setText(" Instance: " + m.group(2) + " ");
+					StatusWin.grpInstance.setText(" Instance: " + m.group(2) + " ");
 				
 				if (m.group(1).equals("devicetype"))
 					devicetype = m.group(2);
@@ -452,7 +452,7 @@ public class StatusWin extends Dialog {
 							{
 								boolean wanttodie = false;
 								
-								while (!wanttodie)
+								while (!wanttodie && (!MainWin.shell.isDisposed()))
 								{
 									try 
 									{

@@ -39,6 +39,7 @@ public class InitialConfigWin extends Dialog {
 	private Button btnNext;
 	private Combo comboCocoModel;
 	
+	private boolean connTested = false;
 	
 	private int page = 0;
 	
@@ -66,6 +67,13 @@ public class InitialConfigWin extends Dialog {
 		this.labelERR.setVisible(false);
 		
 		Link link = new Link(compPage2, SWT.NONE);
+		link.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				// open wiki in browser
+				org.eclipse.swt.program.Program.launch("http://sourceforge.net/apps/mediawiki/drivewireserver/index.php");
+			}
+		});
 		link.setBounds(10, 150, 406, 31);
 		link.setText("If you have trouble connecting, please <a href=\"http://sourceforge.net/apps/mediawiki/drivewireserver/index.php\">consult the documentation.</a>");
 		
@@ -138,7 +146,14 @@ public class InitialConfigWin extends Dialog {
 				}
 				else if (page == 2)
 				{
-					applyConfig();
+					if (!comboSerialDev.getText().equals(""))
+					{
+						applyConfig();
+					}
+					else
+					{
+						MainWin.showError("We need a serial device", "In order to finish this wizard, we have to specify a serial device", "Please choose a valid serial device if possible.  If the desired device is not available, please exit this wizard and sort that out before continuing with DriveWire.\r\n\r\nIf you wanted to use some connection method other than serial, you'll have to use the regular instance config dialog.  This simple wizard only knows how to set up regular serial connections.");
+					}
 				}
 				
 				
@@ -257,6 +272,9 @@ public class InitialConfigWin extends Dialog {
 					
 						textConnTest.setText(res.get(0));
 						labelOK.setVisible(true);
+						connTested = true;
+						
+						
 					
 					} 
 					catch (IOException e1) 
@@ -273,10 +291,10 @@ public class InitialConfigWin extends Dialog {
 				else
 				{
 					labelERR.setVisible(true);
-					textConnTest.setText("Valid port range is 1-65535.");
+					textConnTest.setText("Valid TCP port range is 1 - 65535.");
 				}
 				
-				
+				btnNext.setEnabled(connTested);
 				
 			}
 		});
@@ -329,7 +347,18 @@ public class InitialConfigWin extends Dialog {
 						comboSerialDev.add(ports.get(i));
 					
 					if (ports.size()>0)
-					 	comboSerialDev.select(0);
+					{
+						// set current device if possible
+						if ((MainWin.getInstanceConfig() != null) && (MainWin.getInstanceConfig().containsKey("SerialDevice")) && (comboSerialDev.indexOf(MainWin.getInstanceConfig().getString("SerialDevice")) > -1))
+						{
+							comboSerialDev.select(comboSerialDev.indexOf(MainWin.getInstanceConfig().getString("SerialDevice")));
+						}
+						else
+						{
+							comboSerialDev.select(0);
+						}
+					}
+					
 					
 				} 
 				catch (IOException e1) 
@@ -369,7 +398,7 @@ public class InitialConfigWin extends Dialog {
 		MainWin.setHost(this.textHost.getText());
 		MainWin.setPort(this.textPort.getText());
 		MainWin.setInstance(0);
-		
+
 		// auto instance
 		HashMap<String,String> vals = new HashMap<String,String>();
 		
@@ -378,6 +407,7 @@ public class InitialConfigWin extends Dialog {
 		vals.put("SerialDevice", this.comboSerialDev.getText());
 		vals.put("DeviceType", "serial");
 		vals.put("AutoStart", "true");
+	
 		
 		try 
 		{
@@ -386,6 +416,8 @@ public class InitialConfigWin extends Dialog {
 			MainWin.sendCommand("ui instance reset protodev");
 			
 			MainWin.refreshDiskTable();
+			
+			MainWin.applyServerSync();
 			
 			shlInitialConfiguration.close();
 			
@@ -425,7 +457,7 @@ public class InitialConfigWin extends Dialog {
 		else if (this.page == 1)
 		{
 			this.btnBack.setEnabled(true);
-			this.btnNext.setEnabled(true);
+			this.btnNext.setEnabled(this.connTested);
 			this.btnNext.setText("Next >>");
 			
 			

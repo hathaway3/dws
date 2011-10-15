@@ -1,7 +1,6 @@
 package com.groupunix.drivewireui;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.eclipse.swt.SWT;
@@ -26,9 +25,6 @@ public class ServerConfigWin extends Dialog {
 	protected static Shell shlServerConfiguration;
 	
 	
-	private HashMap<String,String> values = new HashMap<String,String>();
-	
-
 	private Button btnLogToConsole;
 	private Button btnLogToFile;
 	private Combo comboLogLevel;
@@ -43,7 +39,7 @@ public class ServerConfigWin extends Dialog {
 	private static Group grpMiscellaneous;
 	private static Group grpUserInterfaceSupport;
 	
-	
+
 	
 	/**
 	 * Create the dialog.
@@ -64,7 +60,8 @@ public class ServerConfigWin extends Dialog {
 	public Object open() throws DWUIOperationFailedException, IOException {
 		createContents();
 		applyFont();		
-		loadSettings();
+		 UIUtils.getDWConfigSerial();
+		applySettings();
 		
 		shlServerConfiguration.open();
 		shlServerConfiguration.layout();
@@ -118,26 +115,6 @@ public class ServerConfigWin extends Dialog {
 	}
 	
 	
-	private void loadSettings() throws DWUIOperationFailedException, IOException 
-	{
-		ArrayList<String> settings = new ArrayList<String>();
-		
-		settings.add("LogToConsole");
-		settings.add("LogToFile");
-		settings.add("LogFile");
-		settings.add("LogLevel");
-		settings.add("LogFormat");
-		settings.add("UIEnabled");
-		settings.add("UIPort");
-		settings.add("DiskLazyWriteInterval");
-		settings.add("LocalDiskDir");
-		
-		values = UIUtils.getServerSettings(settings);
-		
-		applySettings();
-		
-	}
-
 	
 
 	
@@ -161,7 +138,7 @@ public class ServerConfigWin extends Dialog {
 
 	private void addIfChanged(HashMap<String, String> map, String key, String value) 
 	{
-		if ((!values.containsKey(key)) || (!values.get(key).equals(value)))
+		if ((!MainWin.dwconfig.containsKey(key)) || (!MainWin.dwconfig.getProperty(key).equals(value)))
 		{ 
 			map.put(key, value);
 		}
@@ -194,97 +171,18 @@ public class ServerConfigWin extends Dialog {
 	{
 		// apply settings, considering defaults
 		
-		if (values.containsKey("LogToConsole"))
-		{
-			this.btnLogToConsole.setSelection(UIUtils.sTob(values.get("LogToConsole")));
-		}
-		else
-		{
-			this.btnLogToConsole.setSelection(true);
-		}
+		this.btnLogToConsole.setSelection(MainWin.dwconfig.getBoolean("LogToConsole",true));
+		this.btnLogToFile.setSelection(MainWin.dwconfig.getBoolean("LogToFile", false));
+		this.btnUIEnabled.setSelection(MainWin.dwconfig.getBoolean("UIEnabled", false));
 		
+		this.textLogFile.setText(MainWin.dwconfig.getString("LogFile",""));
 		
-		if (values.containsKey("LogToFile"))
-		{
-			this.btnLogToFile.setSelection(UIUtils.sTob(values.get("LogToFile")));
-		}
-		else
-		{
-			this.btnLogToFile.setSelection(false);
-		}
+		this.textLogFormat.setText(MainWin.dwconfig.getString("LogFormat","%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n"));
+		this.textUIPort.setText(MainWin.dwconfig.getString("UIPort",""));
+		this.textLazyWrite.setText(MainWin.dwconfig.getString("DiskLazyWriteInterval","15000"));
+		this.textLocalDiskDir.setText(MainWin.dwconfig.getString("LocalDiskDir",""));
+		this.comboLogLevel.select(this.comboLogLevel.indexOf(MainWin.dwconfig.getString("LogLevel","WARN")));
 		
-		
-		if (values.containsKey("UIEnabled"))
-		{
-			this.btnUIEnabled.setSelection(UIUtils.sTob(values.get("UIEnabled")));
-		}
-		else
-		{
-			this.btnUIEnabled.setSelection(false);
-		}
-		
-		
-		if (values.containsKey("LogFile"))
-		{
-			this.textLogFile.setText(values.get("LogFile"));
-		}
-		else
-		{
-			this.textLogFile.setText("");
-		}
-	
-		
-		if (values.containsKey("LogFormat"))
-		{
-			this.textLogFormat.setText(values.get("LogFormat"));
-		}
-		else
-		{
-			this.textLogFormat.setText("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n");
-		}
-		
-		
-		
-		if (values.containsKey("UIPort"))
-		{
-			this.textUIPort.setText(values.get("UIPort"));
-		}
-		else
-		{
-			this.textUIPort.setText("");
-		}
-		
-		
-		if (values.containsKey("DiskLazyWriteInterval"))
-		{
-			this.textLazyWrite.setText(values.get("DiskLazyWriteInterval"));
-		}
-		else
-		{
-			this.textLazyWrite.setText("15000");
-		}
-		
-		
-		
-		if (values.containsKey("LocalDiskDir"))
-		{
-			this.textLocalDiskDir.setText(values.get("LocalDiskDir"));
-		}
-		else
-		{
-			this.textLocalDiskDir.setText("");
-		}
-		
-		
-		if (values.containsKey("LogLevel"))
-		{
-			this.comboLogLevel.select(this.comboLogLevel.indexOf(values.get("LogLevel")));
-		}
-		else
-		{
-			this.comboLogLevel.select(this.comboLogLevel.indexOf("WARN"));
-		
-		}
 	}
 
 	/**
@@ -375,7 +273,7 @@ public class ServerConfigWin extends Dialog {
 		
 		grpMiscellaneous = new Group(shlServerConfiguration, SWT.NONE);
 		grpMiscellaneous.setText(" Disk Settings ");
-		grpMiscellaneous.setBounds(15, 305, 378, 112);
+		grpMiscellaneous.setBounds(15, 305, 378, 119);
 		
 		Label lblDiskSyncLazy = new Label(grpMiscellaneous, SWT.NONE);
 		lblDiskSyncLazy.setAlignment(SWT.RIGHT);
@@ -387,10 +285,10 @@ public class ServerConfigWin extends Dialog {
 		textLazyWrite.setBounds(247, 27, 65, 21);
 		
 		textLocalDiskDir = new Text(grpMiscellaneous, SWT.BORDER);
-		textLocalDiskDir.setBounds(25, 73, 331, 21);
+		textLocalDiskDir.setBounds(22, 80, 331, 21);
 		
 		Label lblLocalDiskDirectory = new Label(grpMiscellaneous, SWT.NONE);
-		lblLocalDiskDirectory.setBounds(25, 54, 171, 18);
+		lblLocalDiskDirectory.setBounds(22, 61, 171, 18);
 		lblLocalDiskDirectory.setText("Local disk directory:");
 		
 		Button btnOk = new Button(shlServerConfiguration, SWT.NONE);
@@ -403,8 +301,18 @@ public class ServerConfigWin extends Dialog {
 					
 					try 
 					{
-						UIUtils.setServerSettings(getChangedValues());
-						shlServerConfiguration.close();
+						// TODO: ? deal with changes while we were open
+						
+						//if (curserial == UIUtils.getDWConfigSerial())
+						//{
+							UIUtils.setServerSettings(getChangedValues());
+							shlServerConfiguration.close();
+						//}
+						//else
+						//{
+							// something changed while we were open...
+							
+						//}
 					} 
 					catch (IOException e1) 
 					{
