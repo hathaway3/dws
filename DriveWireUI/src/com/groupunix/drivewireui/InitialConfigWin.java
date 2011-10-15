@@ -339,6 +339,11 @@ public class InitialConfigWin extends Dialog {
 			public void widgetSelected(SelectionEvent e) 
 			{
 				try {
+					MainWin.setHost(textHost.getText());
+					MainWin.setPort(textPort.getText());
+					MainWin.setInstance(0);
+					
+					
 					ArrayList<String> ports = UIUtils.loadArrayList("ui server show serialdevs");
 					
 					comboSerialDev.removeAll();
