@@ -1571,7 +1571,9 @@ public class MainWin {
 
 	public static void refreshDiskTableAsync() throws IOException, DWUIOperationFailedException 
 	{
-		display.asyncExec(
+		if (display != null)
+		{
+			display.asyncExec(
 				  new Runnable() {
 					  public void run()
 					  {
@@ -1590,7 +1592,7 @@ public class MainWin {
 						  
 					  }
 				  });
-		
+		}
 	}
 	
 	public static void refreshDiskTable() throws IOException, DWUIOperationFailedException 
