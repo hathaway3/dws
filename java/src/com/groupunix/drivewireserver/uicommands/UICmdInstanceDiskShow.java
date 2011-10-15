@@ -33,6 +33,11 @@ public class UICmdInstanceDiskShow implements DWCommand {
 		
 		if (cmdline.length() == 0)
 		{
+			if (dwProto.getDiskDrives() == null)
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET, "Disk drives are null, is server restarting?"));
+			}
+			
 			for (int i =0;i<dwProto.getDiskDrives().getMaxDrives();i++)
 			{
 				if (dwProto.getDiskDrives().diskLoaded(i))
@@ -69,7 +74,8 @@ public class UICmdInstanceDiskShow implements DWCommand {
 					res += "reads: " + dwProto.getDiskDrives().getDisk(driveno).getReads() + "\n";
 					res += "writes: " + dwProto.getDiskDrives().getDisk(driveno).getWrites() + "\n";
 					
-					
+					res += "namedobject: " + dwProto.getDiskDrives().getDisk(driveno).isNamedObj() + "\n";
+					res += "syncfromsource: " + dwProto.getDiskDrives().getDisk(driveno).isSyncFromSource() + "\n";
 					
 				}
 				else

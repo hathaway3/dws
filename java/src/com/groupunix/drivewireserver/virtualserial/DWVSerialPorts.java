@@ -796,7 +796,14 @@ public class DWVSerialPorts {
 
 	public String getMidiProfileName() 
 	{
-		return(this.midiProfConf.getString("name","none"));
+		if (this.midiProfConf != null)
+		{
+			return(this.midiProfConf.getString("name","none"));
+		}
+		else
+		{
+			return("none");
+		}
 	}
 
 	public HierarchicalConfiguration getMidiProfile() 

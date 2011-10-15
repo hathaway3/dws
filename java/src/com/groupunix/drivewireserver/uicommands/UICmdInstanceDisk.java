@@ -15,7 +15,8 @@ public class UICmdInstanceDisk implements DWCommand {
 	{
 
 		commands.addcommand(new UICmdInstanceDiskShow(dwuiClientThread));
-		
+		commands.addcommand(new UICmdInstanceDiskSerial(dwuiClientThread));
+		commands.addcommand(new UICmdInstanceDiskStatus(dwuiClientThread));
 	}
 
 	

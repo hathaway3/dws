@@ -34,6 +34,8 @@ public class DWDiskDrives
 	private DWProtocolHandler dwProto;
 	private int hdbdrive;
 	
+	private int diskDriveSerial = -1;
+	
 	public DWDiskDrives(DWProtocolHandler dwProto)
 	{
 		logger.debug("disk drives init for handler #" + dwProto.getHandlerNo());
@@ -47,8 +49,7 @@ public class DWDiskDrives
 	{
 		if (DriveWireServer.hasDiskset(setname))
 		{
-			
-			
+
 			synchronized (DriveWireServer.serverconfig)
 			{
 				dwProto.getConfig().setProperty("CurrentDiskSet", setname);
@@ -73,8 +74,7 @@ public class DWDiskDrives
 				if (dset.getBoolean("EjectAllOnLoad",false))
 					EjectAllDisks();
 				
-				
-				
+
 				List<HierarchicalConfiguration> disks = dset.configurationsAt("disk");
 		    	
 				for(HierarchicalConfiguration disk : disks)
@@ -83,6 +83,8 @@ public class DWDiskDrives
 					// valid disk?
 					if (disk.containsKey("path") && disk.containsKey("drive"))
 					{
+						int driveno =  disk.getInt("drive");
+						
 						String filepath = new String();
 				    
 						if (disk.getBoolean("relativepath",false))
@@ -95,8 +97,8 @@ public class DWDiskDrives
 						{
 							filepath = disk.getString("path"); 
 						}
-				    
-				    
+						
+						
 						DWDisk tmpdisk = new DWDisk(this,filepath);
 				    
 				    
@@ -119,14 +121,14 @@ public class DWDiskDrives
 						{
 							tmpdisk.setOffset(disk.getInt("offset", 0));
 						}
-				    
+				    		
 						// 	eject if necessary
-						if (this.diskLoaded(disk.getInt("drive")))
+						if (this.diskLoaded(driveno))
 		    			{
-		    				EjectDisk(disk.getInt("drive"));
+		    				EjectDisk(driveno);
 		    			}
 		    		
-						LoadDisk(disk.getInt("drive"), tmpdisk);
+						LoadDisk(driveno, tmpdisk, false);
 				    
 			    	
 					}
@@ -173,11 +175,11 @@ public class DWDiskDrives
 	{
 		DWDisk tmpdisk = new DWDisk(this,path);
     	
-    	LoadDisk(driveno, tmpdisk);
+    	LoadDisk(driveno, tmpdisk, true);
 	}
 	
 	
-	public void LoadDisk(int driveno, DWDisk disk) throws DWDriveNotValidException, DWDriveAlreadyLoadedException
+	public void LoadDisk(int driveno, DWDisk disk, boolean savech) throws DWDriveNotValidException, DWDriveAlreadyLoadedException
 	{
 		validateDriveNo(driveno);
 		
@@ -189,15 +191,17 @@ public class DWDiskDrives
 		{
 			diskDrives[driveno] = disk;
 
-			updateCurrentDiskSet(driveno);
+			if (savech)
+			{
+				updateCurrentDiskSet(driveno);
+			}
 
 			logger.info("loaded disk '" + disk.getFilePath() + "' in drive " + driveno);
-			
+			incDiskDriveSerial();
 		}
 	}
 	
-	
-	@SuppressWarnings("unchecked")
+
 	private void updateCurrentDiskSet(int driveno) 
 	{
 		if (dwProto.getConfig().containsKey("CurrentDiskSet"))
@@ -209,32 +213,9 @@ public class DWDiskDrives
 		
 				// 	sync disk set with disk object for drive
 		
-				logger.debug("updating drive " + driveno + " in disk set " + diskset.getString("Name","Noname"));
+				logger.debug("updating disk set " + dwProto.getConfig().getString("CurrentDiskSet"));
 		
-				// 	clear old config
-		
-				List<HierarchicalConfiguration> disks = diskset.configurationsAt("disk");
-		
-				for (int i = disks.size()-1;i>-1;i--)
-				{
-					if (diskset.configurationAt("disk(" + i + ")").getInt("drive") == driveno)
-						diskset.configurationAt("disk(" + i + ")").clear();
-				}
-		
-				if (this.diskLoaded(driveno))
-				{
-					// add config for this disk
-				
-					diskset.addProperty("disk(-1).drive", driveno);
-					diskset.addProperty("disk.path", this.diskDrives[driveno].getFilePath());
-					diskset.addProperty("disk.writeprotect", this.diskDrives[driveno].getWriteProtect());
-					diskset.addProperty("disk.sync", this.diskDrives[driveno].isSync());
-					diskset.addProperty("disk.expand", this.diskDrives[driveno].isExpand());
-					diskset.addProperty("disk.sizelimit", this.diskDrives[driveno].getSizelimit());
-					diskset.addProperty("disk.offset", this.diskDrives[driveno].getOffset());
-					diskset.addProperty("disk.syncfromsource", this.diskDrives[driveno].isSyncFromSource());
-					diskset.addProperty("disk.namedobj", this.diskDrives[driveno].isNamedObj());
-				}
+				this.SaveDiskSet(dwProto.getConfig().getString("CurrentDiskSet"));
 			}
 		}		
 	}
@@ -262,6 +243,7 @@ public class DWDiskDrives
 		diskDrives[driveno] = null;
 		updateCurrentDiskSet(driveno);
 		logger.info("ejected disk from drive " + driveno);
+		incDiskDriveSerial();
 	}
 	
 	public void EjectAllDisks()
@@ -739,6 +721,105 @@ public class DWDiskDrives
 		}
 		
 		return res;
+	}
+
+
+	public void incDiskDriveSerial() 
+	{
+		this.diskDriveSerial++;
+	}
+
+
+	public int getDiskDriveSerial() {
+		return diskDriveSerial;
+	}
+
+
+	public void setNamedObj(int driveno, boolean onoff) throws DWDriveNotLoadedException 
+	{
+		if (diskDrives[driveno] != null)
+		{
+			diskDrives[driveno].setNamedObj(onoff);
+			updateCurrentDiskSet(driveno);
+		}
+		else
+		{
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);
+		}		
+	}
+	
+	public void setSyncFromSource(int driveno, boolean onoff) throws DWDriveNotLoadedException 
+	{
+		if (diskDrives[driveno] != null)
+		{
+			diskDrives[driveno].setSyncFromSource(onoff);
+			updateCurrentDiskSet(driveno);
+		}
+		else
+		{
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);
+		}		
+	}
+
+
+	public boolean isNamedObj(int driveno) throws DWDriveNotLoadedException 
+	{
+		if (!diskLoaded(driveno))
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);	
+		
+		return this.diskDrives[driveno].isNamedObj();
+	}
+	
+	public boolean isSyncFromSource(int driveno) throws DWDriveNotLoadedException 
+	{
+		if (!diskLoaded(driveno))
+			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);	
+		
+		return this.diskDrives[driveno].isSyncFromSource();
+	}
+
+
+	public void SaveDiskSet(String setname) 
+	{
+		HierarchicalConfiguration diskset;
+		
+		// does diskset already exist..
+		if (DriveWireServer.hasDiskset(setname))
+		{
+			// clean out disk info
+			diskset = (HierarchicalConfiguration) DriveWireServer.getDiskset(setname);
+			diskset.clearTree("disk");
+
+		}
+		else
+		{
+			// make a new one
+			DriveWireServer.serverconfig.addProperty("diskset(-1).Name", setname);
+			diskset = (HierarchicalConfiguration) DriveWireServer.getDiskset(setname);
+			
+		}
+		
+		// add disks
+		for (int driveno = 0;driveno<getMaxDrives();driveno++)
+		{
+	
+			if (this.diskLoaded(driveno))
+			{
+				// add config for this disk
+				
+				diskset.addProperty("disk(-1).drive", driveno);
+				diskset.addProperty("disk.path", this.diskDrives[driveno].getFilePath());
+				diskset.addProperty("disk.writeprotect", this.diskDrives[driveno].getWriteProtect());
+				diskset.addProperty("disk.sync", this.diskDrives[driveno].isSync());
+				diskset.addProperty("disk.expand", this.diskDrives[driveno].isExpand());
+				diskset.addProperty("disk.sizelimit", this.diskDrives[driveno].getSizelimit());
+				diskset.addProperty("disk.offset", this.diskDrives[driveno].getOffset());
+				diskset.addProperty("disk.syncfromsource", this.diskDrives[driveno].isSyncFromSource());
+				diskset.addProperty("disk.namedobj", this.diskDrives[driveno].isNamedObj());
+			}
+		}
+		
+
 	}
 	
 	

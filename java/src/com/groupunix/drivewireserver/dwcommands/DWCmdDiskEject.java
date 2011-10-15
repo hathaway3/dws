@@ -34,29 +34,37 @@ public class DWCmdDiskEject implements DWCommand
 	private DWCommandResponse doDiskEject(String drivestr) 
 	{
 		
-		try
+		if (drivestr.equals("all"))
 		{
-			int driveno = Integer.parseInt(drivestr);
-	
-			dwProto.getDiskDrives().EjectDisk(driveno);
-		
-			return(new DWCommandResponse("Disk ejected from drive " + driveno + "."));
-			
+			dwProto.getDiskDrives().EjectAllDisks();
+			return(new DWCommandResponse("Ejected all disks."));
 		}
-		catch (NumberFormatException e)
+		else
 		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR, "dw disk eject requires a numeric disk # as an argument"));
+			try
+			{
+				int driveno = Integer.parseInt(drivestr);
+	
+				dwProto.getDiskDrives().EjectDisk(driveno);
+		
+				return(new DWCommandResponse("Disk ejected from drive " + driveno + "."));
+			
+			}
+			catch (NumberFormatException e)
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR, "dw disk eject requires a numeric disk # as an argument"));
 					
-		} 
-		catch (DWDriveNotValidException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
+			} 
+			catch (DWDriveNotValidException e) 
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
 			
-		} 
-		catch (DWDriveNotLoadedException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
+			} 
+			catch (DWDriveNotLoadedException e) 
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
 			
+			}
 		}
 		
 	}

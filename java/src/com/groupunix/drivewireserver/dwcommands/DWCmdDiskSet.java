@@ -13,7 +13,7 @@ public class DWCmdDiskSet implements DWCommand
 		commands = new DWCommandList(dwProto);
 		commands.addcommand(new DWCmdDiskSetShow());
 		commands.addcommand(new DWCmdDiskSetLoad(dwProto));
-		
+		commands.addcommand(new DWCmdDiskSetSave(dwProto));
 	}
 
 	

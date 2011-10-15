@@ -16,6 +16,8 @@ public class UICmdServerConfig implements DWCommand {
 
 		commands.addcommand(new UICmdServerConfigShow());
 		commands.addcommand(new UICmdServerConfigSet());
+		commands.addcommand(new UICmdServerConfigSerial());
+		commands.addcommand(new UICmdServerConfigWrite());
 	}
 
 	

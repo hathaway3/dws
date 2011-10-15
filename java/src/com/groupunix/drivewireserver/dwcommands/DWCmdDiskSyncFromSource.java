@@ -5,18 +5,18 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
-public class DWCmdDiskWP implements DWCommand {
+public class DWCmdDiskSyncFromSource implements DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskWP(DWProtocolHandler dwProto)
+	public DWCmdDiskSyncFromSource(DWProtocolHandler dwProto)
 	{
 		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
 	{
-		return "wp";
+		return "ssync";
 	}
 
 	public String getLongHelp() 
@@ -28,20 +28,20 @@ public class DWCmdDiskWP implements DWCommand {
 	
 	public String getShortHelp() 
 	{
-		return "Toggle write protect on drive # ";
+		return "Toggle sync from source on drive # ";
 	}
 
 
 	public String getUsage() 
 	{
-		return "dw disk wp # [on|off]";
+		return "dw disk ssync # [on|off]";
 	}
 
 	public DWCommandResponse parse(String cmdline) 
 	{
 		if (cmdline.length() == 0)
 		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk wp requires a drive # as an argument"));
+			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk ssync requires a drive # as an argument"));
 		} 
 		else 
 		{
@@ -49,11 +49,11 @@ public class DWCmdDiskWP implements DWCommand {
 			
 			if (args.length == 1)
 			{
-				return(doDiskWPToggle(args[0]));
+				return(doDiskSSToggle(args[0]));
 			}
 			else
 			{
-				return(doDiskWPSet(args[0],args[1]));
+				return(doDiskSSSet(args[0],args[1]));
 			}
 			
 		}
@@ -63,7 +63,7 @@ public class DWCmdDiskWP implements DWCommand {
 	
 
 	
-	private DWCommandResponse doDiskWPSet(String drivestr, String tf) 
+	private DWCommandResponse doDiskSSSet(String drivestr, String tf) 
 	{
 		
 		try
@@ -72,13 +72,13 @@ public class DWCmdDiskWP implements DWCommand {
 	
 			if (DWUtils.isStringFalse(tf))
 			{
-				dwProto.getDiskDrives().setWriteProtect(driveno, false);
-				return(new DWCommandResponse("Disk in drive " + driveno + " is not write protected."));
+				dwProto.getDiskDrives().setSyncFromSource(driveno, false);
+				return(new DWCommandResponse("Disk in drive " + driveno + " will not sync from source."));
 			}
 			else if (DWUtils.isStringTrue(tf))
 			{
-				dwProto.getDiskDrives().setWriteProtect(driveno, true);
-				return(new DWCommandResponse("Disk in drive " + driveno + " is write protected."));
+				dwProto.getDiskDrives().setSyncFromSource(driveno, true);
+				return(new DWCommandResponse("Disk in drive " + driveno + " will sync from source."));
 			}
 			else
 			{
@@ -90,28 +90,29 @@ public class DWCmdDiskWP implements DWCommand {
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error: non numeric drive #"));
 			
-		} catch (DWDriveNotLoadedException e) 
+		} 
+		catch (DWDriveNotLoadedException e) 
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED, e.getMessage()));
 		} 
 	}
 
-	private DWCommandResponse doDiskWPToggle(String drivestr) 
+	private DWCommandResponse doDiskSSToggle(String drivestr) 
 	{
 		
 		try
 		{
 			int driveno = Integer.parseInt(drivestr);
 	
-			if (dwProto.getDiskDrives().getWriteProtect(driveno))
+			if (dwProto.getDiskDrives().isSyncFromSource(driveno))
 			{
-				dwProto.getDiskDrives().setWriteProtect(driveno, false);
-				return(new DWCommandResponse("Disk in drive " + driveno + " is not write protected."));
+				dwProto.getDiskDrives().setSyncFromSource(driveno, false);
+				return(new DWCommandResponse("Disk in drive " + driveno + " will not sync from source."));
 			}
 			else
 			{
-				dwProto.getDiskDrives().setWriteProtect(driveno, true);
-				return(new DWCommandResponse("Disk in drive " + driveno + " is write protected."));
+				dwProto.getDiskDrives().setSyncFromSource(driveno, true);
+				return(new DWCommandResponse("Disk in drive " + driveno + " will sync from source."));
 			}
 			
 		}

@@ -32,8 +32,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.98";
-	public static final String DWServerVersionDate = "10/06/2011";
+	public static final String DWServerVersion = "3.9.99";
+	public static final String DWServerVersionDate = "10/15/2011";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -44,6 +44,8 @@ public class DriveWireServer
 	
 	public static XMLConfiguration serverconfig;
 	
+	public static int configserial = 0;
+	
 	private static Thread[] dwProtoHandlerThreads;
 	private static DWProtocol[] dwProtoHandlers;
 	private static int numHandlers;
@@ -52,8 +54,9 @@ public class DriveWireServer
 	private static DWUIThread uiObj;
 	private static Thread uiT;	
 	
+	
 	private static boolean wanttodie = false;
-
+	
 	
 	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
 	@SuppressWarnings("unchecked")
@@ -112,6 +115,7 @@ public class DriveWireServer
 		try 
     	{
 			serverconfig = new XMLConfiguration(configfile);
+			
 		} 
     	catch (ConfigurationException e1) 
     	{

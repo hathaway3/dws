@@ -62,12 +62,12 @@ public class DWCmdDiskExpand implements DWCommand {
 			if (DWUtils.isStringFalse(tf))
 			{
 				dwProto.getDiskDrives().setExpand(driveno, false);
-				return(new DWCommandResponse("Image in drive " + driveno + " will NOT be automatically expanded."));
+				return(new DWCommandResponse("Disk in drive " + driveno + " will not be automatically expanded."));
 			}
 			else if (DWUtils.isStringTrue(tf))
 			{
 				dwProto.getDiskDrives().setExpand(driveno, true);
-				return(new DWCommandResponse("Image in drive " + driveno + " will be automatically expanded."));
+				return(new DWCommandResponse("Disk in drive " + driveno + " will be automatically expanded."));
 			}
 			else
 			{
