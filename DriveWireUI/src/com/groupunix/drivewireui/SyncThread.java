@@ -17,6 +17,17 @@ public class SyncThread implements Runnable
 		
 		while(MainWin.config.getBoolean("ServerSync",true) && !((MainWin.shell != null) && MainWin.shell.isDisposed()))
 		{
+			// sleep
+			try 
+			{
+				Thread.sleep(MainWin.config.getLong("ServerSyncInterval", 2000));
+			} 
+			catch (InterruptedException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			// are we ready to look at disks
 			if (MainWin.getInstance() > -1)
 			{
@@ -97,16 +108,7 @@ public class SyncThread implements Runnable
 
 			}
 			
-			// sleep
-			try 
-			{
-				Thread.sleep(MainWin.config.getLong("ServerSyncInterval", 2000));
-			} 
-			catch (InterruptedException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
 			
 		}
 		
