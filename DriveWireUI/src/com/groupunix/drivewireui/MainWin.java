@@ -1919,9 +1919,16 @@ public class MainWin {
 
 	public static HierarchicalConfiguration getInstanceConfig() 
 	{
-		@SuppressWarnings("unchecked")
-		List<HierarchicalConfiguration> handlerconfs = (List<HierarchicalConfiguration>)MainWin.dwconfig.configurationsAt("instance");
-
-		return handlerconfs.get(MainWin.getInstance());
+		if (MainWin.dwconfig != null)
+		{
+			@SuppressWarnings("unchecked")
+			List<HierarchicalConfiguration> handlerconfs = (List<HierarchicalConfiguration>)MainWin.dwconfig.configurationsAt("instance");
+			
+			if (MainWin.getInstance() < handlerconfs.size())
+			{
+				return handlerconfs.get(MainWin.getInstance());
+			}
+		}
+		return(null);
 	}
 }
