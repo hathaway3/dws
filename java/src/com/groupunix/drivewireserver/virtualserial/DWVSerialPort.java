@@ -446,7 +446,7 @@ public class DWVSerialPort {
 				}
 				
 				
-				
+				// close socket if connected
 				if (this.socket != null)
 				{
 					logger.debug("closing socket on port " + this.port);
@@ -459,6 +459,10 @@ public class DWVSerialPort {
 				
 					this.socket = null;
 				}
+				
+				
+				// close listeners if this was their control port
+				this.dwProto.getVPorts().getListenerPool().closePortServerSockets(this.port);
 				
 			}
 		}
