@@ -9,19 +9,14 @@ import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 
-public class UICmdDisksetSet implements DWCommand {
+public class UICmdDisksetSet extends DWCommand {
 
 	
 	public String getCommand() 
 	{
 		return "set";
-	}
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	
@@ -63,19 +58,20 @@ public class UICmdDisksetSet implements DWCommand {
 	  
 		if (m.find())
 		{
-			if (DriveWireServer.hasDiskset(m.group(1)))
-			{
+
 				synchronized(DriveWireServer.serverconfig)
 				{
-					DriveWireServer.getDiskset(m.group(1)).setProperty(m.group(2), m.group(3));
+					try {
+						DriveWireServer.getDiskset(m.group(1)).setProperty(m.group(2), m.group(3));
+					} 
+					catch (DWDisksetNotValidException e) 
+					{
+						return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
+					}
 				}
 				
 				return(new DWCommandResponse("Set item '" + m.group(2) + "' in diskset '" + m.group(1) + "'."));
-			}
-			else
-			{
-				return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,"There is no diskset called '" + m.group(1) + "'"));
-			}			
+				
 			
 		}
 		else
@@ -86,28 +82,33 @@ public class UICmdDisksetSet implements DWCommand {
 
 	private DWCommandResponse doDiskSetClear(String setname, String item) 
 	{
-		if (DriveWireServer.hasDiskset(setname))
-		{
-			HierarchicalConfiguration diskset = DriveWireServer.getDiskset(setname);
-			
-			if (diskset.containsKey(item))
+
+			HierarchicalConfiguration diskset;
+			try 
 			{
-				synchronized(DriveWireServer.serverconfig)
+				diskset = DriveWireServer.getDiskset(setname);
+				if (diskset.containsKey(item))
 				{
-					diskset.clearProperty(item);
+					synchronized(DriveWireServer.serverconfig)
+					{
+						diskset.clearProperty(item);
+					}
 				}
-			}
-			else
+				else
+				{
+					return(new DWCommandResponse("Item '"+item+"' is not set in diskset '"+setname+"'"));
+				}
+			
+			} 
+			catch (DWDisksetNotValidException e) 
 			{
-				return(new DWCommandResponse("Item '"+item+"' is not set in diskset '"+setname+"'"));
+				return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET, e.getMessage()));
 			}
+			
+			
 			
 			return(new DWCommandResponse("Cleared item '" + item + "' from diskset '" + setname + "'."));
-		}
-		else
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,"There is no diskset called '" + setname + "'"));
-		}
+	
 	}
 
 	public boolean validate(String cmdline) 

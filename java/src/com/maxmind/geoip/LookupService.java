@@ -125,8 +125,10 @@ public class LookupService {
 
     private static final Country UNKNOWN_COUNTRY = new Country("--", "N/A");
 
-    private final static HashMap hashmapcountryCodetoindex = new HashMap(512);
-    private final static HashMap hashmapcountryNametoindex = new HashMap(512);
+    @SuppressWarnings("rawtypes")
+	private final static HashMap hashmapcountryCodetoindex = new HashMap(512);
+    @SuppressWarnings("rawtypes")
+	private final static HashMap hashmapcountryNametoindex = new HashMap(512);
     private final static String[] countryCode = {
 	"--","AP","EU","AD","AE","AF","AG","AI","AL","AM","AN","AO","AQ","AR",
 	"AS","AT","AU","AW","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ",
@@ -294,7 +296,8 @@ public class LookupService {
      *
      * @throws java.io.IOException if an error occurs reading from the database file.
      */
-    private void init() throws IOException {
+    @SuppressWarnings("unchecked")
+	private void init() throws IOException {
         int i, j;
         byte [] delim = new byte[3];
         byte [] buf = new byte[SEGMENT_RECORD_LENGTH];
@@ -557,7 +560,8 @@ public class LookupService {
 	}
     }
 
-    String getDnsAttributes(String ip) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	String getDnsAttributes(String ip) {
         try {
             Hashtable env = new Hashtable();
             env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");

@@ -22,39 +22,45 @@ import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException
 
 public class DWDisk {
 
-	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 
-	private int LSN = 0;
-	private boolean	wrProt = false;
-	private boolean expand = true;
-	private boolean sync = true;
-	private boolean namedobj = false;
-	private boolean syncFromSource = false;
 	
-	private int offset = 0;
-	private int sizelimit = -1;
-	
+	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 	private ArrayList<DWDiskSector> sectors = new ArrayList<DWDiskSector>();
+		
 	
-	private int reads = 0;
-	private int writes = 0;
-	
-	private int readErrors = 0;
 	
 	private FileSystemManager fsManager;
 	private FileObject fileobj;
 	
-	private DWDiskDrives diskDrives;
+	private HierarchicalConfiguration params;
+	
+	// these cannot change for this disk while it is loaded
+	private int sectorsize;
+	private int maxsectors;
 
-	private long lastModifiedTime = 0;
 	
 	
-	public DWDisk(DWDiskDrives diskDrives, String path) throws IOException
+	public DWDisk(String path, int sectorsize, int maxsectors) throws IOException
 	{
-		this.fsManager = VFS.getManager();
-		fileobj = fsManager.resolveFile(path);
+		this.sectorsize = sectorsize;
+		this.maxsectors = maxsectors;
 
-		this.diskDrives = diskDrives;
+		
+		this.fsManager = VFS.getManager();
+		
+		try
+		{
+			fileobj = fsManager.resolveFile(path);
+		}
+		catch (org.apache.commons.vfs.FileSystemException e)
+		{
+			logger.error("FileSystemException: " + e.getMessage());
+			throw new IOException(e.getMessage());
+		}
+		
+		
+		this.params = new HierarchicalConfiguration();
+		this.params.setProperty("path", fileobj.getName().toString());
 		
 		logger.info("New DWDisk for '" + path + "'");
 		
@@ -71,7 +77,23 @@ public class DWDisk {
 	}
 	
 	
+
+	void setParam(String key, Object val) 
+	{
+		if (val == null)
+		{
+			this.params.clearProperty(key);
+		}
+		else
+		{
+			this.params.setProperty(key, val);
+		}
+	}
+
+
 	
+	// OS9 disk format stuff
+
 	public int DD_TOT()
 	{
 		byte[] dd_tot = new byte[3];
@@ -221,22 +243,22 @@ public class DWDisk {
 	{
 	
 		
-		if ((newLSN < 0) || (newLSN > this.diskDrives.getConfig().getInt("DiskMaxSectors", DWDefs.DISK_MAXSECTORS)))
+		if ((newLSN < 0) || (newLSN > this.maxsectors))
 		{
 			throw new DWInvalidSectorException("Sector " + newLSN + " is not valid");
 			
 		}
-		else if ((newLSN >= this.getDiskSectors()) && (!this.expand))
+		else if ((newLSN >= this.getDiskSectors()) && (!this.params.getBoolean("expand",DWDefs.DISK_DEFAULT_EXPAND)))
 		{
 			throw new DWSeekPastEndOfDeviceException("Sector " + newLSN + " is beyond end of file, and expansion is not allowed");
 		}
-		else if ((this.sizelimit > -1) && (newLSN >= this.sizelimit))
+		else if ((this.getSizelimit() > -1) && (newLSN >= this.getSizelimit()))
 		{
 			throw new DWSeekPastEndOfDeviceException("Sector " + newLSN + " is beyond specified sector size limit");
 		}
 		else
 		{
-			this.LSN = newLSN;
+			this.setParam("_lsn", newLSN);
 			
 		}
 	}
@@ -245,30 +267,15 @@ public class DWDisk {
 	
 	public int getLSN()
 	{
-		return(this.LSN);
+		return(this.params.getInt("_lsn",0));
 	}
 	
-	
-	
-	public synchronized void setWriteProtect(boolean wp)
-	{
-		if (wp)
-		{
-			logger.debug("write protecting '" + this.fileobj.getName() + "'");
-		}
-		else
-		{
-			logger.debug("write enabling '" + this.fileobj.getName() + "'");
-		}
-		
-		this.wrProt = wp;
-	}
 	
 	
 	
 	public synchronized boolean getWriteProtect()
 	{
-		return(this.wrProt);
+		return(this.params.getBoolean("writeprotect",DWDefs.DISK_DEFAULT_WRITEPROTECT));
 	}
 	
 	
@@ -284,7 +291,7 @@ public class DWDisk {
 	    this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
 	    
 	    int sector = 0;
-	    int sectorsize = getSectorSize();
+	    int sectorsize = this.sectorsize;
 	    int readres = 0;
 	    int bytesRead = 0;
 	    byte[] buffer = new byte[sectorsize];
@@ -298,7 +305,7 @@ public class DWDisk {
 		   	if (bytesRead == sectorsize)
 		   	{
 		   		
-		   		this.sectors.add(sector, new DWDiskSector(this, sector));
+		   		this.sectors.add(sector, new DWDiskSector(sector, this.sectorsize));
 		   		this.sectors.get(sector).setData(buffer, false);
 		   		sector++;
 		   		bytesRead = 0;
@@ -311,9 +318,9 @@ public class DWDisk {
 		if (bytesRead > 0)
 		{
 			
-			if (getConfig().getBoolean("DiskPadPartialSectors", false))
+			if (this.isPadPartialSectors())
 			{
-				this.sectors.add(sector, new DWDiskSector(this, sector));
+				this.sectors.add(sector, new DWDiskSector(sector, this.sectorsize));
 		   		this.sectors.get(sector).setData(buffer, false);
 		   		sector++;
 		   		logger.info("File length doesn't match current sector size of " + sectorsize + ", the last " + bytesRead + " bytes were padded to form a full sector.");
@@ -329,6 +336,7 @@ public class DWDisk {
 			
 		//logger.error("Encoding: " + this.fileobj.getContent().getContentInfo().getContentEncoding() + "  Type: " + this.fileobj.getContent().getContentInfo().getContentType());
 		
+		this.setParam("_sectors", sector);
 		fis.close();
 			
 	}
@@ -345,12 +353,13 @@ public class DWDisk {
 	public synchronized byte[] readSector() throws IOException
 	{
 		// logger.debug("Read sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
-		this.reads++;
+		this.incParam("_reads");
+		
 		
 		// check source for changes...
-		if (getConfig().getBoolean("DiskSyncFromSource", false) || (this.syncFromSource) || ( (this.namedobj) && (getConfig().getBoolean("NamedObjectSyncFromSource", false)) ) )
+		if (this.isSyncFrom())
 		{
-			if (this.fileobj.getContent().getLastModifiedTime() != this.lastModifiedTime)
+			if (this.fileobj.getContent().getLastModifiedTime() != this.getLastModifiedTime())
 			{
 				// source has changed.. have we?
 				if (this.getDirtySectors() > 0)
@@ -368,16 +377,16 @@ public class DWDisk {
 		}
 		
 		
-		int effLSN = this.LSN + this.offset;
+		int effLSN = this.getLSN() + this.getOffset();
 		
 		// we can read beyond the current size of the image
 		if (effLSN >= this.sectors.size())
 		{
-			logger.debug("request for undefined sector " + effLSN + " (" + this.LSN + ")");
+			logger.debug("request for undefined sector " + effLSN + " (" + this.getLSN() + ")");
 			
 			// expand disk
 			expandDisk(effLSN);
-			this.sectors.add(effLSN, new DWDiskSector(this, effLSN));
+			this.sectors.add(effLSN, new DWDiskSector(effLSN, this.sectorsize));
 		}
 		
 		return(this.sectors.get(effLSN).getData());	
@@ -385,12 +394,42 @@ public class DWDisk {
 	
 	
 	
+
+	public boolean isNamedObject() 
+	{
+		return this.params.getBoolean("namedobject",DWDefs.DISK_DEFAULT_NAMEDOBJECT);
+	}
+
+
+
+	public boolean isSyncFrom() 
+	{
+		return this.params.getBoolean("syncfrom",DWDefs.DISK_DEFAULT_SYNCFROM);
+	}
+
+	public boolean isSyncTo() 
+	{
+		return this.params.getBoolean("syncto",DWDefs.DISK_DEFAULT_SYNCTO);
+	}
+	
+	public boolean isPadPartialSectors() 
+	{
+		return this.params.getBoolean("padsectors",DWDefs.DISK_DEFAULT_PADSECTORS);
+	}
+
+	public void incParam(String key)
+	{
+		this.setParam(key, this.params.getInt(key,0) + 1);
+	}
+	
+
 	private void expandDisk(int target) 
 	{
 		for (int i = this.sectors.size();i < target;i++)
 		{
-			this.sectors.add(i, new DWDiskSector(this, i));
+			this.sectors.add(i, new DWDiskSector(0, this.sectorsize));
 		}
+		this.setParam("_sectors", target);
 	}
 
 
@@ -398,26 +437,26 @@ public class DWDisk {
 	public synchronized void writeSector(byte[] data) throws DWDriveWriteProtectedException, IOException
 	{
 		
-		if (this.wrProt)
+		if (this.getWriteProtect())
 		{
 			throw new DWDriveWriteProtectedException("Disk is write protected");
 		}
 		else
 		{
-			int effLSN = this.LSN + this.offset;
+			int effLSN = this.getLSN() + this.getOffset();
 			
 			// we can write beyond our current size
 			if (effLSN>= this.sectors.size())
 			{
 				// expand disk / add sector
 				expandDisk(effLSN);
-				this.sectors.add(effLSN, new DWDiskSector(this, effLSN));
+				this.sectors.add(effLSN, new DWDiskSector(effLSN, this.sectorsize));
 				logger.debug("new sector " + effLSN);
 			}
 			
 			this.sectors.get(effLSN).setData(data);
 			
-			this.writes++;
+			this.incParam("_writes");
 			
 			// logger.debug("write sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
 
@@ -426,12 +465,12 @@ public class DWDisk {
 	}
 
 	public int getReads() {
-		return reads;
+		return this.params.getInt("_reads",0);
 	}
 
 
 	public int getWrites() {
-		return writes;
+		return this.params.getInt("_writes",0);
 	}
 
 	public synchronized int getDirtySectors() 
@@ -463,11 +502,9 @@ public class DWDisk {
 	
 	public synchronized void writeDisk() throws IOException
 	{
-		// write in memory image to file
+		// write in memory image to source 
 		// using most efficient method available
 		
-		if (getDirtySectors() > 0)
-		{	
 		
 		if (this.fileobj.isWriteable())
 		{
@@ -494,7 +531,7 @@ public class DWDisk {
 			throw new IOException("File is unwriteable");
 		}
 		
-		}
+		
 	}
 	
 	
@@ -544,7 +581,7 @@ public class DWDisk {
 				{
 					if (getSector(i).isDirty())
 					{
-						long pos = i * getSectorSize();
+						long pos = i * this.sectorsize;
 						raf.seek(pos);
 						raf.write(getSector(i).getData());
 						logger.debug("wrote sector " + i + " in " + getFilePath() );
@@ -560,8 +597,7 @@ public class DWDisk {
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error writing sectors in " + this.getFilePath() + ": " + e.getMessage() );
 		}
 		
 		
@@ -586,7 +622,7 @@ public class DWDisk {
 	   while (sector < this.sectors.size()) 
 	   {
 	    
-		   fos.write(this.sectors.get(sector).getData(), 0, getSectorSize());
+		   fos.write(this.sectors.get(sector).getData(), 0, this.sectorsize);
 		   this.sectors.get(sector).makeClean();
 		   sector++;
 	   }
@@ -615,8 +651,7 @@ public class DWDisk {
 		   } 
 		   catch (FileSystemException e)
 		   {
-			   // TODO Auto-generated catch block
-			   e.printStackTrace();
+			   logger.error("While checking FS writable: " + e.getMessage());
 		   }
 		   
 		   return(isw);
@@ -645,7 +680,7 @@ public FileObject getFileObject()
 
 public void reload() throws IOException
 {
-	logger.debug("reloading disk sectors");
+	logger.debug("reloading disk sectors from " + this.getFilePath());
 
 	this.sectors.clear();
 	
@@ -673,118 +708,108 @@ public void shutdown()
 
 
 
-	public void setExpand(boolean expand) {
-		this.expand = expand;
-	}
-
-
-
-	public boolean isExpand() {
-		return expand;
-	}
-
-
-
-	public void setSync(boolean sync) {
-		this.sync = sync;
-	}
-
-
-
-	public boolean isSync() {
-		return sync;
-	}
-
-	public boolean isSyncFromSource() {
-		return this.syncFromSource;
-	}
-
-	public void setOffset(int offset) {
-		this.offset = offset;
-	}
-
-
-
-	public int getOffset() {
-		return offset;
-	}
-
-
-
-	public void setSizelimit(int size) {
-		this.sizelimit = size;
-	}
-
-
-
-	public int getSizelimit() {
-		return sizelimit;
-	}
-
-
-
-	public HierarchicalConfiguration getConfig() 
+	public boolean isExpand() 
 	{
-		return(diskDrives.getConfig());
+		return this.params.getBoolean("expand", DWDefs.DISK_DEFAULT_EXPAND);
 	}
 
-	
-	public int getSectorSize()
+
+
+
+	public int getOffset() 
 	{
-		return getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE);
+		return this.params.getInt("offset", DWDefs.DISK_DEFAULT_OFFSET);
 	}
 
 
-	public void readError() 
+
+	public void setSizelimit(int size) 
 	{
-		this.readErrors++;
+		this.params.setProperty("sizelimit", size);
 	}
+
+
+
+	public int getSizelimit() 
+	{
+		return this.params.getInt("sizelimit",DWDefs.DISK_DEFAULT_SIZELIMIT);
+	}
+
+
 
 
 
 	public int getReadErrors() 
 	{
-		return this.readErrors;
+		return this.params.getInt("_read_errors",0);
+	}
+
+	public int getWriteErrors() 
+	{
+		return this.params.getInt("_write_errors",0);
 	}
 
 
 
-	public void setNamedObj(boolean namedobj) {
-		this.namedobj = namedobj;
+	public void setLastModifiedTime(long lastModifiedTime) 
+	{
+		this.params.setProperty("_last_modified_time", lastModifiedTime);
 	}
 
 
 
-	public boolean isNamedObj() {
-		return namedobj;
+	public long getLastModifiedTime() 
+	{
+		return this.params.getLong("_last_modified_time", 0);
 	}
 
 
 
-	public void setLastModifiedTime(long lastModifiedTime) {
-		this.lastModifiedTime = lastModifiedTime;
+	public HierarchicalConfiguration getParams() 
+	{
+		return(this.params);
 	}
 
 
-
-	public long getLastModifiedTime() {
-		return lastModifiedTime;
-	}
-
-
-
-	public void setSyncFromSource(boolean sync) {
-		this.syncFromSource = sync;
+	
+	public String getDiskFSType()
+	{
 		
+		if (!sectors.isEmpty())
+		{
+			// OS9 ?
+			if ((sectors.get(0).getData()[3] == 18) && (sectors.get(0).getData()[73] == 18) && (sectors.get(0).getData()[75] == 18))
+			{
+				return("OS9");
+			}
+			
+			// LWFS
+			byte[] lwfs = new byte[4];
+			System.arraycopy( sectors.get(0).getData(), 0, lwfs, 0, 4 );
+			
+			if (new String(lwfs).equals("LWFS") || new String(lwfs).equals("LW16"))
+			{
+				return("LWFS");
+			}
+			
+			// cocoboot isave
+			if (sectors.get(0).getData()[0] == (byte) 'f' && sectors.get(0).getData()[1] == (byte) 'c')
+			{
+				return("CoCoBoot isave");
+			}
+			
+			// cocoboot script
+			if (sectors.get(0).getData()[0] == (byte) 'f' && sectors.get(0).getData()[1] == (byte) 's')
+			{
+				return("CoCoBoot script");
+			}
+			
+			// DECB?
+		}
+		
+		return("Unknown");
 	}
-
-
-
-
-
-
-
-
+	
 	
 	
 }

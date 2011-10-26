@@ -5,11 +5,11 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdInstanceConfig implements DWCommand {
+public class UICmdInstanceConfig extends DWCommand {
 
 	static final String command = "config";
 	
-	private DWCommandList commands = new DWCommandList(null);
+	private DWCommandList commands = new DWCommandList();
 		
 	public UICmdInstanceConfig(DWUIClientThread dwuiClientThread)
 	{
@@ -27,13 +27,6 @@ public class UICmdInstanceConfig implements DWCommand {
 	public DWCommandResponse parse(String cmdline)
 	{
 		return(commands.parse(cmdline));
-	}
-
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 

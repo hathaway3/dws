@@ -7,12 +7,13 @@ import org.apache.commons.lang.StringUtils;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
-public class DWCmdConfigShow implements DWCommand {
+public class DWCmdConfigShow extends DWCommand {
 
 	DWProtocol dwProto;
 	
-	public DWCmdConfigShow(DWProtocol dwProtocol) 
+	public DWCmdConfigShow(DWProtocol dwProtocol,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProtocol;
 	}
 
@@ -21,11 +22,6 @@ public class DWCmdConfigShow implements DWCommand {
 		return "show";
 	}
 
-	public String getLongHelp() 
-	{
-
-		return null;
-	}
 
 	
 	public String getShortHelp() 

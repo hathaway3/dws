@@ -1,12 +1,51 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import com.groupunix.drivewireserver.DWDefs;
 
-public interface DWCommand {
+public abstract class DWCommand 
+{
 
-	String getCommand();
-	DWCommandResponse parse(String cmdline);
-	String getShortHelp();
-	String getLongHelp();
-	String getUsage();
-	boolean validate(String cmdline);
+	private DWCommand parentcmd = null;
+	
+	public abstract String getCommand();
+	
+	
+	public DWCommandList getCommandList()
+	{
+		return null;
+	}
+	
+	public DWCommandResponse parse(String cmdline)
+	{
+		return(new DWCommandResponse(false,DWDefs.RC_SERVER_NOT_IMPLEMENTED,"Not implemented (yet?)."));
+	}
+	
+	public DWCommand getParentCmd()
+	{
+		return this.parentcmd;
+	}
+	
+	public void setParentCmd(DWCommand cmd)
+	{
+		this.parentcmd = cmd;
+	}
+	
+
+	public String getShortHelp()
+	{
+		return("Not implemented.");
+	}
+
+	public String getUsage()
+	{
+		return("Not implemented.");
+	}
+
+	public boolean validate(String cmdline)
+	{
+		return false;
+	}
+	
 }
+
+

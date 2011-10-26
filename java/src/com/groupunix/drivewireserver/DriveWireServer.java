@@ -23,6 +23,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
+import com.groupunix.drivewireserver.dwhelp.DWHelp;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
@@ -32,8 +34,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "3.9.99";
-	public static final String DWServerVersionDate = "10/15/2011";
+	public static final String DWServerVersion = "4.0.0";
+	public static final String DWServerVersionDate = "10/25/2011";
 	
 	
 	private static Logger logger = Logger.getLogger("DWServer");
@@ -54,6 +56,7 @@ public class DriveWireServer
 	private static DWUIThread uiObj;
 	private static Thread uiT;	
 	
+	private static DWHelp dwhelp = null;
 	
 	private static boolean wanttodie = false;
 	
@@ -161,6 +164,10 @@ public class DriveWireServer
     		serverconfig.setAutoSave(true);
     	}
     	
+    	
+    	// make a helper
+    	if (!serverconfig.getBoolean("NoHelp", false))
+    		dwhelp = new DWHelp(serverconfig.getString("HelpFile",DWDefs.HELP_DEFAULT_FILE));
     	
     	
     	// start protocol handler instances
@@ -490,6 +497,11 @@ public class DriveWireServer
 	@SuppressWarnings("unchecked")
 	public static boolean hasDiskset(String setname)
 	{
+		if (setname.equalsIgnoreCase("all"))
+		{
+			return(true);
+		}
+		
 		List<HierarchicalConfiguration> disksets = serverconfig.configurationsAt("diskset");
     	
 		boolean setexists = false;
@@ -509,8 +521,14 @@ public class DriveWireServer
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static HierarchicalConfiguration getDiskset(String setname)
+	public static HierarchicalConfiguration getDiskset(String setname) throws DWDisksetNotValidException
 	{
+		if (setname.equalsIgnoreCase("all"))
+		{
+			throw new DWDisksetNotValidException("Diskset '" + setname + "' is not allowed.");
+		}
+		
+		
 		List<HierarchicalConfiguration> disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
 	
 
@@ -518,14 +536,15 @@ public class DriveWireServer
 		{
 			HierarchicalConfiguration dset = it.next();
 	    
-			if ( dset.getString("Name","").equalsIgnoreCase(setname) )
+			if ( dset.getString("Name","").equals(setname) )
 			{
 				return(dset);
 			}
 	    
 		}
 	
-		return(null);
+		throw new DWDisksetNotValidException("No diskset '" + setname + "' is defined.");
+		
 	}
 
 
@@ -572,6 +591,10 @@ public class DriveWireServer
 		logger.warn("server shutdown requested");
 		wanttodie = true;
 		
+	}
+
+	public static DWHelp getHelp() {
+		return dwhelp;
 	}
 	
 }

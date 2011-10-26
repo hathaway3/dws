@@ -6,7 +6,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdInstanceAttach implements DWCommand {
+public class UICmdInstanceAttach extends DWCommand {
 
 	private DWUIClientThread clientref;
 	
@@ -22,11 +22,6 @@ public class UICmdInstanceAttach implements DWCommand {
 		return "attach";
 	}
 
-	@Override
-	public String getLongHelp() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public String getShortHelp() {

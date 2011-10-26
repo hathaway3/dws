@@ -3,23 +3,19 @@ package com.groupunix.drivewireserver.dwcommands;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdMidiSynthInstr implements DWCommand {
+public class DWCmdMidiSynthInstr extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthInstr(DWProtocolHandler dwProto)
+	public DWCmdMidiSynthInstr(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
 	{
 		return "instr";
-	}
-
-	public String getLongHelp() 
-	{
-		return null;
 	}
 
 	

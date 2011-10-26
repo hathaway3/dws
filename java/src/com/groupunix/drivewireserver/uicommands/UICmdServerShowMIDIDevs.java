@@ -9,7 +9,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShowMIDIDevs implements DWCommand {
+public class UICmdServerShowMIDIDevs extends DWCommand {
 
 	@Override
 	public String getCommand() 
@@ -17,10 +17,6 @@ public class UICmdServerShowMIDIDevs implements DWCommand {
 		return "mididevs";
 	}
 
-	@Override
-	public String getLongHelp() {
-		return null;
-	}
 
 	@Override
 	public String getShortHelp() {
@@ -49,7 +45,7 @@ public class UICmdServerShowMIDIDevs implements DWCommand {
 				try 
 				{
 					device = MidiSystem.getMidiDevice(infos[i]);
-					res += i + " " + device.getDeviceInfo().getName()+ " (" + device.getClass().getSimpleName() + ")\n";
+					res += i + " " + device.getDeviceInfo().getName() +"\n";
 				
 				} 
 				catch (MidiUnavailableException e) 

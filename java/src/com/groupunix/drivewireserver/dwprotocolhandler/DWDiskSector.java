@@ -7,15 +7,15 @@ public class DWDiskSector
 	private byte[] data;
 	private byte[] dirtydata;
 	private boolean dirty = false;
-	private DWDisk disk;
+	private int sectorsize;
 	
 
-	public DWDiskSector(DWDisk disk, int lsn)
+	public DWDiskSector( int lsn, int sectorsize)
 	{
 		this.LSN = lsn;
-		this.disk = disk;
-		this.data = new byte[disk.getSectorSize()];
-		this.dirtydata = new byte[disk.getSectorSize()];
+		this.sectorsize = sectorsize;
+		this.data = new byte[sectorsize];
+		this.dirtydata = new byte[sectorsize];
 	}
 
 	public synchronized int getLSN() {
@@ -26,7 +26,7 @@ public class DWDiskSector
 	{
 
 		this.dirty = true;
-		System.arraycopy(newdata, 0, this.dirtydata, 0, disk.getSectorSize());
+		System.arraycopy(newdata, 0, this.dirtydata, 0, this.sectorsize);
 	}
 
 	public synchronized void setData(byte[] newdata, boolean dirty) 
@@ -36,11 +36,11 @@ public class DWDiskSector
 		
 		if (dirty == true)
 		{
-			System.arraycopy(newdata, 0, this.dirtydata, 0, disk.getSectorSize());
+			System.arraycopy(newdata, 0, this.dirtydata, 0, this.sectorsize);
 		}
 		else
 		{
-			System.arraycopy(newdata, 0, this.data, 0, disk.getSectorSize());
+			System.arraycopy(newdata, 0, this.data, 0, this.sectorsize);
 		}
 	}
 	
@@ -61,7 +61,7 @@ public class DWDiskSector
 	{
 		if (this.dirty)
 		{
-			System.arraycopy(this.dirtydata, 0, this.data, 0, disk.getSectorSize());
+			System.arraycopy(this.dirtydata, 0, this.data, 0, this.sectorsize);
 			this.dirty = false;
 		}
 	}

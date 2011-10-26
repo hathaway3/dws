@@ -9,7 +9,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShowSynthProfiles implements DWCommand {
+public class UICmdServerShowSynthProfiles extends DWCommand {
 
 	@Override
 	public String getCommand() 
@@ -18,11 +18,6 @@ public class UICmdServerShowSynthProfiles implements DWCommand {
 		return "synthprofiles";
 	}
 
-	@Override
-	public String getLongHelp() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public String getShortHelp() {

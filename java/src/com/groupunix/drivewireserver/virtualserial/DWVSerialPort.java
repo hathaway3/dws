@@ -10,7 +10,6 @@ import javax.sound.midi.ShortMessage;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
@@ -551,9 +550,9 @@ public class DWVSerialPort {
 
 
 
-	public void sendUtilityFailResponse(int errno, String txt) 
+	public void sendUtilityFailResponse(byte errno, String txt) 
 	{
-		String perrno = String.format("%03d", errno);
+		String perrno = String.format("%03d", (errno & 0xFF));
 		logger.debug("command failed: " + perrno + " " + txt);
 		try 
 		{

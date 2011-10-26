@@ -4,7 +4,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerConfigSerial implements DWCommand {
+public class UICmdServerConfigSerial extends DWCommand {
 
 	static final String command = "serial";
 	
@@ -23,13 +23,6 @@ public class UICmdServerConfigSerial implements DWCommand {
 		res = DriveWireServer.configserial + "";
 		
 		return(new DWCommandResponse(res));
-	}
-
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 

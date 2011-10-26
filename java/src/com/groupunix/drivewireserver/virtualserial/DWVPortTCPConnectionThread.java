@@ -51,13 +51,13 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		catch (UnknownHostException e) 
 		{
 			logger.debug("unknown host " + tcphost );
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, 4,"Unknown host '" + this.tcphost + "'");
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_UNKNOWN_HOST,"Unknown host '" + this.tcphost + "'");
 			this.wanttodie = true;
 		} 
 		catch (IOException e1) 
 		{
 			logger.debug("IO error: " + e1.getMessage());
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, 5, e1.getMessage());
+			dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_IO_ERROR, e1.getMessage());
 			this.wanttodie = true;
 		}
 		
@@ -175,8 +175,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 				} 
 				catch (DWPortNotValidException e) 
 				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error("in close port: " + e.getMessage());
 				}
 			}
 			

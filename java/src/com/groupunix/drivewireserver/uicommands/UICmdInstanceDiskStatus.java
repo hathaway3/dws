@@ -5,9 +5,11 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class UICmdInstanceDiskStatus implements DWCommand {
+public class UICmdInstanceDiskStatus extends DWCommand {
 
 	static final String command = "status";
 	
@@ -61,6 +63,14 @@ public class UICmdInstanceDiskStatus implements DWCommand {
 				catch (NumberFormatException e)
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Non numeric drive number"));
+				} 
+				catch (DWDriveNotLoadedException e) 
+				{
+					res += "loaded: false\n";
+				} 
+				catch (DWDriveNotValidException e) 
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE, e.getMessage()));
 				}
 			}
 			else
@@ -77,11 +87,6 @@ public class UICmdInstanceDiskStatus implements DWCommand {
 		return(new DWCommandResponse(res));
 	}
 
-
-	public String getLongHelp() 
-	{
-		return null;
-	}
 
 
 	public String getShortHelp() 

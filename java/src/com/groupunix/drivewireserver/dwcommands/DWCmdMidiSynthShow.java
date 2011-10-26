@@ -3,33 +3,36 @@ package com.groupunix.drivewireserver.dwcommands;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 
-public class DWCmdMidiSynthShow implements DWCommand 
+public class DWCmdMidiSynthShow extends DWCommand 
 {
 
 	private DWCommandList commands;
+	private DWProtocolHandler dwProto;
 	
-	public DWCmdMidiSynthShow(DWProtocolHandler dwProto)
+	public DWCmdMidiSynthShow(DWProtocolHandler dwProto,DWCommand parent)
 	{
-		commands = new DWCommandList(dwProto);
-		commands.addcommand(new DWCmdMidiSynthShowChannels(dwProto));
-		commands.addcommand(new DWCmdMidiSynthShowInstr(dwProto));
-		commands.addcommand(new DWCmdMidiSynthShowProfiles());
+		setParentCmd(parent);
+		this.dwProto = dwProto;
+		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands.addcommand(new DWCmdMidiSynthShowChannels(dwProto,this));
+		commands.addcommand(new DWCmdMidiSynthShowInstr(dwProto,this));
+		commands.addcommand(new DWCmdMidiSynthShowProfiles(this));
 	}
 	
 	public String getCommand() 
 	{
 		return "show";
 	}
-
-	public String getLongHelp() 
+	
+	public DWCommandList getCommandList()
 	{
-		return null;
+		return(this.commands);
 	}
 
 	
 	public String getShortHelp() 
 	{
-		return "Show various internal synth info";
+		return "View details about the synth";
 	}
 
 
@@ -38,8 +41,12 @@ public class DWCmdMidiSynthShow implements DWCommand
 		return "dw midi synth show [item]";
 	}
 
-	public DWCommandResponse parse(String cmdline) 
+	public DWCommandResponse parse(String cmdline)
 	{
+		if (cmdline.length() == 0)
+		{
+			return(new DWCommandResponse(this.commands.getShortHelp()));
+		}
 		return(commands.parse(cmdline));
 	}
 

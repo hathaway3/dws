@@ -5,7 +5,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerTerminate implements DWCommand {
+public class UICmdServerTerminate extends DWCommand {
 
 	static final String command = "terminate";
 
@@ -29,12 +29,6 @@ public class UICmdServerTerminate implements DWCommand {
 		return(new DWCommandResponse("Server shutdown requested."));
 	}
 
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	public String getShortHelp() 

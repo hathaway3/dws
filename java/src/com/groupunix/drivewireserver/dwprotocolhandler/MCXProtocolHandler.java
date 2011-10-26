@@ -5,7 +5,6 @@ import gnu.io.PortInUseException;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.GregorianCalendar;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -421,6 +420,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	
 
 	
+	@SuppressWarnings("unused")
 	private void DoOP_WRITE(byte opcode)
 	{
 		byte[] cocosum = new byte[2];
@@ -550,6 +550,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	
 	// printing
 	
+	@SuppressWarnings("unused")
 	private void DoOP_PRINT() 
 	{
 		int tmpint;
@@ -573,6 +574,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 		
 	}
 	
+	@SuppressWarnings("unused")
 	private void DoOP_PRINTFLUSH() 
 	{
 		if (config.getBoolean("LogOpCode", false))
@@ -791,12 +793,6 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 
 
 
-	@Override
-	public void doCmd(String cmd, OutputStream outputStream) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
 
 	@Override
 	public void syncStorage() {
@@ -816,6 +812,13 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	public Logger getLogger() {
 		// TODO Auto-generated method stub
 		return this.logger;
+	}
+
+
+	@Override
+	public int getCMDCols() {
+		// TODO Auto-generated method stub
+		return 32;
 	}
 	
 }

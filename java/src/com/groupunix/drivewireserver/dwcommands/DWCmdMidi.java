@@ -2,17 +2,20 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdMidi implements DWCommand {
+public class DWCmdMidi extends DWCommand {
 
 	static final String command = "midi";
 	private DWCommandList commands;
-		
-	public DWCmdMidi(DWProtocolHandler dwProto)
+	private DWProtocolHandler dwProto;	
+	
+	public DWCmdMidi(DWProtocolHandler dwProto,DWCommand parent)
 	{
-		commands = new DWCommandList(dwProto);
-		commands.addcommand(new DWCmdMidiStatus(dwProto));
-		commands.addcommand(new DWCmdMidiOutput(dwProto));
-		commands.addcommand(new DWCmdMidiSynth(dwProto));	
+		setParentCmd(parent);
+		this.dwProto = dwProto;
+		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands.addcommand(new DWCmdMidiStatus(dwProto, this));
+		commands.addcommand(new DWCmdMidiOutput(dwProto, this));
+		commands.addcommand(new DWCmdMidiSynth(dwProto, this));	
 		
 	}
 
@@ -21,22 +24,28 @@ public class DWCmdMidi implements DWCommand {
 	{
 		return command;
 	}
+	
+	public DWCommandList getCommandList()
+	{
+		return(this.commands);
+	}
+	
 
 	public DWCommandResponse parse(String cmdline)
 	{
+		if (cmdline.length() == 0)
+		{
+			return(new DWCommandResponse(this.commands.getShortHelp()));
+		}
 		return(commands.parse(cmdline));
 	}
 
 
-	public String getLongHelp() 
-	{
-		return null;
-	}
 
 
 	public String getShortHelp() 
 	{
-		return "Commands that manage the MIDI system";
+		return "Manage the MIDI subsystem";
 	}
 
 

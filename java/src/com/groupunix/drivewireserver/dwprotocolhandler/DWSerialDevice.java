@@ -11,8 +11,6 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
-
 public class DWSerialDevice implements DWProtocolDevice
 {
 	private static final Logger logger = Logger.getLogger("DWServer.DWSerialDevice");
@@ -280,7 +278,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 		byte[] buf = new byte[len];
 		
-		int sofar = 0;
+		//int sofar = 0;
 
 		
 		// we never got more than 1 byte at a time even at 230k, so

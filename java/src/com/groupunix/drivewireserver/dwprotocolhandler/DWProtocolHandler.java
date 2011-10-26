@@ -5,7 +5,6 @@ import gnu.io.PortInUseException;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -14,15 +13,9 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwcommands.DWCmdConfig;
-import com.groupunix.drivewireserver.dwcommands.DWCmdDisk;
-import com.groupunix.drivewireserver.dwcommands.DWCmdLog;
-import com.groupunix.drivewireserver.dwcommands.DWCmdMidi;
-import com.groupunix.drivewireserver.dwcommands.DWCmdNet;
-import com.groupunix.drivewireserver.dwcommands.DWCmdPort;
-import com.groupunix.drivewireserver.dwcommands.DWCmdServer;
-import com.groupunix.drivewireserver.dwcommands.DWCommandList;
-import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetInvalidDiskDefException;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
@@ -40,7 +33,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 {
 
 	private final Logger logger = Logger.getLogger("DWServer.DWProtocolHandler");
-	  
 
 	
 	// record keeping portion of dwTransferData
@@ -80,17 +72,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private DWVSerialPorts dwVSerialPorts;
 	private DWVPortTermThread termHandler;
 	
-	// DW commands
-	private DWCommandList dwcommands;
 	
-	// DATurbo mode
-	private int DATdetect = 0;
+
 	
 	public DWProtocolHandler(int handlerno, HierarchicalConfiguration hconf)
 	{
 		this.handlerno = handlerno;
 		this.config = hconf;
-		this.dwcommands = createDWCmds(); 
 		
 		//config.addConfigurationListener(new DWProtocolConfigListener());   
 		
@@ -160,7 +148,34 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			// load current disk set
 			if (config.containsKey("CurrentDiskSet"))
 			{
-				diskDrives.LoadDiskSet(config.getString("CurrentDiskSet"));
+				try 
+				{
+					diskDrives.LoadDiskSet(config.getString("CurrentDiskSet"));
+				} 
+				catch (DWDisksetInvalidDiskDefException e) 
+				{
+					logger.warn(e.getMessage());
+				} 
+				catch (DWDisksetNotValidException e) 
+				{
+					logger.warn(e.getMessage());
+				} 
+				catch (IOException e) 
+				{
+					logger.warn(e.getMessage());
+				} 
+				catch (DWDriveNotValidException e) 
+				{
+					logger.warn(e.getMessage());
+				} 
+				catch (DWDriveNotLoadedException e) 
+				{
+					logger.warn(e.getMessage());
+				} 
+				catch (DWDriveAlreadyLoadedException e) 
+				{
+					logger.warn(e.getMessage());
+				}
 			}
 				
 			
@@ -874,9 +889,22 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				}
 				else
 				{
-					if (this.diskDrives.diskLoaded(lastDrive))
-						this.diskDrives.getDisk(lastDrive).readError();
 					logger.warn("DoOP_READEX CRC check failed, lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+					
+					try 
+					{
+						this.diskDrives.getDisk(lastDrive).incParam("_read_errors");
+					} 
+					catch (DWDriveNotLoadedException e) 
+					{
+						logger.warn(e.getMessage());
+					} 
+					catch (DWDriveNotValidException e) 
+					{
+						logger.warn(e.getMessage());
+					}
+					
+					
 				}
 			
 			}
@@ -1355,25 +1383,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 
 
 
-	public DWCommandList getDWCmds() 
-	{
-		return this.dwcommands;
-	}
-	
-	private DWCommandList createDWCmds()
-	{
-		DWCommandList commands = new DWCommandList(this);
-		
-		commands.addcommand(new DWCmdDisk(this));
-		commands.addcommand(new DWCmdServer(this));
-		commands.addcommand(new DWCmdConfig(this));
-		commands.addcommand(new DWCmdPort(this));
-		commands.addcommand(new DWCmdLog(this));
-		commands.addcommand(new DWCmdNet(this));
-		commands.addcommand(new DWCmdMidi(this));
-		
-		return(commands);
-	}
 
 	
 	public void resetProtocolDevice()
@@ -1514,24 +1523,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	}
 
 
-	@Override
-	public void doCmd(String cmd, OutputStream outs) throws IOException 
-	{
-		
-		
-		DWCommandResponse resp = this.dwcommands.parse(DWUtils.dropFirstToken(cmd));
-		
-		if (resp.getSuccess())
-		{
-			outs.write(resp.getResponseText().getBytes());
-		}
-		else
-		{
-			
-			outs.write(("FAIL " + resp.getResponseCode() + " " + resp.getResponseText()).getBytes() );
-		}
-		
-	}
 
 
 	public String getName()
@@ -1569,6 +1560,14 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	{
 		return this.logger;
 	}
+
+
+	public int getCMDCols() 
+	{
+		return getConfig().getInt("DWCommandOutputWidth",DWDefs.DWCMD_DEFAULT_COLS);
+	}
+
+
 
 	
 }

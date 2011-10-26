@@ -4,7 +4,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShowStatus implements DWCommand {
+public class UICmdServerShowStatus extends DWCommand {
 
 	@Override
 	public String getCommand() 
@@ -13,11 +13,6 @@ public class UICmdServerShowStatus implements DWCommand {
 		return "status";
 	}
 
-	@Override
-	public String getLongHelp() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public String getShortHelp() {

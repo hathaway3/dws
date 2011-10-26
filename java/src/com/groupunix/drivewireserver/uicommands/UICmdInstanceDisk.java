@@ -5,11 +5,11 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdInstanceDisk implements DWCommand {
+public class UICmdInstanceDisk extends DWCommand {
 
 	static final String command = "disk";
 	
-	private DWCommandList commands = new DWCommandList(null);
+	private DWCommandList commands = new DWCommandList();
 		
 	public UICmdInstanceDisk(DWUIClientThread dwuiClientThread)
 	{
@@ -30,12 +30,6 @@ public class UICmdInstanceDisk implements DWCommand {
 		return(commands.parse(cmdline));
 	}
 
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	public String getShortHelp() 

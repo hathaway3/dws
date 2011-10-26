@@ -10,12 +10,13 @@ import javax.sound.midi.Soundbank;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdMidiSynthBank implements DWCommand {
+public class DWCmdMidiSynthBank extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthBank(DWProtocolHandler dwProto)
+	public DWCmdMidiSynthBank(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -24,12 +25,7 @@ public class DWCmdMidiSynthBank implements DWCommand {
 		return "bank";
 	}
 
-	public String getLongHelp() 
-	{
-		return null;
-	}
 
-	
 	public String getShortHelp() 
 	{
 		return "Load soundbank file";

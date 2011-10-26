@@ -6,13 +6,14 @@ import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
-public class DWCmdConfigSave implements DWCommand {
+public class DWCmdConfigSave extends DWCommand {
 
 	DWProtocol dwProto;
 	
 	
-	public DWCmdConfigSave(DWProtocol dwProtocol) 
+	public DWCmdConfigSave(DWProtocol dwProtocol,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProtocol;
 	}
 
@@ -21,11 +22,6 @@ public class DWCmdConfigSave implements DWCommand {
 		return "save";
 	}
 
-	public String getLongHelp() 
-	{
-
-		return null;
-	}
 
 	
 	public String getShortHelp() 

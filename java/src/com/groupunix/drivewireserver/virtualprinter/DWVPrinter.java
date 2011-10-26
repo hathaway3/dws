@@ -1,6 +1,5 @@
 package com.groupunix.drivewireserver.virtualprinter;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;

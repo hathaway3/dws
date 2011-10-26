@@ -6,7 +6,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdInstanceConfigSet implements DWCommand {
+public class UICmdInstanceConfigSet extends DWCommand {
 
 	static final String command = "set";
 	private DWUIClientThread uiref;
@@ -42,13 +42,6 @@ public class UICmdInstanceConfigSet implements DWCommand {
 			return(doSetConfig(args[0],cmdline.substring(args[0].length()+1)));
 		}
 		
-	}
-
-
-	public String getLongHelp() 
-	{
-
-		return null;
 	}
 
 

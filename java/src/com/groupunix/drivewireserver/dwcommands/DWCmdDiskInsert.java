@@ -6,18 +6,22 @@ import java.io.IOException;
 import org.apache.commons.vfs.FileSystemException;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetInvalidDiskDefException;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
-public class DWCmdDiskInsert implements DWCommand {
+public class DWCmdDiskInsert extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskInsert(DWProtocolHandler dwProto)
+	public DWCmdDiskInsert(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -31,25 +35,111 @@ public class DWCmdDiskInsert implements DWCommand {
 	{
 		String[] args = cmdline.split(" ");
 		
-		if (args.length < 2)
+		if (args.length < 1)
 		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk insert requires a drive number and a URI or local path as arguments"));
+			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk insert requires at least 1 arguments"));
 		}
 		
-		return(doDiskInsert(args[0], cmdline.substring(args[0].length()+1)));
+		if (this.dwProto.getDiskDrives().isDiskNo(args[0]))
+		{
+			// regular disk -> drive
+			return(doDiskInsert(Integer.parseInt(args[0]), DWUtils.dropFirstToken(cmdline)));
+		}
+		else if (this.dwProto.getDiskDrives().isDiskSetName(args[0]))
+		{
+			if (args.length == 1)
+			{
+				// load disk set
+				return(doDiskInsert(args[0]));
+			}
+			else if ((args.length > 2) && this.dwProto.getDiskDrives().isDiskNo(args[1]))
+			{
+				// add disk def to set
+				return(doDiskInsert(args[0], Integer.parseInt(args[1]), DWUtils.dropFirstToken(DWUtils.dropFirstToken(cmdline))));
+			}
+		}
+		
+		
+		return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"syntax error"));
 		
 	}
 
 	
-	
-	private DWCommandResponse doDiskInsert(String drivestr, String path) 
+	private DWCommandResponse doDiskInsert(String set)
+	{
+		try 
+		{
+			dwProto.getDiskDrives().LoadDiskSet(set);
+		} 
+		catch (DWDisksetInvalidDiskDefException e) 
+		{
+			return(new DWCommandResponse(false, DWDefs.RC_INVALID_DISK_DEF, e.getMessage()));
+		} 
+		catch (DWDisksetNotValidException e) 
+		{
+			return(new DWCommandResponse(false, DWDefs.RC_NO_SUCH_DISKSET, e.getMessage()));
+		} 
+		catch (IOException e) 
+		{
+			return(new DWCommandResponse(false, DWDefs.RC_SERVER_IO_EXCEPTION, e.getMessage()));
+		} 
+		catch (DWDriveNotValidException e) 
+		{
+			return(new DWCommandResponse(false, DWDefs.RC_INVALID_DRIVE, e.getMessage()));
+		} 
+		catch (DWDriveNotLoadedException e) 
+		{
+			return(new DWCommandResponse(false, DWDefs.RC_DRIVE_NOT_LOADED, e.getMessage()));
+		} 
+		catch (DWDriveAlreadyLoadedException e) 
+		{
+			return(new DWCommandResponse(false, DWDefs.RC_DRIVE_ALREADY_LOADED, e.getMessage()));
+		}
+		
+		return(new DWCommandResponse("Loaded disk set '" + set +"'."));
+	}
+
+	private DWCommandResponse doDiskInsert(String set, int driveno, String path) 
 	{
 		
 		path = DWUtils.convertStarToBang(path);
 		
 		try
 		{
-			int driveno = Integer.parseInt(drivestr);
+			// load new disk
+			
+			try 
+			{
+				dwProto.getDiskDrives().clearDisksetDisk(set, driveno);
+			} 
+			catch (DWDisksetDriveNotLoadedException e) 
+			{
+				// dont care
+			}
+			
+			dwProto.getDiskDrives().addDisksetDisk(set, driveno, path);
+			
+			return(new DWCommandResponse("Disk inserted into set '" + set + "' drive " + driveno + "."));
+
+		}
+		catch (DWDisksetNotValidException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
+		}
+		
+		
+	}
+	
+	
+	
+	
+	private DWCommandResponse doDiskInsert(int driveno, String path) 
+	{
+		
+		path = DWUtils.convertStarToBang(path);
+		
+		try
+		{
 		
 			dwProto.getDiskDrives().validateDriveNo(driveno);
 			
@@ -65,10 +155,6 @@ public class DWCmdDiskInsert implements DWCommand {
 			
 			return(new DWCommandResponse("Disk inserted in drive " + driveno + "."));
 
-		}
-		catch (NumberFormatException e)
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk insert requires a numeric disk number as the first argument"));
 		}
 		catch (DWDriveNotValidException e) 
 		{
@@ -96,15 +182,16 @@ public class DWCmdDiskInsert implements DWCommand {
 		catch (IOException e)
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
+		} 
+		catch (DWDisksetNotValidException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
 		}
 		
 		
 	}
 
-	public String getLongHelp() 
-	{
-		return null;
-	}
+
 
 	public String getShortHelp() 
 	{
@@ -114,7 +201,7 @@ public class DWCmdDiskInsert implements DWCommand {
 
 	public String getUsage() 
 	{
-		return "dw disk insert # URI/path";
+		return "dw disk insert [dset] # path";
 	}
 	
 	public boolean validate(String cmdline) 

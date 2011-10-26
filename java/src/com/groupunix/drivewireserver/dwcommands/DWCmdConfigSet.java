@@ -4,23 +4,19 @@ import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
-public class DWCmdConfigSet implements DWCommand {
+public class DWCmdConfigSet extends DWCommand {
 
 	DWProtocol dwProto;
 	
-	public DWCmdConfigSet(DWProtocol dwProtocol)
+	public DWCmdConfigSet(DWProtocol dwProtocol,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProtocol;
 	}
 
 	public String getCommand() 
 	{
 		return "set";
-	}
-
-	public String getLongHelp() 
-	{
-		return null;
 	}
 
 	

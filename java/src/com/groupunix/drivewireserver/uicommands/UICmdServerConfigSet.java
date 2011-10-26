@@ -5,7 +5,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerConfigSet implements DWCommand {
+public class UICmdServerConfigSet extends DWCommand {
 
 	static final String command = "set";
 	
@@ -37,14 +37,6 @@ public class UICmdServerConfigSet implements DWCommand {
 		}
 		
 	}
-
-
-	public String getLongHelp() 
-	{
-
-		return null;
-	}
-
 
 	public String getShortHelp() 
 	{

@@ -4,19 +4,13 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShowVersion implements DWCommand {
+public class UICmdServerShowVersion extends DWCommand {
 
 	@Override
 	public String getCommand() 
 	{
 		// TODO Auto-generated method stub
 		return "version";
-	}
-
-	@Override
-	public String getLongHelp() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

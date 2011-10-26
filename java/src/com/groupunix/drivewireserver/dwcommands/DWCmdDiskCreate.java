@@ -7,17 +7,20 @@ import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
-public class DWCmdDiskCreate implements DWCommand {
+public class DWCmdDiskCreate extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskCreate(DWProtocolHandler dwProto)
+	public DWCmdDiskCreate(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -26,46 +29,52 @@ public class DWCmdDiskCreate implements DWCommand {
 		return "create";
 	}
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	
 	public String getShortHelp() 
 	{
-		return "Create new disk image";
+		return "Create new disk image or set";
 	}
 
 
 	public String getUsage() 
 	{
-		return "dw disk create # URI/path";
+		return "dw disk create {# path | dset}";
 	}
 
-	public DWCommandResponse parse(String cmdline) 
+	public DWCommandResponse parse(String cmdline)  
 	{
-		
-		String[] args = cmdline.split(" ");
-		
-		if ((cmdline.length() == 0) || (args.length < 2))
+		if ((cmdline.length() == 0))
 		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk create requires a drive # and URI/path as arguments"));
+			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk create requires at least 1 argument."));
 		}
-				
-		return(doDiskCreate(args[0],args[1]));
+
+		String[] args = cmdline.split(" ");
+
+		if (dwProto.getDiskDrives().isDiskNo(args[0]))
+		{
+			if (args.length < 2)
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk create # requires a path."));
+			}
+			else
+			{
+				return(doDiskCreate(Integer.parseInt(args[0]), DWUtils.dropFirstToken(cmdline)));
+			}
+		}
+		
+		
+		return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error"));
 	}
 
 	
-	private DWCommandResponse doDiskCreate(String drivestr, String filepath)
+	private DWCommandResponse doDiskCreate(int driveno, String filepath)
 	{
 		FileSystemManager fsManager;
 		FileObject fileobj;
 		
 		try
 		{
-			int driveno = Integer.parseInt(drivestr);
 			
 			// create file
 			fsManager = VFS.getManager();
@@ -87,11 +96,6 @@ public class DWCmdDiskCreate implements DWCommand {
 			return(new DWCommandResponse("Disk #" + driveno + " created."));
 
 		}
-		catch (NumberFormatException e)
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error: non numeric drive #"));
-				
-		} 
 		catch (IOException e1)
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e1.getMessage()));
@@ -108,6 +112,10 @@ public class DWCmdDiskCreate implements DWCommand {
 		catch (DWDriveNotLoadedException e) 
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
+		} 
+		catch (DWDisksetNotValidException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET, e.getMessage()));
 		}
 		
 	}

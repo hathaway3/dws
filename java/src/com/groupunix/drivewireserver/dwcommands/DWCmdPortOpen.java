@@ -5,23 +5,19 @@ import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVPortTCPConnectionThread;
 
-public class DWCmdPortOpen implements DWCommand {
+public class DWCmdPortOpen extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdPortOpen(DWProtocolHandler dwProto)
+	public DWCmdPortOpen(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
 	{
 		return "open";
-	}
-
-	public String getLongHelp() 
-	{
-		return null;
 	}
 
 	

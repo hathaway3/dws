@@ -7,7 +7,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
-public class UICmdInstanceStatus implements DWCommand {
+public class UICmdInstanceStatus extends DWCommand {
 
 	private DWUIClientThread clientref;
 	
@@ -20,11 +20,6 @@ public class UICmdInstanceStatus implements DWCommand {
 	public String getCommand() 
 	{
 		return "status";
-	}
-
-	@Override
-	public String getLongHelp() {
-		return null;
 	}
 
 	@Override

@@ -6,7 +6,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShowSerialDevs implements DWCommand {
+public class UICmdServerShowSerialDevs extends DWCommand {
 
 	@Override
 	public String getCommand() 
@@ -15,11 +15,7 @@ public class UICmdServerShowSerialDevs implements DWCommand {
 		return "serialdevs";
 	}
 
-	@Override
-	public String getLongHelp() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 
 	@Override
 	public String getShortHelp() {

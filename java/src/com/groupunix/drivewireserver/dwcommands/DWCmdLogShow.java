@@ -5,18 +5,17 @@ import java.util.ArrayList;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 
-public class DWCmdLogShow implements DWCommand {
+public class DWCmdLogShow extends DWCommand {
 
+	
+	public DWCmdLogShow(DWCommand parent)
+	{
+		setParentCmd(parent);
+	}
 	
 	public String getCommand() 
 	{
 		return "show";
-	}
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	

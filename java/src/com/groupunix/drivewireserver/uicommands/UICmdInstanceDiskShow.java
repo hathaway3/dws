@@ -1,13 +1,19 @@
 package com.groupunix.drivewireserver.uicommands;
 
+import java.util.Iterator;
+
+import org.apache.commons.configuration.HierarchicalConfiguration;
+
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class UICmdInstanceDiskShow implements DWCommand {
+public class UICmdInstanceDiskShow extends DWCommand {
 
 	static final String command = "show";
 	
@@ -24,6 +30,7 @@ public class UICmdInstanceDiskShow implements DWCommand {
 		return command;
 	}
 
+	@SuppressWarnings("unchecked")
 	public DWCommandResponse parse(String cmdline)
 	{
 		String res = new String();
@@ -57,25 +64,20 @@ public class UICmdInstanceDiskShow implements DWCommand {
 				if ((!(dwProto.getDiskDrives() == null)) && (dwProto.getDiskDrives().diskLoaded(driveno)))
 				{
 					res += "loaded: true\n"; 
-					res += "path: " + dwProto.getDiskDrives().getDisk(driveno).getFilePath() + "\n";
-					res += "sizelimit: " + dwProto.getDiskDrives().getDisk(driveno).getSizelimit() + "\n";
-					res += "offset: " + dwProto.getDiskDrives().getDisk(driveno).getOffset() + "\n";
-					res += "sync: " + dwProto.getDiskDrives().getDisk(driveno).isSync() + "\n";
-					res += "expand: " + dwProto.getDiskDrives().getDisk(driveno).isExpand() + "\n";
-					res += "writeprotect: " + dwProto.getDiskDrives().getDisk(driveno).getWriteProtect() + "\n";
+					
+					HierarchicalConfiguration disk = dwProto.getDiskDrives().getDisk(driveno).getParams();
+					
+					for(Iterator<String> itk = disk.getKeys(); itk.hasNext();)
+					{
+						String option = itk.next();
+						
+						res += option + ": " + disk.getProperty(option) + "\n";
+					}
+
 					
 					res += "fswriteable: " + dwProto.getDiskDrives().getDisk(driveno).isFSWriteable() + "\n";
 					res += "writeable: " + dwProto.getDiskDrives().getDisk(driveno).isWriteable() + "\n";
 					res += "randomwriteable: " + dwProto.getDiskDrives().getDisk(driveno).isRandomWriteable() + "\n";
-					
-					res += "sectors: " + dwProto.getDiskDrives().getDisk(driveno).getDiskSectors() + "\n";
-					res += "dirty: " + dwProto.getDiskDrives().getDisk(driveno).getDirtySectors() + "\n";
-					res += "lsn: " + dwProto.getDiskDrives().getDisk(driveno).getLSN() + "\n";
-					res += "reads: " + dwProto.getDiskDrives().getDisk(driveno).getReads() + "\n";
-					res += "writes: " + dwProto.getDiskDrives().getDisk(driveno).getWrites() + "\n";
-					
-					res += "namedobject: " + dwProto.getDiskDrives().getDisk(driveno).isNamedObj() + "\n";
-					res += "syncfromsource: " + dwProto.getDiskDrives().getDisk(driveno).isSyncFromSource() + "\n";
 					
 				}
 				else
@@ -87,17 +89,20 @@ public class UICmdInstanceDiskShow implements DWCommand {
 			{
 				return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Non numeric drive number"));
 			}
+			catch (DWDriveNotLoadedException e) 
+			{
+				res += "loaded: false\n";
+			} 
+			catch (DWDriveNotValidException e) 
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE, e.getMessage()));
+			}
 			
 		}
 		
 		return(new DWCommandResponse(res));
 	}
 
-
-	public String getLongHelp() 
-	{
-		return null;
-	}
 
 
 	public String getShortHelp() 

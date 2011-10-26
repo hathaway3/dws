@@ -3,17 +3,17 @@ package com.groupunix.drivewireserver.dwcommands;
 import java.io.IOException;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdDiskReload implements DWCommand {
+public class DWCmdDiskReload extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskReload(DWProtocolHandler dwProto)
+	public DWCmdDiskReload(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -22,11 +22,6 @@ public class DWCmdDiskReload implements DWCommand {
 		return "reload";
 	}
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	
 	public String getShortHelp() 
@@ -37,14 +32,14 @@ public class DWCmdDiskReload implements DWCommand {
 
 	public String getUsage() 
 	{
-		return "dw disk reload #";
+		return "dw disk reload {# | all}";
 	}
 
 	public DWCommandResponse parse(String cmdline) 
 	{
 		if (cmdline.length() == 0)
 		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk reload requires a drive # as an argument"));
+			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk reload requires a drive # or 'all' as an argument"));
 		}
 		return(doDiskReload(cmdline));
 	}
@@ -52,16 +47,23 @@ public class DWCmdDiskReload implements DWCommand {
 	
 	private DWCommandResponse doDiskReload(String drivestr)
 	{
-
 		
 		try
 		{
-			int driveno = Integer.parseInt(drivestr);
+			if (drivestr.equals("all"))
+			{
+				dwProto.getDiskDrives().ReLoadAllDisks();
+				
+				return(new DWCommandResponse("All disks reloaded."));
+			}
+			else
+			{
+				int driveno = Integer.parseInt(drivestr);
 			
-			dwProto.getDiskDrives().ReLoadDisk(driveno);
+				dwProto.getDiskDrives().ReLoadDisk(driveno);
 	
-			return(new DWCommandResponse("Disk in drive #"+ driveno + " reloaded."));
-
+				return(new DWCommandResponse("Disk in drive #"+ driveno + " reloaded."));
+			}
 		}
 		catch (NumberFormatException e)
 		{
@@ -79,10 +81,7 @@ public class DWCmdDiskReload implements DWCommand {
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
 		} 
-		catch (DWDriveAlreadyLoadedException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_ALREADY_LOADED,e.getMessage()));
-		}
+		
 		
 	}
 	

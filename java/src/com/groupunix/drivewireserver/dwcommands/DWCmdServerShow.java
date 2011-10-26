@@ -3,17 +3,19 @@ package com.groupunix.drivewireserver.dwcommands;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 
-public class DWCmdServerShow implements DWCommand {
+public class DWCmdServerShow extends DWCommand {
 
 
 	private DWCommandList commands;
+	private DWProtocol dwProto;
 	
-	
-	public DWCmdServerShow(DWProtocol dwProto)
+	public DWCmdServerShow(DWProtocol dwProto,DWCommand parent)
 	{
-		commands = new DWCommandList(dwProto);
-		commands.addcommand(new DWCmdServerShowThreads());
-		commands.addcommand(new DWCmdServerShowHandlers());
+		setParentCmd(parent);
+		this.dwProto = dwProto;
+		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands.addcommand(new DWCmdServerShowThreads(this));
+		commands.addcommand(new DWCmdServerShowHandlers(this));
 	}
 	
 	public String getCommand() 
@@ -21,12 +23,11 @@ public class DWCmdServerShow implements DWCommand {
 		return "show";
 	}
 
-	public String getLongHelp() 
+	public DWCommandList getCommandList()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return(this.commands);
 	}
-
+	
 	
 	public String getShortHelp() 
 	{
@@ -39,8 +40,12 @@ public class DWCmdServerShow implements DWCommand {
 		return "dw server show [option]";
 	}
 
-	public DWCommandResponse parse(String cmdline) 
+	public DWCommandResponse parse(String cmdline)
 	{
+		if (cmdline.length() == 0)
+		{
+			return(new DWCommandResponse(this.commands.getShortHelp()));
+		}
 		return(commands.parse(cmdline));
 	}
 

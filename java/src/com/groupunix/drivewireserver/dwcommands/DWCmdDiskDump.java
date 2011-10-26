@@ -1,14 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
+import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdDiskDump implements DWCommand {
+public class DWCmdDiskDump extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdDiskDump(DWProtocolHandler dwProto)
+	public DWCmdDiskDump(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -17,10 +20,6 @@ public class DWCmdDiskDump implements DWCommand {
 		return "dump";
 	}
 
-	public String getLongHelp() 
-	{
-		return null;
-	}
 
 	
 	public String getShortHelp() 
@@ -31,14 +30,14 @@ public class DWCmdDiskDump implements DWCommand {
 
 	public String getUsage() 
 	{
-		return "dw disk dump disk# sector#";
+		return "dw disk dump # sector";
 	}
 
 	public DWCommandResponse parse(String cmdline) 
 	{
 		String[] args = cmdline.split(" ");
 		
-		if ((args.length < 2) || (cmdline.length() == 0))
+		if ((cmdline.length() == 0) || (args.length < 2))
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk dump requires a drive # and sector # as arguments"));
 		}
@@ -63,6 +62,14 @@ public class DWCmdDiskDump implements DWCommand {
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error: non numeric drive # or sector #"));
 		} 
+		catch (DWDriveNotLoadedException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
+		} 
+		catch (DWDriveNotValidException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
+		}
 		
 	}
 	

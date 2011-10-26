@@ -3,12 +3,13 @@ package com.groupunix.drivewireserver.dwcommands;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
-public class DWCmdServerStatus implements DWCommand {
+public class DWCmdServerStatus extends DWCommand {
 
 	private DWProtocol dwProto;
 	
-	public DWCmdServerStatus(DWProtocol dwProto)
+	public DWCmdServerStatus(DWProtocol dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -17,11 +18,6 @@ public class DWCmdServerStatus implements DWCommand {
 		return "status";
 	}
 
-	public String getLongHelp() 
-	{
-
-		return null;
-	}
 
 	
 	public String getShortHelp() 

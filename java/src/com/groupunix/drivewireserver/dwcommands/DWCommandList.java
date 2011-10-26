@@ -1,42 +1,52 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
-
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 
 public class DWCommandList {
-
-	DWProtocol dwProto;
 	
 	private List<DWCommand> commands = new ArrayList<DWCommand>();
+	private int outputcols = 80;	
 	
-	public DWCommandList(DWProtocol dwProto)
+	public DWCommandList(int outputcols)
 	{
-		this.dwProto = dwProto;
+		this.outputcols = outputcols;
 	}
+	
+	public DWCommandList()
+	{
+
+	}
+	
 	
 	public void addcommand(DWCommand dwCommand) 
 	{
 		commands.add(dwCommand);
 	}
 
+	public List<DWCommand> getCommands() 
+	{
+		return(this.commands);
+	}
 	
 	
 	public DWCommandResponse parse(String cmdline) 
 	{
+		
 		String[] args = cmdline.split(" ");
 		
 		if (cmdline.length() == 0)
 		{
-			// implied 'help'
-			return(new DWCommandResponse(genHelp()));
+			// ended here, show commands..
+			return(new DWCommandResponse(getShortHelp()));
 		}
 		
 		int matches = numCommandMatches(args[0]);
@@ -51,29 +61,72 @@ public class DWCommandList {
 		}
 		else
 		{
-			return(getCommandMatch(args[0]).parse(DWUtils.dropFirstToken(cmdline)));
+			if ((args.length == 2) && args[1].equals("?"))
+			{
+				return(getLongHelp(getCommandMatch(args[0])));
+			}
+			else
+			{
+				return(getCommandMatch(args[0]).parse(DWUtils.dropFirstToken(cmdline)));
+			}
 		}
 		 
 	}
 
 	
 	
-	private String genHelp() 
+	
+
+	private DWCommandResponse getLongHelp(DWCommand cmd) 
+	{
+		String text = new String();
+		
+		
+		// figure out whole command..
+		String cmdline = cmd.getCommand();
+		
+		DWCommand tmp = cmd;
+		
+		while (tmp.getParentCmd() != null)
+		{
+			tmp = tmp.getParentCmd();
+			cmdline = tmp.getCommand() + " " + cmdline;
+		}
+		
+		try 
+		{
+			text += DriveWireServer.getHelp().getTopicText(cmdline);
+		} 
+		catch (DWHelpTopicNotFoundException e) 
+		{
+			text = cmd.getUsage() + "\r\n\r\n";
+			text += cmd.getShortHelp() + "\r\n";
+		}
+		
+		if (this.outputcols <= 32)
+			text = text.toUpperCase();
+		
+		return(new DWCommandResponse(text));
+	}
+
+
+	public String getShortHelp() 
 	{
 		String txt = new String();
 		
-		txt = "\r\nCommands available:\r\n\n";
+		ArrayList<String> ps = new ArrayList<String>();
 		
 		for (Iterator<DWCommand> it = this.commands.iterator(); it.hasNext(); )
 		{
 			DWCommand cmd = it.next();
-			txt = txt + String.format("  %-37s", cmd.getUsage());
-			if ((this.dwProto == null) || (this.dwProto.getConfig().getBoolean("CommandShortHelp", true)))
-			{
-				txt = txt + String.format("- %-31s", cmd.getShortHelp() );
-			}
-			txt = txt + "\r\n";
+			ps.add(cmd.getCommand());
+				
 		}
+		
+		Collections.sort(ps);
+		txt = DWCommandList.colLayout(ps, this.outputcols);
+		
+		txt = "Possible commands:\r\n\r\n" + txt;
 		
 		return(txt);
 	}
@@ -145,27 +198,93 @@ public class DWCommandList {
 		
 		if (cmdline.length() == 0)
 		{
-			// implied 'help'
-			return false;
+			// we ended here
+			return true;
 		}
 		
 		int matches = numCommandMatches(args[0]);
 		
 		if (matches == 0)
 		{
+			// no match
 			return false;
 		}
 		else if (matches > 1)
 		{
+			// ambiguous
 			return false;
 		}
 		else
 		{
 			return(getCommandMatch(args[0]).validate(DWUtils.dropFirstToken(cmdline)));
 		}
-		
-		
 	}
+	
+
+	public static String colLayout(ArrayList<String> ps, int cols) 
+	{
+		cols = cols - 1;
+		String text = new String();
+		
+		Iterator<String> it = ps.iterator();
+		int maxlen = 1;
+		while (it.hasNext())
+        {
+			int curlen = it.next().length();
+			if (curlen > maxlen)
+				maxlen = curlen;
+        }
+		
+		maxlen++;
+		
+		it = ps.iterator();
+		int i = 0;
+		int ll = cols / maxlen;
+		while (it.hasNext())
+        {
+			String itxt = String.format("%-" + maxlen + "s", it.next());
+			if ((i>0) && ((i % ll) == 0))
+        		text += "\r\n";
+            
+            if (cols <= 32)
+            	itxt = itxt.toUpperCase();
+            
+            text += itxt;
+            
+			i++;
+        }
+		
+		text += "\r\n";
+		
+		return(text);
+	}
+
+
+	public ArrayList<String> getCommandStrings()
+	{
+		return(this.getCommandStrings(this, ""));
+	}
+
+	private ArrayList<String> getCommandStrings(DWCommandList commands, String prefix) 
+	{
+		ArrayList<String> res = new ArrayList<String>();
+		
+		for (DWCommand cmd : commands.getCommands())
+		{
+			res.add(prefix + " " + cmd.getCommand());
+			if (cmd.getCommandList() != null)
+			{
+				res.addAll(this.getCommandStrings(cmd.getCommandList(), prefix + " " + cmd.getCommand()));
+			}
+		}
+		
+		return(res);
+	}
+
+
+
+	
+
 
 	
 	

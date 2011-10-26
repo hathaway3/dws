@@ -5,23 +5,19 @@ import javax.sound.midi.MidiChannel;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdMidiSynthShowChannels implements DWCommand {
+public class DWCmdMidiSynthShowChannels extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthShowChannels(DWProtocolHandler dwProto)
+	public DWCmdMidiSynthShowChannels(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
 	{
 		return "channels";
-	}
-
-	public String getLongHelp() 
-	{
-		return null;
 	}
 
 	

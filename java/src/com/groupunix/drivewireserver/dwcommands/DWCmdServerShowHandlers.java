@@ -2,18 +2,18 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 
-public class DWCmdServerShowHandlers implements DWCommand {
+public class DWCmdServerShowHandlers extends DWCommand {
 
+	DWCmdServerShowHandlers(DWCommand parent)
+	{
+		setParentCmd(parent);
+		}
+	
 	public String getCommand() 
 	{
 		return "handlers";
 	}
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	
 	public String getShortHelp() 

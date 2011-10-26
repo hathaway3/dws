@@ -11,23 +11,19 @@ import javax.sound.midi.Soundbank;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdMidiSynthStatus implements DWCommand {
+public class DWCmdMidiSynthStatus extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthStatus(DWProtocolHandler dwProto)
+	public DWCmdMidiSynthStatus(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
 	{
 		return "status";
-	}
-
-	public String getLongHelp() 
-	{
-		return null;
 	}
 
 	

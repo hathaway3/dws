@@ -4,12 +4,13 @@ import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdPortClose implements DWCommand {
+public class DWCmdPortClose extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdPortClose(DWProtocolHandler dwProto)
+	public DWCmdPortClose(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -18,12 +19,6 @@ public class DWCmdPortClose implements DWCommand {
 		return "close";
 	}
 
-	public String getLongHelp() 
-	{
-		return null;
-	}
-
-	
 	public String getShortHelp() 
 	{
 		return "Close port #";

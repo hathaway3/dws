@@ -5,11 +5,11 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerShow implements DWCommand {
+public class UICmdServerShow extends DWCommand {
 
 	static final String command = "show";
 	
-	private DWCommandList commands = new DWCommandList(null);
+	private DWCommandList commands = new DWCommandList();
 		
 	public UICmdServerShow(DWUIClientThread dwuiClientThread)
 	{
@@ -20,6 +20,7 @@ public class UICmdServerShow implements DWCommand {
 		commands.addcommand(new UICmdServerShowLocalDisks());
 		commands.addcommand(new UICmdServerShowSerialDevs());
 		commands.addcommand(new UICmdServerShowStatus());
+		commands.addcommand(new UICmdServerShowHelpTopics());
 	}
 
 	
@@ -33,12 +34,6 @@ public class UICmdServerShow implements DWCommand {
 		return(commands.parse(cmdline));
 	}
 
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	public String getShortHelp() 

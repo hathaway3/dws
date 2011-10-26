@@ -5,8 +5,12 @@ import gnu.io.CommPortIdentifier;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.configuration.HierarchicalConfiguration;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetDriveNotLoadedException;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class DWUtils
@@ -411,7 +415,7 @@ public class DWUtils
 	@SuppressWarnings("unchecked")
 	public static ArrayList<String> getPortNames()
 	{
-		ArrayList<String> ports = new ArrayList();
+		ArrayList<String> ports = new ArrayList<String>();
 		
 		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier.getPortIdentifiers();
 		while ( portEnum.hasMoreElements() ) 
@@ -603,6 +607,57 @@ public class DWUtils
 			  {
 				  return(true);
 			  }
+		}
+
+		public static String shortenLocalURI(String df) 
+		{
+			if (df.startsWith("file:///"))
+			{
+				if (df.charAt(9) == ':')
+				{
+					return df.substring(8);
+				}
+				else
+				{
+					return df.substring(7);
+				}
+			}
+			return(df);
+		}
+
+		public static String getFileDescriptor(File f) 
+		{
+			String res = "";
+			
+			//System.out.println("getFD: " + f.getPath());
+			
+			try {
+				res = File.separator + "|" + f.getCanonicalPath() + "|" + f.getParent() + "|" + f.length() + "|" + f.lastModified() + "|" + f.isDirectory();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return(res);
+		}
+
+		public static HierarchicalConfiguration getDiskDef(HierarchicalConfiguration diskset, int driveno) throws DWDisksetDriveNotLoadedException 
+		{
+			
+			@SuppressWarnings("unchecked")
+			List<HierarchicalConfiguration> disks = diskset.configurationsAt("disk");
+			
+			for (HierarchicalConfiguration disk : disks)
+			{
+				if (disk.getInt("drive", -1) == driveno)
+				{
+					return(disk);
+				}
+			}
+			
+			throw new DWDisksetDriveNotLoadedException("Disk " + driveno + " is not defined in diskset.");
+			
+
 		}
 	   
 }

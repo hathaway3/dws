@@ -5,11 +5,11 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdInstanceReset implements DWCommand {
+public class UICmdInstanceReset extends DWCommand {
 
 	static final String command = "reset";
 	
-	private DWCommandList commands = new DWCommandList(null);
+	private DWCommandList commands = new DWCommandList();
 		
 	public UICmdInstanceReset(DWUIClientThread dwuiClientThread)
 	{
@@ -27,13 +27,6 @@ public class UICmdInstanceReset implements DWCommand {
 	public DWCommandResponse parse(String cmdline)
 	{
 		return(commands.parse(cmdline));
-	}
-
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 

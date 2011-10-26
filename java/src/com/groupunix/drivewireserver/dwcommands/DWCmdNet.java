@@ -3,15 +3,18 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdNet implements DWCommand {
+public class DWCmdNet extends DWCommand {
 
 	static final String command = "net";
 	private DWCommandList commands;
-		
-	public DWCmdNet(DWProtocolHandler dwProto)
+	private DWProtocolHandler dwProto;	
+	
+	public DWCmdNet(DWProtocolHandler dwProto,DWCommand parent)
 	{
-		commands = new DWCommandList(dwProto);
-		commands.addcommand(new DWCmdNetShow(dwProto));
+		setParentCmd(parent);
+		this.dwProto = dwProto;
+		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands.addcommand(new DWCmdNetShow(dwProto,this));
 		
 	}
 
@@ -20,23 +23,26 @@ public class DWCmdNet implements DWCommand {
 	{
 		return command;
 	}
+	
+	public DWCommandList getCommandList()
+	{
+		return(this.commands);
+	}
 
 	public DWCommandResponse parse(String cmdline)
 	{
+		if (cmdline.length() == 0)
+		{
+			return(new DWCommandResponse(this.commands.getShortHelp()));
+		}
 		return(commands.parse(cmdline));
 	}
 
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 
 	public String getShortHelp() 
 	{
-		return "Networking commands";
+		return "Manage network connections";
 	}
 
 

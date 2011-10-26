@@ -5,7 +5,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdInstanceResetProtodev implements DWCommand {
+public class UICmdInstanceResetProtodev extends DWCommand {
 
 	static final String command = "protodev";
 	
@@ -31,12 +31,6 @@ public class UICmdInstanceResetProtodev implements DWCommand {
 		return(new DWCommandResponse(res));
 	}
 
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	public String getShortHelp() 

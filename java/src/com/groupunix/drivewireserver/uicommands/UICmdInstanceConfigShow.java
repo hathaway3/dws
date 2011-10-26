@@ -10,7 +10,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdInstanceConfigShow implements DWCommand {
+public class UICmdInstanceConfigShow extends DWCommand {
 
 	static final String command = "show";
 	
@@ -61,12 +61,6 @@ public class UICmdInstanceConfigShow implements DWCommand {
 		return(new DWCommandResponse(res));
 	}
 
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	public String getShortHelp() 

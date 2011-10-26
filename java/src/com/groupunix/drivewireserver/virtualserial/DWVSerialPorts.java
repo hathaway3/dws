@@ -444,9 +444,9 @@ public class DWVSerialPorts {
 
 
 
-	public void sendUtilityFailResponse(int vport, int code, String txt) 
+	public void sendUtilityFailResponse(int vport, byte code, String txt) 
 	{
-		logger.debug("API FAIL: port " + vport + " code " + code + ": " + txt);
+		logger.info("API FAIL: port " + vport + " code " + code + ": " + txt);
 		vserialPorts[vport].sendUtilityFailResponse(code, txt);
 	}
 

@@ -8,21 +8,21 @@ import org.apache.commons.vfs.VFS;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
-public class DWCmdServerDir implements DWCommand {
+public class DWCmdServerDir extends DWCommand {
 
+	
+	public DWCmdServerDir(DWCommand parent)
+	{
+		setParentCmd(parent);
+	}
+	
 	
 	public String getCommand() 
 	{
 		return "dir";
 	}
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	
 	public String getShortHelp() 
 	{
 		return "Show directory of URI or local path";

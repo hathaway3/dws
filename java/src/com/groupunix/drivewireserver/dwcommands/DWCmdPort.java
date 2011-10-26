@@ -2,17 +2,20 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdPort implements DWCommand {
+public class DWCmdPort extends DWCommand {
 
 	static final String command = "port";
 	private DWCommandList commands;
-		
-	public DWCmdPort(DWProtocolHandler dwProto)
+	private DWProtocolHandler dwProto;	
+	
+	public DWCmdPort(DWProtocolHandler dwProto,DWCommand parent)
 	{
-		commands = new DWCommandList(dwProto);
-		commands.addcommand(new DWCmdPortShow(dwProto));
-		commands.addcommand(new DWCmdPortClose(dwProto));
-		commands.addcommand(new DWCmdPortOpen(dwProto));
+		setParentCmd(parent);
+		this.dwProto = dwProto;
+		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands.addcommand(new DWCmdPortShow(dwProto,this));
+		commands.addcommand(new DWCmdPortClose(dwProto,this));
+		commands.addcommand(new DWCmdPortOpen(dwProto,this));
 	}
 
 	
@@ -20,23 +23,25 @@ public class DWCmdPort implements DWCommand {
 	{
 		return command;
 	}
+	
+	public DWCommandList getCommandList()
+	{
+		return(this.commands);
+	}
 
 	public DWCommandResponse parse(String cmdline)
 	{
+		if (cmdline.length() == 0)
+		{
+			return(new DWCommandResponse(this.commands.getShortHelp()));
+		}
 		return(commands.parse(cmdline));
-	}
-
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 
 	public String getShortHelp() 
 	{
-		return "Commands that manage virtual ports";
+		return "Manage virtual serial ports";
 	}
 
 

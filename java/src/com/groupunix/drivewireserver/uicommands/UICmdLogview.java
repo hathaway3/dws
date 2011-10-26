@@ -9,7 +9,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdLogview implements DWCommand {
+public class UICmdLogview extends DWCommand {
 
 	static final String command = "logview";
 		
@@ -58,13 +58,6 @@ public class UICmdLogview implements DWCommand {
 			Logger.getRootLogger().removeAppender(logAppender);
 	
 		return(new DWCommandResponse("Logviewer closed"));
-	}
-
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 

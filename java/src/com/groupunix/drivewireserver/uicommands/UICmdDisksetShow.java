@@ -9,19 +9,14 @@ import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 
-public class UICmdDisksetShow implements DWCommand {
+public class UICmdDisksetShow extends DWCommand {
 
 	
 	public String getCommand() 
 	{
 		return "show";
-	}
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	
@@ -81,40 +76,46 @@ public class UICmdDisksetShow implements DWCommand {
 	{
 		String text = new String();
 		
-		if (DriveWireServer.hasDiskset(setname))
-		{
-			HierarchicalConfiguration theset = DriveWireServer.getDiskset(setname);
-			
-			text = "Description: " + theset.getString("Description","") + "\n";
-			text += "Notes: " + theset.getString("Notes","") + "\n";
-			text += "SaveChanges: " + theset.getBoolean("SaveChanges",false) + "\n";
-			text += "HDBDOSMode: " + theset.getBoolean("HDBDOSMode",false) + "\n";
-			text += "ImageURL: " + theset.getString("ImageURL","") + "\n";
-			text += "EjectAllOnLoad: " + theset.getBoolean("EjectAllOnLoad",false) + "\n";
-			
-			// disks
-			List<HierarchicalConfiguration> disks = theset.configurationsAt("disk");
-	    	
-			for(Iterator<HierarchicalConfiguration> it = disks.iterator(); it.hasNext();)
-			{
-			    HierarchicalConfiguration disk = (HierarchicalConfiguration) it.next();
-			    text += "path(" + disk.getInt("drive") + "): " + disk.getString("path","") + "\n";
-			    text += "writeprotect(" + disk.getInt("drive") + "): " + disk.getBoolean("writeprotect",false) + "\n";
-			    text += "sync(" + disk.getInt("drive") + "): " + disk.getBoolean("sync",false) + "\n";
-			    text += "expand(" + disk.getInt("drive") + "): " + disk.getBoolean("expand",false) + "\n";
-			    text += "sizelimit(" + disk.getInt("drive") + "): " + disk.getInt("sizelimit",-1) + "\n";
-			    text += "offset(" + disk.getInt("drive") + "): " + disk.getInt("offset",0) + "\n";
 
-			    
+			HierarchicalConfiguration theset;
+			try 
+			{
+				theset = DriveWireServer.getDiskset(setname);
+				
+				text = "Description: " + theset.getString("Description","") + "\n";
+				text += "Notes: " + theset.getString("Notes","") + "\n";
+				text += "SaveChanges: " + theset.getBoolean("SaveChanges",false) + "\n";
+				text += "HDBDOSMode: " + theset.getBoolean("HDBDOSMode",false) + "\n";
+				text += "ImageURL: " + theset.getString("ImageURL","") + "\n";
+				text += "EjectAllOnLoad: " + theset.getBoolean("EjectAllOnLoad",false) + "\n";
+				
+				// disks
+				List<HierarchicalConfiguration> disks = theset.configurationsAt("disk");
+		    	
+				for(Iterator<HierarchicalConfiguration> it = disks.iterator(); it.hasNext();)
+				{
+				    HierarchicalConfiguration disk = (HierarchicalConfiguration) it.next();
+				    text += "path(" + disk.getInt("drive") + "): " + disk.getString("path","") + "\n";
+				    text += "writeprotect(" + disk.getInt("drive") + "): " + disk.getBoolean("writeprotect",false) + "\n";
+				    text += "sync(" + disk.getInt("drive") + "): " + disk.getBoolean("sync",false) + "\n";
+				    text += "expand(" + disk.getInt("drive") + "): " + disk.getBoolean("expand",false) + "\n";
+				    text += "sizelimit(" + disk.getInt("drive") + "): " + disk.getInt("sizelimit",-1) + "\n";
+				    text += "offset(" + disk.getInt("drive") + "): " + disk.getInt("offset",0) + "\n";
+
+				    
+				}
+			
+				
+			} 
+			catch (DWDisksetNotValidException e) 
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
 			}
-		
+			
+			
 		
 			return(new DWCommandResponse(text));
-		}
-		else
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET, "No disk set named '" + setname + "' found"));
-		}
+
 	}	
 
 	public boolean validate(String cmdline) 

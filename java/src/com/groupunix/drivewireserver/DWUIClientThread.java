@@ -6,13 +6,10 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
-import com.groupunix.drivewireserver.uicommands.UICmdDiskset;
-import com.groupunix.drivewireserver.uicommands.UICmdInstance;
-import com.groupunix.drivewireserver.uicommands.UICmdLogview;
-import com.groupunix.drivewireserver.uicommands.UICmdServer;
+import com.groupunix.drivewireserver.uicommands.UICmd;
 
 public class DWUIClientThread implements Runnable {
 
@@ -22,7 +19,7 @@ public class DWUIClientThread implements Runnable {
 	private boolean wanttodie = false;
 	private int instance = -1;
 	
-	private DWCommandList uiCmds;
+	private DWCommandList commands;
 	
 	
 	
@@ -30,22 +27,20 @@ public class DWUIClientThread implements Runnable {
 	{
 		this.skt = skt;
 		
-		uiCmds = new DWCommandList(null);
-		uiCmds.addcommand(new UICmdInstance(this));
-		uiCmds.addcommand(new UICmdServer(this));
-		uiCmds.addcommand(new UICmdDiskset(this));
-		uiCmds.addcommand(new UICmdLogview(this));
+		commands = new DWCommandList();
+		commands.addcommand(new UICmd(this));
 	}
 
+	
+	
 	public void run() 
 	{
-		
-		
+
 		Thread.currentThread().setName("dwUIcliIn-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
 		
-		logger.debug("run for client at " + skt.getInetAddress().getCanonicalHostName());
+		logger.debug("run for client at " + skt.getInetAddress().getHostAddress());
 		
 		
 		try 
@@ -103,93 +98,32 @@ public class DWUIClientThread implements Runnable {
 		logger.debug("exit");
 	}
 
+	
+	
 	private void doCmd(String cmd) throws IOException 
 	{
 		
 		skt.getOutputStream().write(("\n>>\n").getBytes());
 		
-		if (serverCommand(cmd))
+		DWCommandResponse resp = this.commands.parse(cmd);
+		
+		if (resp.getSuccess())
 		{
-			logger.debug("server command: " + cmd);
+
+			sendUIresponse(skt.getOutputStream(),resp.getResponseText());
 		}
 		else
 		{
-			if (this.instance < 0)
-			{
-				logger.debug("no instance requested by client");
-			}
-			else
-			if (instanceCommand(cmd))
-			{
-				logger.debug("instance command: " + cmd);
-			}
-			else
-			{
-				skt.getOutputStream().write(("FAIL " + DWDefs.RC_SYNTAX_ERROR + " unknown command\r\n").getBytes());
-			}	
-				
+
+			sendUIresponse(skt.getOutputStream(),"FAIL " + (resp.getResponseCode() & 0xFF) + " " + resp.getResponseText());
+
 		}
+		
+
 		
 		skt.getOutputStream().write(("<<\n").getBytes());
 	}
 
-	private boolean instanceCommand(String cmd) throws IOException 
-	{
-		if (cmd.startsWith("dw"))
-		{
-			if (DriveWireServer.isValidHandlerNo(instance))
-			{
-				if (DriveWireServer.handlerIsAlive(instance))
-				{
-					
-					DriveWireServer.getHandler(instance).doCmd(cmd, skt.getOutputStream());
-						
-				}
-				else
-				{
-					sendUIresponse(skt.getOutputStream(),"FAIL " + DWDefs.RC_INVALID_HANDLER + " Instance is not running");
-				
-				}
-			}
-			else
-			{
-				sendUIresponse(skt.getOutputStream(),"FAIL " + DWDefs.RC_INVALID_HANDLER + " Instance is not valid");
-			
-			}
-		
-			return true;
-		}
-		
-		return false;
-	}
-
-	
-	private boolean serverCommand(String cmd) throws IOException 
-	{
-		
-		if (cmd.startsWith("ui"))
-		{
-			DWCommandResponse resp = uiCmds.parse( DWUtils.dropFirstToken(cmd));
-			
-			if (resp.getSuccess())
-			{
-
-				sendUIresponse(skt.getOutputStream(),resp.getResponseText());
-			}
-			else
-			{
-
-				sendUIresponse(skt.getOutputStream(),"FAIL " + resp.getResponseCode() + " " + resp.getResponseText());
-
-			}
-			
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
 
 	private void sendUIresponse(OutputStream outputStream, String txt) throws IOException 
 	{
@@ -198,9 +132,13 @@ public class DWUIClientThread implements Runnable {
 
 	}
 
+
+
 	public void setInstance(int handler) 
 	{
 		this.instance = handler;
+		if (!this.commands.validate("dw"))
+			this.commands.addcommand(new DWCmd(DriveWireServer.getHandler(handler)));
 	}
 
 	public int getInstance() 

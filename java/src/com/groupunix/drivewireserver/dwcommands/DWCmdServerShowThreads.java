@@ -3,20 +3,19 @@ package com.groupunix.drivewireserver.dwcommands;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 
-public class DWCmdServerShowThreads implements DWCommand {
+public class DWCmdServerShowThreads extends DWCommand {
 
+	DWCmdServerShowThreads(DWCommand parent)
+	{
+		setParentCmd(parent);
+	}
+	
 	public String getCommand() 
 	{
 		return "threads";
 	}
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	
 	public String getShortHelp() 
 	{
 		return "Show server threads";

@@ -68,17 +68,34 @@ public class DWDefs
 	public static final int UTILMODE_TCPLISTEN = 7;
 	
 	
-	// result codes
+	// result codes for DW virtual channel API calls - all subject to change until I know of anyone actually using these on client side
 	public static final byte RC_SUCCESS = 0;
 	public static final byte RC_SYNTAX_ERROR = 100;
 	public static final byte RC_INVALID_DRIVE = 101;
 	public static final byte RC_DRIVE_NOT_LOADED = 102;
 	public static final byte RC_DRIVE_ALREADY_LOADED = 103;
 	public static final byte RC_NO_SUCH_DISKSET = 110;
+	public static final byte RC_INVALID_DISK_DEF = 111;
+	
+	public static final byte RC_NET_IO_ERROR = 120;
+	public static final byte RC_NET_UNKNOWN_HOST = 121;
+	public static final byte RC_NET_INVALID_CONNECTION = 122;
+
+	
+	public static final byte RC_INVALID_PORT = (byte)140;
+
+	public static final byte RC_MIDI_UNAVAILABLE = (byte)150;
+	public static final byte RC_MIDI_INVALID_DEVICE = (byte)151;
+	public static final byte RC_MIDI_INVALID_DATA = (byte)152;
+	public static final byte RC_MIDI_SOUNDBANK_FAILED = (byte)153;
+	public static final byte RC_MIDI_SOUNDBANK_NOT_SUPPORTED = (byte)154;
+	public static final byte RC_MIDI_INVALID_PROFILE = (byte)155;
+	public static final byte RC_MIDI_ERROR = (byte)156;
 	
 	public static final byte RC_SERVER_FILESYSTEM_EXCEPTION = (byte)200;
 	public static final byte RC_SERVER_IO_EXCEPTION = (byte)201;
 	public static final byte RC_SERVER_FILE_NOT_FOUND = (byte)202;
+	public static final byte RC_SERVER_NOT_IMPLEMENTED = (byte)203;
 
 
 	public static final byte RC_INVALID_HANDLER = (byte) 210;
@@ -86,28 +103,35 @@ public class DWDefs
 
 	public static final byte RC_CONFIG_KEY_NOT_SET = (byte)220;
 
-	public static final byte RC_INVALID_PORT = (byte)140;
 
-	public static final byte RC_MIDI_UNAVAILABLE = (byte)150;
 
-	public static final byte RC_MIDI_INVALID_DEVICE = (byte)151;
-
-	public static final byte RC_MIDI_INVALID_DATA = (byte)152;
-
-	public static final byte RC_MIDI_SOUNDBANK_FAILED = (byte)153;
-
-	public static final byte RC_MIDI_SOUNDBANK_NOT_SUPPORTED = (byte)154;
-
-	public static final byte RC_MIDI_INVALID_PROFILE = (byte)155;
-
-	public static final byte RC_MIDI_ERROR = (byte)156;
-
-	public static final int DISK_MAXDRIVES = 256;
-
-	public static final int DISK_MAXSECTORS = 16777215;
 	
+	// disk stuff
+	
+	public static final int DISK_MAXDRIVES = 256;
+	public static final int DISK_MAXSECTORS = 16777215;
 	public static final int DISK_SECTORSIZE = 256;
 
+	public static final Boolean DISK_DEFAULT_EXPAND = true;
+	public static final Boolean DISK_DEFAULT_SYNCTO = true;
+	public static final Boolean DISK_DEFAULT_SYNCFROM = true;
+	public static final Boolean DISK_DEFAULT_WRITEPROTECT = false;
+	public static final Boolean DISK_DEFAULT_NAMEDOBJECT = false;
+	public static final int DISK_DEFAULT_OFFSET = 0;
+	public static final int DISK_DEFAULT_SIZELIMIT = -1;
+
+	public static final Boolean DISK_DEFAULT_PADSECTORS = false;
+
+	// help
+	
+	public static final String HELP_DEFAULT_FILE = "help.xml";
+
+	public static final int DWCMD_DEFAULT_COLS = 80;
+
+	
+
+	
+	
 	
 	
 	

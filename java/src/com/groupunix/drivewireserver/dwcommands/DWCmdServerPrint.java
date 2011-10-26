@@ -17,13 +17,14 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 
-public class DWCmdServerPrint implements DWCommand {
+public class DWCmdServerPrint extends DWCommand {
 
 	
 	private DWProtocol dwProto;
 	
-	public DWCmdServerPrint(DWProtocol dwProto)
+	public DWCmdServerPrint(DWProtocol dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 
@@ -31,12 +32,6 @@ public class DWCmdServerPrint implements DWCommand {
 	public String getCommand() 
 	{
 		return "print";
-	}
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	

@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
@@ -157,24 +158,10 @@ public class DWVPortHandler
 				}
 				else
 				{
-					respondFail(2,"Syntax error in TCP command");
+					respondFail(DWDefs.RC_SYNTAX_ERROR,"Syntax error in TCP command");
 				}
 			}
-			else if (cmdparts[0].equalsIgnoreCase("url"))
-			{
-				if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("get"))) 
-				{
-					doURL("get",cmdparts[2]);
-				}
-				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("post"))) 
-				{
-					doURL("post",cmdparts[2]);
-				}
-				else
-				{
-					respondFail(2,"Syntax error in URL command");
-				}
-			}
+
 			/* else if (cmdparts[0].equalsIgnoreCase("serial"))
 			{
 				if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("con"))) 
@@ -206,7 +193,7 @@ public class DWVPortHandler
 		else
 		{
 			logger.debug("got empty command?");
-			respondFail(2,"Syntax error: no command?");
+			respondFail(DWDefs.RC_SYNTAX_ERROR,"Syntax error: no command?");
 		}
 			
 	}
@@ -246,7 +233,7 @@ public class DWVPortHandler
 		}
 		catch (NumberFormatException e)
 		{
-			respondFail(2,"non-numeric port in tcp join command");
+			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp join command");
 			return;
 		}
 		
@@ -262,7 +249,7 @@ public class DWVPortHandler
 		} 
 		catch (DWConnectionNotValidException e) 
 		{
-			respondFail(101,"invalid connection number");
+			respondFail(DWDefs.RC_NET_INVALID_CONNECTION,"invalid connection number");
 		}
 		
 		
@@ -279,7 +266,7 @@ public class DWVPortHandler
 		}
 		catch (NumberFormatException e)
 		{
-			respondFail(2,"non-numeric port in tcp kill command");
+			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp kill command");
 			return;
 		}
 		
@@ -294,18 +281,14 @@ public class DWVPortHandler
 		} 
 		catch (DWConnectionNotValidException e) 
 		{
-			respondFail(101,"invalid connection number");
+			respondFail(DWDefs.RC_NET_INVALID_CONNECTION,"invalid connection number");
 		}
 		
 		
 	}
 	
 
-	private void doURL(String action,String url) 
-	{
-		this.utilthread = new Thread(new DWUtilURLThread(this.dwProto, this.vport, url, action));
-		this.utilthread.start();
-	}
+
 
 	private void doTCPConnect(String tcphost, String tcpportstr) 
 	{
@@ -318,7 +301,7 @@ public class DWVPortHandler
 		}
 		catch (NumberFormatException e)
 		{
-			respondFail(2,"non-numeric port in tcp connect command");
+			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp connect command");
 			return;
 		}
 		
@@ -341,7 +324,7 @@ public class DWVPortHandler
 		}
 		catch (NumberFormatException e)
 		{
-			respondFail(2,"non-numeric port in tcp listen command");
+			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp listen command");
 			return;
 		}
 		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.dwProto, this.vport, tcpport);
@@ -371,7 +354,7 @@ public class DWVPortHandler
 		}
 		catch (NumberFormatException e)
 		{
-			respondFail(2,"non-numeric port in tcp listen command");
+			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp listen command");
 			return;
 		}
 		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.dwProto, this.vport, tcpport);
@@ -427,9 +410,9 @@ public class DWVPortHandler
 	}
 	
 	
-	public void respondFail(int errno, String txt) 
+	public void respondFail(byte errno, String txt) 
 	{
-		String perrno = String.format("%03d", errno);
+		String perrno = String.format("%03d", errno & 0xFF);
 		logger.debug("command failed: " + perrno + " " + txt);
 		try 
 		{

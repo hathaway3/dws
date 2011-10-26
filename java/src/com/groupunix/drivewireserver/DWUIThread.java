@@ -75,7 +75,7 @@ public class DWUIThread implements Runnable {
 			{
 				skt = srvr.accept();
 				
-				logger.info("new UI connection from " + skt.getInetAddress().getHostAddress());
+				logger.debug("new UI connection from " + skt.getInetAddress().getHostAddress());
 				
 				Thread uiclientthread = new Thread(new DWUIClientThread(skt));
 				uiclientthread.start();

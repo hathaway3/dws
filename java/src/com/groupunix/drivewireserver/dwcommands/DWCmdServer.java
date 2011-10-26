@@ -2,20 +2,24 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
-public class DWCmdServer implements DWCommand {
+public class DWCmdServer extends DWCommand {
 
 	static final String command = "server";
 	private DWCommandList commands;
-		
-	public DWCmdServer(DWProtocol dwProto)
+	private DWProtocol dwProto;	
+	
+	public DWCmdServer(DWProtocol dwProto,DWCommand parent)
 	{
-		commands = new DWCommandList(dwProto);
-		commands.addcommand(new DWCmdServerStatus(dwProto));
-		commands.addcommand(new DWCmdServerShow(dwProto));
-		commands.addcommand(new DWCmdServerList());
-		commands.addcommand(new DWCmdServerDir());
-		commands.addcommand(new DWCmdServerTurbo(dwProto));
-		commands.addcommand(new DWCmdServerPrint(dwProto));
+		setParentCmd(parent);
+		this.dwProto = dwProto;
+		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands.addcommand(new DWCmdServerStatus(dwProto,this));
+		commands.addcommand(new DWCmdServerShow(dwProto,this));
+		commands.addcommand(new DWCmdServerList(this));
+		commands.addcommand(new DWCmdServerDir(this));
+		commands.addcommand(new DWCmdServerTurbo(dwProto,this));
+		commands.addcommand(new DWCmdServerPrint(dwProto,this));
+		commands.addcommand(new DWCmdServerHelp(dwProto,this));
 		
 	//	commands.addcommand(new DWCmdServerRestart(handlerno));
 	}
@@ -29,22 +33,25 @@ public class DWCmdServer implements DWCommand {
 	{
 		return command;
 	}
+	
+	public DWCommandList getCommandList()
+	{
+		return(this.commands);
+	}
 
+	
 	public DWCommandResponse parse(String cmdline)
 	{
+		if (cmdline.length() == 0)
+		{
+			return(new DWCommandResponse(this.commands.getShortHelp()));
+		}
 		return(commands.parse(cmdline));
 	}
 
-
-	public String getLongHelp() 
-	{
-		return null;
-	}
-
-
 	public String getShortHelp() 
 	{
-		return "Commands for the server";
+		return "Various server based tools";
 	}
 
 

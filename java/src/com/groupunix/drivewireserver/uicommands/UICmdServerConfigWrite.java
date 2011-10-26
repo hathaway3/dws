@@ -8,7 +8,7 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdServerConfigWrite implements DWCommand {
+public class UICmdServerConfigWrite extends DWCommand {
 
 	static final String command = "write";
 	
@@ -40,12 +40,6 @@ public class UICmdServerConfigWrite implements DWCommand {
 		return(new DWCommandResponse(res));
 	}
 
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	public String getShortHelp() 

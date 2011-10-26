@@ -13,19 +13,17 @@ import org.apache.commons.vfs.VFS;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
-public class DWCmdServerList implements DWCommand {
+public class DWCmdServerList extends DWCommand {
 
+	public DWCmdServerList(DWCommand parent)
+	{
+		setParentCmd(parent);
+	}
 
 	
 	public String getCommand() 
 	{
 		return "list";
-	}
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	

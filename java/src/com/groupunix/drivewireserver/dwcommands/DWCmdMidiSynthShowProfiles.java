@@ -7,23 +7,20 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 
-public class DWCmdMidiSynthShowProfiles implements DWCommand {
+public class DWCmdMidiSynthShowProfiles extends DWCommand {
 
-
-
+ 
+	public DWCmdMidiSynthShowProfiles(DWCommand parent)
+	{
+		setParentCmd(parent);
+	}
 	
 	public String getCommand() 
 	{
 		return "profiles";
 	}
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	
 	public String getShortHelp() 
 	{
 		return "Show internal synth profiles";

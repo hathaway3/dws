@@ -3,12 +3,13 @@ package com.groupunix.drivewireserver.dwcommands;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdMidiSynthProfile implements DWCommand {
+public class DWCmdMidiSynthProfile extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthProfile(DWProtocolHandler dwProto)
+	public DWCmdMidiSynthProfile(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -17,10 +18,6 @@ public class DWCmdMidiSynthProfile implements DWCommand {
 		return "profile";
 	}
 
-	public String getLongHelp() 
-	{
-		return null;
-	}
 
 	
 	public String getShortHelp() 

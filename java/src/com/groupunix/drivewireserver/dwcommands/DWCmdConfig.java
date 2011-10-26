@@ -2,19 +2,21 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
-public class DWCmdConfig implements DWCommand
+public class DWCmdConfig extends DWCommand
 {
 	
 	static final String command = "config";
 	private DWCommandList commands;
-		
+	private DWProtocol dwProto;
 	
-	public DWCmdConfig(DWProtocol dwProtocol)
+	public DWCmdConfig(DWProtocol dwProtocol,DWCommand parent)
 	{
-		commands = new DWCommandList(dwProtocol);
-		commands.addcommand(new DWCmdConfigShow(dwProtocol));
-		commands.addcommand(new DWCmdConfigSet(dwProtocol));
-		commands.addcommand(new DWCmdConfigSave(dwProtocol));
+		setParentCmd(parent);
+		this.dwProto = dwProtocol;
+		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands.addcommand(new DWCmdConfigShow(dwProtocol, this));
+		commands.addcommand(new DWCmdConfigSet(dwProtocol, this));
+		commands.addcommand(new DWCmdConfigSave(dwProtocol, this));
 		// save/load not implemented here
 	} 
 
@@ -23,23 +25,27 @@ public class DWCmdConfig implements DWCommand
 	{
 		return command;
 	}
+	
+	public DWCommandList getCommandList()
+	{
+		return(this.commands);
+	}
 
 	public DWCommandResponse parse(String cmdline)
 	{
+		if (cmdline.length() == 0)
+		{
+			return(new DWCommandResponse(this.commands.getShortHelp()));
+		}
 		return(commands.parse(cmdline));
 	}
 
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	public String getShortHelp() 
 	{
-		return "Commands that manipulate the config";
+		return "Commands to manipulate the config";
 	}
 
 

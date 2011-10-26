@@ -74,7 +74,7 @@ public class DWVPortTCPListenerThread implements Runnable
 			catch (IOException e2) 
 			{
 				logger.error(e2.getMessage());
-				dwVSerialPorts.sendUtilityFailResponse(this.vport, 12, e2.getMessage());
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_IO_ERROR, e2.getMessage());
 				return;
 			} 
 			

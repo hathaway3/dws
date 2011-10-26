@@ -2,8 +2,6 @@ package com.groupunix.drivewireserver.dwprotocolhandler;
 
 import java.io.IOException;
 
-import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
-
 
 
 public interface DWProtocolDevice 

@@ -5,10 +5,10 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
-public class UICmdDiskset implements DWCommand {
+public class UICmdDiskset extends DWCommand {
 
 	static final String command = "diskset";
-	private DWCommandList commands = new DWCommandList(null);
+	private DWCommandList commands = new DWCommandList();
 		
 	public UICmdDiskset(DWUIClientThread dwuiClientThread)
 	{
@@ -27,12 +27,6 @@ public class UICmdDiskset implements DWCommand {
 		return(commands.parse(cmdline));
 	}
 
-
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	public String getShortHelp() 

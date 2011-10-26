@@ -33,6 +33,7 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 
 	
 	private boolean m_expanded = false;
+	@SuppressWarnings("unused")
 	private boolean m_pica = true;
 	private boolean m_elite = false;
 	private boolean m_compressed = false;
@@ -47,6 +48,7 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 	private DWVPrinterFX80CharacterSet charset = new DWVPrinterFX80CharacterSet();
 	private Graphics2D rGraphic;
 	
+	@SuppressWarnings("unused")
 	private File printDir;
 	private File printFile;
 	

@@ -7,12 +7,13 @@ import javax.sound.midi.MidiUnavailableException;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdMidiStatus implements DWCommand {
+public class DWCmdMidiStatus extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiStatus(DWProtocolHandler dwProto)
+	public DWCmdMidiStatus(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -21,11 +22,6 @@ public class DWCmdMidiStatus implements DWCommand {
 		return "status";
 	}
 
-	public String getLongHelp() 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	
 	public String getShortHelp() 

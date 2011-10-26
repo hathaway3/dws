@@ -3,11 +3,11 @@ package com.groupunix.drivewireserver.virtualserial;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWUtilDWThread implements Runnable 
 {
@@ -33,7 +33,8 @@ public class DWUtilDWThread implements Runnable
 		}
 		
 
-		commands = dwProto.getDWCmds();
+		commands = new DWCommandList(dwProto.getCMDCols());
+		commands.addcommand(new DWCmd(dwProto));
 		
 		logger.debug("init dw util thread (protected mode: " + this.protect + ")");	
 	}
@@ -51,7 +52,7 @@ public class DWUtilDWThread implements Runnable
 		this.dwVSerialPorts.markConnected(vport);
 		this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_DWCMD);
 		
-		DWCommandResponse resp = commands.parse(DWUtils.dropFirstToken(this.strargs));
+		DWCommandResponse resp = commands.parse(this.strargs);
 		
 		if (resp.getSuccess())
 		{

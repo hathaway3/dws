@@ -4,13 +4,14 @@ import javax.sound.midi.Instrument;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class DWCmdMidiSynthShowInstr implements DWCommand {
+public class DWCmdMidiSynthShowInstr extends DWCommand {
 
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdMidiSynthShowInstr(DWProtocolHandler dwProto)
+	public DWCmdMidiSynthShowInstr(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
@@ -19,10 +20,6 @@ public class DWCmdMidiSynthShowInstr implements DWCommand {
 		return "instr";
 	}
 
-	public String getLongHelp() 
-	{
-		return null;
-	}
 
 	
 	public String getShortHelp() 

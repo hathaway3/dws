@@ -4,23 +4,19 @@ import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.virtualserial.DWVPortListenerPool;
 
-public class DWCmdNetShow implements DWCommand {
+public class DWCmdNetShow extends DWCommand {
 
 	private DWProtocolHandler dwProto;
 
-	public DWCmdNetShow(DWProtocolHandler dwProto)
+	public DWCmdNetShow(DWProtocolHandler dwProto,DWCommand parent)
 	{
+		setParentCmd(parent);
 		this.dwProto = dwProto;
 	}
 	
 	public String getCommand() 
 	{
 		return "show";
-	}
-
-	public String getLongHelp() 
-	{
-		return null;
 	}
 
 	
