@@ -48,9 +48,8 @@ public class UICmdLogview extends DWCommand {
 				}
 				catch (InterruptedException e) 
 				{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				wanttodie = true;
+					logger.error(e.getMessage());
+					wanttodie = true;
 				}
 			}
 			

@@ -297,7 +297,7 @@ public class StatusWin extends Dialog {
 			public void widgetSelected(SelectionEvent e) 
 			{
 				stopRefreshThread();
-				shlServerStatus.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnOk.setBounds(347, 376, 87, 25);

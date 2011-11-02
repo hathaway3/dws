@@ -155,7 +155,7 @@ public class UIConfigWin extends Dialog {
 			{
 				applySettings();
 				
-				shlUserInterfaceConfiguration.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnOk.setBounds(166, 385, 75, 25);
@@ -166,7 +166,7 @@ public class UIConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				shlUserInterfaceConfiguration.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnCancel.setBounds(316, 385, 75, 25);

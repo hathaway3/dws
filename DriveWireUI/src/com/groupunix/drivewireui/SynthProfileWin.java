@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -12,12 +13,14 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Label;
 
 public class SynthProfileWin extends Dialog {
 
 	protected Object result;
-	protected Shell shlChooseASynth;
+	protected static Shell shlChooseASynth;
 
 	protected Combo combo;
 	
@@ -33,12 +36,21 @@ public class SynthProfileWin extends Dialog {
 		setText("SWT Dialog");
 	}
 
-	/**
-	 * Open the dialog.
-	 * @return the result
-	 * @throws DWUIOperationFailedException 
-	 * @throws IOException 
-	 */
+
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shlChooseASynth.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlChooseASynth.getDisplay(), f));
+		}
+	}
+	
+	
 	public Object open() throws IOException, DWUIOperationFailedException {
 		createContents();
 		
@@ -48,6 +60,8 @@ public class SynthProfileWin extends Dialog {
 		Label lblAvailableSynthTranslations = new Label(shlChooseASynth, SWT.NONE);
 		lblAvailableSynthTranslations.setBounds(10, 10, 217, 15);
 		lblAvailableSynthTranslations.setText("Available synth translations:");
+		
+		applyFont();
 		
 		shlChooseASynth.open();
 		shlChooseASynth.layout();
@@ -95,7 +109,7 @@ public class SynthProfileWin extends Dialog {
 				{
 					MainWin.sendCommand("dw midi synth profile " + profiles.get(combo.getSelectionIndex()).split(" ")[0]);
 				}
-				shlChooseASynth.close();
+				e.display.getActiveShell().close();
 				
 			}
 		});
@@ -107,7 +121,7 @@ public class SynthProfileWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				shlChooseASynth.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnCancel.setBounds(152, 63, 75, 25);

@@ -12,7 +12,7 @@ public class DWCmdMidiSynth extends DWCommand {
 	{
 		setParentCmd(parent);
 		this.dwProto = dwProto;
-		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
 		commands.addcommand(new DWCmdMidiSynthStatus(dwProto,this));
 		commands.addcommand(new DWCmdMidiSynthShow(dwProto,this));
 		commands.addcommand(new DWCmdMidiSynthBank(dwProto,this));

@@ -41,14 +41,18 @@ public class DWLogAppender extends AppenderSkeleton
 
 	protected void append(LoggingEvent event) 
 	{
-		synchronized (events) 
+		// ignore those pesky XMLConfiguration debug messages
+		if (!event.getMessage().equals("ConfigurationUtils.locate(): base is null, name is null"))
 		{
-			if (events.size() == MAX_EVENTS)
+			synchronized (events) 
 			{
-				events.removeFirst();
-			}
+				if (events.size() == MAX_EVENTS)
+				{
+					events.removeFirst();
+				}
 			
-			events.addLast(event);
+				events.addLast(event);
+			}
 		}
 	}
 

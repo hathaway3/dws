@@ -27,6 +27,7 @@ public class Connection
 	
 	public void Connect() throws UnknownHostException, IOException
 	{
+		MainWin.setConStatusConnect();
 		this.sock = new Socket(this.host, this.port);
 		this.sock.setSoTimeout(MainWin.config.getInt("TCPTimeout",MainWin.default_TCPTimeout));
 	}
@@ -48,6 +49,7 @@ public class Connection
 
 	public void close() throws IOException 
 	{
+		MainWin.setConStatusNone();
 		this.sock.close();
 	}
 
@@ -63,6 +65,7 @@ public class Connection
 	}
 
 
+
 	public void sendCommand(String cmd, int instance) throws IOException, DWUIOperationFailedException 
 	{
 		// attach to instance
@@ -73,7 +76,8 @@ public class Connection
 			
 		if ((resp.size() > 0) && (resp.get(0).startsWith("FAIL")))
 		{
-			MainWin.showError("Error in command", "The command failed with the following message:" , resp.get(0) );
+			throw new DWUIOperationFailedException(resp.get(0));
+			
 		}
 		else
 		{
@@ -114,7 +118,7 @@ public class Connection
 		}
 		
 		String strres = new String();
-		
+		MainWin.setConStatusWrite();
 		sock.getOutputStream().write((arg + "\n").getBytes());
 			
 		String line = readLine(sock);
@@ -157,6 +161,8 @@ public class Connection
 		
 		ArrayList<String> res = new ArrayList<String>();
 		
+		
+		MainWin.setConStatusWrite();
 		sock.getOutputStream().write((arg + "\n").getBytes());
 			
 		String line = readLine(sock);
@@ -189,6 +195,8 @@ public class Connection
 	private static String readLine(Socket sock) throws IOException 
 	{
 		String line = new String();
+		
+		MainWin.setConStatusRead();
 		
 		int data = sock.getInputStream().read();
 		

@@ -5,8 +5,8 @@ import java.io.IOException;
 import org.apache.commons.configuration.ConfigurationException;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdServerHelpGentopics extends DWCommand {
 
@@ -48,7 +48,7 @@ public class DWCmdServerHelpGentopics extends DWCommand {
 	{
 		try 
 		{
-			DriveWireServer.getHelp().genTopics(this.dwProto);
+			((DWProtocolHandler)dwProto).getHelp().genTopics(this.dwProto);
 		} 
 		catch (ConfigurationException e) 
 		{

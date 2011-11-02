@@ -1,29 +1,30 @@
 package com.groupunix.drivewireui;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Spinner;
+import javax.swing.JFileChooser;
+
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
 
 public class CreateDiskWin extends Dialog {
 
 	protected Object result;
-	protected Shell shlCreateANew;
+	protected static Shell shlCreateANew;
 	private Text textPath;
 	private Spinner spinnerDrive;
-	private Button btnLocal;
-	private Button btnRemote;
 	private Button btnFile;
 
 	/**
@@ -42,6 +43,9 @@ public class CreateDiskWin extends Dialog {
 	 */
 	public Object open() {
 		createContents();
+		
+		applyFont();
+		
 		shlCreateANew.open();
 		shlCreateANew.layout();
 		Display display = getParent().getDisplay();
@@ -53,78 +57,79 @@ public class CreateDiskWin extends Dialog {
 		return result;
 	}
 
-	/**
-	 * Create contents of the dialog.
-	 */
+	
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shlCreateANew.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlCreateANew.getDisplay(), f));
+		}
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlCreateANew.getDisplay(), f));
+		}
+		
+	}
+	
 	private void createContents() {
 		shlCreateANew = new Shell(getParent(), getStyle());
-		shlCreateANew.setSize(381, 343);
+		shlCreateANew.setSize(380, 206);
 		shlCreateANew.setText("Create a new disk image...");
 		shlCreateANew.setLayout(null);
 		
 		spinnerDrive = new Spinner(shlCreateANew, SWT.BORDER);
-		spinnerDrive.setBounds(209, 26, 47, 22);
+		spinnerDrive.setBounds(227, 26, 47, 22);
 		spinnerDrive.setMaximum(255);
 		
 		Label lblInsertNewDisk = new Label(shlCreateANew, SWT.NONE);
-		lblInsertNewDisk.setBounds(20, 29, 183, 19);
+		lblInsertNewDisk.setBounds(36, 29, 185, 19);
 		lblInsertNewDisk.setAlignment(SWT.RIGHT);
 		lblInsertNewDisk.setText("Create new disk for drive:");
 		
-		Group grpTypeOfPath = new Group(shlCreateANew, SWT.NONE);
-		grpTypeOfPath.setBounds(26, 74, 325, 98);
-		grpTypeOfPath.setText(" Type of path");
-		
-		btnLocal = new Button(grpTypeOfPath, SWT.RADIO);
-		btnLocal.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				btnFile.setVisible(true);
-			}
-		});
-		btnLocal.setSelection(true);
-		btnLocal.setBounds(25, 29, 294, 24);
-		btnLocal.setText("Local file path or URI");
-		
-		btnRemote = new Button(grpTypeOfPath, SWT.RADIO);
-		btnRemote.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				btnFile.setVisible(false);
-			}
-		});
-		btnRemote.setBounds(25, 56, 282, 24);
-		btnRemote.setText("File in server's disk directory");
-		
 		Label lblPath = new Label(shlCreateANew, SWT.NONE);
-		lblPath.setBounds(26, 193, 51, 19);
+		lblPath.setBounds(22, 68, 65, 19);
 		lblPath.setText("Path:");
 		
 		textPath = new Text(shlCreateANew, SWT.BORDER);
-		textPath.setBounds(26, 218, 272, 21);
+		textPath.setBounds(21, 89, 298, 21);
 		
 		btnFile = new Button(shlCreateANew, SWT.NONE);
 		btnFile.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlCreateANew, SWT.SAVE);
-			        fd.setText("Choose file name for the new image...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textPath.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textPath.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+			
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose path for new file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textPath.setText(selected.getPath());
+			
+				}
 			
 			}
 		});
-		btnFile.setBounds(299, 213, 40, 30);
+		btnFile.setBounds(322, 88, 29, 23);
 		btnFile.setText("...");
 		
 		Button btnCreate = new Button(shlCreateANew, SWT.NONE);
@@ -134,27 +139,11 @@ public class CreateDiskWin extends Dialog {
 			{
 				try 
 				{
-					if (btnLocal.getSelection())
-					{
-						MainWin.sendCommand("dw disk create " + spinnerDrive.getSelection() + " " + textPath.getText());
-					}
-					else
-					{
-						ArrayList<String> res;
-						res = UIUtils.loadArrayList(MainWin.getInstance(),"ui server config show LocalDiskDir");
-					
-						if (res.size() != 1)
-						{
-							throw new DWUIOperationFailedException("Strange results from server");
-						}
-					
-						MainWin.sendCommand("dw disk create " + spinnerDrive.getSelection() + " " + res.get(0) + "/" + textPath.getText());
-						
-					}
+					MainWin.sendCommand("dw disk create " + spinnerDrive.getSelection() + " " + textPath.getText());
 				
 					MainWin.refreshDiskTable();
 					
-					shlCreateANew.close();
+					e.display.getActiveShell().close();
 				} 
 				catch (DWUIOperationFailedException e1) 
 				{
@@ -167,7 +156,7 @@ public class CreateDiskWin extends Dialog {
 				
 			}
 		});
-		btnCreate.setBounds(141, 275, 90, 30);
+		btnCreate.setBounds(141, 137, 90, 30);
 		btnCreate.setText("Create");
 		
 		Button btnCancel = new Button(shlCreateANew, SWT.NONE);
@@ -175,10 +164,10 @@ public class CreateDiskWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				shlCreateANew.close();
+				e.display.getActiveShell().close();
 			}
 		});
-		btnCancel.setBounds(276, 275, 75, 30);
+		btnCancel.setBounds(276, 137, 75, 30);
 		btnCancel.setText("Cancel");
 
 	}
@@ -186,13 +175,8 @@ public class CreateDiskWin extends Dialog {
 	protected Spinner getSpinner() {
 		return spinnerDrive;
 	}
-	protected Button getBtnLocal() {
-		return btnLocal;
-	}
-	protected Button getBtnRemote() {
-		return btnRemote;
-	}
 	protected Button getBtnFile() {
 		return btnFile;
 	}
+
 }

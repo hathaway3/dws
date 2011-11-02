@@ -12,10 +12,15 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
@@ -24,8 +29,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 public class BugReportWin extends Dialog {
@@ -44,6 +50,7 @@ public class BugReportWin extends Dialog {
 	private Button btnServerConf;
 	private Button btnUIConf;
 	private Button btnErrDetails;
+	private Button btnJavaInfo;
 	
 	/**
 	 * Create the dialog.
@@ -84,12 +91,18 @@ public class BugReportWin extends Dialog {
 	 */
 	private void createContents() {
 		shlBugReport = new Shell(getParent(), getStyle());
-		shlBugReport.setSize(598, 504);
+		shlBugReport.addPaintListener(new PaintListener() {
+			public void paintControl(PaintEvent e) 
+			{
+				//moveTheBug();
+				
+			}
+		});
+		shlBugReport.setSize(598, 538);
 		shlBugReport.setText("Bug Report for '" + title + "'");
 		
 		
-		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
-		
+		FontData f = MainWin.getDialogFont();
 		
 		btnClose = new Button(shlBugReport, SWT.NONE);
 		btnClose.addSelectionListener(new SelectionAdapter() {
@@ -101,26 +114,18 @@ public class BugReportWin extends Dialog {
 			
 			}
 		});
-		btnClose.setBounds(493, 440, 75, 25);
+		btnClose.setBounds(493, 474, 75, 25);
 		btnClose.setText("Cancel");
-		
-		Label lblIfYouBelieve = new Label(shlBugReport, SWT.WRAP);
-		lblIfYouBelieve.setBounds(25, 25, 543, 114);
-		lblIfYouBelieve.setText("Please submit as much information as you can about this problem.  Internet access is required to submit a bug report.\r\n\r\nFor those concerned with privacy, you should know that all information in this bug report is sent in plain text over the internet.  While it will never intentionally be made public, the author offers absolutely no promise of confidentiality.   On the other hand, it's just some DriveWire configuration data and will normally not contain anything sensitive at all.\r\n\r\n");
 		
 		btnErrMsg = new Button(shlBugReport, SWT.CHECK);
 		btnErrMsg.setSelection(true);
-		btnErrMsg.setBounds(25, 176, 382, 16);
-		btnErrMsg.setText("The error message itself (if any)");
-		
-		Label lblDataToInclude = new Label(shlBugReport, SWT.NONE);
-		lblDataToInclude.setBounds(25, 145, 226, 25);
-		lblDataToInclude.setText("Data to include in this bug report:");
+		btnErrMsg.setBounds(25, 176, 543, 16);
+		btnErrMsg.setText("The error message itself, if any");
 		
 		btnErrDetails = new Button(shlBugReport, SWT.CHECK);
 		btnErrDetails.setSelection(true);
-		btnErrDetails.setText("The extended error details (as seen in the lower pane of the error dialog)");
-		btnErrDetails.setBounds(25, 198, 529, 16);
+		btnErrDetails.setText("The extended error details, as seen in the lower pane of the error dialog");
+		btnErrDetails.setBounds(25, 198, 543, 16);
 		
 		btnUIConf = new Button(shlBugReport, SWT.CHECK);
 		btnUIConf.setSelection(true);
@@ -133,11 +138,12 @@ public class BugReportWin extends Dialog {
 		btnServerConf.setBounds(25, 241, 543, 16);
 		
 		textAdditionalInfo = new Text(shlBugReport, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
-		textAdditionalInfo.setBounds(25, 298, 543, 60);
-		
-		Label lblAdditionalInformationbe = new Label(shlBugReport, SWT.NONE);
-		lblAdditionalInformationbe.setBounds(25, 277, 226, 15);
-		lblAdditionalInformationbe.setText("Additional information (be verbose!):");
+		textAdditionalInfo.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				//moveTheBug();
+			}
+		});
+		textAdditionalInfo.setBounds(25, 330, 543, 60);
 		
 		Button btnNewButton = new Button(shlBugReport, SWT.NONE);
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
@@ -150,15 +156,52 @@ public class BugReportWin extends Dialog {
 				
 			}
 		});
-		btnNewButton.setBounds(223, 440, 141, 25);
+		btnNewButton.setBounds(223, 474, 141, 25);
 		btnNewButton.setText("Submit Bug Report");
 		
 		textEmail = new Text(shlBugReport, SWT.BORDER);
-		textEmail.setBounds(25, 390, 288, 21);
+		textEmail.setBounds(25, 422, 288, 21);
+		
+		Link link = new Link(shlBugReport, SWT.NONE);
+		link.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				MainWin.doDisplayAsync(new Runnable() {
+
+					@Override
+					public void run() 
+					{
+						JavaInfoWin jiwin = new JavaInfoWin(shlBugReport, SWT.DIALOG_TRIM);
+						jiwin.open();
+					}
+					
+				});
+				
+			}
+		});
+		link.setBounds(43, 263, 525, 15);
+		link.setText("Information about your Java environment  (<a>click here to see what is included</a>)");
+		
+		btnJavaInfo = new Button(shlBugReport, SWT.CHECK);
+		btnJavaInfo.setSelection(true);
+		btnJavaInfo.setBounds(25, 263, 20, 16);
+		
+		Label lblIfYouBelieve = new Label(shlBugReport, SWT.WRAP);
+		lblIfYouBelieve.setBounds(25, 10, 543, 129);
+		lblIfYouBelieve.setText("Please submit as much information as you can about this problem.  Internet access is required to submit a bug report.\r\n\r\nFor those concerned with privacy, you should know that all information in this bug report is sent in plain text over the internet.  While it will never intentionally be made public, the author offers absolutely no promise of confidentiality.   On the other hand, it's just some DriveWire configuration data and will normally not contain anything sensitive.\r\n\r\n");
 		
 		Label lblEmailAddressoptional = new Label(shlBugReport, SWT.NONE);
-		lblEmailAddressoptional.setBounds(25, 369, 543, 15);
-		lblEmailAddressoptional.setText("Email address (optional, used only to communicate regarding this report):");
+		lblEmailAddressoptional.setBounds(25, 401, 288, 15);
+		lblEmailAddressoptional.setText("Email address (optional):");
+		
+		Label lblAdditionalInformationbe = new Label(shlBugReport, SWT.NONE);
+		lblAdditionalInformationbe.setBounds(25, 309, 393, 15);
+		lblAdditionalInformationbe.setText("Additional information (be verbose!):");
+		
+		Label lblDataToInclude = new Label(shlBugReport, SWT.NONE);
+		lblDataToInclude.setBounds(25, 145, 543, 25);
+		lblDataToInclude.setText("What data would you like to include in this bug report?");
 		
 		
 		Control[] controls = shlBugReport.getChildren();
@@ -169,6 +212,35 @@ public class BugReportWin extends Dialog {
 		}
 		
 	}
+
+	/*
+	
+	protected void moveTheBug() 
+	{
+		//possibly the most vital routine in all of DriveWire...
+		
+		Random r = new Random();
+		
+		int x = lblBug.getLocation().x;
+		int y = lblBug.getLocation().y;
+		
+		int maxx = shlBugReport.getSize().x - 48;
+		int maxy = shlBugReport.getSize().y - 48;
+		
+		x = x + (r.nextInt(11) - 5);
+		y = y + (r.nextInt(11) - 5);
+		
+		if ((x < 0) || (x > maxx) || (y < 0) || (y > maxy))
+		{
+			x = r.nextInt(maxx);
+			y = r.nextInt(maxy);
+		}
+		
+		
+		lblBug.setLocation(x, y);	
+	}
+
+	*/
 
 	protected boolean doSubmit() 
 	{
@@ -213,8 +285,6 @@ public class BugReportWin extends Dialog {
 				{
 					surl += "&" + encv("uiconf", e.getMessage());
 				}
-				
-				
 				
 			}
 			
@@ -261,7 +331,17 @@ public class BugReportWin extends Dialog {
 				
 			}
 			
-			// user
+			// java info
+			if (this.btnJavaInfo.getSelection())
+			{
+				String jitmp = new String();
+				for (Map.Entry<Object, Object> e : System.getProperties().entrySet()) {
+					jitmp += e +"\n";
+				}
+				surl += "&" + encv("java", jitmp);
+			}
+			
+			// user supplied
 			if (!this.getTextAdditionalInfo().getText().equals(""))
 			{
 				surl += "&" + encv("usrinf",this.getTextAdditionalInfo().getText());
@@ -352,5 +432,8 @@ public class BugReportWin extends Dialog {
 	}
 	protected Button getBtnErrDetails() {
 		return btnErrDetails;
+	}
+	protected Button getBtnJavaInfo() {
+		return btnJavaInfo;
 	}
 }

@@ -24,8 +24,7 @@ public class SyncThread implements Runnable
 			} 
 			catch (InterruptedException e) 
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log("Interrupted while sleeping?");
 			}
 			
 			// are we ready to look at disks
@@ -94,17 +93,21 @@ public class SyncThread implements Runnable
 					if (!this.noconn)
 					{
 						log("lost connection to DW server");
+						
 					}
 					this.noconn = true;
+					MainWin.setConStatusError();
 				}
 				catch (IOException e1) 
 				{
 					log(e1.getMessage());
+					MainWin.setConStatusError();
 				} 
 				catch (DWUIOperationFailedException e1) 
 				{
 					log(e1.getMessage());
-				} 
+					MainWin.setConStatusError();
+				}
 
 			}
 			

@@ -3,11 +3,20 @@ package com.groupunix.drivewireserver.uicommands;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
 public class UICmdServerShowHelpTopics extends DWCommand {
+
+	private DWUIClientThread dwuiref;
+
+	public UICmdServerShowHelpTopics(DWUIClientThread dwuiClientThread) 
+	{
+		this.dwuiref = dwuiClientThread;
+	}
+
 
 	@Override
 	public String getCommand() 
@@ -34,7 +43,7 @@ public class UICmdServerShowHelpTopics extends DWCommand {
 	{
 		String txt = new String();
 		
-		ArrayList<String> tops = DriveWireServer.getHelp().getTopics(null);
+		ArrayList<String> tops = DriveWireServer.getHandler(this.dwuiref.getInstance()).getHelp().getTopics(null);
 		
 		Iterator<String> t = tops.iterator();
 		while (t.hasNext())

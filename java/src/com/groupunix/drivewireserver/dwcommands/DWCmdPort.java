@@ -12,7 +12,7 @@ public class DWCmdPort extends DWCommand {
 	{
 		setParentCmd(parent);
 		this.dwProto = dwProto;
-		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
 		commands.addcommand(new DWCmdPortShow(dwProto,this));
 		commands.addcommand(new DWCmdPortClose(dwProto,this));
 		commands.addcommand(new DWCmdPortOpen(dwProto,this));

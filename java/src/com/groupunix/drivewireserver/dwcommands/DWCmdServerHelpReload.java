@@ -1,14 +1,20 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdServerHelpReload extends DWCommand {
 
 	 
+	private DWProtocol dwProto;
+
+
+
+
 	public DWCmdServerHelpReload(DWProtocol dwProtocol,DWCommand parent)
 	{
 		setParentCmd(parent);
+		this.dwProto = dwProtocol;
 	}
 
 
@@ -39,7 +45,7 @@ public class DWCmdServerHelpReload extends DWCommand {
 
 	private DWCommandResponse doHelpReload(String cmdline) 
 	{
-		DriveWireServer.getHelp().reload();
+		((DWProtocolHandler)dwProto).getHelp().reload();
 		
 		return(new DWCommandResponse("Reloaded help topics."));
 	}

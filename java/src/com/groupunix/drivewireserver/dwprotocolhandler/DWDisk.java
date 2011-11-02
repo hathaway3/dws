@@ -27,8 +27,7 @@ public class DWDisk {
 	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 	private ArrayList<DWDiskSector> sectors = new ArrayList<DWDiskSector>();
 		
-	
-	
+		
 	private FileSystemManager fsManager;
 	private FileObject fileobj;
 	
@@ -62,7 +61,7 @@ public class DWDisk {
 		this.params = new HierarchicalConfiguration();
 		this.params.setProperty("path", fileobj.getName().toString());
 		
-		logger.info("New DWDisk for '" + path + "'");
+		logger.debug("New DWDisk for '" + path + "'");
 		
 	
 		if (fileobj.isReadable())

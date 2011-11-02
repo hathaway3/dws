@@ -12,6 +12,8 @@ import java.io.InputStreamReader;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
+
 import com.groupunix.drivewireserver.dwexceptions.DWPrinterFileError;
 import com.groupunix.drivewireserver.dwexceptions.DWPrinterNotDefinedException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
@@ -22,8 +24,7 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 	
 	private DWVSerialCircularBuffer printBuffer = new DWVSerialCircularBuffer(-1, true);
 
-	private DWVPrinter vprinter;
-	
+	private HierarchicalConfiguration config; 
 	
 	private double DEF_XSIZE;
 	private double DEF_YSIZE;
@@ -59,15 +60,15 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 	
 	
 	
-	public DWVPrinterFX80(DWVPrinter dwvPrinter) 
+	public DWVPrinterFX80(HierarchicalConfiguration config) 
 	{
-		this.vprinter = dwvPrinter;
-		this.DEF_XSIZE = vprinter.getConfig().getDouble("PrinterDPI",300) * 8.5;
-		this.DEF_YSIZE = vprinter.getConfig().getDouble("PrinterDPI",300) * 11;
+		this.config = config;
+		this.DEF_XSIZE = config.getDouble("DPI",300) * 8.5;
+		this.DEF_YSIZE = config.getDouble("DPI",300) * 11;
 		this.SZ_PICA = DEF_XSIZE / 80;
 		this.SZ_ELITE = DEF_XSIZE / 96;
 		this.SZ_COMPRESSED = DEF_XSIZE / 132;
-		this.line_height = DEF_YSIZE / vprinter.getConfig().getInt("PrinterLines", 66);
+		this.line_height = DEF_YSIZE / config.getInt("Lines", 66);
 	
 	}
 
@@ -90,7 +91,7 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 		
 // load characters
 		
-		loadCharacter(vprinter.getConfig().getString("PrinterCharacterFile","default.chars"));
+		loadCharacter(config.getString("CharacterFile","default.chars"));
 
 		// init img
 
@@ -246,13 +247,13 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
         {
         	printFile = this.getPrinterFile();
     		
-            ImageIO.write(rImage, vprinter.getConfig().getString("PrinterImageFormat","PNG"), printFile);
-            vprinter.getLogger().info("wrote last print page image to: " + printFile.getAbsolutePath());
+            ImageIO.write(rImage, config.getString("ImageFormat","PNG"), printFile);
+            //Logger.getLogger().info("wrote last print page image to: " + printFile.getAbsolutePath());
             
         } 
         catch (IOException ex) 
         {
-            vprinter.getLogger().warn("Cannot save print image: " + ex.getMessage());
+           // vprinter.getLogger().warn("Cannot save print image: " + ex.getMessage());
         }
 
 		
@@ -306,9 +307,9 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 			try 
 		    {
 				printFile = this.getPrinterFile();
-				ImageIO.write(rImage, vprinter.getConfig().getString("PrinterImageFormat","PNG"), printFile);
+				ImageIO.write(rImage, config.getString("ImageFormat","PNG"), printFile);
 				
-				vprinter.getLogger().info("wrote print page image to: " + printFile.getAbsolutePath());
+//				vprinter.getLogger().info("wrote print page image to: " + printFile.getAbsolutePath());
 				
 				rImage = new BufferedImage((int)DEF_XSIZE, (int)DEF_YSIZE, BufferedImage.TYPE_USHORT_GRAY );
 				rGraphic = (Graphics2D) rImage.getGraphics();
@@ -318,7 +319,7 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 		    } 
 		    catch (IOException ex) 
 		    {
-		    	 vprinter.getLogger().warn("Cannot save print image: " + ex.getMessage());
+	//	    	 vprinter.getLogger().warn("Cannot save print image: " + ex.getMessage());
 		    }
 			
 			
@@ -604,34 +605,40 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 
 	public File getPrinterFile() throws IOException, DWPrinterNotDefinedException, DWPrinterFileError 
 	{
-		if (vprinter.getConfig().containsKey("PrinterFile"))
+		if (config.containsKey("OutputFile"))
 		{
-			if (DWUtils.FileExistsOrCreate(vprinter.getConfig().getString("PrinterFile")))
+			if (DWUtils.FileExistsOrCreate(config.getString("OutputFile")))
 			{
-				return(new File(vprinter.getConfig().getString("PrinterFile")));
+				return(new File(config.getString("OutputFile")));
 			}
 			else
 			{
-				throw new DWPrinterFileError("Cannot find or create the output file '" + vprinter.getConfig().getString("PrinterFile") + "'");
+				throw new DWPrinterFileError("Cannot find or create the output file '" + config.getString("OutputFile") + "'");
 			}
 			
 		} 
-		else if (vprinter.getConfig().containsKey("PrinterDir"))
+		else if (config.containsKey("OutputDir"))
 		{
-			if (DWUtils.DirExistsOrCreate(vprinter.getConfig().getString("PrinterDir")))
+			if (DWUtils.DirExistsOrCreate(config.getString("OutputDir")))
 			{
-				return(File.createTempFile("dw_fx80_",getFileExtension(vprinter.getConfig().getString("PrinterImageFormat","PNG")), new File(vprinter.getConfig().getString("PrinterDir"))));
+				return(File.createTempFile("dw_fx80_",getFileExtension(config.getString("ImageFormat","PNG")), new File(config.getString("OutputDir"))));
 			}
 			else
 			{
-				throw new DWPrinterFileError("Cannot find or create the output directory '" + vprinter.getConfig().getString("PrinterDir") + "'");
+				throw new DWPrinterFileError("Cannot find or create the output directory '" + config.getString("OutputDir") + "'");
 			}
 		
 		}
 		else
 		{
-			throw new DWPrinterFileError("No PrinterFile or PrinterDir defined in config");
+			throw new DWPrinterFileError("No OutputFile or OutputDir defined in config");
 		}
 	}
 
+	
+	@Override
+	public String getPrinterName() 
+	{
+		return(this.config.getString("Name","?noname?"));
+	}
 }

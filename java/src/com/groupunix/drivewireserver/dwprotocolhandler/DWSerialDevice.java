@@ -60,7 +60,7 @@ public class DWSerialDevice implements DWProtocolDevice
 
 	public void close()
 	{
-		logger.info("closing serial device " +  this.device + " in handler #" + dwProto.getHandlerNo());
+		logger.debug("closing serial device " +  this.device + " in handler #" + dwProto.getHandlerNo());
 		this.serialPort.close();
 	
 	}
@@ -68,39 +68,38 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 	public void shutdown()
 	{
-		logger.debug("shutting down");
+		logger.debug("serial device shutting down");
 		this.wanttodie = true;
 		
 		try
 		{
+			logger.debug("1");
 			this.serialPort.getInputStream().close();
 		} 
 		catch (IOException e)
 		{
 			logger.warn(e.getMessage());
 		}
+		logger.debug("2");
 		this.serialPort.close();
 		
 	}
 
 	private void connect(String portName, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
-		logger.info("attempting to open device '" + portName + "'");
+		logger.debug("attempting to open device '" + portName + "'");
 		
-		//logger.info("Note: RXTX Version mismatch here is not a problem...");
-		
-		try
+
+		CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
+        
+        
+		if ( portIdentifier.isCurrentlyOwned() )
 		{
-			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
-        
-        
-			if ( portIdentifier.isCurrentlyOwned() )
-			{
-				logger.error("Port is already in use");
-			}
-			else
-			{
-				CommPort commPort = portIdentifier.open("DWProtocolHandler",2000);
+			throw new PortInUseException();
+		}
+		else
+		{
+			CommPort commPort = portIdentifier.open("DWProtocolHandler",2000);
             
 				if ( commPort instanceof SerialPort )
 				{
@@ -114,20 +113,16 @@ public class DWSerialDevice implements DWProtocolDevice
                 
 					setSerialParams(serialPort, cocomodel);               
                 
-					logger.info("succesfully opened " + portName);
+					logger.info("opened serial device " + portName);
 				}
 				else
 				{
-					logger.error("Only serial devices are allowed.");
+					logger.error("The operating system says '" + portName +"' is not a serial port!");
+					throw new NoSuchPortException();
 				}
 			}
-        }
-		catch (Error e)
-		{
-			logger.error(e.getMessage());
-			logger.error("Due to the serious error above, the server will be terminated.");
-			System.exit(1);
-		}
+    
+
 	}
 	
 	
@@ -324,7 +319,7 @@ public class DWSerialDevice implements DWProtocolDevice
 			
 			if (wanttodie)
 			{
-				logger.debug("died while in read1");
+				//logger.debug("died while in read1");
 				return(-1);
 			}
 			

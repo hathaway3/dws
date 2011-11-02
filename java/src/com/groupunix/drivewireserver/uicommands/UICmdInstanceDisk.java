@@ -9,7 +9,7 @@ public class UICmdInstanceDisk extends DWCommand {
 
 	static final String command = "disk";
 	
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands = new DWCommandList(null);
 		
 	public UICmdInstanceDisk(DWUIClientThread dwuiClientThread)
 	{

@@ -86,7 +86,7 @@ public class AboutWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				shell.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnOk.setBounds(171, 366, 75, 25);

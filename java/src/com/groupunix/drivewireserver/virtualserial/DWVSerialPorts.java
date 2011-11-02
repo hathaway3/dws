@@ -79,23 +79,21 @@ public class DWVSerialPorts {
 				{
 					loadSoundbank(dwProto.getConfig().getString("MIDISynthDefaultSoundbank"));
 				}
+				
+				if (dwProto.getConfig().containsKey("MIDISynthDefaultProfile"))
+				{
+					if (!setMidiProfile(dwProto.getConfig().getString("MIDISynthDefaultProfile")))
+					{
+						logger.warn("Invalid MIDI profile specified in config file.");
+					}
+				}
 			
 			} 
 			catch (MidiUnavailableException e) 
 			{
 				logger.warn("MIDI is not available");
 			}
-		
-			if (dwProto.getConfig().containsKey("MIDISynthDefaultProfile"))
-			{
-				if (!setMidiProfile(dwProto.getConfig().getString("MIDISynthDefaultProfile")))
-				{
-					logger.warn("Invalid MIDI profile specified in config file.");
-				}
-			}
-		
 		}
-		
 	}
 
 

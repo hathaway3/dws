@@ -3,7 +3,11 @@ package com.groupunix.drivewireserver;
 
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +28,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWPlatformUnknownException;
 import com.groupunix.drivewireserver.dwhelp.DWHelp;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
@@ -32,13 +37,14 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 
+
 public class DriveWireServer 
 {
 	public static final String DWServerVersion = "4.0.0";
-	public static final String DWServerVersionDate = "10/25/2011";
+	public static final String DWServerVersionDate = "10/29/2011";
 	
 	
-	private static Logger logger = Logger.getLogger("DWServer");
+	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;
 	private static DWLogAppender dwAppender;
 	private static FileAppender fileAppender;
@@ -50,34 +56,303 @@ public class DriveWireServer
 	
 	private static Thread[] dwProtoHandlerThreads;
 	private static DWProtocol[] dwProtoHandlers;
-	private static int numHandlers;
 
 	private static Thread lazyWriterT;
 	private static DWUIThread uiObj;
 	private static Thread uiT;	
 	
-	private static DWHelp dwhelp = null;
 	
 	private static boolean wanttodie = false;
+	private static String configfile = "config.xml";
 	
-	
-	//@SuppressWarnings({ "deprecation", "static-access" })   // for funky logger root call
-	@SuppressWarnings("unchecked")
+
 	public static void main(String[] args) throws ConfigurationException
 	{
-		
-		
+		init(args);
 		
 		// install clean shutdown handler
-		DWShutdownHandler sh = new DWShutdownHandler();
-        Runtime.getRuntime().addShutdownHook(sh);
+        //Runtime.getRuntime().addShutdownHook(new DWShutdownHandler());
 		
-		String configfile = "config.xml";
+	 	// hang around 
+		logger.debug("waiting...");	
 		
-		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
+		while (!wanttodie)
+    	{
+    	
+    		try
+    		{
+    			Thread.sleep(1000);
+    		} 
+    		catch (InterruptedException e)
+    		{
+    			logger.debug("I've been interrupted, now I want to die");
+    			wanttodie = true;
+    		}
+
+    	}
+    	
+		System.exit(0);
+	}
+
 	
+
+
+	public static void init(String[] args) 
+	{
+		// set thread name
+		Thread.currentThread().setName("dwserver-" + Thread.currentThread().getId());
+		
 		// command line arguments
-		Options cmdoptions = new Options();
+        doCmdLineArgs(args);
+               
+		// 	set up initial logging config
+        initLogging();
+        
+        
+		// load server settings
+        try 
+        {
+    		// try to load/parse config
+    		serverconfig = new XMLConfiguration(configfile);
+		} 
+        catch (ConfigurationException e1) 
+    	{
+    		logger.fatal(e1.getMessage());
+    		System.exit(-1);
+		}
+
+        
+        // apply settings to logger
+        applyLoggingSettings();
+		
+    	
+    	// Try to add native rxtx to lib path
+		if (serverconfig.getBoolean("LoadRXTX",true))
+		{
+		   loadRXTX();
+		}
+		
+		// test for RXTX..
+		if (serverconfig.getBoolean("UseRXTX", true) && !checkRXTXLoaded())
+		{
+			logger.fatal("UseRXTX is true, but RXTX native libraries could not be loaded");
+			logger.fatal("Please see http://sourceforge.net/apps/mediawiki/drivewireserver/index.php?title=Installation");
+			System.exit(-1);
+		}
+
+    	// add server config listener
+    	serverconfig.addConfigurationListener(new DWServerConfigListener());    	
+    	
+    	// apply configuration
+    	
+    	// auto save
+    	if (serverconfig.getBoolean("ConfigAutosave",true))
+    	{
+    		logger.debug("Auto save of configuration is enabled");
+    		serverconfig.setAutoSave(true);
+    	}
+    	
+    	
+    	
+    	
+    	
+		
+    	// start protocol handler instance(s)
+    	startProtoHandlers();
+    	
+    	// start lazy writer
+		startLazyWriter();
+    	
+		// start UI server
+		applyUISettings();
+
+	}
+
+
+
+
+	private static void startProtoHandlers() 
+	{
+	   	@SuppressWarnings("unchecked")
+		List<HierarchicalConfiguration> handlerconfs = serverconfig.configurationsAt("instance");
+    	
+    	dwProtoHandlers = new DWProtocol[handlerconfs.size()];
+    	dwProtoHandlerThreads = new Thread[handlerconfs.size()];
+    	
+    	int hno = 0;
+    	
+		for(HierarchicalConfiguration hconf : handlerconfs)
+		{
+		    if (hconf.containsKey("Protocol"))
+		    {
+		    	if (hconf.getString("Protocol").equals("DriveWire"))
+		    	{
+		    		dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+		    	}
+		    	else if (hconf.getString("Protocol").equals("MCX"))
+		    	{
+		    		dwProtoHandlers[hno] = new MCXProtocolHandler(hno, hconf);
+		    	}
+		    	else
+		    	{
+		    		logger.error("Unknown protocol '" + hconf.getString("Protocol") + "' in handler #" + hno);
+		    	}
+		    }
+		    else
+		    {
+		    	dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+		    }
+		    
+		    
+		    
+		    if (hconf.getBoolean("AutoStart", true))
+		    {
+		    	logger.info("Starting #" + hno + ": " + hconf.getString("Name","unnamed") + " (" + dwProtoHandlers[hno].getClass().getSimpleName() + ")");
+		    	dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
+		    	dwProtoHandlerThreads[hno].start();	
+    	    }
+		    
+		    hno++;
+		}
+	}
+
+
+
+
+	private static boolean checkRXTXLoaded() 
+	{
+		// try to load RXTX, redirect it's version messages into our logs
+		
+		PrintStream ops = System.out;
+		PrintStream eps = System.err;
+		
+		ByteArrayOutputStream rxtxbaos = new ByteArrayOutputStream();
+		ByteArrayOutputStream rxtxbaes = new ByteArrayOutputStream();
+		
+		PrintStream rxtxout = new PrintStream(rxtxbaos);
+		PrintStream rxtxerr = new PrintStream(rxtxbaes);
+		
+		System.setOut(rxtxout);
+		System.setErr(rxtxerr);
+		
+		boolean res = DWUtils.testClassPath("gnu.io.RXTXCommDriver");
+		
+		for (String l : rxtxbaes.toString().trim().split("\n"))
+		{
+			if (!l.equals(""))
+				logger.warn(l);
+		}
+		
+		for (String l : rxtxbaos.toString().trim().split("\n"))
+		{
+			// ignore pesky version warning that doesn't ever seem to matter
+			if (!l.equals("WARNING:  RXTX Version mismatch") && !l.equals(""))
+				logger.debug(l);
+		}
+	
+		System.setOut(ops);
+		System.setErr(eps);
+		
+		return(res);
+	}
+
+
+
+
+	private static void loadRXTX() 
+	{
+		
+		try 
+		{
+			String rxtxpath;
+			
+			if (serverconfig.containsKey("LoadRXTXPath"))
+			{
+				rxtxpath = serverconfig.getString("LoadRXTXPath");
+			}
+			else
+			{
+				// look for native/x/x in current dir
+				File curdir = new File(".");
+				rxtxpath = curdir.getCanonicalPath();
+			
+				// 	+ native platform dir
+				String[] osparts = System.getProperty("os.name").split(" ");
+			
+				if (osparts.length < 1)
+				{
+					throw new DWPlatformUnknownException("No native dir for os '" + System.getProperty("os.name") + "' arch '" + System.getProperty("os.arch") + "'");
+				}
+			
+				rxtxpath += File.separator + "native" + File.separator + osparts[0] + File.separator + System.getProperty("os.arch");
+			}
+			
+			File testrxtxpath = new File(rxtxpath);
+			logger.debug("Using rxtx lib path: " + rxtxpath);
+			
+			if (!testrxtxpath.exists())
+			{
+				throw new DWPlatformUnknownException("No native dir for os '" + System.getProperty("os.name") + "' arch '" + System.getProperty("os.arch") + "'");
+			}
+			
+			// add this dir to path..
+			System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + rxtxpath);
+		    
+			//set sys_paths to null so they will be reread by jvm
+			Field sysPathsField;
+			sysPathsField = ClassLoader.class.getDeclaredField("sys_paths");
+			sysPathsField.setAccessible(true);
+		    sysPathsField.set(null, null);
+			
+		} 
+		catch (SecurityException e) 
+		{
+			logger.fatal(e.getMessage());
+		} 
+		catch (NoSuchFieldException e) 
+		{
+			logger.fatal(e.getMessage());
+		} 
+		catch (IllegalArgumentException e) 
+		{
+			logger.fatal(e.getMessage());
+		} 
+		catch (IllegalAccessException e) 
+		{
+			logger.fatal(e.getMessage());
+		} 
+		catch (IOException e) 
+		{
+			logger.fatal(e.getMessage());
+		} 
+		catch (DWPlatformUnknownException e) 
+		{
+			logger.fatal(e.getMessage());
+		}
+		
+	}
+
+
+
+
+
+
+	private static void initLogging() 
+	{
+		consoleAppender = new ConsoleAppender(logLayout);
+		Logger.getRootLogger().addAppender(consoleAppender);
+			
+		Logger.getRootLogger().setLevel(Level.INFO);
+		logger.info("DriveWire Server v" + DWServerVersion + " starting");	
+	}
+
+
+
+
+	private static void doCmdLineArgs(String[] args) 
+	{
+		// set options from cmdline args
+        Options cmdoptions = new Options();
 		
 		cmdoptions.addOption("config", true, "configuration file (defaults to config.xml)");
 		cmdoptions.addOption("help", false, "display command line argument help");
@@ -106,144 +381,6 @@ public class DriveWireServer
 		    System.exit(-1);
 		}
 		
-		
-		// 	set up initial logging - server stuff goes to console
-		consoleAppender = new ConsoleAppender(logLayout);
-		Logger.getRootLogger().addAppender(consoleAppender);
-		logger.info("DriveWire Server " + DWServerVersion + " (" + DWServerVersionDate + ") starting up");
-    			
-		
-		// load server settings
-		logger.info("reading config from '" + configfile + "'");
-		try 
-    	{
-			serverconfig = new XMLConfiguration(configfile);
-			
-		} 
-    	catch (ConfigurationException e1) 
-    	{
-    		System.out.println("Fatal - Could not process config file '" + configfile + "'.  Please consult the documentation.");
-    		System.exit(-1);
-		}
-    	
-    	
-    	// Bail out if no RXTX
-		if (serverconfig.getBoolean("TestForRXTX",true) && !DWUtils.testClassPath("gnu.io.RXTXCommDriver"))
-		{
-			
-			logger.fatal("Fatal - RXTX native libraries not found!");
-			logger.fatal("Please see http://sourceforge.net/apps/mediawiki/drivewireserver/index.php?title=Installation");
-			
-			System.exit(1);
-		}
-		
-    	
-    	
-    	
-    	// server config listener
-    	serverconfig.addConfigurationListener(new DWServerConfigListener());    	
-    	
-    	// apply configuration
-    	List<HierarchicalConfiguration> handlerconfs = serverconfig.configurationsAt("instance");
-    	
-    	numHandlers = handlerconfs.size();
-    	
-    	dwProtoHandlers = new DWProtocol[numHandlers];
-    	dwProtoHandlerThreads = new Thread[numHandlers];
-    	
-    	
-    	applyLoggingSettings();
-    	
-    	
-    	
-    	// auto save
-    	
-    	if (serverconfig.getBoolean("ConfigAutosave",true))
-    	{
-    		logger.info("Auto save of configuration is enabled");
-    		serverconfig.setAutoSave(true);
-    	}
-    	
-    	
-    	// make a helper
-    	if (!serverconfig.getBoolean("NoHelp", false))
-    		dwhelp = new DWHelp(serverconfig.getString("HelpFile",DWDefs.HELP_DEFAULT_FILE));
-    	
-    	
-    	// start protocol handler instances
-    	int hno = 0;
-    	
-		for(Iterator<HierarchicalConfiguration> it = handlerconfs.iterator(); it.hasNext();)
-		{
-		    HierarchicalConfiguration hconf = it.next();
-		      
-		    if (hconf.containsKey("Protocol"))
-		    {
-		    	if (hconf.getString("Protocol").equals("DriveWire"))
-		    	{
-		    		dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
-		    	}
-		    	else if (hconf.getString("Protocol").equals("MCX"))
-		    	{
-		    		dwProtoHandlers[hno] = new MCXProtocolHandler(hno, hconf);
-		    	}
-		    	else
-		    	{
-		    		logger.error("Unknown protocol '" + hconf.getString("Protocol") + "' in handler #" + hno);
-		    	}
-		    }
-		    else
-		    {
-		    	dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
-		    }
-		    
-		    
-		    
-		    if (hconf.getBoolean("AutoStart", true))
-		    {
-		    	logger.info("Starting protocol handler #" + hno + ": " + hconf.getString("Name","unnamed") + " (" + dwProtoHandlers[hno].getClass().getSimpleName() + ")");
-		    	dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
-		    	dwProtoHandlerThreads[hno].start();	
-    	    }
-		    
-		    hno++;
-		}
-    	
-    	
-    	
-    	// start lazy writer
-		startLazyWriter();
-    	
-		// start UI server
-		applyUISettings();
-		
-		
-    	
-    	// hang around so something is running even if handlers are not
-		
-		logger.info("going to sleep...");	
-		
-		while (!wanttodie)
-    	{
-    	
-    		try
-    		{
-    			Thread.sleep(2000);
-    		} 
-    		catch (InterruptedException e)
-    		{
-    			logger.warn("I've been interrupted and now I want to die");
-    			wanttodie = true;
-    		}
-
-    	}
-    	
-		
-		// shut things down as best we can
-		serverShutdown();
-		
-		logger.removeAllAppenders();
-		System.exit(0);
 	}
 
 
@@ -251,7 +388,7 @@ public class DriveWireServer
 
 	public static void serverShutdown() 
 	{
-		logger.warn("server shutting down...");
+		logger.info("server shutting down...");
 		
 		if (dwProtoHandlerThreads != null)
 		{
@@ -263,19 +400,19 @@ public class DriveWireServer
 				{
 					dwProtoHandlers[i].shutdown();
 				
-				/*
-				if (dwProtoHandlerThreads[i].isAlive())
-				{
-					try 
+				
+					if (dwProtoHandlerThreads[i].isAlive())
 					{
-						dwProtoHandlerThreads[i].join();
-					} 
-					catch (InterruptedException e) 
-					{
-						logger.warn(e.getMessage());
+						try 
+						{
+							dwProtoHandlerThreads[i].join();
+						} 
+						catch (InterruptedException e) 
+						{
+							logger.warn(e.getMessage());
+						}
 					}
-				}
-				*/
+				
 				}
 			}
 		
@@ -313,8 +450,8 @@ public class DriveWireServer
 		}
 		
 		
-		logger.warn("server shutdown complete");
-		
+		logger.info("server shutdown complete");
+		logger.removeAllAppenders();
 	}
 
 
@@ -361,7 +498,7 @@ public class DriveWireServer
 	public static void applyLoggingSettings() 
 	{
 		// logging
-    	if (serverconfig.containsKey("LogFormat"))
+		if (serverconfig.containsKey("LogFormat"))
     	{
     		logLayout = new PatternLayout(serverconfig.getString("LogFormat"));
     	}
@@ -393,7 +530,7 @@ public class DriveWireServer
     	 		
     	}
     	
-    	Logger.getRootLogger().setLevel(Level.toLevel(serverconfig.getString("LogLevel", "WARN")));
+    	Logger.getRootLogger().setLevel(Level.toLevel(serverconfig.getString("LogLevel", "INFO")));
 
 	}
 
@@ -423,7 +560,7 @@ public class DriveWireServer
 
 	public static int getNumHandlers()
 	{
-		return numHandlers;
+		return dwProtoHandlers.length;
 	}
 
 
@@ -431,7 +568,7 @@ public class DriveWireServer
 
 	public static boolean isValidHandlerNo(int handler)
 	{
-		if ((handler < numHandlers) && (handler >= 0))
+		if ((handler < dwProtoHandlers.length) && (handler >= 0))
 		{
 			if (dwProtoHandlers[handler] != null)
 			{
@@ -462,7 +599,6 @@ public class DriveWireServer
 		} 
 		catch (InterruptedException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -588,13 +724,8 @@ public class DriveWireServer
 
 	public static void shutdown() 
 	{
-		logger.warn("server shutdown requested");
+		logger.info("server shutdown requested");
 		wanttodie = true;
-		
-	}
-
-	public static DWHelp getHelp() {
-		return dwhelp;
 	}
 	
 }

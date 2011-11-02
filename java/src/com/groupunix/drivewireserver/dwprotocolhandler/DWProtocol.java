@@ -6,6 +6,8 @@ import java.util.GregorianCalendar;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.dwhelp.DWHelp;
+
 
 
 
@@ -25,5 +27,6 @@ public interface DWProtocol extends Runnable
 	int getHandlerNo();
 	Logger getLogger();
 	int getCMDCols();
+	DWHelp getHelp();
 	
 }

@@ -67,7 +67,7 @@ public class ChooseServerWin extends Dialog {
 	 */
 	private void createContents() {
 		shlChooseServer = new Shell(getParent(), getStyle());
-		shlChooseServer.setSize(291, 151);
+		shlChooseServer.setSize(325, 151);
 		shlChooseServer.setText("Choose Server...");
 		
 		Button btnOk = new Button(shlChooseServer, SWT.NONE);
@@ -85,7 +85,7 @@ public class ChooseServerWin extends Dialog {
 						MainWin.setHost(hp[0]);
 						MainWin.setPort(hp[1]);
 					
-						shlChooseServer.close();
+						e.display.getActiveShell().close();
 					}
 					else
 					{
@@ -99,7 +99,7 @@ public class ChooseServerWin extends Dialog {
 			
 			}
 		});
-		btnOk.setBounds(101, 91, 82, 25);
+		btnOk.setBounds(120, 91, 82, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlChooseServer, SWT.NONE);
@@ -107,20 +107,20 @@ public class ChooseServerWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				shlChooseServer.close();
+				e.display.getActiveShell().close();
 			
 			}
 		});
-		btnCancel.setBounds(200, 91, 75, 25);
+		btnCancel.setBounds(222, 91, 75, 25);
 		btnCancel.setText("Cancel");
 		
 		cmbHost = new Combo(shlChooseServer, SWT.NONE);
 
-		cmbHost.setBounds(22, 40, 241, 23);
+		cmbHost.setBounds(22, 40, 275, 23);
 		cmbHost.setText(MainWin.getHost() + ":" + MainWin.getPort());
 		
 		Label lblEnterServerAddress = new Label(shlChooseServer, SWT.NONE);
-		lblEnterServerAddress.setBounds(22, 19, 241, 15);
+		lblEnterServerAddress.setBounds(22, 19, 275, 15);
 		lblEnterServerAddress.setText("Enter server address in the form host:port");
 
 	}

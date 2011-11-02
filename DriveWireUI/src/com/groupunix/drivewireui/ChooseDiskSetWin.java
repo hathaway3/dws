@@ -7,8 +7,11 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -16,7 +19,7 @@ import org.eclipse.swt.widgets.Shell;
 public class ChooseDiskSetWin extends Dialog {
 
 	protected Object result;
-	protected Shell shell;
+	protected static Shell shell;
 
 	protected Combo cmbDiskSet;
 
@@ -48,6 +51,8 @@ public class ChooseDiskSetWin extends Dialog {
 	public Object open() throws IOException, DWUIOperationFailedException {
 		createContents();
 		
+		applyFont();
+		
 		UIUtils.getDWConfigSerial();
 		
 		loadDiskSets(cmbDiskSet);
@@ -64,6 +69,21 @@ public class ChooseDiskSetWin extends Dialog {
 		return result;
 	}
 
+	
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shell.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shell.getDisplay(), f));
+		}
+	}
+	
+	
 	private void loadDiskSets(Combo cmb) throws IOException, DWUIOperationFailedException 
 	{
 		@SuppressWarnings("unchecked")

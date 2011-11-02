@@ -1,7 +1,10 @@
 package com.groupunix.drivewireui;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+
+import javax.swing.JFileChooser;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -228,19 +231,28 @@ public class ServerConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-			
-				 FileDialog fd = new FileDialog(shlServerConfiguration, SWT.SAVE);
-			        fd.setText("Choose a log file...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textLogFile.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textLogFile.getText());
 				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textLogFile.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose log file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textLogFile.setText(selected.getPath());
+			
+				}		
 			
 			}
 		});
@@ -285,11 +297,43 @@ public class ServerConfigWin extends Dialog {
 		textLazyWrite.setBounds(247, 27, 65, 21);
 		
 		textLocalDiskDir = new Text(grpMiscellaneous, SWT.BORDER);
-		textLocalDiskDir.setBounds(22, 80, 331, 21);
+		textLocalDiskDir.setBounds(22, 80, 307, 21);
 		
 		Label lblLocalDiskDirectory = new Label(grpMiscellaneous, SWT.NONE);
 		lblLocalDiskDirectory.setBounds(22, 61, 171, 18);
-		lblLocalDiskDirectory.setText("Local disk directory:");
+		lblLocalDiskDirectory.setText("Default disk directory:");
+		
+		Button btnChooseDiskDir = new Button(grpMiscellaneous, SWT.NONE);
+		btnChooseDiskDir.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser();
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose default disk directory...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textLocalDiskDir.setText(selected.getPath());
+			
+				}		
+				
+			}
+		});
+		btnChooseDiskDir.setBounds(331, 79, 29, 23);
+		btnChooseDiskDir.setText("...");
 		
 		Button btnOk = new Button(shlServerConfiguration, SWT.NONE);
 		btnOk.addSelectionListener(new SelectionAdapter() {
@@ -306,7 +350,8 @@ public class ServerConfigWin extends Dialog {
 						//if (curserial == UIUtils.getDWConfigSerial())
 						//{
 							UIUtils.setServerSettings(getChangedValues());
-							shlServerConfiguration.close();
+							e.display.getActiveShell().close();
+							//shlServerConfiguration.close();
 						//}
 						//else
 						//{
@@ -347,7 +392,8 @@ public class ServerConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				shlServerConfiguration.close();
+				e.display.getActiveShell().close();
+				//shlServerConfiguration.close();
 			}
 		});
 		btnCancel.setBounds(318, 444, 75, 25);

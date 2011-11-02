@@ -8,7 +8,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 public class UICmdDiskset extends DWCommand {
 
 	static final String command = "diskset";
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands = new DWCommandList(null);
 		
 	public UICmdDiskset(DWUIClientThread dwuiClientThread)
 	{

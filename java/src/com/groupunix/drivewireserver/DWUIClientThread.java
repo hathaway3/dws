@@ -27,7 +27,7 @@ public class DWUIClientThread implements Runnable {
 	{
 		this.skt = skt;
 		
-		commands = new DWCommandList();
+		commands = new DWCommandList(null);
 		commands.addcommand(new UICmd(this));
 	}
 
@@ -39,8 +39,9 @@ public class DWUIClientThread implements Runnable {
 		Thread.currentThread().setName("dwUIcliIn-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
-		
-		logger.debug("run for client at " + skt.getInetAddress().getHostAddress());
+	
+		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+			logger.debug("run for client at " + skt.getInetAddress().getHostAddress());
 		
 		
 		try 
@@ -66,8 +67,11 @@ public class DWUIClientThread implements Runnable {
 				{
 					if (databyte == 10)
 					{
-						doCmd(cmd);
-						cmd = "";
+						if (cmd.length() > 0)
+						{
+							doCmd(cmd.trim());
+							cmd = "";
+						}
 					}
 					else
 					{
@@ -75,7 +79,7 @@ public class DWUIClientThread implements Runnable {
 						{
 							cmd = cmd.substring(0, cmd.length() - 1);
 						}
-						else if (databyte > 0)
+						else if ((databyte > 0) && (databyte != 13))
 						{
 							cmd += Character.toString((char) databyte);
 						}
@@ -95,13 +99,17 @@ public class DWUIClientThread implements Runnable {
 		
 		//DriveWireServer.getHandler(ourHandler).getEventHandler().unregisterAllEvents(this.uiport);
 		
-		logger.debug("exit");
+		
+		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+			logger.debug("exit");
 	}
 
 	
 	
 	private void doCmd(String cmd) throws IOException 
 	{
+		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+			logger.debug("got command '" + cmd + "'");
 		
 		skt.getOutputStream().write(("\n>>\n").getBytes());
 		
@@ -154,6 +162,23 @@ public class DWUIClientThread implements Runnable {
 	public Socket getSocket() {
 		
 		return skt;
+	}
+
+
+
+	public void die() 
+	{
+		wanttodie = true;
+		if (this.skt != null)
+		{
+			try 
+			{
+				this.skt.close();
+			} 
+			catch (IOException e) 
+			{
+			}
+		}
 	}
 	
 	

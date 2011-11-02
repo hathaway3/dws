@@ -23,6 +23,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
+import com.groupunix.drivewireserver.dwhelp.DWHelp;
 import com.groupunix.drivewireserver.virtualprinter.DWVPrinter;
 import com.groupunix.drivewireserver.virtualserial.DWVPortTermThread;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
@@ -61,7 +62,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private DWDiskDrives diskDrives;
 	
 	private boolean wanttodie = false;
-	// private static Thread readerthread;
 
 	// RFM handler
 	private DWRFMHandler rfmhandler;
@@ -71,6 +71,9 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private Thread termT;
 	private DWVSerialPorts dwVSerialPorts;
 	private DWVPortTermThread termHandler;
+
+
+	private DWHelp dwhelp;
 	
 	
 
@@ -106,7 +109,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	
 	public void shutdown()
 	{
-		logger.info("handler #" + handlerno + ": shutdown requested");
+		logger.debug("handler #" + handlerno + ": shutdown requested");
 		
 		this.wanttodie = true;
 		
@@ -129,12 +132,10 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		// setup environment and get started
 		if (!wanttodie)
 		{
-			logger.info("handler #" + handlerno + ": starting...");
+			logger.debug("handler #" + handlerno + ": setting up...");
 
 			// setup drives
 			diskDrives = new DWDiskDrives(this);
-
-			
 			
 			// set current to default
 			if (config.containsKey("DefaultDiskSet"))
@@ -192,14 +193,25 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			// setup term device
 			if (config.containsKey("TermPort"))
 			{
-				logger.info("handler #" + handlerno + ": starting term device listener thread");
+				logger.debug("handler #" + handlerno + ": starting term device listener thread");
 				this.termHandler = new DWVPortTermThread(this, config.getInt("TermPort"));
 				this.termT = new Thread(termHandler);
 				this.termT.start();
 			}
+			
+			// load help
+	    	if (config.containsKey("HelpFile"))
+	    	{
+	    		this.dwhelp = new DWHelp(config.getString("HelpFile"));
+	    	}
+	    	else
+	    	{
+	    		this.dwhelp = new DWHelp(this);
+	    	}
+			
 		}			
 
-		logger.info("handler #" + handlerno + ": ready");
+		logger.info("handler #" + handlerno + " is ready");
 		
 		// protocol loop
 		while(!wanttodie)
@@ -344,27 +356,29 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			}
 			else
 			{
-				logger.debug("cannot access the device.. maybe it has not been configured or maybe it does not exist");
-				
-				// take a break, reset, hope things work themselves out
-				try 
+				if (!this.wanttodie)
 				{
-					Thread.sleep(config.getInt("FailedPortRetryTime",3000));
-					resetProtocolDevice();
+					logger.debug("cannot access the device.. maybe it has not been configured or maybe it does not exist");
+				
+					// take a break, reset, hope things work themselves out
+					try 
+					{
+						Thread.sleep(config.getInt("FailedPortRetryTime",3000));
+						resetProtocolDevice();
 					
-				} 
-				catch (InterruptedException e) 
-				{
-					logger.error("Interrupted during failed port delay.. giving up on this crazy situation");
-					wanttodie = true;
+					} 
+					catch (InterruptedException e) 
+					{	
+						logger.error("Interrupted during failed port delay.. giving up on this crazy situation");
+						wanttodie = true;
+					}
 				}
-				
 			}
 
 		}
  
 			
-		logger.info("handler #"+ handlerno+ ": exiting");
+		logger.debug("handler #"+ handlerno+ ": exiting");
 		
 		
 		if (this.dwVSerialPorts != null)
@@ -722,7 +736,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			writeRetries++;
 			if (config.getBoolean("LogOpCode", false))
 			{
-				logger.info("DoOP_REWRITE lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+				logger.warn("DoOP_REWRITE lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
 			}
 		}
 		else
@@ -1202,7 +1216,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			{
 				try 
 				{
-					logger.debug("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0] + " (" + dwVSerialPorts.getPortOutput(cmdpacket[0]).available() + " bytes in buffer)");
+					logger.info("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0] + " (" + dwVSerialPorts.getPortOutput(cmdpacket[0]).available() + " bytes in buffer)");
 				} 
 				catch (IOException e) 
 				{
@@ -1212,12 +1226,8 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			
 			data = dwVSerialPorts.serReadM((int) cmdpacket[0],(cmdpacket[1] & 0xFF));
 			
-			// logger.debug(new String(data));
-			
 			protodev.comWrite(data, (int) (cmdpacket[1] & 0xFF), true);
-			
-			
-			
+	
 		} 
 		catch (IOException e) 
 		{
@@ -1389,7 +1399,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	{
 		if (!this.wanttodie)
 		{
-			logger.warn("resetting protocol device");
+			logger.info("resetting protocol device");
 			// 	do we need to do anything else here?
 			setupProtocolDevice();
 		}
@@ -1568,7 +1578,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	}
 
 
+	public DWHelp getHelp() 
+	{
+		return dwhelp;
+	}
 
+
+	
 	
 }
 	

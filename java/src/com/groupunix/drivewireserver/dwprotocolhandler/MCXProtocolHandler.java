@@ -17,6 +17,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
+import com.groupunix.drivewireserver.dwhelp.DWHelp;
 import com.groupunix.drivewireserver.virtualprinter.DWVPrinter;
 
 
@@ -819,6 +820,13 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	public int getCMDCols() {
 		// TODO Auto-generated method stub
 		return 32;
+	}
+
+
+	@Override
+	public DWHelp getHelp() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

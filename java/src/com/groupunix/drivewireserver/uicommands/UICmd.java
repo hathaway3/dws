@@ -15,7 +15,7 @@ public class UICmd extends DWCommand
 	
 	public UICmd(DWUIClientThread ct)
 	{
-		commands = new DWCommandList();
+		commands = new DWCommandList(null);
 		commands.addcommand(new UICmdInstance(ct));
 		commands.addcommand(new UICmdServer(ct));
 		commands.addcommand(new UICmdDiskset(ct));

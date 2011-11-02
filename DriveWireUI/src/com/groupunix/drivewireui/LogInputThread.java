@@ -1,52 +1,136 @@
 package com.groupunix.drivewireui;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
 
 public class LogInputThread implements Runnable 
 {
-	private InputStream input;
+	private String host =  new String();
+	private int port = -1;
+	private Socket sock = null;
+	private boolean wanttodie = false;
+	private PrintWriter out;
+	private BufferedReader in;
 	
-	public LogInputThread(InputStream inp)
+	public LogInputThread()
 	{
-		this.input = inp;
+		
 	}
 	
 	@Override
 	public void run() 
 	{
-		int data;
-		String line = new String();
+		char[] cbuf = new char[256];
 		
-		try 
+		while (!wanttodie)
 		{
-			data = this.input.read();
-			
-			while ((data != -1) && (!MainWin.shell.isDisposed()))
+			// change/establish connection
+			if (!(MainWin.getHost() == null) && !this.host.equals(MainWin.getHost()) || !(this.port == MainWin.getPort()) || (this.sock == null))		
 			{
-				
-				if (data != 10)
+				if (!(sock == null))
 				{
-					line += Character.toString((char) data);
-				}
-				else
-				{
-					MainWin.getLogViewerWin().addToDisplay(line);
-					line = "";
+					try 
+					{
+						sock.close();
+					} 
+					catch (IOException e) 
+					{
+						MainWin.addToDisplay("Log viewer: " + e.getMessage());
+					}
 				}
 				
-				data = this.input.read();
+				this.host = MainWin.getHost();
+				this.port = MainWin.getPort();
+								
+				try 
+				{
+					sock = new Socket(host, port);
+					
+					this.out = new PrintWriter(sock.getOutputStream(), true);
+				    this.in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+				    
+				    out.println("ui logview");
+				} 
+				catch (UnknownHostException e) 
+				{
+					MainWin.addToDisplay("Log viewer: " + e.getMessage());
+					sock = null;
+				} 
+				catch (IOException e) 
+				{
+					MainWin.addToDisplay("Log viewer: " + e.getMessage());
+					sock = null;
+				}	
 			}
 			
 			
-		} 
-		catch (IOException e) 
-		{
-			MainWin.addToDisplay("Log viewer: " + e.getMessage());
+			if ((sock != null) && !sock.isInputShutdown())
+			{
+				try 
+				{
+					int thisread = in.read(cbuf,0,256);
+					
+					if (thisread < 0)
+					{
+						MainWin.addToServerDisplay("Closed");
+						try 
+						{
+							sock.close();
+						} 
+						catch (IOException e1) 
+						{
+							MainWin.addToDisplay("Log viewer: " + e1.getMessage());
+						}
+						
+						sock = null;
+					}
+					else if (thisread > 0)
+					{
+						MainWin.addToServerDisplay(String.valueOf(cbuf).substring(0, thisread));
+					}
+					
+					
+				
+				} 
+				catch (IOException e) 
+				{
+					MainWin.addToDisplay("Log viewer: " + e.getMessage());
+					
+					try 
+					{
+						sock.close();
+					} 
+					catch (IOException e1) 
+					{
+						MainWin.addToDisplay("Log viewer: " + e.getMessage());
+					}
+					
+					sock = null;
+					
+				}
+				catch (NullPointerException e)
+				{
+					try 
+					{
+						sock.close();
+					} 
+					catch (IOException e1) 
+					{
+					}
+					sock = null;
+				}
+			}
 		}
-		
-		
-		
+	}
+	
+	public void die()
+	{
+		this.wanttodie = true;
 	}
 
 }

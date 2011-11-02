@@ -4,16 +4,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdServerHelpShow extends DWCommand {
 
 	
+	private DWProtocol dwProto;
+
+
 	public DWCmdServerHelpShow(DWProtocol dwProtocol,DWCommand parent)
 	{
 		setParentCmd(parent);
+		this.dwProto = dwProtocol;
 	}
 
 
@@ -52,7 +56,7 @@ public class DWCmdServerHelpShow extends DWCommand {
 		
 		try 
 		{
-			text += DriveWireServer.getHelp().getTopicText(cmdline);
+			text += ((DWProtocolHandler)dwProto).getHelp().getTopicText(cmdline);
 			return(new DWCommandResponse(text));
 		} 
 		catch (DWHelpTopicNotFoundException e) 
@@ -69,7 +73,7 @@ public class DWCmdServerHelpShow extends DWCommand {
 		
 		text = "Help Topics:\r\n\r\n";
 		
-		ArrayList<String> tops = DriveWireServer.getHelp().getTopics(null);
+		ArrayList<String> tops = ((DWProtocolHandler)dwProto).getHelp().getTopics(null);
 		
 		Iterator<String> t = tops.iterator();
 		while (t.hasNext())

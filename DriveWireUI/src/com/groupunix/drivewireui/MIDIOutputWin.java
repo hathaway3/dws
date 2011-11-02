@@ -6,8 +6,11 @@ import java.util.ArrayList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -16,7 +19,7 @@ import org.eclipse.swt.widgets.Shell;
 public class MIDIOutputWin extends Dialog {
 
 	protected Object result;
-	protected Shell shlChooseMidiOutput;
+	protected static Shell shlChooseMidiOutput;
 
 	private Combo combo;
 	private ArrayList<String> outputdevs;
@@ -40,6 +43,8 @@ public class MIDIOutputWin extends Dialog {
 	public Object open() throws IOException, DWUIOperationFailedException {
 		createContents();
 		
+		applyFont();
+		
 		loadOutputDevs(combo);
 		combo.select(0);
 		
@@ -54,9 +59,21 @@ public class MIDIOutputWin extends Dialog {
 		return result;
 	}
 
-	/**
-	 * Create contents of the dialog.
-	 */
+
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shlChooseMidiOutput.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlChooseMidiOutput.getDisplay(), f));
+		}
+	}
+	
+	
 	private void createContents() {
 		shlChooseMidiOutput = new Shell(getParent(), getStyle());
 		shlChooseMidiOutput.setSize(310, 119);
@@ -76,7 +93,7 @@ public class MIDIOutputWin extends Dialog {
 			public void widgetSelected(SelectionEvent e) 
 			{
 				MainWin.sendCommand("dw midi out " + outputdevs.get(combo.getSelectionIndex()).split(" ")[0]);
-				shlChooseMidiOutput.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnOk.setBounds(105, 60, 75, 25);
@@ -86,7 +103,7 @@ public class MIDIOutputWin extends Dialog {
 		btnCancel.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				shlChooseMidiOutput.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnCancel.setBounds(219, 60, 75, 25);

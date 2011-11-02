@@ -8,21 +8,26 @@ import java.util.List;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 
 public class DWCommandList {
 	
 	private List<DWCommand> commands = new ArrayList<DWCommand>();
-	private int outputcols = 80;	
+	private int outputcols = 80;
+	private DWProtocol dwProto;	
 	
-	public DWCommandList(int outputcols)
+	public DWCommandList(DWProtocol dwProto, int outputcols)
 	{
 		this.outputcols = outputcols;
+		this.dwProto = dwProto;
 	}
 	
-	public DWCommandList()
+	public DWCommandList(DWProtocol dwProto)
 	{
+		this.dwProto = dwProto;
 
 	}
 	
@@ -70,12 +75,9 @@ public class DWCommandList {
 				return(getCommandMatch(args[0]).parse(DWUtils.dropFirstToken(cmdline)));
 			}
 		}
-		 
 	}
 
-	
-	
-	
+
 
 	private DWCommandResponse getLongHelp(DWCommand cmd) 
 	{
@@ -93,14 +95,18 @@ public class DWCommandList {
 			cmdline = tmp.getCommand() + " " + cmdline;
 		}
 		
-		try 
+		text = cmd.getUsage() + "\r\n\r\n";
+		text += cmd.getShortHelp() + "\r\n";
+	
+		if (this.dwProto != null)
 		{
-			text += DriveWireServer.getHelp().getTopicText(cmdline);
-		} 
-		catch (DWHelpTopicNotFoundException e) 
-		{
-			text = cmd.getUsage() + "\r\n\r\n";
-			text += cmd.getShortHelp() + "\r\n";
+			try 
+			{
+				text = ((DWProtocolHandler)dwProto).getHelp().getTopicText(cmdline);
+			}	 
+			catch (DWHelpTopicNotFoundException e) 
+			{
+			}
 		}
 		
 		if (this.outputcols <= 32)

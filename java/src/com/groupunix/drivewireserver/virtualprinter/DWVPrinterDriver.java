@@ -10,6 +10,5 @@ public interface DWVPrinterDriver
 	public void flush() throws IOException, DWPrinterFileError, DWPrinterNotDefinedException;
 	public void addByte(byte data) throws IOException;
 	public String getDriverName();
-
-		
+	public String getPrinterName();
 }

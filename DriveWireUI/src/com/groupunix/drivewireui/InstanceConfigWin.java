@@ -1,8 +1,11 @@
 package com.groupunix.drivewireui;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import javax.swing.JFileChooser;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.eclipse.swt.SWT;
@@ -17,9 +20,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
@@ -80,9 +81,9 @@ public class InstanceConfigWin extends Dialog {
 	private static Group grpTelnetOptions;
 	private static Group grpTelnetAuthentication;
 	private Button btnDetect;
-	private Group grpProtocol;
+	private static Group grpProtocol;
 	private Button btnDetectTurbo;
-	private Group grpDisk;
+	private static Group grpDisk;
 	private Text textDiskMaxSectors;
 	private Text textDiskSectorSize;
 	private Text textDiskMaxDrives;
@@ -93,6 +94,7 @@ public class InstanceConfigWin extends Dialog {
 	
 
 	private HierarchicalConfiguration iconf;
+	private static Group grpLogging;
 	
 	/**
 	 * Create the dialog.
@@ -208,6 +210,26 @@ public class InstanceConfigWin extends Dialog {
 			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
 		}
 		
+		controls = grpProtocol.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = grpDisk.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
+		
+		controls = grpLogging.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
+		}
 		
 	}
 	
@@ -555,16 +577,28 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 DirectoryDialog fd = new DirectoryDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose printer output directory...");
-			        fd.setFilterPath("");
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textPrinterDir.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textPrinterDir.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose printer output directory...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
 
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textPrinterDir.setText(selected);
-			        }
+					textPrinterDir.setText(selected.getPath());
+			
+				}
 			}
 		});
 		button.setBounds(324, 31, 26, 25);
@@ -588,17 +622,28 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose character definition file...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textCharacterFile.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textCharacterFile.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textCharacterFile.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose character definition file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textCharacterFile.setText(selected.getPath());
+			
+				}
 			}
 		});
 		button_1.setBounds(324, 96, 26, 25);
@@ -642,17 +687,28 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose MIDI SoundBank...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textMIDIsoundbank.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textMIDIsoundbank.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textMIDIsoundbank.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose soundbank file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textMIDIsoundbank.setText(selected.getPath());
+			
+				}
 			}
 		});
 		button_8.setText("...");
@@ -712,17 +768,28 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose telnet banner file...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textTelnetBanner.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textTelnetBanner.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textTelnetBanner.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose telnet banner file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textTelnetBanner.setText(selected.getPath());
+			
+				}
 			}
 		});
 		button_2.setBounds(324, 27, 28, 25);
@@ -742,17 +809,29 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose telnet no ports banner...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textTelnetNoPorts.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textTelnetNoPorts.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textTelnetNoPorts.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose telnet no ports file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textTelnetNoPorts.setText(selected.getPath());
+			
+				}
+	
 			}
 		});
 		button_3.setText("...");
@@ -763,17 +842,28 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose telnet pre-auth banner...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textTelnetPreAuth.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textTelnetPreAuth.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textTelnetPreAuth.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose telnet pre-auth file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textTelnetPreAuth.setText(selected.getPath());
+			
+				}
 			}
 		});
 		button_4.setText("...");
@@ -784,17 +874,28 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose telnet banned banner...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textTelnetBanned.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textTelnetBanned.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textTelnetBanned.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose telnet banned file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textTelnetBanned.setText(selected.getPath());
+			
+				}
 			}
 		});
 		button_5.setText("...");
@@ -818,6 +919,35 @@ public class InstanceConfigWin extends Dialog {
 		Button button_6 = new Button(grpTelnetAuthentication, SWT.NONE);
 		button_6.setText("...");
 		button_6.setBounds(324, 31, 28, 25);
+		button_6.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textTelnetPasswd.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textTelnetPasswd.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose telnet passwd file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textTelnetPasswd.setText(selected.getPath());
+			
+				}
+			}
+		});
+		
 		
 		Label lblPasswdFile = new Label(grpTelnetAuthentication, SWT.NONE);
 		lblPasswdFile.setAlignment(SWT.RIGHT);
@@ -852,17 +982,28 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				 FileDialog fd = new FileDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose GeoIP database file...");
-			        fd.setFilterPath("");
-			        String[] filterExt = { "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textGeoIPfile.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textGeoIPfile.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textGeoIPfile.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose GeoIP db file...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textGeoIPfile.setText(selected.getPath());
+			
+				}
 			}
 		});
 		buttonGeoipDB.setBounds(355, 160, 27, 25);
@@ -901,7 +1042,7 @@ public class InstanceConfigWin extends Dialog {
 		compositeP5 = new Composite(tabFolder, SWT.NONE);
 		tbtmAdvanced_1.setControl(compositeP5);
 		
-		Group grpLogging = new Group(compositeP5, SWT.NONE);
+		grpLogging = new Group(compositeP5, SWT.NONE);
 		grpLogging.setText("Logging");
 		grpLogging.setBounds(10, 10, 372, 111);
 		
@@ -1012,16 +1153,28 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				 DirectoryDialog fd = new DirectoryDialog(shlInstanceConfiguration, SWT.OPEN);
-			        fd.setText("Choose named object directory...");
-			        fd.setFilterPath("");
-			      
-			        String selected = fd.open();
-			        
-			        if (selected != null)
-			        {
-			        	textNameObjectDir.setText(selected);
-			        }
+				// create a file chooser
+				final DWServerFileChooser fileChooser = new DWServerFileChooser(textNameObjectDir.getText());
+				
+				// 	configure the file dialog
+				
+				fileChooser.setFileHidingEnabled(false);
+				fileChooser.setMultiSelectionEnabled(false);
+				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+				fileChooser.setSelectedFile(textNameObjectDir.getText());
+				
+				// 	show the file dialog
+				int answer = fileChooser.showDialog(fileChooser, "Choose named object dir...");
+							
+				// 	check if a file was selected
+				if (answer == JFileChooser.APPROVE_OPTION)
+				{
+					final File selected =  fileChooser.getSelectedFile();
+
+					textNameObjectDir.setText(selected.getPath());
+			
+				}
 			}
 		});
 		buttonChooseNODir.setBounds(324, 105, 27, 21);
@@ -1090,7 +1243,7 @@ public class InstanceConfigWin extends Dialog {
 						if (letsreset)
 							MainWin.sendCommand("ui instance reset protodev");
 						
-						shlInstanceConfiguration.close();
+						e.display.getActiveShell().close();
 					} 
 					catch (IOException e1) 
 					{
@@ -1112,7 +1265,7 @@ public class InstanceConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				shlInstanceConfiguration.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnCancel.setBounds(335, 411, 75, 25);
@@ -1211,5 +1364,14 @@ public class InstanceConfigWin extends Dialog {
 	}
 	protected Button getButtonGeoipDB() {
 		return buttonGeoipDB;
+	}
+	protected Group getGrpLogging() {
+		return grpLogging;
+	}
+	protected Group getGrpProtocol() {
+		return grpProtocol;
+	}
+	protected Group getGrpDisk() {
+		return grpDisk;
 	}
 }

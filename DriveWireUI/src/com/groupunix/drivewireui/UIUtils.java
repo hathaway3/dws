@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.configuration.AbstractHierarchicalFileConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -299,13 +301,14 @@ public class UIUtils {
 		
 		conn.Connect();
 		
-		conn.sendCommand("dw disk offset " + diskno + " " + ddef.getOffset(), instance);
-		conn.sendCommand("dw disk limit " + diskno + " " + ddef.getSizelimit(), instance);
-		conn.sendCommand("dw disk sync " + diskno + " " + ddef.isSync(), instance);
-		conn.sendCommand("dw disk expand " + diskno + " " + ddef.isExpand(), instance);
-		conn.sendCommand("dw disk wp " + diskno + " " + ddef.isWriteprotect(), instance);
-		conn.sendCommand("dw disk namedobject " + diskno + " " + ddef.isNamedobject(), instance);
-		conn.sendCommand("dw disk ssync " + diskno + " " + ddef.isSyncfromsource(), instance);
+		conn.sendCommand("dw disk set " + diskno + " offset " + ddef.getOffset(), instance);
+		conn.sendCommand("dw disk set " + diskno + " sizelimit " + ddef.getSizelimit(), instance);
+		conn.sendCommand("dw disk set " + diskno + " syncto " + ddef.isSync(), instance);
+		conn.sendCommand("dw disk set " + diskno + " expand " + ddef.isExpand(), instance);
+		conn.sendCommand("dw disk set " + diskno + " writeprotect " + ddef.isWriteprotect(), instance);
+		conn.sendCommand("dw disk set " + diskno + " namedobject " + ddef.isNamedobject(), instance);
+		conn.sendCommand("dw disk set " + diskno + " syncfrom " + ddef.isSyncfromsource(), instance);
+		conn.sendCommand("dw disk set " + diskno + " padpartial " + ddef.isPadPartial(), instance);
 		
 		conn.close();
 	}
@@ -341,7 +344,7 @@ public class UIUtils {
 					if (m.group(1).equals("writeprotect"))
 						disk.setWriteprotect(UIUtils.sTob(m.group(2)));
 					
-					if (m.group(1).equals("sync"))
+					if (m.group(1).equals("syncto"))
 						disk.setSync(UIUtils.sTob(m.group(2)));
 					
 					if (m.group(1).equals("expand"))
@@ -356,19 +359,19 @@ public class UIUtils {
 					if (m.group(1).equals("randomwriteable"))
 						disk.setRandomwriteable(UIUtils.sTob(m.group(2)));
 					
-					if (m.group(1).equals("sectors"))
+					if (m.group(1).equals("_sectors"))
 						disk.setSectors(Integer.parseInt(m.group(2)));
 					
-					if (m.group(1).equals("dirty"))
+					if (m.group(1).equals("_dirty"))
 						disk.setDirty(Integer.parseInt(m.group(2)));
 					
-					if (m.group(1).equals("lsn"))
+					if (m.group(1).equals("_lsn"))
 						disk.setLsn(Integer.parseInt(m.group(2)));
 					
-					if (m.group(1).equals("reads"))
+					if (m.group(1).equals("_reads"))
 						disk.setReads(Integer.parseInt(m.group(2)));
 					
-					if (m.group(1).equals("writes"))
+					if (m.group(1).equals("_writes"))
 						disk.setWrites(Integer.parseInt(m.group(2)));
 					
 					if (m.group(1).equals("loaded"))
@@ -377,8 +380,11 @@ public class UIUtils {
 					if (m.group(1).equals("namedobject"))
 						disk.setNamedobject(UIUtils.sTob(m.group(2)));
 					
-					if (m.group(1).equals("syncfromsource"))
+					if (m.group(1).equals("syncfrom"))
 						disk.setSyncfromsource(UIUtils.sTob(m.group(2)));
+					
+					if (m.group(1).equals("padpartial"))
+						disk.setPadPartial(UIUtils.sTob(m.group(2)));
 					
 				}
 				
@@ -402,11 +408,9 @@ public class UIUtils {
 		
 		StringReader sr = conn.loadReader("ui server config write");
 		conn.close();
-		
+
 		XMLConfiguration res = new XMLConfiguration();
 		res.load(sr);
-		
-		// TODO Auto-generated method stub
 		return (HierarchicalConfiguration) res.clone();
 	}
 
@@ -485,4 +489,161 @@ public class UIUtils {
 		return(res);
 	}
 
+	
+	
+	public static int getNextFreeDisk(String dsname) 
+	{
+		
+		
+		HierarchicalConfiguration dset = getDiskset(dsname);
+		
+		if (dset != null)
+		{
+			for (int i = 0;i < MainWin.getInstanceConfig().getInt("DiskMaxDrives",255);i++)
+			{
+				if (getDisksetDisk(dsname, i) == null)
+				{
+					return(i);
+				}
+			}
+		}
+		
+		return -1;
+	}
+
+	
+	public static HierarchicalConfiguration getDiskset(String dsname)
+	{
+		HierarchicalConfiguration res = null;
+		 
+		@SuppressWarnings("unchecked")
+		List<HierarchicalConfiguration> disksets = MainWin.dwconfig.configurationsAt("diskset");
+		
+		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
+		{
+			HierarchicalConfiguration dset = it.next();
+			if (dset.getString("Name").equals(dsname))
+			{
+				res = dset;
+			}
+		}
+		
+		return res;
+	}
+	
+	public static HierarchicalConfiguration getDisksetDisk(String dsname, int diskno)
+	{
+		HierarchicalConfiguration res = null;
+		 
+		HierarchicalConfiguration dset = getDiskset(dsname);
+		
+		if (dset != null)
+		{
+			@SuppressWarnings("unchecked")
+			List<HierarchicalConfiguration> disks = dset.configurationsAt("disk");
+		
+			for(Iterator<HierarchicalConfiguration> it = disks.iterator(); it.hasNext();)
+			{
+				HierarchicalConfiguration disk = it.next();
+				if (disk.getInt("drive") == diskno)
+				{
+					res = disk;
+				}
+			}
+		
+		}
+		
+		return res;
+	}
+
+	public static void createDiskset(String dsname, String cp) throws IOException, DWUIOperationFailedException 
+	{
+		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
+		
+		conn.Connect();
+		
+		// conn.sendCommand("dw disk dset create " + dsname, MainWin.getInstance());
+		MainWin.addToDisplay("dw disk dset create " + dsname);
+		
+		if (cp != null)
+		{
+			HierarchicalConfiguration  cpdset = UIUtils.getDiskset(cp);
+			
+			if (cpdset != null)
+			{
+				// copy diskset settings
+				
+				for(@SuppressWarnings("unchecked")
+				Iterator<String> itk = cpdset.getKeys(); itk.hasNext();)
+				{
+					String option = itk.next();
+					
+					if (!option.equals("Name") && !option.startsWith("disk."))
+					{
+						// conn.sendCommand("dw disk dset set " + dsname + " " + option + " " + cpdset.getString(option)  , MainWin.getInstance());
+						MainWin.addToDisplay("dw disk dset set " + dsname + " " + option + " " + cpdset.getString(option));
+					}
+				}
+					
+				
+				// copy disks and settings
+				
+				@SuppressWarnings("unchecked")
+				List<HierarchicalConfiguration> disks = cpdset.configurationsAt("disk");
+			
+				for(Iterator<HierarchicalConfiguration> itd = disks.iterator(); itd.hasNext();)
+				{
+					HierarchicalConfiguration disk = itd.next();
+					
+					if (disk.containsKey("drive") && disk.containsKey("path"))
+					{
+						//conn.sendCommand("dw disk dset adddisk " + dsname + " " + disk.getInt("drive") + " " + disk.getString("path") , MainWin.getInstance());
+						MainWin.addToDisplay("dw disk dset adddisk " + dsname + " " + disk.getInt("drive") + " " + disk.getString("path"));
+						
+						for(@SuppressWarnings("unchecked")
+						Iterator<String> itk = disk.getKeys(); itk.hasNext();)
+						{
+							String option = itk.next();
+							
+							if (!option.equals("drive") && !option.equals("path"))
+							{
+								//conn.sendCommand("dw disk dset setdisk " + dsname + " " + disk.getInt("drive") + " " + option + " " + disk.getString(option)  , MainWin.getInstance());
+								MainWin.addToDisplay("dw disk dset setdisk " + dsname + " " + disk.getInt("drive") + " " + option + " " + disk.getString(option) );
+							}
+						}
+					}
+					
+				}
+			}
+			
+		}
+		
+		conn.close();	
+		
+	}
+
+	public static DWServerFile[] getFileArray(String uicmd) throws IOException, DWUIOperationFailedException 
+	{
+
+		DWServerFile[] res = null;
+			
+		ArrayList<String> roots = UIUtils.loadArrayList(uicmd);
+				
+		res = new DWServerFile[roots.size()];
+				
+		for (int i = 0;i<roots.size();i++)
+		{
+			res[i] = new DWServerFile(".");
+			res[i].setVals(roots.get(i));
+					
+		}
+				
+
+			
+			
+		return(res);
+		
+	}
+	
+	
 }

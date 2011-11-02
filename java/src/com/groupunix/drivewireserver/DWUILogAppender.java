@@ -2,6 +2,7 @@ package com.groupunix.drivewireserver;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
@@ -17,6 +18,23 @@ public class DWUILogAppender extends AppenderSkeleton
 		this.outskt = outskt;
 		this.setDwuiref(dwuiref);
 		setLayout(layout);
+		
+		if (DriveWireServer.getLogEventsSize() > 0)
+		{
+			ArrayList<String> exist = DriveWireServer.getLogEvents(DriveWireServer.getLogEventsSize());
+			
+			for (String l : exist)
+			{
+				try 
+				{
+					this.outskt.getOutputStream().write(l.getBytes());
+				} 
+				catch (IOException e) 
+				{
+					
+				}
+			}
+		}
 	}
 	
 	public void setLayout(Layout layout) {
@@ -36,30 +54,28 @@ public class DWUILogAppender extends AppenderSkeleton
 	{
 		try 
 		{
-			if (!outskt.isClosed())
-				this.outskt.getOutputStream().write((layout.format(evt) + "\r\n").getBytes());
+			if (!outskt.isClosed() && !evt.getMessage().equals("ConfigurationUtils.locate(): base is null, name is null"))
+				this.outskt.getOutputStream().write((layout.format(evt)).getBytes());
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
+			
 			
 			try {
 				outskt.close();
 			} 
 			catch (IOException e1) 
 			{
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				
 			}
 			
 		}
 	}
 
 	@Override
-	public void close() {
-		// TODO Auto-generated method stub
-		
+	public void close() 
+	{
+		this.dwuiref.die();
 	}
 
 	public void setDwuiref(DWUIClientThread dwuiref) {

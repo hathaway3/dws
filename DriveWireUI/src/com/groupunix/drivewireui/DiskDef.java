@@ -23,6 +23,7 @@ public class DiskDef
 	private int writes = 0;
 	
 	private boolean loaded = false;
+	private boolean padpartial;
 	
 	
 	public void setDrive(int drive) {
@@ -133,6 +134,14 @@ public class DiskDef
 	}
 	public boolean isSyncfromsource() {
 		return syncfromsource;
+	}
+	public boolean isPadPartial() 
+	{
+		return padpartial;
+	}
+	public void setPadPartial(boolean tf)
+	{
+		this.padpartial = tf;
 	}
 
 

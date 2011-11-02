@@ -14,7 +14,7 @@ public class DWCmdDisk extends DWCommand {
 		setParentCmd(parent);
 		this.dwProto = dwProto;
 		
-		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
 		
 		commands.addcommand(new DWCmdDiskShow(dwProto,this));
 		commands.addcommand(new DWCmdDiskEject(dwProto,this));
@@ -23,7 +23,8 @@ public class DWCmdDisk extends DWCommand {
 		commands.addcommand(new DWCmdDiskWrite(dwProto,this));
 		commands.addcommand(new DWCmdDiskCreate(dwProto,this));
 		commands.addcommand(new DWCmdDiskSet(dwProto,this));
-		commands.addcommand(new DWCmdDiskDump(dwProto,this));
+		// testing only, little point
+		//commands.addcommand(new DWCmdDiskDump(dwProto,this));
 	}
 
 	

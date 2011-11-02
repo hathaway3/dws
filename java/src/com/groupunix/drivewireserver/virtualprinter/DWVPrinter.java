@@ -1,6 +1,10 @@
 package com.groupunix.drivewireserver.virtualprinter;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
@@ -12,7 +16,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 public class DWVPrinter 
 {
 
-	private DWVPrinterDriver[] drivers;
+	private ArrayList<DWVPrinterDriver> drivers = new ArrayList<DWVPrinterDriver>();
 	
 	
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPrinter");
@@ -23,20 +27,66 @@ public class DWVPrinter
 	{
 		this.dwProto = dwProto;
 		
-		logger.debug("initialized by handler #" + dwProto.getHandlerNo());
+		logger.debug("dwprinter init for handler #" + dwProto.getHandlerNo());
 		
 		// load drivers
 		
-		drivers = new DWVPrinterDriver[2];
-		drivers[0] = new DWVPrinterText(this);
-		drivers[1] = new DWVPrinterFX80(this);
+		@SuppressWarnings("unchecked")
+		List<HierarchicalConfiguration> printers = dwProto.getConfig().configurationsAt("Printer");
 		
-		for (int i = 0;i<drivers.length;i++)
+		for (HierarchicalConfiguration printer : printers)
 		{
-			logger.info("Print driver " + drivers[i].getDriverName() + " loaded");
+			if (printer.containsKey("Name") && printer.containsKey("Driver"))
+			{
+				// definition appears valid, now can we instantiate the requested driver...
+				
+				try 
+				{
+					@SuppressWarnings("unchecked")
+					Constructor<DWVPrinterDriver> pconst = (Constructor<DWVPrinterDriver>) Class.forName(("com.groupunix.drivewireserver.virtualprinter.DWVPrinter" + printer.getString("Driver")), true, this.getClass().getClassLoader()).getConstructor(Class.forName("org.apache.commons.configuration.HierarchicalConfiguration"));
+					this.drivers.add((DWVPrinterDriver) pconst.newInstance(printer));
+					// yes we can
+					logger.info("init printer '" + printer.getString("Name") + "' using driver '" + printer.getString("Driver") + "'");
+					
+				} 
+				// so many ways to fail...
+				catch (ClassNotFoundException e) 
+				{
+					logger.warn("Invalid printer definition '" + printer.getString("Name") + "' in config, '" + printer.getString("Driver") + "' is not a known driver.");
+				} 
+				catch (InstantiationException e) 
+				{
+					logger.warn("InstantiationException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+				} 
+				catch (IllegalAccessException e) 
+				{
+					logger.warn("IllegalAccessException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+				} 
+				catch (SecurityException e) 
+				{
+					logger.warn("SecurityException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+				} 
+				catch (NoSuchMethodException e) 
+				{
+					logger.warn("NoSuchMethodException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+				} 
+				catch (IllegalArgumentException e) 
+				{
+					logger.warn("IllegalArgumentException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+				} 
+				catch (InvocationTargetException e) 
+				{
+					logger.warn("InvocationTargetException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+				}
+				
+			}
+			else
+			{
+				logger.warn("Invalid printer definition in config, name " + printer.getString("Name","not defined") + " driver " + printer.getString("Driver","not defined"));
+			}
 		}
-		
 	}
+	
 	
 	public void addByte(byte data)
 	{
@@ -56,16 +106,20 @@ public class DWVPrinter
 	
 	private DWVPrinterDriver getCurrentDriver() throws DWPrinterNotDefinedException
 	{
+		String curprinter = this.dwProto.getConfig().getString("CurrentPrinter",null);
 		
-		for (int i = 0;i<drivers.length;i++)
+		if (curprinter == null)
 		{
-			if (getConfig().getString("PrinterType","TEXT").equalsIgnoreCase(drivers[i].getDriverName()))
-			{
-				return(drivers[i]);
-			}
+			throw new DWPrinterNotDefinedException("No current printer is set in the configuration");
 		}
 		
-		throw new DWPrinterNotDefinedException("Cannot find driver for printer type '" + getConfig().getString("PrinterType","TEXT") + "'");
+		for (DWVPrinterDriver drv : this.drivers)
+		{
+			if (drv.getPrinterName().equals(curprinter))
+				return(drv);
+		}
+		
+		throw new DWPrinterNotDefinedException("Cannot find printer named '" + curprinter + "'");
 	}
 
 	
@@ -73,22 +127,39 @@ public class DWVPrinter
 	{
 		logger.debug("Printer flush");
 		
-		try 
+		// get out of main thread for flush..
+		
+		Thread flusher = new Thread(new Runnable() 
 		{
-			getCurrentDriver().flush();
-		} 
-		catch (DWPrinterNotDefinedException e) 
-		{
-			logger.warn("error flushing print buffer: " + e.getMessage());
-		} 
-		catch (IOException e) 
-		{
-			logger.warn("error flushing print buffer: " + e.getMessage());
-		} 
-		catch (DWPrinterFileError e) 
-		{
-			logger.warn("error flushing print buffer: " + e.getMessage());
-		}
+		
+			@Override
+			public void run() 
+			{
+				Thread.currentThread().setName("printflush-" + Thread.currentThread().getId());
+				Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+				logger.debug("flush thread run");
+				try 
+				{
+					getCurrentDriver().flush();
+				} 
+				catch (DWPrinterNotDefinedException e) 
+				{
+					logger.warn("error flushing print buffer: " + e.getMessage());
+				} 
+				catch (IOException e) 
+				{
+					logger.warn("error flushing print buffer: " + e.getMessage());
+				} 
+				catch (DWPrinterFileError e) 
+				{	
+					logger.warn("error flushing print buffer: " + e.getMessage());
+				}
+				logger.debug("flush thread exit");
+			}
+		
+		});
+		
+		flusher.start();
 
 	}
 

@@ -11,6 +11,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
@@ -20,7 +21,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 public class DWHelp 
 {
 	private XMLConfiguration help;
-	private String helpfile;
+	private String helpfile = null;
 	
 	private static final Logger logger = Logger.getLogger("DWHelp");
 	
@@ -29,6 +30,22 @@ public class DWHelp
 		this.helpfile = helpfile;
 		
 		this.reload();
+	}
+
+	public DWHelp(DWProtocolHandler dwProto) 
+	{
+		try 
+		{
+			help = new XMLConfiguration();
+			addAllTopics(new DWCmd(dwProto), "");
+			help.setFileName(DWDefs.HELP_DEFAULT_FILE);
+			help.save(DWDefs.HELP_DEFAULT_FILE);
+		} 
+		catch (ConfigurationException e) 
+		{
+			logger.warn(e.getMessage());
+		}
+		
 	}
 
 	public void reload()
@@ -118,7 +135,9 @@ public class DWHelp
 
 	public boolean hasTopic(String topic)
 	{
-		return(this.help.containsKey("topics." + this.spaceToDot(topic) + ".text"));
+		if (this.help != null)
+			return(this.help.containsKey("topics." + this.spaceToDot(topic) + ".text"));
+		return false;
 	}
 	
 
@@ -152,11 +171,14 @@ public class DWHelp
 	{
 		ArrayList<String> res = new ArrayList<String>();
 		
-		for(Iterator<String> itk = help.configurationAt("topics").getKeys(); itk.hasNext();)
+		if (this.help != null)
 		{
-			String key = itk.next();
-			if (key.endsWith(".text"))
-				res.add(this.dotToSpace(key.substring(0, key.length()-5)));
+			for(Iterator<String> itk = help.configurationAt("topics").getKeys(); itk.hasNext();)
+			{
+				String key = itk.next();
+				if (key.endsWith(".text"))
+					res.add(this.dotToSpace(key.substring(0, key.length()-5)));
+			}
 		}
 		
 		return(res);
@@ -175,7 +197,17 @@ public class DWHelp
 
 	public void genTopics(DWProtocol dwProto) throws ConfigurationException, IOException 
 	{
-		this.help.clearTree("topics");
+		if (this.help != null)
+		{
+			this.help.clearTree("topics");
+		}
+		else
+		{
+			this.help = new XMLConfiguration();
+			this.help.setFileName(dwProto.getConfig().getString("HelpFile", DWDefs.HELP_DEFAULT_FILE));
+			this.help.save(dwProto.getConfig().getString("HelpFile", DWDefs.HELP_DEFAULT_FILE));
+		}
+		
 		addAllTopics(new DWCmd((DWProtocolHandler) dwProto), "");
 		
 		if (help.containsKey("wikiurl"))

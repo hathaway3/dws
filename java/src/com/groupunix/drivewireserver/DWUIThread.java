@@ -23,8 +23,6 @@ public class DWUIThread implements Runnable {
 	
 	public void die()
 	{
-		
-		logger.debug("we've been asked to die");
 		this.wanttodie = true;
 		try 
 		{
@@ -44,12 +42,8 @@ public class DWUIThread implements Runnable {
 	{
 		Thread.currentThread().setName("dwUIserver-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
-				
-		logger.debug("run");
 		
 		// open server socket
-		
-		
 		
 		try 
 		{
@@ -69,13 +63,14 @@ public class DWUIThread implements Runnable {
 				
 		while ((wanttodie == false) && (srvr.isClosed() == false))
 		{
-			logger.debug("UI waiting for connection");
+			//logger.debug("UI waiting for connection");
 			Socket skt = null;
 			try 
 			{
 				skt = srvr.accept();
 				
-				logger.debug("new UI connection from " + skt.getInetAddress().getHostAddress());
+				if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+					logger.debug("new UI connection from " + skt.getInetAddress().getHostAddress());
 				
 				Thread uiclientthread = new Thread(new DWUIClientThread(skt));
 				uiclientthread.start();

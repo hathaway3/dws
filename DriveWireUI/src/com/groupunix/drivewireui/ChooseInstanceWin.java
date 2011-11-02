@@ -75,7 +75,7 @@ public class ChooseInstanceWin extends Dialog {
 			public void widgetSelected(SelectionEvent e) 
 			{
 				MainWin.setInstance(cmbInstance.getSelectionIndex());
-				shlChooseAnInstance.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnOk.setBounds(123, 80, 75, 25);
@@ -86,7 +86,7 @@ public class ChooseInstanceWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				shlChooseAnInstance.close();
+				e.display.getActiveShell().close();
 			
 			}
 		});

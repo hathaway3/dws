@@ -1,5 +1,7 @@
 package com.groupunix.drivewireui;
 
+import java.util.Random;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -12,6 +14,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import com.swtdesigner.SWTResourceManager;
+import org.eclipse.swt.widgets.Label;
 
 public class ErrorWin extends Dialog {
 
@@ -47,9 +50,16 @@ public class ErrorWin extends Dialog {
 	public Object open() {
 		createContents();
 
+		Display display = getParent().getDisplay();
+		
+		int x = getParent().getBounds().x + (getParent().getBounds().width / 2) - (shlAnErrorHas.getBounds().width / 2);
+		int y = getParent().getBounds().y + (getParent().getBounds().height / 2) - (shlAnErrorHas.getBounds().height / 2);
+		
+		shlAnErrorHas.setLocation(x, y);
+		
 		shlAnErrorHas.open();
 		shlAnErrorHas.layout();
-		Display display = getParent().getDisplay();
+		
 		while (!shlAnErrorHas.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -66,7 +76,7 @@ public class ErrorWin extends Dialog {
 	 */
 	private void createContents() {
 		shlAnErrorHas = new Shell(getParent(), getStyle());
-		shlAnErrorHas.setSize(441, 274);
+		shlAnErrorHas.setSize(419, 274);
 		shlAnErrorHas.setText(title);
 		
 		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
@@ -78,29 +88,30 @@ public class ErrorWin extends Dialog {
 			public void widgetSelected(SelectionEvent e) 
 			{
 			
-				shlAnErrorHas.close();
+				e.display.getActiveShell().close();
 			
 			}
 		});
-		btnClose.setBounds(338, 211, 75, 25);
+		btnClose.setBounds(327, 211, 75, 25);
 		btnClose.setText("Close");
 		
 		
 		
-		txtSummary = new Text(shlAnErrorHas, SWT.WRAP);
+		txtSummary = new Text(shlAnErrorHas, SWT.READ_ONLY | SWT.WRAP);
 		txtSummary.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 		txtSummary.setEditable(false);
-		txtSummary.setBounds(21, 20, 392, 42);
+		txtSummary.setBounds(10, 20, 329, 42);
 		txtSummary.setText(summary);
 		txtSummary.setFont(new Font(shlAnErrorHas.getDisplay(), f));
 		
 		textDetail = new Text(shlAnErrorHas, SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
 		textDetail.setEditable(false);
-		textDetail.setBounds(21, 67, 392, 127);
+		textDetail.setBounds(10, 67, 392, 127);
 		textDetail.setText(detail);
 		textDetail.setFont(new Font(shlAnErrorHas.getDisplay(), f));
 		
 		Button btnSubmitABug = new Button(shlAnErrorHas, SWT.NONE);
+		btnSubmitABug.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(ErrorWin.class, "/bug.png"));
 		btnSubmitABug.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -110,7 +121,12 @@ public class ErrorWin extends Dialog {
 			
 			}
 		});
-		btnSubmitABug.setBounds(21, 211, 158, 25);
+		btnSubmitABug.setBounds(10, 211, 185, 25);
 		btnSubmitABug.setText("Submit a bug report...");
+		
+		Label lblNewLabel = new Label(shlAnErrorHas, SWT.NONE);
+		Random rand = new Random();
+		lblNewLabel.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(ErrorWin.class, "/a" + rand.nextInt(22) + ".png"));
+		lblNewLabel.setBounds(353, 10, 48, 48);
 	}
 }

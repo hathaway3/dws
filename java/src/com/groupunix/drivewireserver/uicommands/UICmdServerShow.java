@@ -9,7 +9,7 @@ public class UICmdServerShow extends DWCommand {
 
 	static final String command = "show";
 	
-	private DWCommandList commands = new DWCommandList();
+	private DWCommandList commands = new DWCommandList(null);
 		
 	public UICmdServerShow(DWUIClientThread dwuiClientThread)
 	{
@@ -20,7 +20,7 @@ public class UICmdServerShow extends DWCommand {
 		commands.addcommand(new UICmdServerShowLocalDisks());
 		commands.addcommand(new UICmdServerShowSerialDevs());
 		commands.addcommand(new UICmdServerShowStatus());
-		commands.addcommand(new UICmdServerShowHelpTopics());
+		commands.addcommand(new UICmdServerShowHelpTopics(dwuiClientThread));
 	}
 
 	

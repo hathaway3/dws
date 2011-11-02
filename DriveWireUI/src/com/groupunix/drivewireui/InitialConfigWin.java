@@ -5,43 +5,50 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import com.swtdesigner.SWTResourceManager;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
+
+import com.swtdesigner.SWTResourceManager;
 
 public class InitialConfigWin extends Dialog {
 
 	protected Object result;
-	protected Shell shlInitialConfiguration;
+	protected static Shell shlInitialConfiguration;
 	private Text textPort;
 	private Text textHost;
 	
-	Composite compPage1;
-	Composite compPage2;
-	Composite compPage3;
+	static Composite compPage1;
+	static Composite compPage2;
+	static Composite compPage3;
 	
 	private Combo comboSerialDev;
 	private Text textConnTest;
 	private Label labelOK;
 	private Label labelERR;
 	private Label labelHost;
+	private Label labelWait;
 	private Button btnBack;
 	private Button btnNext;
 	private Combo comboCocoModel;
 	
+	private Label lblLocalimg;
+	
 	private boolean connTested = false;
 	
 	private int page = 0;
+	private static Composite composite;
 	
 	
 	/**
@@ -61,26 +68,17 @@ public class InitialConfigWin extends Dialog {
 	public Object open() {
 		createContents();
 		
+		applyFont();
+		
 		updatePages();
 		
 		this.labelOK.setVisible(false);
 		this.labelERR.setVisible(false);
-		
-		Link link = new Link(compPage2, SWT.NONE);
-		link.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				// open wiki in browser
-				org.eclipse.swt.program.Program.launch("http://sourceforge.net/apps/mediawiki/drivewireserver/index.php");
-			}
-		});
-		link.setBounds(10, 150, 406, 31);
-		link.setText("If you have trouble connecting, please <a href=\"http://sourceforge.net/apps/mediawiki/drivewireserver/index.php\">consult the documentation.</a>");
+		this.labelWait.setVisible(false);
 		
 		this.labelHost.setVisible(false);
 		this.textHost.setVisible(false);
 		
-
 		
 		shlInitialConfiguration.open();
 		shlInitialConfiguration.layout();
@@ -93,9 +91,50 @@ public class InitialConfigWin extends Dialog {
 		return result;
 	}
 
-	/**
-	 * Create contents of the dialog.
-	 */
+	
+	private static void applyFont() 
+	{
+		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
+		
+		
+		Control[] controls = shlInitialConfiguration.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInitialConfiguration.getDisplay(), f));
+		}
+		
+		controls = compPage1.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInitialConfiguration.getDisplay(), f));
+		}
+		
+		controls = compPage2.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInitialConfiguration.getDisplay(), f));
+		}
+		
+		controls = compPage3.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInitialConfiguration.getDisplay(), f));
+		}
+		
+		controls = composite.getChildren();
+		
+		for (int i = 0;i<controls.length;i++)
+		{
+			controls[i].setFont(new Font(shlInitialConfiguration.getDisplay(), f));
+		}
+		
+	}
+	
+	
 	private void createContents() {
 		shlInitialConfiguration = new Shell(getParent(), getStyle());
 		shlInitialConfiguration.setSize(453, 409);
@@ -167,11 +206,12 @@ public class InitialConfigWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				shlInitialConfiguration.close();
+				e.display.getActiveShell().close();
 			}
 		});
 		btnCancel.setBounds(361, 346, 75, 25);
 		btnCancel.setText("Cancel");
+		
 		
 		compPage1 = new Composite(shlInitialConfiguration, SWT.NONE);
 		compPage1.setBounds(10, 10, 426, 314);
@@ -181,11 +221,11 @@ public class InitialConfigWin extends Dialog {
 		lblThisWizardWill.setText("This wizard will help you configure DriveWire 4.");
 		
 		Label lblFirstWeNeed = new Label(compPage1, SWT.WRAP);
-		lblFirstWeNeed.setBounds(10, 39, 406, 38);
+		lblFirstWeNeed.setBounds(10, 34, 406, 43);
 		lblFirstWeNeed.setText("First, we need to know how to communicate with the DriveWire server.  Where does the server run?");
 		
-		Composite composite = new Composite(compPage1, SWT.NONE);
-		composite.setBounds(38, 83, 329, 55);
+		composite = new Composite(compPage1, SWT.NONE);
+		composite.setBounds(10, 83, 319, 55);
 		
 		Button btnLocalServer = new Button(composite, SWT.RADIO);
 		btnLocalServer.addSelectionListener(new SelectionAdapter() {
@@ -194,6 +234,8 @@ public class InitialConfigWin extends Dialog {
 			{
 				labelHost.setVisible(false);
 				textHost.setVisible(false);
+				textHost.setText("127.0.0.1");
+				lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/my_computer.png"));
 			}
 		});
 		btnLocalServer.setSelection(true);
@@ -207,6 +249,7 @@ public class InitialConfigWin extends Dialog {
 			{
 				labelHost.setVisible(true);
 				textHost.setVisible(true);
+				lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/network-local.png"));
 			
 			}
 		});
@@ -223,16 +266,16 @@ public class InitialConfigWin extends Dialog {
 		textHost.setText("127.0.0.1");
 		
 		Label lblByDefaultThe = new Label(compPage1, SWT.WRAP);
-		lblByDefaultThe.setBounds(10, 196, 406, 94);
-		lblByDefaultThe.setText("By default, the server listens for clients on TCP port 6800.  \r\n\r\nYou can change this using the client once we have a connection to the server, or by editing the server's configuration file.\r\n");
+		lblByDefaultThe.setBounds(27, 206, 389, 64);
+		lblByDefaultThe.setText("By default, the server listens for clients on TCP port 6800.  \r\n\r\nIf you have not changed this setting, then just hit Next.\r\n");
 		
 		Label lblWhatTcpPort = new Label(compPage1, SWT.NONE);
 		lblWhatTcpPort.setAlignment(SWT.RIGHT);
-		lblWhatTcpPort.setBounds(10, 296, 239, 18);
+		lblWhatTcpPort.setBounds(10, 279, 239, 18);
 		lblWhatTcpPort.setText("What TCP port does the server use?");
 		
 		textPort = new Text(compPage1, SWT.BORDER);
-		textPort.setBounds(255, 293, 55, 21);
+		textPort.setBounds(254, 276, 55, 21);
 		textPort.setText("6800");
 		
 		compPage2 = new Composite(shlInitialConfiguration, SWT.NO_FOCUS);
@@ -243,10 +286,15 @@ public class InitialConfigWin extends Dialog {
 		lblOkNowLets.setText("Ok, now let's make sure we can communicate with the server.");
 		
 		Label lblIfYouHavent = new Label(compPage2, SWT.WRAP);
-		lblIfYouHavent.setBounds(10, 43, 406, 101);
-		lblIfYouHavent.setText("If you haven't started the server, please start it now.  \r\n\r\nIf you aren't sure whether the server is running, there is no harm in using the \"Test Connection\" button here to find out.  If the connection is successful, you'll see a green \"OK\" logo and the current server version displayed.");
+		lblIfYouHavent.setBounds(10, 43, 406, 151);
+		lblIfYouHavent.setText("If you haven't started the server, please start it now.  \r\n\r\nIf you aren't sure whether the server is running, there is no harm in using the \"Test Connection\" button here to find out.  \r\n\r\nIf the connection test is successful, you will see a green \"OK\" logo and the current server version will be displayed.");
 		
-		Button btnTestConnection = new Button(compPage2, SWT.NONE);
+		lblLocalimg = new Label(compPage1, SWT.NONE);
+		lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/my_computer.png"));
+		lblLocalimg.setBounds(335, 78, 64, 64);
+		
+		
+		final Button btnTestConnection = new Button(compPage2, SWT.NONE);
 		btnTestConnection.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -260,6 +308,13 @@ public class InitialConfigWin extends Dialog {
 				
 				if (UIUtils.validateNum(textPort.getText(), 1, 65535))
 				{	
+					textConnTest.setText("Trying " + textHost.getText() + ":" + textPort.getText());
+					labelWait.setVisible(true);
+					btnTestConnection.setEnabled(false);
+					
+					compPage2.redraw();
+					shlInitialConfiguration.update();
+					
 					try 
 					{
 						Connection conn = new Connection(textHost.getText(), Integer.parseInt(textPort.getText()), 0);
@@ -287,6 +342,8 @@ public class InitialConfigWin extends Dialog {
 						labelERR.setVisible(true);
 						textConnTest.setText("Port number must be numeric.");
 					}
+					
+					btnTestConnection.setEnabled(true);
 				}
 				else
 				{
@@ -294,6 +351,7 @@ public class InitialConfigWin extends Dialog {
 					textConnTest.setText("Valid TCP port range is 1 - 65535.");
 				}
 				
+				labelWait.setVisible(false);
 				btnNext.setEnabled(connTested);
 				
 			}
@@ -303,16 +361,21 @@ public class InitialConfigWin extends Dialog {
 		
 		labelOK = new Label(compPage2, SWT.SHADOW_NONE);
 		labelOK.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/dw4logo5.png"));
-		labelOK.setBounds(27, 239, 64, 54);
+		labelOK.setBounds(27, 239, 64, 64);
+		
+		labelWait = new Label(compPage2, SWT.SHADOW_NONE);
+		labelWait.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/Hourglass.png"));
+		labelWait.setBounds(27, 239, 64, 64);
 		
 		textConnTest = new Text(compPage2, SWT.READ_ONLY | SWT.WRAP | SWT.CENTER);
+		textConnTest.setEnabled(false);
 		textConnTest.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 		textConnTest.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
-		textConnTest.setBounds(97, 250, 203, 54);
+		textConnTest.setBounds(97, 250, 217, 54);
 		
 		labelERR = new Label(compPage2, SWT.SHADOW_NONE);
-		labelERR.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/javax/swing/plaf/metal/icons/ocean/error.png"));
-		labelERR.setBounds(40, 250, 38, 43);
+		labelERR.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/dialog-error-4.png"));
+		labelERR.setBounds(27, 239, 64, 64);
 		
 		compPage3 = new Composite(shlInitialConfiguration, SWT.NONE);
 		compPage3.setBounds(10, 10, 426, 314);
@@ -454,9 +517,9 @@ public class InitialConfigWin extends Dialog {
 			this.btnNext.setEnabled(true);
 			this.btnNext.setText("Next >>");
 			
-			this.compPage1.setVisible(true);
-			this.compPage2.setVisible(false);
-			this.compPage3.setVisible(false);
+			InitialConfigWin.compPage1.setVisible(true);
+			InitialConfigWin.compPage2.setVisible(false);
+			InitialConfigWin.compPage3.setVisible(false);
 			
 		}
 		else if (this.page == 1)
@@ -466,9 +529,9 @@ public class InitialConfigWin extends Dialog {
 			this.btnNext.setText("Next >>");
 			
 			
-			this.compPage1.setVisible(false);
-			this.compPage2.setVisible(true);
-			this.compPage3.setVisible(false);
+			InitialConfigWin.compPage1.setVisible(false);
+			InitialConfigWin.compPage2.setVisible(true);
+			InitialConfigWin.compPage3.setVisible(false);
 		}
 		else if (this.page == 2)
 		{
@@ -476,9 +539,13 @@ public class InitialConfigWin extends Dialog {
 			this.btnNext.setEnabled(true);
 			this.btnNext.setText("Finish");
 			
-			this.compPage1.setVisible(false);
-			this.compPage2.setVisible(false);
-			this.compPage3.setVisible(true);
+			InitialConfigWin.compPage1.setVisible(false);
+			InitialConfigWin.compPage2.setVisible(false);
+			InitialConfigWin.compPage3.setVisible(true);
 		}
 	}
+	protected Composite getComposite() {
+		return composite;
+	}
+
 }

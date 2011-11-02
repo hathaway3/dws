@@ -17,7 +17,7 @@ public class DWCmd extends DWCommand
 		
 		this.dwProto = dwProtocol;
 		
-		commands = new DWCommandList(this.dwProto.getCMDCols());
+		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
 		commands.addcommand(new DWCmdDisk((DWProtocolHandler) dwProtocol, this));
 		commands.addcommand(new DWCmdServer(dwProtocol, this));
 		commands.addcommand(new DWCmdConfig(dwProtocol, this));
