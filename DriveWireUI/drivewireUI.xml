@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration>
+<AutoCreated>true</AutoCreated>
+<MainFont>Lucida Console</MainFont>
+<MainFontSize>9</MainFontSize>
+<MainFontStyle>0</MainFontStyle>
+<LocalServer>true</LocalServer>
+<CmdHistory>dw</CmdHistory>
+<CmdHistory>ui i d sh</CmdHistory>
+<CmdHistory>dw</CmdHistory>
+<CmdHistory>dw d</CmdHistory>
+<CmdHistory>dw</CmdHistory>
+<CmdHistory>ddw</CmdHistory>
+<CmdHistory>dw</CmdHistory>
+<CmdHistory>dw</CmdHistory>
+<CmdHistory>dw</CmdHistory>
+<CmdHistory>dw</CmdHistory>
+<DiskHistory>E:\\cocodisks\\bbs_boot.dsk</DiskHistory>
+<LogFont>Lucida Console</LogFont>
+<LogFontSize>9</LogFontSize>
+<LogFontStyle>0</LogFontStyle>
+<DialogFont>Segoe UI</DialogFont>
+<DialogFontSize>9</DialogFontSize>
+<DialogFontStyle>0</DialogFontStyle>
+<DiskHistorySize>10</DiskHistorySize>
+<ServerHistorySize>10</ServerHistorySize>
+<CmdHistorySize>10</CmdHistorySize>
+<TCPTimeout>15000</TCPTimeout>
+<TermServerOnExit>true</TermServerOnExit>
+<ShowCommandsSent>false</ShowCommandsSent>
+<ServerSync>false</ServerSync>
+<ServerSyncInterval>2000</ServerSyncInterval>
+</configuration>

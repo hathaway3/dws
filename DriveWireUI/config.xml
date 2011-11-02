@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- DriveWire 4 configuration.  See below for settings that must be adjusted -->
+<drivewire-config xmlns="http://groupunix.org/DriveWireConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://groupunix.org/DriveWireConfig Config.xsd ">
+<DiskLazyWriteInterval>15000</DiskLazyWriteInterval>
+<LogLevel>ALL</LogLevel>
+<LogToFile>false</LogToFile>
+<LogFile>E:\\drivewire.log2</LogFile>
+<LogToConsole>true</LogToConsole>
+<LogUIConnections>true</LogUIConnections>
+<!-- <LogFormat>%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n</LogFormat> -->
+<LogFormat>%d{HH:mm:ss}: [%-14t] %m%n</LogFormat>
+<!-- User interface settings -->
+<UIEnabled>true</UIEnabled>
+<UIPort>6800</UIPort>
+<!--  config autosave -->
+<ConfigAutosave>true</ConfigAutosave>
+<!-- This is the default location for disk images.  Only disk files in this directory are selectable when -->
+<!-- using the user interface on a computer other than the server -->
+<LocalDiskDir>E:\\cocodisks</LocalDiskDir>
+<!-- if you would like to drive multiple cocos with one server -->
+<!-- you may specify as many instance sections as you have serial ports (and CoCos) -->
+<instance>
+    		<Name>CoCo 3 on COM6</Name>
+<DWCommandOutputWidth>40</DWCommandOutputWidth>
+
+			<!-- These settings need to be adjusted for your system -->
+
+			<!-- device type, serial (default) or tcp -->
+			<DeviceType>serial</DeviceType>
+
+
+			<!-- device name, like COM1 on windows or /dev/ttyS0 on linux -->		    		
+    		
+		           
+			<!-- CocoModel is 1, 2 or 3 for Coco 1 2 or 3 -->
+    		<CocoModel>3</CocoModel>
+
+			<!-- End of settings that must be adjusted -->
+
+			<AutoStart>true</AutoStart>
+
+			<!-- This is the disk set that is loaded when the server is started.  -->
+			<!-- Use dw4boot-6309l2 to boot with DW4 utils, 6309 (or dw4boot-6809 for 6809) --> 
+			<!-- Set to nos9-6309l2 for NitrOS9 6309 boot from CVS nightly builds via HTTP, nos9-6809l2 for a 6809 -->
+			<!-- or look below in the diskset section for many other options -->
+			
+			<!--  <DefaultDiskSet>fpga</DefaultDiskSet> -->
+			
+
+			<TCPDevicePort>6799</TCPDevicePort>
+			<TCPClientPort>10001</TCPClientPort>
+			<TCPClientHost>some.host.com</TCPClientHost>    		
+    		
+
+			
+			<!-- Use term port in headless mode -->
+			<!-- <TermPort>6801</TermPort> -->
+			
+			<!-- Set ListenAddress to bind this instance to a particular network interface -->
+			<!-- <ListenAddress>192.168.0.80</ListenAddress> -->
+			
+			<TelnetBannerFile>banner.txt</TelnetBannerFile>
+			<!-- <TelnetNoPortsBannerFile>npbanner.txt</TelnetNoPortsBannerFile> -->
+			<TelnetBanned>24.178.184.40</TelnetBanned>
+			<TelnetBanned>199.248.173.248</TelnetBanned>
+			<!-- <TelnetPreAuthFile>preauth.txt</TelnetPreAuthFile> -->
+			<!-- <TelnetPasswdFile>passwd.txt</TelnetPasswdFile> -->
+			<GeoIPLookup>false</GeoIPLookup>
+			<GeoIPDatabaseFile>E:\GeoLiteCity.dat</GeoIPDatabaseFile>
+			<!-- <GeoIPBannedCountries>China</GeoIPBannedCountries> -->
+			<!-- <GeoIPBannedCities>Birmingham</GeoIPBannedCities> -->
+			
+			<!-- Printing options -->
+			
+			<!-- Where do we put printer output -->
+			<PrinterDir>E:\\cocoprints</PrinterDir>
+			
+			<!-- PrinterType can be TEXT or FX80 -->
+			<PrinterType>FX80</PrinterType>
+			
+			<!-- for FX80 mode, this is the font definition -->
+			<PrinterCharacterFile>C:\\Users\\Aaron\\workspace\\drivewireserver\\java\\default.chars</PrinterCharacterFile>
+			
+			<PrinterColumns>80</PrinterColumns>
+			<PrinterLines>66</PrinterLines>
+			
+			
+			
+			<!-- MIDI options -->
+			
+			<MIDISynthDefaultSoundbank>soundbank-deluxe.gm</MIDISynthDefaultSoundbank>
+			<MIDISynthDefaultProfile>gm</MIDISynthDefaultProfile>
+			
+			
+			<!-- This will map requests to disks based on sector #, not the disk number given in the actual op -->
+			<!-- Allows individual .dsks to be accessed from HDB DOS as DRIVE X.  Do not use with OS9! -->
+			<HDBDOSMode>false</HDBDOSMode>
+			
+			<!-- Debugging options, only set these if you know why you are setting them -->
+			
+			<!-- <DW3Only>true</DW3Only> --> 
+			<!-- <LogDeviceBytes>true</LogDeviceBytes> -->
+			<!-- <LogVPortBytes>true</LogVPortBytes> -->
+			<LogMIDIBytes>false</LogMIDIBytes>
+			<LogOpCode>false</LogOpCode>
+			<!-- <LogOpCodePolls>true</LogOpCodePolls> -->
+			<!-- <RateOverride>460800</RateOverride> -->
+			<!-- <OpTimeSendsDOW>true</OpTimeSendsDOW> -->
+			<RFMRoot>ftp://www.rtsi.com/OS9/OS9_6X09</RFMRoot>
+			<!-- <ProtectedMode>true</ProtectedMode> -->
+			<FailedPortRetryTime>2000</FailedPortRetryTime>
+			<LogVPortBytes>false</LogVPortBytes>
+<DW3Only>false</DW3Only>
+<LogDeviceBytes>false</LogDeviceBytes>
+<LogOpCodePolls>false</LogOpCodePolls>
+<OpTimeSendsDOW>false</OpTimeSendsDOW>
+<DetectDATurbo>true</DetectDATurbo>
+<DiskPadPartialSectors>true</DiskPadPartialSectors>
+<DefaultDiskSet>current</DefaultDiskSet>
+<SerialDevice>COM6</SerialDevice>
+<DiskSectorSize>256</DiskSectorSize>
+<NamedObjectDir>E:\\cocodisks\\named</NamedObjectDir>
+<CurrentDiskSet>current</CurrentDiskSet>
+<TelnetBannedFile>E:\\cocodisks\\banned</TelnetBannedFile>
+</instance>
+<!-- Disk set definitions are shared between all instances, but each instance gets it's own in ram copy of any given disk when you load it -->
+<!-- midisynthprofile's let you map instrument #s from a non GM device into GM instruments (as best you can) -->
+<!-- each <mapping> element must have two attributes: dev and gm.  dev should be set to the device's native  -->
+<!-- instrument number, and gm should be set to the closest equivalent general midi instrument. -->
+<!-- NOTE: these are byte level translations, which start at 0, not 1.  If you're working off a General MIDI spec, -->
+<!-- chances are you need to use the value shown - 1. i.e. "Acoustic Grand Piano" = 0 here, not 1. -->
+<!-- Still need docs for Casio MT-240 -->
+<midisynthprofile>
+			<name>gm</name>
+			<desc>General MIDI / Roland SoundCanvas</desc>
+		</midisynthprofile>
+<midisynthprofile>
+			<name>pss480</name>
+			<desc>Yamaha PSS-480/680</desc>
+			<mapping dev="0" gm="38"/>
+			<mapping dev="1" gm="18"/>
+			<mapping dev="2" gm="19"/>					
+			<mapping dev="3" gm="0"/>
+			<mapping dev="4" gm="6"/>
+			<mapping dev="5" gm="4"/>
+			<mapping dev="6" gm="8"/>
+			<mapping dev="7" gm="11"/>
+			<mapping dev="8" gm="12"/>
+			<mapping dev="9" gm="114"/>
+			<mapping dev="10" gm="40"/>
+			<mapping dev="11" gm="42"/>
+			<mapping dev="12" gm="26"/>
+			<mapping dev="13" gm="29"/>
+			<mapping dev="14" gm="32"/>
+			<mapping dev="15" gm="56"/>
+			<mapping dev="16" gm="57"/>
+			<mapping dev="17" gm="60"/>
+			<mapping dev="18" gm="64"/>
+			<mapping dev="19" gm="71"/>
+			<mapping dev="20" gm="73"/>
+			<mapping dev="21" gm="68"/>
+			<mapping dev="22" gm="22"/>
+			<mapping dev="23" gm="78"/>
+			<mapping dev="24" gm="10"/>
+			<mapping dev="25" gm="3"/>
+			<mapping dev="26" gm="2"/>
+			<mapping dev="27" gm="17"/>
+			<mapping dev="28" gm="16"/>
+			<mapping dev="29" gm="19"/>
+			<mapping dev="30" gm="7"/>
+			<mapping dev="31" gm="21"/>
+			<mapping dev="32" gm="9"/>
+			<mapping dev="33" gm="25"/>
+			<mapping dev="34" gm="105"/>
+			<mapping dev="35" gm="43"/>
+			<mapping dev="36" gm="24"/>
+			<mapping dev="37" gm="46"/>
+			<mapping dev="38" gm="34"/>
+			<mapping dev="39" gm="36"/>
+			<mapping dev="40" gm="45"/>
+			<mapping dev="41" gm="48"/>
+			<mapping dev="42" gm="69"/>
+			<mapping dev="43" gm="109"/>
+			<mapping dev="44" gm="59"/>
+			<mapping dev="45" gm="66"/>
+			<mapping dev="46" gm="76"/>
+			<mapping dev="47" gm="75"/>
+			<mapping dev="48" gm="15"/>
+			<mapping dev="49" gm="20"/>
+			<mapping dev="50" gm="80"/>
+			<mapping dev="51" gm="16"/>
+			<mapping dev="52" gm="1"/>
+			<mapping dev="53" gm="6"/>
+			<mapping dev="54" gm="5"/>
+			<mapping dev="55" gm="9"/>
+			<mapping dev="56" gm="108"/>
+			<mapping dev="57" gm="18"/>
+			<mapping dev="58" gm="38"/>
+			<mapping dev="59" gm="12"/>
+			<mapping dev="60" gm="114"/>
+			<mapping dev="61" gm="15"/>
+			<mapping dev="62" gm="14"/>
+			<mapping dev="63" gm="9"/>
+			<mapping dev="64" gm="79"/>
+			<mapping dev="65" gm="118"/>
+			<mapping dev="66" gm="47"/>
+			<mapping dev="67" gm="41"/>
+			<mapping dev="68" gm="28"/>
+			<mapping dev="69" gm="26"/>
+			<mapping dev="70" gm="30"/>
+			<mapping dev="71" gm="25"/>
+			<mapping dev="72" gm="24"/>
+			<mapping dev="73" gm="26"/>
+			<mapping dev="74" gm="24"/>
+			<mapping dev="75" gm="104"/>
+			<mapping dev="76" gm="107"/>
+			<mapping dev="77" gm="106"/>
+			<mapping dev="78" gm="111"/>
+			<mapping dev="79" gm="32"/>
+			<mapping dev="80" gm="33"/>
+			<mapping dev="81" gm="32"/>
+			<mapping dev="82" gm="93"/>
+			<mapping dev="83" gm="89"/>
+			<mapping dev="84" gm="58"/>
+			<mapping dev="85" gm="65"/>
+			<mapping dev="86" gm="70"/>
+			<mapping dev="87" gm="70"/>
+			<mapping dev="88" gm="74"/>
+			<mapping dev="89" gm="79"/>
+			<mapping dev="90" gm="72"/>
+			<mapping dev="91" gm="78"/>
+			<mapping dev="92" gm="61"/>
+			<mapping dev="93" gm="68"/>
+			<mapping dev="94" gm="53"/>
+			<mapping dev="95" gm="54"/>
+			<mapping dev="96" gm="52"/>
+			<mapping dev="97" gm="109"/>
+			<mapping dev="98" gm="81"/>
+			<mapping dev="99" gm="88"/>
+		</midisynthprofile>
+<midisynthprofile>
+			<name>mt540</name>
+			<desc>Casio MT-540</desc>
+			<mapping dev="0" gm="0"/>
+			<mapping dev="1" gm="6"/>
+			<mapping dev="2" gm="11"/>					
+			<mapping dev="3" gm="18"/>
+			<mapping dev="4" gm="19"/>
+			<mapping dev="5" gm="62"/>
+			<mapping dev="6" gm="48"/>
+			<mapping dev="7" gm="73"/>
+			<mapping dev="8" gm="54"/>
+			<mapping dev="9" gm="26"/>
+			<mapping dev="10" gm="14"/>
+			<mapping dev="11" gm="7"/>
+			<mapping dev="12" gm="50"/>
+			<mapping dev="13" gm="117"/>
+			<mapping dev="14" gm="4"/>
+			<mapping dev="15" gm="20"/>
+			<mapping dev="16" gm="21"/>
+			<mapping dev="17" gm="36"/>
+			<mapping dev="18" gm="119"/>
+			<mapping dev="19" gm="123"/>
+			<mapping dev="20" gm="3"/>
+			<mapping dev="21" gm="12"/>
+			<mapping dev="22" gm="68"/>
+			<mapping dev="23" gm="92"/>
+			<mapping dev="24" gm="46"/>
+			<mapping dev="25" gm="89"/>
+			<mapping dev="26" gm="94"/>
+			<mapping dev="27" gm="93"/>
+			<mapping dev="28" gm="88"/>
+			<mapping dev="29" gm="95"/>
+		</midisynthprofile>
+<midisynthprofile>
+			<name>ct460</name>
+			<desc>Casio CT-460</desc>
+			<mapping dev="0" gm="0"/>
+			<mapping dev="1" gm="6"/>
+			<mapping dev="2" gm="11"/>					
+			<mapping dev="3" gm="18"/>
+			<mapping dev="4" gm="19"/>
+			<mapping dev="5" gm="62"/>
+			<mapping dev="6" gm="73"/>
+			<mapping dev="7" gm="54"/>
+			<mapping dev="8" gm="26"/>
+			<mapping dev="9" gm="14"/>
+			<mapping dev="10" gm="7"/>
+			<mapping dev="11" gm="93"/>
+			<mapping dev="12" gm="50"/>
+			<mapping dev="13" gm="117"/>
+			<mapping dev="14" gm="3"/>
+			<mapping dev="15" gm="4"/>
+			<mapping dev="16" gm="12"/>
+			<mapping dev="17" gm="16"/>
+			<mapping dev="18" gm="21"/>
+			<mapping dev="19" gm="48"/>
+			<mapping dev="20" gm="68"/>
+			<mapping dev="21" gm="84"/>
+			<mapping dev="22" gm="46"/>
+			<mapping dev="23" gm="89"/>
+			<mapping dev="24" gm="92"/>
+			<mapping dev="25" gm="88"/>
+			<mapping dev="26" gm="95"/>
+			<mapping dev="27" gm="36"/>
+			<mapping dev="28" gm="119"/>
+			<mapping dev="29" gm="123"/>
+		</midisynthprofile>
+<diskset>
+<Name>current</Name>
+<SaveChanges>true</SaveChanges>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<disk>
+<drive>0</drive>
+<path>file:///E:/cocodisks/nos96309l2v030209coco3_dw3.dsk</path>
+</disk>
+<disk>
+<drive>1</drive>
+<path>file:///E:/cocodisks/Burke &amp; Burke RSB Disks/RSB02.DSK</path>
+</disk>
+<disk>
+<drive>4</drive>
+<path>file:///E:/cocodisks/basic09v010100.dsk</path>
+</disk>
+<disk>
+<drive>5</drive>
+<path>file:///E:/cocodisks/nos96309l2v030209coco3_dw3.dsk</path>
+</disk>
+<disk>
+<drive>6</drive>
+<path>file:///E:/cocodisks/basic09v010100.dsk</path>
+</disk>
+<disk>
+<drive>7</drive>
+<path>file:///E:/cocodisks/nos96309l2v030209coco3_dw3.dsk</path>
+</disk>
+<disk>
+<drive>255</drive>
+<path>file:///E:/cocodisks/named/CoCoBoot.isave</path>
+</disk>
+</diskset>
+<diskset>
+<Name>newsave</Name>
+<disk>
+<drive>0</drive>
+<path>file:///E:/cocodisks/nos96309l2v030209coco3_dw3.dsk</path>
+</disk>
+<disk>
+<drive>1</drive>
+<path>file:///E:/cocodisks/lwfs_rootfs.dsk</path>
+</disk>
+<disk>
+<drive>2</drive>
+<path>file:///E:/cocodisks/CoCoBoot-.43a/46/menu.dsk</path>
+</disk>
+</diskset>
+<diskset>
+<Name>newsave2</Name>
+<disk>
+<drive>0</drive>
+<path>file:///E:/cocodisks/nos96309l2v030209coco3_dw3.dsk</path>
+</disk>
+<disk>
+<drive>1</drive>
+<path>file:///E:/cocodisks/lwfs_rootfs.dsk</path>
+</disk>
+<disk>
+<drive>2</drive>
+<path>file:///E:/cocodisks/CoCoBoot-.43a/46/menu.dsk</path>
+</disk>
+</diskset>
+<diskset>
+<Name>newsave3</Name>
+<disk>
+<drive>0</drive>
+<path>file:///E:/cocodisks/nos96309l2v030209coco3_dw3.dsk</path>
+</disk>
+<disk>
+<drive>1</drive>
+<path>file:///E:/cocodisks/lwfs_rootfs.dsk</path>
+</disk>
+<disk>
+<drive>2</drive>
+<path>file:///E:/cocodisks/CoCoBoot-.43a/46/menu.dsk</path>
+</disk>
+</diskset>
+<diskset>
+<Name>abc</Name>
+<disk>
+<drive>0</drive>
+<path>file:///E:/cocodisks/nos96309l2v030209coco3_dw3.dsk</path>
+</disk>
+<disk>
+<drive>1</drive>
+<path>file:///E:/cocodisks/lwfs_rootfs.dsk</path>
+<test>hello</test>
+</disk>
+<disk>
+<drive>2</drive>
+<path>file:///E:/cocodisks/CoCoBoot-.43a/46/menu.dsk</path>
+</disk>
+</diskset>
+<diskset>
+<Name>newsave0</Name>
+<disk>
+<drive>0</drive>
+<path>file:///E:/cocodisks/nos96309l2v030209coco3_dw3.dsk</path>
+</disk>
+<disk>
+<drive>1</drive>
+<path>file:///E:/cocodisks/lwfs_rootfs.dsk</path>
+</disk>
+<disk>
+<drive>2</drive>
+<path>file:///E:/cocodisks/CoCoBoot-.43a/46/menu.dsk</path>
+</disk>
+</diskset>
+</drivewire-config>

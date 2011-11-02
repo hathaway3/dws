@@ -227,7 +227,7 @@ public class MainWin {
 		loadConfig();
 		
 		startDWServer(args);
-
+		System.out.println("wtf");
 		try 
 		{
 			applyServerSync();
@@ -1337,10 +1337,12 @@ public class MainWin {
 		compositeSrvControl.setLayout(new FillLayout(SWT.VERTICAL));
 		
 		Button btnServerStart = new Button(compositeSrvControl, SWT.NONE);
+		
 		btnServerStart.setToolTipText("Start Local Server");
 		btnServerStart.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/media-playback-start-4.png"));
 		
 		Button btnServerStop = new Button(compositeSrvControl, SWT.NONE);
+		
 		btnServerStop.setToolTipText("Stop Server");
 		btnServerStop.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/media-playback-stop-4.png"));
 		
