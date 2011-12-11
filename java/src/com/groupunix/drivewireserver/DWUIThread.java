@@ -3,6 +3,10 @@ package com.groupunix.drivewireserver;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 
@@ -15,6 +19,8 @@ public class DWUIThread implements Runnable {
 	private boolean wanttodie = false;
 	private ServerSocket srvr = null;
 	
+	private LinkedList<DWUIClientThread> clientThreads = new LinkedList<DWUIClientThread>();
+	
 	public DWUIThread(int port) 
 	{
 		this.tcpport = port;
@@ -26,6 +32,11 @@ public class DWUIThread implements Runnable {
 		this.wanttodie = true;
 		try 
 		{
+			for (DWUIClientThread ct : this.clientThreads)
+			{
+				ct.die();
+			}
+			
 			if (this.srvr != null)
 			{
 				this.srvr.close();
@@ -72,7 +83,8 @@ public class DWUIThread implements Runnable {
 				if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
 					logger.debug("new UI connection from " + skt.getInetAddress().getHostAddress());
 				
-				Thread uiclientthread = new Thread(new DWUIClientThread(skt));
+				Thread uiclientthread = new Thread(new DWUIClientThread(skt, this.clientThreads));
+				uiclientthread.setDaemon(true);
 				uiclientthread.start();
 			
 				
@@ -99,6 +111,28 @@ public class DWUIThread implements Runnable {
 		
 		
 		logger.debug("exiting");
+	}
+
+
+	public void submitEvent(DWEvent evt) 
+	{
+		Iterator<DWUIClientThread> itr = this.clientThreads.iterator(); 
+		
+		//System.out.println("Event " + evt.getEventType() + " " + evt.getParam("k") + " " + evt.getParam("v"));
+		
+		synchronized(this.clientThreads)
+		{
+			while(itr.hasNext()) 
+			{	
+				LinkedBlockingQueue<DWEvent> queue = (LinkedBlockingQueue<DWEvent>) itr.next().getEventQueue(); 
+		    
+				if ((queue != null) && (queue.size() < 1000))
+				{
+					queue.add(evt);
+				}
+			}
+
+		} 
 	}
 
 }

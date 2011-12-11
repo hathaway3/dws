@@ -132,7 +132,7 @@ public class DWDefs
 	public static final int DISK_FORMAT_RAW = 1;
 	public static final int DISK_FORMAT_DMK = 2;
 	public static final int DISK_FORMAT_JVC = 3;
-	public static final int DISK_FORMAT_DK = 4;
+	public static final int DISK_FORMAT_VDK = 4;
 	
 	public static final int DISK_CONSIDER_NO = 0;
 	public static final int DISK_CONSIDER_MAYBE = 1;
@@ -162,6 +162,8 @@ public class DWDefs
 	public static final byte EVENT_TYPE_MIDI = 'M';
 	public static final byte EVENT_TYPE_NET = 'N';
 	public static final byte EVENT_TYPE_PRINT = 'P';
+
+	
 
 	
 

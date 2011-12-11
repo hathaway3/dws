@@ -52,6 +52,7 @@ public class DWLogAppender extends AppenderSkeleton
 				}
 			
 				events.addLast(event);
+				DriveWireServer.submitLogEvent(event);
 			}
 		}
 	}

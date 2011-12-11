@@ -3,6 +3,8 @@ package com.groupunix.drivewireserver;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 
@@ -21,11 +23,15 @@ public class DWUIClientThread implements Runnable {
 	
 	private DWCommandList commands;
 	
+	private LinkedBlockingQueue<DWEvent> eventQueue = new LinkedBlockingQueue<DWEvent>();
+
+	private LinkedList<DWUIClientThread> clientThreads;
 	
 	
-	public DWUIClientThread(Socket skt) 
+	public DWUIClientThread(Socket skt, LinkedList<DWUIClientThread> clientThreads) 
 	{
 		this.skt = skt;
+		this.clientThreads = clientThreads;
 		
 		commands = new DWCommandList(null);
 		commands.addcommand(new UICmd(this));
@@ -35,7 +41,8 @@ public class DWUIClientThread implements Runnable {
 	
 	public void run() 
 	{
-
+		this.clientThreads.add(this);
+		
 		Thread.currentThread().setName("dwUIcliIn-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
@@ -47,7 +54,7 @@ public class DWUIClientThread implements Runnable {
 		try 
 		{
 			skt.getOutputStream().write(("Connected to DriveWire " + DriveWireServer.DWServerVersion + "\r\n").getBytes());
-
+			
 			
 			// cmd loop
 			
@@ -96,12 +103,12 @@ public class DWUIClientThread implements Runnable {
 			logger.warn("IO Exception: " + e.getMessage());
 		}
 
-		
-		//DriveWireServer.getHandler(ourHandler).getEventHandler().unregisterAllEvents(this.uiport);
-		
+		this.clientThreads.remove(this);
 		
 		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
 			logger.debug("exit");
+		
+		
 	}
 
 	
@@ -112,6 +119,32 @@ public class DWUIClientThread implements Runnable {
 			logger.debug("got command '" + cmd + "'");
 		
 		skt.getOutputStream().write(("\n>>\n").getBytes());
+		
+		// wait for server/instance ready
+		while (!DriveWireServer.isReady())
+		{
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		// wait for instance ready..
+		if (this.instance > -1)
+		{
+			while (!DriveWireServer.getHandler(instance).isReady())
+			{
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		
 		DWCommandResponse resp = this.commands.parse(cmd);
 		
@@ -135,8 +168,8 @@ public class DWUIClientThread implements Runnable {
 
 	private void sendUIresponse(OutputStream outputStream, String txt) throws IOException 
 	{
-
-		outputStream.write(txt.getBytes());
+		if (!(txt == null))
+			outputStream.write(txt.getBytes());
 
 	}
 
@@ -166,7 +199,7 @@ public class DWUIClientThread implements Runnable {
 
 
 
-	public void die() 
+	public synchronized void die() 
 	{
 		wanttodie = true;
 		if (this.skt != null)
@@ -181,6 +214,9 @@ public class DWUIClientThread implements Runnable {
 		}
 	}
 	
-	
+	public LinkedBlockingQueue<DWEvent> getEventQueue()
+	{
+		return(this.eventQueue);
+	}
 
 }

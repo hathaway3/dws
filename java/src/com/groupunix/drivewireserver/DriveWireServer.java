@@ -26,11 +26,12 @@ import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.apache.log4j.lf5.LF5Appender;
+import org.apache.log4j.spi.LoggingEvent;
 
+import com.groupunix.drivewireserver.dwdisk.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPlatformUnknownException;
-import com.groupunix.drivewireserver.dwhelp.DWHelp;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
@@ -40,8 +41,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "4.0.0";
-	public static final String DWServerVersionDate = "10/29/2011";
+	public static final String DWServerVersion = "4.0.0RC1";
+	public static final String DWServerVersionDate = "12/11/2011";
 	
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
@@ -64,10 +65,15 @@ public class DriveWireServer
 	
 	private static boolean wanttodie = false;
 	private static String configfile = "config.xml";
+	private static boolean ready = false;
+	private static boolean useLF5 = false;
+	private static LF5Appender lf5appender;
 	
 
 	public static void main(String[] args) throws ConfigurationException
 	{
+		
+		wanttodie = false;
 		init(args);
 		
 		// install clean shutdown handler
@@ -76,6 +82,7 @@ public class DriveWireServer
 	 	// hang around 
 		logger.debug("waiting...");	
 		
+		DriveWireServer.ready = true;
 		while (!wanttodie)
     	{
     	
@@ -91,7 +98,8 @@ public class DriveWireServer
 
     	}
     	
-		System.exit(0);
+		serverShutdown();
+		//System.exit(0);
 	}
 
 	
@@ -108,7 +116,8 @@ public class DriveWireServer
 		// 	set up initial logging config
         initLogging();
         
-        
+        logger.info("DriveWire Server v" + DWServerVersion + " starting");
+
 		// load server settings
         try 
         {
@@ -339,11 +348,15 @@ public class DriveWireServer
 
 	private static void initLogging() 
 	{
+		Logger.getRootLogger().removeAllAppenders();
 		consoleAppender = new ConsoleAppender(logLayout);
 		Logger.getRootLogger().addAppender(consoleAppender);
-			
+
+		if (useLF5)
+			Logger.getRootLogger().addAppender(lf5appender);
+		
 		Logger.getRootLogger().setLevel(Level.INFO);
-		logger.info("DriveWire Server v" + DWServerVersion + " starting");	
+		
 	}
 
 
@@ -356,6 +369,8 @@ public class DriveWireServer
 		
 		cmdoptions.addOption("config", true, "configuration file (defaults to config.xml)");
 		cmdoptions.addOption("help", false, "display command line argument help");
+		cmdoptions.addOption("logviewer", false, "use GUI log viewer");
+		
 		
 		CommandLineParser parser = new GnuParser();
 		try 
@@ -374,6 +389,15 @@ public class DriveWireServer
 			{
 			    configfile = line.getOptionValue( "config" );
 			}
+			
+			if( line.hasOption( "logviewer" ) ) 
+			{
+				useLF5 = true;
+				lf5appender = new LF5Appender();
+				lf5appender.setName("DriveWire 4 Server Log");
+			
+			}
+			
 		}
 		catch( ParseException exp ) 
 		{
@@ -508,6 +532,9 @@ public class DriveWireServer
     	dwAppender = new DWLogAppender(logLayout);
     	Logger.getRootLogger().addAppender(dwAppender);
     	
+    	if (useLF5)
+			Logger.getRootLogger().addAppender(lf5appender);
+    	
     	if (serverconfig.getBoolean("LogToConsole", true))
     	{
     		consoleAppender = new ConsoleAppender(logLayout);
@@ -531,7 +558,10 @@ public class DriveWireServer
     	}
     	
     	Logger.getRootLogger().setLevel(Level.toLevel(serverconfig.getString("LogLevel", "INFO")));
-
+    	
+    	
+		
+    	
 	}
 
 
@@ -726,6 +756,74 @@ public class DriveWireServer
 	{
 		logger.info("server shutdown requested");
 		wanttodie = true;
+	}
+
+
+
+
+	public static void submitServerConfigEvent(String propertyName, String propertyValue) 
+	{
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_SERVERCONFIG);
+		
+		evt.setParam("k", propertyName);
+		evt.setParam("v", propertyValue);
+		
+		uiObj.submitEvent(evt);
+	}
+
+
+	public static void submitInstanceConfigEvent(int instance, String propertyName, String propertyValue) 
+	{
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_INSTANCECONFIG);
+		
+		evt.setParam("i", String.valueOf(instance));
+		evt.setParam("k", propertyName);
+		evt.setParam("v", propertyValue);
+		
+		uiObj.submitEvent(evt);
+	}
+
+
+	public static void submitDiskEvent(int instance, int diskno, String key, String val) 
+	{
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_DISK);
+		
+		evt.setParam("i", String.valueOf(instance));
+		evt.setParam("d", String.valueOf(diskno));
+		evt.setParam("k", key);
+		evt.setParam("v", val);
+		
+		uiObj.submitEvent(evt);
+	}
+
+
+	public static void submitMIDIEvent(int instance, String key, String val) 
+	{
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_MIDI);
+		
+		evt.setParam("i", String.valueOf(instance));
+		evt.setParam("k", key);
+		evt.setParam("v", val);
+		
+		uiObj.submitEvent(evt);
+	}
+
+	public static void submitLogEvent(LoggingEvent event) 
+	{
+		if (uiObj != null)
+		{
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_LOG);
+			evt.setParam("l", logLayout.format(event));
+			uiObj.submitEvent(evt);
+		}
+	}
+
+
+
+
+	public static boolean isReady() 
+	{
+		return DriveWireServer.ready ;
 	}
 	
 }

@@ -14,14 +14,16 @@ public class DWServerConfigListener implements ConfigurationListener
     public void configurationChanged(ConfigurationEvent event)
     {
     	
+    	
         if (!event.isBeforeUpdate())
         {
-
         	// indicate changed config for UI poll
         	DriveWireServer.configserial++;
         	
+        	
             if (event.getPropertyName() != null)
-            {
+            {	
+            	DriveWireServer.submitServerConfigEvent(event.getPropertyName(), event.getPropertyValue().toString());
             	
             	// logging changes
             	if (event.getPropertyName().startsWith("Log"))
