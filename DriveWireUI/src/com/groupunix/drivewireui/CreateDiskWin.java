@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.swing.JFileChooser;
+import javax.swing.SwingUtilities;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -49,6 +50,17 @@ public class CreateDiskWin extends Dialog {
 		shlCreateANew.open();
 		shlCreateANew.layout();
 		Display display = getParent().getDisplay();
+		
+		int x = getParent().getBounds().x + (getParent().getBounds().width / 2) - (shlCreateANew.getBounds().width / 2);
+		int y = getParent().getBounds().y + (getParent().getBounds().height / 2) - (shlCreateANew.getBounds().height / 2);
+		
+		shlCreateANew.setLocation(x, y);
+		
+		if (MainWin.getCurrentDiskNo() > -1)
+		{
+			this.spinnerDrive.setSelection(MainWin.getCurrentDiskNo());
+		}
+		
 		while (!shlCreateANew.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -93,39 +105,61 @@ public class CreateDiskWin extends Dialog {
 		lblInsertNewDisk.setText("Create new disk for drive:");
 		
 		Label lblPath = new Label(shlCreateANew, SWT.NONE);
-		lblPath.setBounds(22, 68, 65, 19);
-		lblPath.setText("Path:");
+		lblPath.setBounds(22, 68, 277, 19);
+		lblPath.setText("File for new disk image:");
 		
 		textPath = new Text(shlCreateANew, SWT.BORDER);
 		textPath.setBounds(21, 89, 298, 21);
+		
+		if (MainWin.getInstanceConfig().containsKey("LocalDiskDir"))
+			textPath.setText(MainWin.getInstanceConfig().getString("LocalDiskDir") + System.getProperty("file.separator"));
 		
 		btnFile = new Button(shlCreateANew, SWT.NONE);
 		btnFile.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				// create a file chooser
-				final DWServerFileChooser fileChooser = new DWServerFileChooser(textPath.getText());
+				final String curpath = textPath.getText();
 				
-				// 	configure the file dialog
-				
-				fileChooser.setFileHidingEnabled(false);
-				fileChooser.setMultiSelectionEnabled(false);
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-			
-				
-				// 	show the file dialog
-				int answer = fileChooser.showDialog(fileChooser, "Choose path for new file...");
-							
-				// 	check if a file was selected
-				if (answer == JFileChooser.APPROVE_OPTION)
+				SwingUtilities.invokeLater(new Runnable() 
 				{
-					final File selected =  fileChooser.getSelectedFile();
-
-					textPath.setText(selected.getPath());
+						
+						public void run() 
+						{
+							// create a file chooser
+							final DWServerFileChooser fileChooser = new DWServerFileChooser(curpath);
+							
+							// 	configure the file dialog
+							
+							fileChooser.setFileHidingEnabled(false);
+							fileChooser.setMultiSelectionEnabled(false);
+							fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+							fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+						
+							
+							// 	show the file dialog
+							int answer = fileChooser.showDialog(fileChooser, "Choose path for new file...");
+										
+							// 	check if a file was selected
+							if (answer == JFileChooser.APPROVE_OPTION)
+							{
+								final File selected =  fileChooser.getSelectedFile();
 			
-				}
+								if (!textPath.isDisposed())
+								{
+									shlCreateANew.getDisplay().asyncExec(new Runnable() 
+									{
+										
+										public void run() 
+										{
+											textPath.setText(selected.getPath());
+										}
+									});
+								}
+							}
+						}
+					
+				});
 			
 			}
 		});
@@ -137,22 +171,9 @@ public class CreateDiskWin extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				try 
-				{
-					MainWin.sendCommand("dw disk create " + spinnerDrive.getSelection() + " " + textPath.getText());
-				
-					MainWin.refreshDiskTable();
+				MainWin.sendCommand("dw disk create " + spinnerDrive.getSelection() + " " + textPath.getText());
 					
-					e.display.getActiveShell().close();
-				} 
-				catch (DWUIOperationFailedException e1) 
-				{
-					MainWin.showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
-				} 
-				catch (IOException e1) 
-				{
-					MainWin.showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
-				}
+				e.display.getActiveShell().close();
 				
 			}
 		});

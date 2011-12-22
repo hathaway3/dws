@@ -8,13 +8,14 @@ public class DWDiskSector
 	//private byte[] dirtydata;
 	private boolean dirty = false;
 	private int sectorsize;
-	
+	private DWDisk disk;
 
-	public DWDiskSector( int lsn, int sectorsize)
+	public DWDiskSector( DWDisk disk, int lsn, int sectorsize)
 	{
 		this.LSN = lsn;
 		this.sectorsize = sectorsize;
 		this.data = new byte[sectorsize];
+		this.disk = disk;
 		//this.dirtydata = new byte[sectorsize];
 	}
 
@@ -63,6 +64,7 @@ public class DWDiskSector
 		{
 			//System.arraycopy(this.dirtydata, 0, this.data, 0, this.sectorsize);
 			this.dirty = false;
+			this.disk.submitEvent("*clean", this.LSN+"");
 		}
 	}
 

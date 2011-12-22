@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -235,7 +236,7 @@ public class InitialConfigWin extends Dialog {
 				labelHost.setVisible(false);
 				textHost.setVisible(false);
 				textHost.setText("127.0.0.1");
-				lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/my_computer.png"));
+				lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/wizard/my_computer.png"));
 			}
 		});
 		btnLocalServer.setSelection(true);
@@ -249,7 +250,7 @@ public class InitialConfigWin extends Dialog {
 			{
 				labelHost.setVisible(true);
 				textHost.setVisible(true);
-				lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/network-local.png"));
+				lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/wizard/network-local.png"));
 			
 			}
 		});
@@ -287,10 +288,10 @@ public class InitialConfigWin extends Dialog {
 		
 		Label lblIfYouHavent = new Label(compPage2, SWT.WRAP);
 		lblIfYouHavent.setBounds(10, 43, 406, 151);
-		lblIfYouHavent.setText("If you haven't started the server, please start it now.  \r\n\r\nIf you aren't sure whether the server is running, there is no harm in using the \"Test Connection\" button here to find out.  \r\n\r\nIf the connection test is successful, you will see a green \"OK\" logo and the current server version will be displayed.");
+		lblIfYouHavent.setText("If you haven't started the server, please start it now.  \r\n\r\nIf you aren't sure whether the server is running, there is no harm in using the \"Test Connection\" button here to find out.  \r\n\r\nIf the connection test is successful, you will see a DriveWire logo and the current server version will be displayed.");
 		
 		lblLocalimg = new Label(compPage1, SWT.NONE);
-		lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/my_computer.png"));
+		lblLocalimg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(InitialConfigWin.class, "/wizard/my_computer.png"));
 		lblLocalimg.setBounds(335, 78, 64, 64);
 		
 		
@@ -319,10 +320,10 @@ public class InitialConfigWin extends Dialog {
 					{
 						Connection conn = new Connection(textHost.getText(), Integer.parseInt(textPort.getText()), 0);
 					
-						ArrayList<String> res = new ArrayList<String>();
+						List<String> res = new ArrayList<String>();
 					
 						conn.Connect();
-						res = conn.loadArrayList("ui server show version");
+						res = conn.loadList(-1, "ui server show version");
 						conn.close();
 					
 						textConnTest.setText(res.get(0));
@@ -341,6 +342,11 @@ public class InitialConfigWin extends Dialog {
 					{
 						labelERR.setVisible(true);
 						textConnTest.setText("Port number must be numeric.");
+					} 
+					catch (DWUIOperationFailedException e3)
+					{
+						labelERR.setVisible(true);
+						textConnTest.setText(e3.getMessage());
 					}
 					
 					btnTestConnection.setEnabled(true);
@@ -360,11 +366,11 @@ public class InitialConfigWin extends Dialog {
 		btnTestConnection.setText("Test Connection");
 		
 		labelOK = new Label(compPage2, SWT.SHADOW_NONE);
-		labelOK.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/dw4logo5.png"));
+		labelOK.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/wizard/dw4logo2.gif"));
 		labelOK.setBounds(27, 239, 64, 64);
 		
 		labelWait = new Label(compPage2, SWT.SHADOW_NONE);
-		labelWait.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/Hourglass.png"));
+		labelWait.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/wizard/Hourglass.png"));
 		labelWait.setBounds(27, 239, 64, 64);
 		
 		textConnTest = new Text(compPage2, SWT.READ_ONLY | SWT.WRAP | SWT.CENTER);
@@ -374,7 +380,7 @@ public class InitialConfigWin extends Dialog {
 		textConnTest.setBounds(97, 250, 217, 54);
 		
 		labelERR = new Label(compPage2, SWT.SHADOW_NONE);
-		labelERR.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/dialog-error-4.png"));
+		labelERR.setImage(SWTResourceManager.getImage(InitialConfigWin.class, "/wizard/dialog-error-4.png"));
 		labelERR.setBounds(27, 239, 64, 64);
 		
 		compPage3 = new Composite(shlInitialConfiguration, SWT.NONE);
@@ -407,7 +413,7 @@ public class InitialConfigWin extends Dialog {
 					MainWin.setInstance(0);
 					
 					
-					ArrayList<String> ports = UIUtils.loadArrayList("ui server show serialdevs");
+					List<String> ports = UIUtils.loadList("ui server show serialdevs");
 					
 					comboSerialDev.removeAll();
 					
@@ -483,9 +489,7 @@ public class InitialConfigWin extends Dialog {
 
 			MainWin.sendCommand("ui instance reset protodev");
 			
-			MainWin.refreshDiskTable();
-			
-			MainWin.applyServerSync();
+			//MainWin.refreshDiskTable();
 			
 			shlInitialConfiguration.close();
 			

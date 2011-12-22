@@ -42,7 +42,7 @@ public class SaveDiskSetWin extends Dialog {
 		
 		applyFont();
 		
-		UIUtils.getDWConfigSerial();
+		//UIUtils.getDWConfigSerial();
 		
 		loadDiskSets(cmbDiskSet);
 		

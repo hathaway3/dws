@@ -2,6 +2,7 @@ package com.groupunix.drivewireui;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -161,7 +162,7 @@ public class StatusWin extends Dialog {
 		String freemem = "";
 		
 		
-		ArrayList<String> res = UIUtils.loadArrayList(MainWin.getInstance(),"ui server show status");
+		List<String> res = UIUtils.loadList(MainWin.getInstance(),"ui server show status");
 				
 		
 		for (int i = 0;i<res.size();i++)
@@ -209,7 +210,7 @@ public class StatusWin extends Dialog {
 		String deviceconnected = "";
 	
 		
-		res = UIUtils.loadArrayList(MainWin.getInstance(),"ui instance status");
+		res = UIUtils.loadList(MainWin.getInstance(),"ui instance status");
 				
 		
 		for (int i = 0;i<res.size();i++)

@@ -5,8 +5,8 @@ import java.util.Random;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
+
+
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
@@ -41,6 +41,15 @@ public class ErrorWin extends Dialog {
 		this.summary = summary;
 		this.detail = detail;
 		
+	}
+
+	public ErrorWin(Shell parent, int style, DWError dwerror)
+	{
+		super(parent, style);
+		this.title = dwerror.getTitle();
+		this.summary = dwerror.getSummary();
+		this.detail = dwerror.getDetail();
+
 	}
 
 	/**
@@ -79,7 +88,6 @@ public class ErrorWin extends Dialog {
 		shlAnErrorHas.setSize(419, 274);
 		shlAnErrorHas.setText(title);
 		
-		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
 		
 		
 		btnClose = new Button(shlAnErrorHas, SWT.NONE);
@@ -102,16 +110,14 @@ public class ErrorWin extends Dialog {
 		txtSummary.setEditable(false);
 		txtSummary.setBounds(10, 20, 329, 42);
 		txtSummary.setText(summary);
-		txtSummary.setFont(new Font(shlAnErrorHas.getDisplay(), f));
 		
 		textDetail = new Text(shlAnErrorHas, SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
 		textDetail.setEditable(false);
 		textDetail.setBounds(10, 67, 392, 127);
 		textDetail.setText(detail);
-		textDetail.setFont(new Font(shlAnErrorHas.getDisplay(), f));
 		
 		Button btnSubmitABug = new Button(shlAnErrorHas, SWT.NONE);
-		btnSubmitABug.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(ErrorWin.class, "/bug.png"));
+		btnSubmitABug.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(ErrorWin.class, "/menu/bug.png"));
 		btnSubmitABug.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -126,7 +132,7 @@ public class ErrorWin extends Dialog {
 		
 		Label lblNewLabel = new Label(shlAnErrorHas, SWT.NONE);
 		Random rand = new Random();
-		lblNewLabel.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(ErrorWin.class, "/a" + rand.nextInt(22) + ".png"));
+		lblNewLabel.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(ErrorWin.class, "/animals/a" + rand.nextInt(22) + ".png"));
 		lblNewLabel.setBounds(353, 10, 48, 48);
 	}
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.JFileChooser;
 
@@ -27,7 +28,11 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class InstanceConfigWin extends Dialog {
 
@@ -39,21 +44,12 @@ public class InstanceConfigWin extends Dialog {
 	private Text textTCPClientHost;
 	private Text textTCPClientPort;
 	private Text textTCPServerPort;
-	private Text textPrinterDir;
-	private Text textCharacterFile;
-	private Text textPrinterCol;
-	private Text textPrinterRow;
 	private Text textListenAddress;
 	private Text textTelnetBanner;
 	private Text textTelnetNoPorts;
 	private Text textTelnetPreAuth;
 	private Text textTelnetBanned;
 	private Text textTermPort;
-	private Text textTelnetPasswd;
-	private Text textIPBanned;
-	private Text textGeoIPfile;
-	private Text textIPBannedCities;
-	private Text textIPBannedCountries;
 	private Combo textRateOverride;
 	private Text textMIDIsoundbank;
 	private Combo textMIDIprofile;
@@ -62,8 +58,6 @@ public class InstanceConfigWin extends Dialog {
 	private Combo textSerialPort;
 	private Combo comboCocoModel;
 	private Button btnStartAutomatically;
-	private Combo comboPrinterType;
-	private Button btnUseGeoipLookups;
 	private Button btnLogOpcodes;
 	private Button btnLogProtocolDevice;
 	private Button btnEvenOppoll;
@@ -74,12 +68,9 @@ public class InstanceConfigWin extends Dialog {
 	private static Composite compositeP1;
 	private static Composite compositeP2;
 	private static Composite compositeP3;
-	private static Composite compositeP4;
 	private static Composite compositeP5;
-	private static Group grpPrintingOptions;
 	private static Group grpMidiOptions;
 	private static Group grpTelnetOptions;
-	private static Group grpTelnetAuthentication;
 	private Button btnDetect;
 	private static Group grpProtocol;
 	private Button btnDetectTurbo;
@@ -90,11 +81,13 @@ public class InstanceConfigWin extends Dialog {
 	private Text textNameObjectDir;
 	private Label lblNamedObjDir;
 	private Button btnPadPartialSectors;
-	private Button buttonGeoipDB;
 	
 
 	private HierarchicalConfiguration iconf;
 	private static Group grpLogging;
+	private Table tablePrinters;
+	private Button btnApply;
+	private Button btnEnableVirtualMidi;
 	
 	/**
 	 * Create the dialog.
@@ -114,13 +107,13 @@ public class InstanceConfigWin extends Dialog {
 	 */
 	public Object open() throws DWUIOperationFailedException, IOException {
 		createContents();
-		applyFont();
+		//applyFont();
 		
-		UIUtils.getDWConfigSerial();
+		//UIUtils.getDWConfigSerial();
 		
 		this.iconf = MainWin.getInstanceConfig();
 		
-		applySettings();
+		loadSettings();
 		updateToggledStuff();
 		
 		shlInstanceConfiguration.open();
@@ -136,8 +129,7 @@ public class InstanceConfigWin extends Dialog {
 
 	private static void applyFont() 
 	{
-		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
-		
+		FontData f = MainWin.getDialogFont();
 		
 		Control[] controls = shlInstanceConfiguration.getChildren();
 		
@@ -167,8 +159,6 @@ public class InstanceConfigWin extends Dialog {
 			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
 		}
 		
-		controls = compositeP4.getChildren();
-		
 		for (int i = 0;i<controls.length;i++)
 		{
 			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
@@ -180,9 +170,6 @@ public class InstanceConfigWin extends Dialog {
 		{
 			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
 		}
-		
-		
-		controls = grpPrintingOptions.getChildren();
 		
 		for (int i = 0;i<controls.length;i++)
 		{
@@ -202,8 +189,6 @@ public class InstanceConfigWin extends Dialog {
 		{
 			controls[i].setFont(new Font(shlInstanceConfiguration.getDisplay(), f));
 		}
-		
-		controls = grpTelnetAuthentication.getChildren();
 		
 		for (int i = 0;i<controls.length;i++)
 		{
@@ -244,7 +229,7 @@ public class InstanceConfigWin extends Dialog {
 		
 		combo.removeAll();
 		try {
-			ArrayList<String> ports = UIUtils.loadArrayList(cmd);
+			List<String> ports = UIUtils.loadList(cmd);
 			
 			for (int i = 0;i<ports.size();i++)
 			{
@@ -281,11 +266,7 @@ public class InstanceConfigWin extends Dialog {
 		addIfChanged(res,"AutoStart",UIUtils.bTos(this.btnStartAutomatically.getSelection()));
 		
 		// devices page
-		addIfChanged(res,"PrinterDir",this.textPrinterDir.getText());
-		addIfChanged(res,"PrinterCharacterFile",this.textCharacterFile.getText());
-		addIfChanged(res,"PrinterColumns",this.textPrinterCol.getText());
-		addIfChanged(res,"PrinterLines",this.textPrinterRow.getText());
-		addIfChanged(res,"PrinterType",this.comboPrinterType.getText());
+
 		addIfChanged(res,"MIDISynthDefaultSoundbank",this.textMIDIsoundbank.getText());
 		addIfChanged(res,"MIDISynthDefaultProfile",this.textMIDIprofile.getText());
 		
@@ -296,15 +277,7 @@ public class InstanceConfigWin extends Dialog {
 		addIfChanged(res,"TelnetBannedFile",this.textTelnetBanned.getText());
 		addIfChanged(res,"TelnetNoPortsBannerFile",this.textTelnetNoPorts.getText());
 		addIfChanged(res,"TelnetPreAuthFile",this.textTelnetPreAuth.getText());
-		addIfChanged(res,"TelnetPasswdFile",this.textTelnetPasswd.getText());
-		
-		// ip access page
-		addIfChanged(res,"TelnetBanned",this.textIPBanned.getText());
-		addIfChanged(res,"GeoIPLookup",UIUtils.bTos(this.btnUseGeoipLookups.getSelection()));
-		addIfChanged(res,"GeoIPDatabaseFile",this.textGeoIPfile.getText());
-		addIfChanged(res,"GeoIPBannedCountries",this.textIPBannedCountries.getText());
-		addIfChanged(res,"GeoIPBannedCities",this.textIPBannedCities.getText());
-		
+	
 		// advanced page
 		addIfChanged(res,"RateOverride",this.textRateOverride.getText());
 		addIfChanged(res,"DefaultDiskSet",this.cmbDefaultDiskSet.getText());
@@ -339,16 +312,22 @@ public class InstanceConfigWin extends Dialog {
 	{
 		//TODO: more
 		
-		if (!UIUtils.validateNum(this.textTCPClientPort.getText(),1,65535))
+		if (this.comboDevType.getText().equals("tcpclient"))
 		{
-			MainWin.showError("Invalid value entered", "Data entered for TCP client port is not valid" , "Valid range is TCP port numbers, 1-65535.");
-			return false;
+			if (!UIUtils.validateNum(this.textTCPClientPort.getText(),1,65535))
+			{
+				MainWin.showError("Invalid value entered", "Data entered for TCP client port is not valid" , "Valid range is TCP port numbers, 1-65535.");
+				return false;
+			}
 		}
 		
-		if (!UIUtils.validateNum(this.textTCPServerPort.getText(),1,65535))
+		if (this.comboDevType.getText().equals("tcp"))
 		{
-			MainWin.showError("Invalid value entered", "Data entered for TCP server port is not valid" , "Valid range is TCP port numbers, 1-65535.");
-			return false;
+			if (!UIUtils.validateNum(this.textTCPServerPort.getText(),1,65535))
+			{
+				MainWin.showError("Invalid value entered", "Data entered for TCP server port is not valid" , "Valid range is TCP port numbers, 1-65535.");
+				return false;
+			}
 		}
 		
 		return true;
@@ -356,7 +335,7 @@ public class InstanceConfigWin extends Dialog {
 
 
 
-	private void applySettings() 
+	private void loadSettings() 
 	{
 		
 		// connection page
@@ -373,15 +352,6 @@ public class InstanceConfigWin extends Dialog {
 		
 		setBooleanValue("AutoStart", this.btnStartAutomatically, true);
 		
-		// devices page
-		
-		setTextValue("PrinterDir", this.textPrinterDir);
-		setTextValue("PrinterCharacterFile", this.textCharacterFile);
-		setTextValue("PrinterColumns", this.textPrinterCol);
-		setTextValue("PrinterLines", this.textPrinterRow);
-		
-		setComboValue("PrinterType",this.comboPrinterType);
-		
 		setTextValue("MIDISynthDefaultSoundbank", this.textMIDIsoundbank);
 		
 		loadCombo("ui server show synthprofiles",textMIDIprofile);
@@ -395,17 +365,6 @@ public class InstanceConfigWin extends Dialog {
 		setTextValue("TelnetBannedFile", this.textTelnetBanned);
 		setTextValue("TelnetNoPortsBannerFile", this.textTelnetNoPorts);
 		setTextValue("TelnetPreAuthFile", this.textTelnetPreAuth);
-		setTextValue("TelnetPasswdFile", this.textTelnetPasswd);
-		
-		// ip access page
-		
-		setTextValue("TelnetBanned", this.textIPBanned);
-		
-		setBooleanValue("GeoIPLookups", this.btnUseGeoipLookups, false);
-		
-		setTextValue("GeoIPDatabaseFile", this.textGeoIPfile);
-		setTextValue("GeoIPBannedCountries", this.textIPBannedCountries);
-		setTextValue("GeoIPBannedCities", this.textIPBannedCities);
 		
 		// advanced page
 		
@@ -428,11 +387,38 @@ public class InstanceConfigWin extends Dialog {
 		setTextValue("DiskSectorSize", this.textDiskSectorSize);
 		setTextValue("NamedObjectDir", this.textNameObjectDir);
 		
+		// Printers
+		loadPrinterTable();
+		
 		
 	}
 	
 	
 	
+	@SuppressWarnings("unchecked")
+	private void loadPrinterTable() 
+	{
+		this.tablePrinters.setRedraw(false);
+		this.tablePrinters.removeAll();
+		
+		for (HierarchicalConfiguration pconf : (List<HierarchicalConfiguration>) iconf.configurationsAt("Printer"))
+		{
+			TableItem ti = new TableItem(this.tablePrinters, SWT.CHECK);
+			ti.setText(0, pconf.getString("Name","?noname?"));
+			ti.setText(1, pconf.getString("Driver", "?noname?"));
+			ti.setText(2, pconf.getString("OutputDir",""));
+			if (pconf.containsKey("Name") && iconf.containsKey("CurrentPrinter"))
+			{
+				if (pconf.getString("Name").equals(iconf.getString("CurrentPrinter")))
+				{
+					ti.setChecked(true);
+				}
+			}
+		}
+		
+		this.tablePrinters.setRedraw(true);
+	}
+
 	private void setBooleanValue(String key, Button btn, boolean def) 
 	{
 		btn.setSelection(iconf.getBoolean(key, def));
@@ -560,127 +546,17 @@ public class InstanceConfigWin extends Dialog {
 		compositeP2 = new Composite(tabFolder, SWT.NONE);
 		tbtmDevices.setControl(compositeP2);
 		
-		grpPrintingOptions = new Group(compositeP2, SWT.NONE);
-		grpPrintingOptions.setText(" Printing Options ");
-		grpPrintingOptions.setBounds(10, 21, 372, 207);
-		
-		Label lblOutputTo = new Label(grpPrintingOptions, SWT.NONE);
-		lblOutputTo.setBounds(10, 35, 111, 21);
-		lblOutputTo.setAlignment(SWT.RIGHT);
-		lblOutputTo.setText("Output to:");
-		
-		textPrinterDir = new Text(grpPrintingOptions, SWT.BORDER);
-		textPrinterDir.setBounds(127, 32, 197, 21);
-		
-		Button button = new Button(grpPrintingOptions, SWT.NONE);
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				// create a file chooser
-				final DWServerFileChooser fileChooser = new DWServerFileChooser(textPrinterDir.getText());
-				
-				// 	configure the file dialog
-				
-				fileChooser.setFileHidingEnabled(false);
-				fileChooser.setMultiSelectionEnabled(false);
-				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-				fileChooser.setSelectedFile(textPrinterDir.getText());
-				
-				// 	show the file dialog
-				int answer = fileChooser.showDialog(fileChooser, "Choose printer output directory...");
-							
-				// 	check if a file was selected
-				if (answer == JFileChooser.APPROVE_OPTION)
-				{
-					final File selected =  fileChooser.getSelectedFile();
-
-					textPrinterDir.setText(selected.getPath());
-			
-				}
-			}
-		});
-		button.setBounds(324, 31, 26, 25);
-		button.setText("...");
-		
-		comboPrinterType = new Combo(grpPrintingOptions, SWT.READ_ONLY);
-		comboPrinterType.setItems(new String[] {"FX80", "TEXT"});
-		comboPrinterType.setBounds(127, 62, 102, 23);
-		comboPrinterType.select(0);
-		
-		Label lblPrinter = new Label(grpPrintingOptions, SWT.NONE);
-		lblPrinter.setBounds(10, 66, 111, 21);
-		lblPrinter.setAlignment(SWT.RIGHT);
-		lblPrinter.setText("Printer type:");
-		
-		textCharacterFile = new Text(grpPrintingOptions, SWT.BORDER);
-		textCharacterFile.setBounds(127, 97, 197, 21);
-		
-		Button button_1 = new Button(grpPrintingOptions, SWT.NONE);
-		button_1.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				// create a file chooser
-				final DWServerFileChooser fileChooser = new DWServerFileChooser(textCharacterFile.getText());
-				
-				// 	configure the file dialog
-				
-				fileChooser.setFileHidingEnabled(false);
-				fileChooser.setMultiSelectionEnabled(false);
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-				fileChooser.setSelectedFile(textCharacterFile.getText());
-				
-				// 	show the file dialog
-				int answer = fileChooser.showDialog(fileChooser, "Choose character definition file...");
-							
-				// 	check if a file was selected
-				if (answer == JFileChooser.APPROVE_OPTION)
-				{
-					final File selected =  fileChooser.getSelectedFile();
-
-					textCharacterFile.setText(selected.getPath());
-			
-				}
-			}
-		});
-		button_1.setBounds(324, 96, 26, 25);
-		button_1.setText("...");
-		
-		Label lblCharacters = new Label(grpPrintingOptions, SWT.NONE);
-		lblCharacters.setBounds(10, 100, 111, 18);
-		lblCharacters.setAlignment(SWT.RIGHT);
-		lblCharacters.setText("Characters:");
-		
-		textPrinterCol = new Text(grpPrintingOptions, SWT.BORDER);
-		textPrinterCol.setBounds(127, 135, 76, 21);
-		
-		textPrinterRow = new Text(grpPrintingOptions, SWT.BORDER);
-		textPrinterRow.setBounds(127, 162, 76, 21);
-		
-		Label lblColumns = new Label(grpPrintingOptions, SWT.NONE);
-		lblColumns.setBounds(10, 138, 111, 21);
-		lblColumns.setAlignment(SWT.RIGHT);
-		lblColumns.setText("Columns:");
-		
-		Label lblLines = new Label(grpPrintingOptions, SWT.NONE);
-		lblLines.setBounds(10, 165, 111, 18);
-		lblLines.setAlignment(SWT.RIGHT);
-		lblLines.setText("Lines:");
-		
 		grpMidiOptions = new Group(compositeP2, SWT.NONE);
 		grpMidiOptions.setText(" MIDI Options ");
-		grpMidiOptions.setBounds(10, 244, 372, 103);
+		grpMidiOptions.setBounds(10, 206, 372, 141);
 		
 		Label lblDefaultSoundbank = new Label(grpMidiOptions, SWT.NONE);
 		lblDefaultSoundbank.setAlignment(SWT.RIGHT);
-		lblDefaultSoundbank.setBounds(10, 37, 136, 18);
+		lblDefaultSoundbank.setBounds(10, 71, 136, 18);
 		lblDefaultSoundbank.setText("Default soundbank:");
 		
 		textMIDIsoundbank = new Text(grpMidiOptions, SWT.BORDER);
-		textMIDIsoundbank.setBounds(152, 34, 171, 21);
+		textMIDIsoundbank.setBounds(152, 68, 171, 21);
 		
 		Button button_8 = new Button(grpMidiOptions, SWT.NONE);
 		button_8.addSelectionListener(new SelectionAdapter() {
@@ -712,15 +588,51 @@ public class InstanceConfigWin extends Dialog {
 			}
 		});
 		button_8.setText("...");
-		button_8.setBounds(324, 32, 26, 25);
+		button_8.setBounds(324, 66, 26, 25);
 		
 		textMIDIprofile = new Combo(grpMidiOptions, SWT.BORDER);
-		textMIDIprofile.setBounds(152, 61, 166, 23);
+		textMIDIprofile.setBounds(152, 97, 171, 23);
 		
 		Label lblDefaultProfile = new Label(grpMidiOptions, SWT.NONE);
 		lblDefaultProfile.setAlignment(SWT.RIGHT);
-		lblDefaultProfile.setBounds(10, 64, 136, 20);
+		lblDefaultProfile.setBounds(10, 100, 136, 20);
 		lblDefaultProfile.setText("Default profile:");
+		
+		btnEnableVirtualMidi = new Button(grpMidiOptions, SWT.CHECK);
+		btnEnableVirtualMidi.setBounds(63, 36, 227, 16);
+		btnEnableVirtualMidi.setText("Enable virtual MIDI");
+		
+		tablePrinters = new Table(compositeP2, SWT.BORDER | SWT.CHECK | SWT.FULL_SELECTION);
+		tablePrinters.setBounds(10, 21, 372, 124);
+		tablePrinters.setHeaderVisible(true);
+		tablePrinters.setLinesVisible(true);
+		
+		TableColumn tblclmnPrinterName = new TableColumn(tablePrinters, SWT.NONE);
+		tblclmnPrinterName.setWidth(97);
+		tblclmnPrinterName.setText("Printer name");
+		
+		TableColumn tblclmnDriver = new TableColumn(tablePrinters, SWT.NONE);
+		tblclmnDriver.setWidth(65);
+		tblclmnDriver.setText("Driver");
+		
+		TableColumn tblclmnOutputTo = new TableColumn(tablePrinters, SWT.NONE);
+		tblclmnOutputTo.setWidth(205);
+		tblclmnOutputTo.setText("Output to..");
+		
+		Button btnNewButton = new Button(compositeP2, SWT.NONE);
+		btnNewButton.setImage(SWTResourceManager.getImage(InstanceConfigWin.class, "/printers/kcontrol-3.png"));
+		btnNewButton.setBounds(150, 151, 68, 25);
+		btnNewButton.setText("Edit");
+		
+		Button btnNewButton_1 = new Button(compositeP2, SWT.NONE);
+		btnNewButton_1.setImage(SWTResourceManager.getImage(InstanceConfigWin.class, "/printers/edit-add-2.png"));
+		btnNewButton_1.setBounds(224, 151, 65, 25);
+		btnNewButton_1.setText("Add");
+		
+		Button btnRemove = new Button(compositeP2, SWT.NONE);
+		btnRemove.setImage(SWTResourceManager.getImage(InstanceConfigWin.class, "/printers/edit-delete-2.png"));
+		btnRemove.setBounds(295, 151, 87, 25);
+		btnRemove.setText("Remove");
 		
 		TabItem tbtmNetworking_1 = new TabItem(tabFolder, SWT.NONE);
 		tbtmNetworking_1.setText("Networking");
@@ -729,16 +641,16 @@ public class InstanceConfigWin extends Dialog {
 		tbtmNetworking_1.setControl(compositeP3);
 		
 		textListenAddress = new Text(compositeP3, SWT.BORDER);
-		textListenAddress.setBounds(212, 19, 156, 21);
+		textListenAddress.setBounds(209, 58, 156, 21);
 		
 		Label lblBindAddress = new Label(compositeP3, SWT.NONE);
 		lblBindAddress.setAlignment(SWT.RIGHT);
-		lblBindAddress.setBounds(23, 22, 183, 15);
+		lblBindAddress.setBounds(20, 61, 183, 15);
 		lblBindAddress.setText("Listen interface address:");
 		
 		grpTelnetOptions = new Group(compositeP3, SWT.NONE);
 		grpTelnetOptions.setText(" Telnet server text files ");
-		grpTelnetOptions.setBounds(10, 92, 372, 149);
+		grpTelnetOptions.setBounds(10, 209, 372, 149);
 		
 		textTelnetBanner = new Text(grpTelnetOptions, SWT.BORDER);
 		textTelnetBanner.setBounds(115, 29, 209, 21);
@@ -902,138 +814,12 @@ public class InstanceConfigWin extends Dialog {
 		button_5.setBounds(324, 109, 28, 25);
 		
 		textTermPort = new Text(compositeP3, SWT.BORDER);
-		textTermPort.setBounds(212, 49, 57, 21);
+		textTermPort.setBounds(214, 134, 57, 21);
 		
 		Label lblOsTermDevice = new Label(compositeP3, SWT.NONE);
 		lblOsTermDevice.setAlignment(SWT.RIGHT);
-		lblOsTermDevice.setBounds(23, 52, 183, 15);
+		lblOsTermDevice.setBounds(25, 137, 183, 15);
 		lblOsTermDevice.setText("OS9 TERM telnet port:");
-		
-		grpTelnetAuthentication = new Group(compositeP3, SWT.NONE);
-		grpTelnetAuthentication.setText(" Telnet authentication ");
-		grpTelnetAuthentication.setBounds(10, 265, 372, 74);
-		
-		textTelnetPasswd = new Text(grpTelnetAuthentication, SWT.BORDER);
-		textTelnetPasswd.setBounds(115, 33, 209, 21);
-		
-		Button button_6 = new Button(grpTelnetAuthentication, SWT.NONE);
-		button_6.setText("...");
-		button_6.setBounds(324, 31, 28, 25);
-		button_6.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				// create a file chooser
-				final DWServerFileChooser fileChooser = new DWServerFileChooser(textTelnetPasswd.getText());
-				
-				// 	configure the file dialog
-				
-				fileChooser.setFileHidingEnabled(false);
-				fileChooser.setMultiSelectionEnabled(false);
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-				fileChooser.setSelectedFile(textTelnetPasswd.getText());
-				
-				// 	show the file dialog
-				int answer = fileChooser.showDialog(fileChooser, "Choose telnet passwd file...");
-							
-				// 	check if a file was selected
-				if (answer == JFileChooser.APPROVE_OPTION)
-				{
-					final File selected =  fileChooser.getSelectedFile();
-
-					textTelnetPasswd.setText(selected.getPath());
-			
-				}
-			}
-		});
-		
-		
-		Label lblPasswdFile = new Label(grpTelnetAuthentication, SWT.NONE);
-		lblPasswdFile.setAlignment(SWT.RIGHT);
-		lblPasswdFile.setBounds(10, 36, 99, 18);
-		lblPasswdFile.setText("Passwd file:");
-		
-		TabItem tbtmAdvanced = new TabItem(tabFolder, SWT.NONE);
-		tbtmAdvanced.setText("IP Access");
-		
-		compositeP4 = new Composite(tabFolder, SWT.NONE);
-		tbtmAdvanced.setControl(compositeP4);
-		
-		textIPBanned = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
-		textIPBanned.setBounds(10, 44, 372, 72);
-		
-		Label lblBannedIpAddresses = new Label(compositeP4, SWT.NONE);
-		lblBannedIpAddresses.setBounds(10, 23, 247, 21);
-		lblBannedIpAddresses.setText("Banned IP Addresses:");
-		
-
-		
-		textGeoIPfile = new Text(compositeP4, SWT.BORDER);
-		textGeoIPfile.setBounds(135, 162, 218, 21);
-		
-		Label lblDatabaseFile = new Label(compositeP4, SWT.NONE);
-		lblDatabaseFile.setAlignment(SWT.RIGHT);
-		lblDatabaseFile.setBounds(10, 165, 119, 18);
-		lblDatabaseFile.setText("Database file:");
-		
-		buttonGeoipDB = new Button(compositeP4, SWT.NONE);
-		buttonGeoipDB.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				// create a file chooser
-				final DWServerFileChooser fileChooser = new DWServerFileChooser(textGeoIPfile.getText());
-				
-				// 	configure the file dialog
-				
-				fileChooser.setFileHidingEnabled(false);
-				fileChooser.setMultiSelectionEnabled(false);
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-				fileChooser.setSelectedFile(textGeoIPfile.getText());
-				
-				// 	show the file dialog
-				int answer = fileChooser.showDialog(fileChooser, "Choose GeoIP db file...");
-							
-				// 	check if a file was selected
-				if (answer == JFileChooser.APPROVE_OPTION)
-				{
-					final File selected =  fileChooser.getSelectedFile();
-
-					textGeoIPfile.setText(selected.getPath());
-			
-				}
-			}
-		});
-		buttonGeoipDB.setBounds(355, 160, 27, 25);
-		buttonGeoipDB.setText("...");
-		
-		textIPBannedCities = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
-		textIPBannedCities.setBounds(10, 220, 372, 46);
-		
-		textIPBannedCountries = new Text(compositeP4, SWT.BORDER | SWT.V_SCROLL);
-		textIPBannedCountries.setBounds(10, 301, 372, 46);
-		
-		Label lblBannedCities = new Label(compositeP4, SWT.NONE);
-		lblBannedCities.setBounds(10, 199, 197, 21);
-		lblBannedCities.setText("Banned Cities:");
-		
-		Label lblBannedCountries = new Label(compositeP4, SWT.NONE);
-		lblBannedCountries.setBounds(10, 280, 197, 21);
-		lblBannedCountries.setText("Banned Countries:");
-		
-		
-		btnUseGeoipLookups = new Button(compositeP4, SWT.CHECK);
-		btnUseGeoipLookups.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				
-				updateToggledStuff();
-			}
-		});
-		btnUseGeoipLookups.setBounds(10, 132, 230, 24);
-		btnUseGeoipLookups.setText("Use GeoIP lookups");
 		
 		
 		TabItem tbtmAdvanced_1 = new TabItem(tabFolder, SWT.NONE);
@@ -1197,19 +983,6 @@ public class InstanceConfigWin extends Dialog {
 		comboDevType.setItems(new String[] {"serial", "tcp", "tcpclient"});
 		comboDevType.setBounds(168, 107, 91, 23);
 		comboDevType.select(0);
-		
-		
-		
-		Button btnUndo = new Button(shlInstanceConfiguration, SWT.NONE);
-		btnUndo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				applySettings();
-			}
-		});
-		btnUndo.setBounds(10, 411, 75, 25);
-		btnUndo.setText("Undo");
 	
 		Button btnOk = new Button(shlInstanceConfiguration, SWT.NONE);
 		btnOk.addSelectionListener(new SelectionAdapter() {
@@ -1257,7 +1030,7 @@ public class InstanceConfigWin extends Dialog {
 				}
 			}
 		});
-		btnOk.setBounds(177, 411, 75, 25);
+		btnOk.setBounds(173, 411, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlInstanceConfiguration, SWT.NONE);
@@ -1268,8 +1041,12 @@ public class InstanceConfigWin extends Dialog {
 				e.display.getActiveShell().close();
 			}
 		});
-		btnCancel.setBounds(335, 411, 75, 25);
+		btnCancel.setBounds(254, 411, 75, 25);
 		btnCancel.setText("Cancel");
+		
+		btnApply = new Button(shlInstanceConfiguration, SWT.NONE);
+		btnApply.setBounds(335, 411, 75, 25);
+		btnApply.setText("Apply");
 
 		
 		
@@ -1286,22 +1063,7 @@ public class InstanceConfigWin extends Dialog {
 			btnEvenOppoll.setEnabled(false);
 		}
 		
-		if (btnUseGeoipLookups.getSelection())
-		{
-			textGeoIPfile.setEnabled(true);
-			buttonGeoipDB.setEnabled(true);
-			textIPBannedCities.setEnabled(true);
-			textIPBannedCountries.setEnabled(true);
-			
-		}
-		else
-		{
-			textGeoIPfile.setEnabled(false);
-			buttonGeoipDB.setEnabled(false);
-			textIPBannedCities.setEnabled(false);
-			textIPBannedCountries.setEnabled(false);
-			
-		}
+		
 	}
 
 	protected void enableDevOptions(String item) 
@@ -1362,9 +1124,7 @@ public class InstanceConfigWin extends Dialog {
 	protected Button getBtnPadPartialSectors() {
 		return btnPadPartialSectors;
 	}
-	protected Button getButtonGeoipDB() {
-		return buttonGeoipDB;
-	}
+
 	protected Group getGrpLogging() {
 		return grpLogging;
 	}
@@ -1373,5 +1133,8 @@ public class InstanceConfigWin extends Dialog {
 	}
 	protected Group getGrpDisk() {
 		return grpDisk;
+	}
+	protected Table getTablePrinters() {
+		return tablePrinters;
 	}
 }

@@ -47,9 +47,22 @@ public class UICmdInstanceDiskShow extends DWCommand {
 			
 			for (int i =0;i<dwProto.getDiskDrives().getMaxDrives();i++)
 			{
-				if (dwProto.getDiskDrives().diskLoaded(i))
+				if (dwProto.getDiskDrives().isLoaded(i))
 				{
-					res += i + " " + dwProto.getDiskDrives().getDiskFile(i) + "\n";
+					try
+					{
+						res += i + "|" + dwProto.getDiskDrives().getDisk(i).getFilePath() + "\n";
+					} 
+					catch (DWDriveNotLoadedException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} 
+					catch (DWDriveNotValidException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -61,9 +74,9 @@ public class UICmdInstanceDiskShow extends DWCommand {
 			
 				int driveno = Integer.parseInt(cmdline);
 				
-				if ((!(dwProto.getDiskDrives() == null)) && (dwProto.getDiskDrives().diskLoaded(driveno)))
+				if ((!(dwProto.getDiskDrives() == null)) && (dwProto.getDiskDrives().isLoaded(driveno)))
 				{
-					res += "loaded: true\n"; 
+					res += "*loaded: true\n"; 
 					
 					HierarchicalConfiguration disk = dwProto.getDiskDrives().getDisk(driveno).getParams();
 					
@@ -73,16 +86,11 @@ public class UICmdInstanceDiskShow extends DWCommand {
 						
 						res += option + ": " + disk.getProperty(option) + "\n";
 					}
-
-					
-					res += "fswriteable: " + dwProto.getDiskDrives().getDisk(driveno).isFSWriteable() + "\n";
-					res += "writeable: " + dwProto.getDiskDrives().getDisk(driveno).isWriteable() + "\n";
-					res += "randomwriteable: " + dwProto.getDiskDrives().getDisk(driveno).isRandomWriteable() + "\n";
-					
+	
 				}
 				else
 				{
-					res += "loaded: false\n";
+					res += "*loaded: false\n";
 				}
 			}
 			catch (NumberFormatException e)
@@ -91,7 +99,7 @@ public class UICmdInstanceDiskShow extends DWCommand {
 			}
 			catch (DWDriveNotLoadedException e) 
 			{
-				res += "loaded: false\n";
+				res += "*loaded: false\n";
 			} 
 			catch (DWDriveNotValidException e) 
 			{

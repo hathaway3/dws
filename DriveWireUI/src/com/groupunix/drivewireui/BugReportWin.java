@@ -12,6 +12,7 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -51,6 +52,8 @@ public class BugReportWin extends Dialog {
 	private Button btnUIConf;
 	private Button btnErrDetails;
 	private Button btnJavaInfo;
+	private Button btnUIText;
+	private Button btnServerText;
 	
 	/**
 	 * Create the dialog.
@@ -75,6 +78,20 @@ public class BugReportWin extends Dialog {
 		shlBugReport.open();
 		shlBugReport.layout();
 		Display display = getParent().getDisplay();
+		
+		int x = getParent().getBounds().x + (getParent().getBounds().width / 2) - (shlBugReport.getBounds().width / 2);
+		int y = getParent().getBounds().y + (getParent().getBounds().height / 2) - (shlBugReport.getBounds().height / 2);
+		
+		shlBugReport.setLocation(x, y);
+		
+		btnUIText = new Button(shlBugReport, SWT.CHECK);
+		btnUIText.setBounds(25, 284, 543, 16);
+		btnUIText.setText("The contents of the 'UI' pane (output from dw commands, etc)");
+		
+		btnServerText = new Button(shlBugReport, SWT.CHECK);
+		btnServerText.setBounds(25, 306, 543, 16);
+		btnServerText.setText("The contents of the 'Server' pane (server log entries)");
+		
 		while (!shlBugReport.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -98,11 +115,11 @@ public class BugReportWin extends Dialog {
 				
 			}
 		});
-		shlBugReport.setSize(598, 538);
+		shlBugReport.setSize(598, 561);
 		shlBugReport.setText("Bug Report for '" + title + "'");
 		
 		
-		FontData f = MainWin.getDialogFont();
+		//FontData f = MainWin.getDialogFont();
 		
 		btnClose = new Button(shlBugReport, SWT.NONE);
 		btnClose.addSelectionListener(new SelectionAdapter() {
@@ -114,7 +131,7 @@ public class BugReportWin extends Dialog {
 			
 			}
 		});
-		btnClose.setBounds(493, 474, 75, 25);
+		btnClose.setBounds(483, 498, 85, 25);
 		btnClose.setText("Cancel");
 		
 		btnErrMsg = new Button(shlBugReport, SWT.CHECK);
@@ -143,7 +160,7 @@ public class BugReportWin extends Dialog {
 				//moveTheBug();
 			}
 		});
-		textAdditionalInfo.setBounds(25, 330, 543, 60);
+		textAdditionalInfo.setBounds(25, 359, 543, 60);
 		
 		Button btnNewButton = new Button(shlBugReport, SWT.NONE);
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
@@ -156,11 +173,11 @@ public class BugReportWin extends Dialog {
 				
 			}
 		});
-		btnNewButton.setBounds(223, 474, 141, 25);
+		btnNewButton.setBounds(203, 498, 183, 25);
 		btnNewButton.setText("Submit Bug Report");
 		
 		textEmail = new Text(shlBugReport, SWT.BORDER);
-		textEmail.setBounds(25, 422, 288, 21);
+		textEmail.setBounds(25, 451, 288, 21);
 		
 		Link link = new Link(shlBugReport, SWT.NONE);
 		link.addSelectionListener(new SelectionAdapter() {
@@ -192,11 +209,11 @@ public class BugReportWin extends Dialog {
 		lblIfYouBelieve.setText("Please submit as much information as you can about this problem.  Internet access is required to submit a bug report.\r\n\r\nFor those concerned with privacy, you should know that all information in this bug report is sent in plain text over the internet.  While it will never intentionally be made public, the author offers absolutely no promise of confidentiality.   On the other hand, it's just some DriveWire configuration data and will normally not contain anything sensitive.\r\n\r\n");
 		
 		Label lblEmailAddressoptional = new Label(shlBugReport, SWT.NONE);
-		lblEmailAddressoptional.setBounds(25, 401, 288, 15);
+		lblEmailAddressoptional.setBounds(25, 430, 288, 15);
 		lblEmailAddressoptional.setText("Email address (optional):");
 		
 		Label lblAdditionalInformationbe = new Label(shlBugReport, SWT.NONE);
-		lblAdditionalInformationbe.setBounds(25, 309, 393, 15);
+		lblAdditionalInformationbe.setBounds(25, 338, 393, 15);
 		lblAdditionalInformationbe.setText("Additional information (be verbose!):");
 		
 		Label lblDataToInclude = new Label(shlBugReport, SWT.NONE);
@@ -206,11 +223,12 @@ public class BugReportWin extends Dialog {
 		
 		Control[] controls = shlBugReport.getChildren();
 		
+		/*
 		for (int i = 0;i<controls.length;i++)
 		{
 			controls[i].setFont(new Font(shlBugReport.getDisplay(), f));
 		}
-		
+		*/
 	}
 
 	/*
@@ -295,12 +313,12 @@ public class BugReportWin extends Dialog {
 				// Try to get server version..
 				Connection conn = new Connection(MainWin.getHost(),MainWin.getPort(), MainWin.getInstance());
 			
-				ArrayList<String> vres = new ArrayList<String>();
+				List<String> vres = new ArrayList<String>();
 		
 				try 
 				{
 					conn.Connect();
-					vres = conn.loadArrayList("ui server show version");	
+					vres = conn.loadList(-1,"ui server show version");	
 					conn.close();
 				
 					surl += "&" + encv("dwv",vres.get(0));
@@ -311,6 +329,10 @@ public class BugReportWin extends Dialog {
 					surl += "&" + encv("dwv",e.getMessage());
 				} 
 				catch (IOException e) 
+				{
+					surl += "&" + encv("dwv",e.getMessage());
+				} 
+				catch (DWUIOperationFailedException e)
 				{
 					surl += "&" + encv("dwv",e.getMessage());
 				}
@@ -340,6 +362,18 @@ public class BugReportWin extends Dialog {
 				}
 				surl += "&" + encv("java", jitmp);
 			}
+			
+			// UI panes
+			if (this.getBtnUIText().getSelection())
+			{
+				surl += "&" + encv("uitxt", MainWin.getUIText());
+			}
+			
+			if (this.getBtnServerText().getSelection())
+			{
+				surl += "&" + encv("srvtxt", MainWin.getServerText());
+			}
+			
 			
 			// user supplied
 			if (!this.getTextAdditionalInfo().getText().equals(""))
@@ -435,5 +469,11 @@ public class BugReportWin extends Dialog {
 	}
 	protected Button getBtnJavaInfo() {
 		return btnJavaInfo;
+	}
+	protected Button getBtnUIText() {
+		return btnUIText;
+	}
+	protected Button getBtnServerText() {
+		return btnServerText;
 	}
 }

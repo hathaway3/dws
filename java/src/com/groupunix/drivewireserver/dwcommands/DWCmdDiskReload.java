@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskReload extends DWCommand {
@@ -41,6 +42,7 @@ public class DWCmdDiskReload extends DWCommand {
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk reload requires a drive # or 'all' as an argument"));
 		}
+		
 		return(doDiskReload(cmdline));
 	}
 
@@ -58,11 +60,10 @@ public class DWCmdDiskReload extends DWCommand {
 			}
 			else
 			{
-				int driveno = Integer.parseInt(drivestr);
-			
-				dwProto.getDiskDrives().ReLoadDisk(driveno);
+				
+				dwProto.getDiskDrives().ReLoadDisk(dwProto.getDiskDrives().getDriveNoFromString(drivestr));
 	
-				return(new DWCommandResponse("Disk in drive #"+ driveno + " reloaded."));
+				return(new DWCommandResponse("Disk in drive #"+ drivestr + " reloaded."));
 			}
 		}
 		catch (NumberFormatException e)
@@ -81,6 +82,10 @@ public class DWCmdDiskReload extends DWCommand {
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
 		} 
+		catch (DWImageFormatException e)
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_IMAGE_FORMAT_EXCEPTION,e.getMessage()));
+		}
 		
 		
 	}

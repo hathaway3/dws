@@ -13,7 +13,6 @@ import org.apache.log4j.spi.LoggingEvent;
 public class DWLogAppender extends AppenderSkeleton 
 {
 
-	public static final int MAX_EVENTS = 500;
 
 	private LinkedList<LoggingEvent> events = new LinkedList<LoggingEvent>();
 
@@ -41,18 +40,24 @@ public class DWLogAppender extends AppenderSkeleton
 
 	protected void append(LoggingEvent event) 
 	{
-		// ignore those pesky XMLConfiguration debug messages
-		if (!event.getMessage().equals("ConfigurationUtils.locate(): base is null, name is null"))
+		// ignore those pesky XMLConfiguration debug messages and massive httpd client noise
+		if ((!event.getMessage().equals("ConfigurationUtils.locate(): base is null, name is null")) && (!event.getLocationInformation().getClassName().startsWith("org.apache.commons.httpclient"))) 
+				
 		{
+			// send it to UI listeners
+			DriveWireServer.submitLogEvent(event);
+			
+			// add to our buffer (for viewing from coco)
 			synchronized (events) 
 			{
-				if (events.size() == MAX_EVENTS)
+				if (events.size() == DWDefs.LOGGING_MAX_BUFFER_EVENTS)
 				{
 					events.removeFirst();
 				}
 			
 				events.addLast(event);
-				DriveWireServer.submitLogEvent(event);
+				
+				
 			}
 		}
 	}
@@ -62,18 +67,21 @@ public class DWLogAppender extends AppenderSkeleton
 		ArrayList<String> eventstxt = new ArrayList<String>();
 		int start = 0;
 		
-		if (num > events.size())
-			num = events.size();
-		
-		if (events.size() > num)
+		synchronized(events)
 		{
-			start = events.size() - num;
-		}
+			if (num > events.size())
+				num = events.size();
 		
-		for (int i = start;i<events.size();i++)
-		{
+			if (events.size() > num)
+			{
+				start = events.size() - num;
+			}
 			
-			eventstxt.add(layout.format(events.get(i)));
+			for (int i = start;i<events.size();i++)
+			{
+				
+				eventstxt.add(layout.format(events.get(i)));
+			}
 		}
 		
 		return(eventstxt);

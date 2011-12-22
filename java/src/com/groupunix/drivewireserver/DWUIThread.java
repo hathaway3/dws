@@ -3,6 +3,7 @@ package com.groupunix.drivewireserver;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +21,8 @@ public class DWUIThread implements Runnable {
 	private ServerSocket srvr = null;
 	
 	private LinkedList<DWUIClientThread> clientThreads = new LinkedList<DWUIClientThread>();
+
+	private int dropppedevents = 0;
 	
 	public DWUIThread(int port) 
 	{
@@ -34,7 +37,9 @@ public class DWUIThread implements Runnable {
 		{
 			for (DWUIClientThread ct : this.clientThreads)
 			{
-				ct.die();
+
+					ct.die();
+				
 			}
 			
 			if (this.srvr != null)
@@ -46,6 +51,11 @@ public class DWUIThread implements Runnable {
 		{
 			logger.warn("IO Error closing socket: " + e.getMessage());
 		}
+		catch (ConcurrentModificationException e)
+		{
+			// whatever
+		}
+		
 	}
 	
 	
@@ -91,7 +101,11 @@ public class DWUIThread implements Runnable {
 			} 
 			catch (IOException e1) 
 			{
-				logger.info("IO error: " + e1.getMessage());
+				if (wanttodie)
+					logger.debug("IO error while dying: " + e1.getMessage());
+				else
+					logger.warn("IO error: " + e1.getMessage());
+				
 				wanttodie = true;
 			}
 			
@@ -116,19 +130,35 @@ public class DWUIThread implements Runnable {
 
 	public void submitEvent(DWEvent evt) 
 	{
-		Iterator<DWUIClientThread> itr = this.clientThreads.iterator(); 
 		
 		//System.out.println("Event " + evt.getEventType() + " " + evt.getParam("k") + " " + evt.getParam("v"));
 		
 		synchronized(this.clientThreads)
 		{
+			Iterator<DWUIClientThread> itr = this.clientThreads.iterator(); 
+			
 			while(itr.hasNext()) 
 			{	
 				LinkedBlockingQueue<DWEvent> queue = (LinkedBlockingQueue<DWEvent>) itr.next().getEventQueue(); 
 		    
-				if ((queue != null) && (queue.size() < 1000))
+				synchronized(queue)
 				{
-					queue.add(evt);
+					if (queue != null)
+					{
+						if (queue.size() < DWDefs.EVENT_QUEUE_LOGDROP_SIZE)
+						{
+							queue.add(evt);
+						}
+						else if ((queue.size() < DWDefs.EVENT_MAX_QUEUE_SIZE) && (evt.getEventType() != DWDefs.EVENT_TYPE_LOG))
+						{
+							queue.add(evt);
+						}
+						else
+						{
+							this.dropppedevents++;
+							System.out.println("queue drop: " + queue.size() + "/" + this.dropppedevents);
+						}
+					}
 				}
 			}
 

@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -30,7 +29,6 @@ import org.apache.log4j.lf5.LF5Appender;
 import org.apache.log4j.spi.LoggingEvent;
 
 import com.groupunix.drivewireserver.dwdisk.DWDiskLazyWriter;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPlatformUnknownException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
@@ -42,7 +40,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 public class DriveWireServer 
 {
 	public static final String DWServerVersion = "4.0.0RC1";
-	public static final String DWServerVersionDate = "12/11/2011";
+	public static final String DWServerVersionDate = "12/18/2011";
 	
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
@@ -68,6 +66,7 @@ public class DriveWireServer
 	private static boolean ready = false;
 	private static boolean useLF5 = false;
 	private static LF5Appender lf5appender;
+	private static boolean useBackup = false;
 	
 
 	public static void main(String[] args) throws ConfigurationException
@@ -123,6 +122,11 @@ public class DriveWireServer
         {
     		// try to load/parse config
     		serverconfig = new XMLConfiguration(configfile);
+    		
+    		// only backup if it loads
+    		if (useBackup)
+    			backupConfig(configfile);
+    		
 		} 
         catch (ConfigurationException e1) 
     	{
@@ -144,7 +148,7 @@ public class DriveWireServer
 		// test for RXTX..
 		if (serverconfig.getBoolean("UseRXTX", true) && !checkRXTXLoaded())
 		{
-			logger.fatal("UseRXTX is true, but RXTX native libraries could not be loaded");
+			logger.fatal("UseRXTX is set, but RXTX native libraries could not be loaded");
 			logger.fatal("Please see http://sourceforge.net/apps/mediawiki/drivewireserver/index.php?title=Installation");
 			System.exit(-1);
 		}
@@ -161,10 +165,7 @@ public class DriveWireServer
     		serverconfig.setAutoSave(true);
     	}
     	
-    	
-    	
-    	
-    	
+
 		
     	// start protocol handler instance(s)
     	startProtoHandlers();
@@ -275,7 +276,7 @@ public class DriveWireServer
 		{
 			String rxtxpath;
 			
-			if (serverconfig.containsKey("LoadRXTXPath"))
+			if (!serverconfig.getString("LoadRXTXPath","").equals(""))
 			{
 				rxtxpath = serverconfig.getString("LoadRXTXPath");
 			}
@@ -368,9 +369,9 @@ public class DriveWireServer
         Options cmdoptions = new Options();
 		
 		cmdoptions.addOption("config", true, "configuration file (defaults to config.xml)");
+		cmdoptions.addOption("backup", false, "make a backup of config at server start");
 		cmdoptions.addOption("help", false, "display command line argument help");
-		cmdoptions.addOption("logviewer", false, "use GUI log viewer");
-		
+		cmdoptions.addOption("logviewer", false, "open GUI log viewer at server start");
 		
 		CommandLineParser parser = new GnuParser();
 		try 
@@ -390,6 +391,11 @@ public class DriveWireServer
 			    configfile = line.getOptionValue( "config" );
 			}
 			
+			if (line.hasOption( "backup"))
+			{
+				useBackup  = true;
+			}
+			
 			if( line.hasOption( "logviewer" ) ) 
 			{
 				useLF5 = true;
@@ -405,6 +411,21 @@ public class DriveWireServer
 		    System.exit(-1);
 		}
 		
+	}
+
+
+
+	private static void backupConfig(String cfile)
+	{
+		try
+		{
+			DWUtils.copyFile(cfile,cfile +".bak");
+			logger.debug("Backed up config to " + cfile +".bak" );
+		} 
+		catch (IOException e)
+		{
+			logger.error("Could not create config backup: " + e.getMessage());
+		}
 	}
 
 
@@ -522,7 +543,7 @@ public class DriveWireServer
 	public static void applyLoggingSettings() 
 	{
 		// logging
-		if (serverconfig.containsKey("LogFormat"))
+		if (!serverconfig.getString("LogFormat","").equals(""))
     	{
     		logLayout = new PatternLayout(serverconfig.getString("LogFormat"));
     	}
@@ -660,60 +681,6 @@ public class DriveWireServer
 	}
 	
 	
-	@SuppressWarnings("unchecked")
-	public static boolean hasDiskset(String setname)
-	{
-		if (setname.equalsIgnoreCase("all"))
-		{
-			return(true);
-		}
-		
-		List<HierarchicalConfiguration> disksets = serverconfig.configurationsAt("diskset");
-    	
-		boolean setexists = false;
-		
-		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
-		{
-		    HierarchicalConfiguration dset = it.next();
-		    
-		    if ( dset.getString("Name","").equalsIgnoreCase(setname) )
-		    {
-		    	setexists = true;
-		    }
-		 
-		}
-		
-		return(setexists);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static HierarchicalConfiguration getDiskset(String setname) throws DWDisksetNotValidException
-	{
-		if (setname.equalsIgnoreCase("all"))
-		{
-			throw new DWDisksetNotValidException("Diskset '" + setname + "' is not allowed.");
-		}
-		
-		
-		List<HierarchicalConfiguration> disksets = DriveWireServer.serverconfig.configurationsAt("diskset");
-	
-
-		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
-		{
-			HierarchicalConfiguration dset = it.next();
-	    
-			if ( dset.getString("Name","").equals(setname) )
-			{
-				return(dset);
-			}
-	    
-		}
-	
-		throw new DWDisksetNotValidException("No diskset '" + setname + "' is defined.");
-		
-	}
-
-
 
 
 	public static String getHandlerName(int handlerno) 
@@ -763,49 +730,61 @@ public class DriveWireServer
 
 	public static void submitServerConfigEvent(String propertyName, String propertyValue) 
 	{
-		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_SERVERCONFIG);
+		if (uiObj != null)
+		{
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_SERVERCONFIG);
 		
-		evt.setParam("k", propertyName);
-		evt.setParam("v", propertyValue);
+			evt.setParam(DWDefs.EVENT_ITEM_KEY, propertyName);
+			evt.setParam(DWDefs.EVENT_ITEM_VALUE, propertyValue);
 		
-		uiObj.submitEvent(evt);
+			uiObj.submitEvent(evt);
+		}
 	}
 
 
 	public static void submitInstanceConfigEvent(int instance, String propertyName, String propertyValue) 
 	{
-		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_INSTANCECONFIG);
+		if (uiObj != null)
+		{
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_INSTANCECONFIG);
 		
-		evt.setParam("i", String.valueOf(instance));
-		evt.setParam("k", propertyName);
-		evt.setParam("v", propertyValue);
+			evt.setParam(DWDefs.EVENT_ITEM_INSTANCE, String.valueOf(instance));
+			evt.setParam(DWDefs.EVENT_ITEM_KEY, propertyName);
+			evt.setParam(DWDefs.EVENT_ITEM_VALUE, propertyValue);
 		
-		uiObj.submitEvent(evt);
+			uiObj.submitEvent(evt);
+		}
 	}
 
 
 	public static void submitDiskEvent(int instance, int diskno, String key, String val) 
 	{
-		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_DISK);
-		
-		evt.setParam("i", String.valueOf(instance));
-		evt.setParam("d", String.valueOf(diskno));
-		evt.setParam("k", key);
-		evt.setParam("v", val);
-		
-		uiObj.submitEvent(evt);
+		if (uiObj != null)
+		{
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_DISK);
+			
+			evt.setParam(DWDefs.EVENT_ITEM_INSTANCE, String.valueOf(instance));
+			evt.setParam(DWDefs.EVENT_ITEM_DRIVE, String.valueOf(diskno));
+			evt.setParam(DWDefs.EVENT_ITEM_KEY, key);
+			evt.setParam(DWDefs.EVENT_ITEM_VALUE, val);
+			
+			uiObj.submitEvent(evt);
+		}
 	}
-
+	
 
 	public static void submitMIDIEvent(int instance, String key, String val) 
 	{
-		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_MIDI);
-		
-		evt.setParam("i", String.valueOf(instance));
-		evt.setParam("k", key);
-		evt.setParam("v", val);
-		
-		uiObj.submitEvent(evt);
+		if (uiObj != null)
+		{
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_MIDI);
+			
+			evt.setParam(DWDefs.EVENT_ITEM_INSTANCE, String.valueOf(instance));
+			evt.setParam(DWDefs.EVENT_ITEM_KEY, key);
+			evt.setParam(DWDefs.EVENT_ITEM_VALUE, val);
+			
+			uiObj.submitEvent(evt);
+		}
 	}
 
 	public static void submitLogEvent(LoggingEvent event) 
@@ -813,7 +792,7 @@ public class DriveWireServer
 		if (uiObj != null)
 		{
 			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_LOG);
-			evt.setParam("l", logLayout.format(event));
+			evt.setParam(DWDefs.EVENT_ITEM_LOGLINE, logLayout.format(event));
 			uiObj.submitEvent(evt);
 		}
 	}

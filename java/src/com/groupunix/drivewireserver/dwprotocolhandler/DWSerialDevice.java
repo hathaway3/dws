@@ -133,9 +133,9 @@ public class DWSerialDevice implements DWProtocolDevice
 		int stopbits = 1;
 		int databits = 8;
 		
-		if (dwProto.getConfig().containsKey("RateOverride"))
+		if (dwProto.getConfig().containsKey("SerialRate"))
 		{
-			rate = dwProto.getConfig().getInt("RateOverride");
+			rate = dwProto.getConfig().getInt("SerialRate");
 		}
 		else
 		{
@@ -152,24 +152,41 @@ public class DWSerialDevice implements DWProtocolDevice
 			}
 		}
 		
-		if (dwProto.getConfig().containsKey("DatabitsOverride"))
+		
+		
+		if (dwProto.getConfig().containsKey("SerialStopbits"))
 		{
-			databits = dwProto.getConfig().getInt("DatabitsOverride");
+			String sb =  dwProto.getConfig().getString("SerialStopbits");
+			
+			if (sb.equals("1"))
+				stopbits = SerialPort.STOPBITS_1;
+			else if (sb.equals("1.5"))
+				stopbits = SerialPort.STOPBITS_1_5;
+			else if (sb.equals("2"))
+				stopbits = SerialPort.STOPBITS_2;
+			
 		}
 		
-		if (dwProto.getConfig().containsKey("StopbitsOverride"))
+		if (dwProto.getConfig().containsKey("SerialParity"))
 		{
-			stopbits = dwProto.getConfig().getInt("StopbitsOverride");
-		}
-		
-		if (dwProto.getConfig().containsKey("ParityOverride"))
-		{
-			parity = dwProto.getConfig().getInt("ParityOverride");
+			String p = dwProto.getConfig().getString("SerialParity");
+			
+			if (p.equals("none"))
+				parity = SerialPort.PARITY_NONE;
+			else if (p.equals("even"))
+				parity = SerialPort.PARITY_EVEN;
+			else if (p.equals("odd"))
+				parity = SerialPort.PARITY_ODD;
+			else if (p.equals("mark"))
+				parity = SerialPort.PARITY_MARK;
+			else if (p.equals("space"))
+				parity = SerialPort.PARITY_SPACE;
+			
+					
 		}
 		
 		logger.debug("setting port params to " + rate + " " + databits + ":" + parity + ":" + stopbits );
 		sport.setSerialPortParams(rate, databits, stopbits, parity);
-		
 		
 	}
 	

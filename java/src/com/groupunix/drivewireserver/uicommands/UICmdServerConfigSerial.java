@@ -18,8 +18,7 @@ public class UICmdServerConfigSerial extends DWCommand {
 	public DWCommandResponse parse(String cmdline)
 	{
 		String res = new String();
-		
-		
+
 		res = DriveWireServer.configserial + "";
 		
 		return(new DWCommandResponse(res));

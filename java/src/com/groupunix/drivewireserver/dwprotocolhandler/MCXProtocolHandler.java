@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.MCXDefs;
+import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
@@ -827,6 +828,21 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	public DWHelp getHelp() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+
+	@Override
+	public boolean isReady() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+
+	@Override
+	public void submitConfigEvent(String propertyName, String string)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

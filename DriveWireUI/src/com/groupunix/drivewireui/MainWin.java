@@ -2,14 +2,16 @@ package com.groupunix.drivewireui;
 
 
 
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
@@ -17,6 +19,11 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.KeyAdapter;
@@ -25,8 +32,6 @@ import org.eclipse.swt.events.MenuAdapter;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
@@ -34,46 +39,41 @@ import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
 
 import swing2swt.layout.BorderLayout;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.swtdesigner.SWTResourceManager;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.widgets.TabItem;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.GridData;
+
 
 
 public class MainWin {
 
+	static Logger logger = Logger.getLogger(MainWin.class);
+	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
 
-
-	public static final String DWUIVersion = "4.0.0";
-	public static final String DWUIVersionDate = "10/25/2011";
+	protected static final int LOG_WIN_MAX_LINES = 100;
+	
+	public static final String DWUIVersion = "4.0.0RC1";
+	public static final String DWUIVersionDate = "12/15/2011";
 	
 	public static final String default_Host = "127.0.0.1";
 	public static final int default_Port = 6800;
@@ -110,18 +110,20 @@ public class MainWin {
 	
 	
 	public static final int default_TCPTimeout = 15000;
-	public static final int default_ServerSyncInterval = 2000;
+	public static final int default_ServerSyncInterval = 1000;
 	
 	
 	public static XMLConfiguration config;
 	public static HierarchicalConfiguration dwconfig;
 	public static final String configfile = "drivewireUI.xml";
 	
-	private static DiskDef currentDisk = new DiskDef();
+
+	
+	private static int currentDisk = 0;
 	
 	protected static Shell shell;
 
-	private Text txtYouCanEnter;
+	private static Text txtYouCanEnter;
 	private static int cmdhistpos = 0;
 	private static Display display;
 	
@@ -129,137 +131,162 @@ public class MainWin {
 	private static int port;
 	private static int instance;
 	
+	private static Boolean connected = false;
 	
 	
 	private static boolean firsttimer = false;
 	private static Text textDWOutput;
 	private static Table table;
-	private static Combo textDiskURI;
-	private static Label labelDiskSectors;
-	private static Label labelDiskLSN;
-	private static Label labelDiskReads;
-	private static Label labelDiskWrites;
-	private static Label lblDiskUri;
-	
-	private static Button btnEject;
-	private static Button btnWrite;
-	private static Button btnReload;
-	private static Label lblSectors2;
-	private static Label lblCurrentLsn;
-	private static Label lblReads;
-	private static Label lblWrites;
-	private static Button buttonFile;
 	
 	private static SashForm sashForm;
-	private static SashForm sashForm_1;
-	private static Composite composite;
-	private static Button btnAdvanced;
-
+	
+	private static MenuItem mntmFile;
+	private static MenuItem mntmTools;
 	private static MenuItem mntmHdbdosTranslation;
 	private static Menu menuDWCmdHelp;
 	private static MenuItem mntmLoadHelp;
 	private static MenuItem mntmRebuildHelpOn;
 	
+	private static Menu menu_file;
+	private static Menu menu_tools;
+	private static Menu menu_config;
+	private static Menu menu_help;
+	
+	private static MenuItem mntmDwCommands;
+	private static MenuItem mntmChooseInstance;	
+	private static MenuItem mntmInitialConfig;
+	private static MenuItem mntmUserInterface;
+	
 	private static Thread syncThread = null;
 	public static int dwconfigserial = -1;
-	private static Label lblDiskDriveImg;
-	private static Label lblDiskDriveLED;
 	
-	private static DropdownSelectionListener disksetDDListener;
-	private static ToolItem tltmLoadDiskSet;
-	private static Label lblConStatus;
-	private static Canvas canvasDriveNo;
+	
+	private static MenuItem mntmMidi;
 	private static Menu menuMIDIOutputs;
 	private static MenuItem mntmLockInstruments;
 	private static Menu menuMIDIProfiles;
 	private static MenuItem mntmSetProfile;
-	private static Text textServer;
+	private static MenuItem mntmSetOutput;
 	private static Thread dwThread;
-	private static Thread logThread;
 	private static TabFolder tabFolderOutput;
 	
 	
-	class DropdownSelectionListener extends SelectionAdapter {
-		  private ToolItem dropdown;
+	
+	private static SyncThread syncObj;
+	
+	private static DiskDef[] disks = new DiskDef[256];
+	private static MIDIStatus midiStatus;
+	
+	public static Color colorWhite;
+	public static Color colorRed;
+	public static Color colorGreen;
+	public static Color colorBlack;
+	public static Color colorDiskBG;
+	public static Color colorDiskFG;
+	public static Color colorDiskGraphBG;
+	public static Color colorDiskGraphLSN;
+	public static Color colorDiskClean;
+	public static Color colorDiskDirty;
+	
+	
+	protected static Font fontDiskNumber;
+	protected static Font fontDiskGraph;
+	
+	
+	private static Boolean driveactivity = false;
+	private static org.eclipse.swt.widgets.List listServerLog;
+	
 
-		  private Menu menu;
+	private static MenuItem mitemInsert;
+	private static MenuItem mitemEject;
+	private static MenuItem mitemExport;
+	private static MenuItem mitemCreate;
+	private static MenuItem mitemParameters;
+	protected static Vector<DiskStatusItem> diskStatusItems;
 
-		  public DropdownSelectionListener(ToolItem dropdown) {
-		    this.dropdown = dropdown;
-		    menu = new Menu(dropdown.getParent().getShell());
-		  }
-
-		  public void add(String item) {
-		    MenuItem menuItem = new MenuItem(menu, SWT.NONE);
-		    menuItem.setText(item);
-		    menuItem.addSelectionListener(new SelectionAdapter() {
-		      public void widgetSelected(SelectionEvent event) {
-		        MenuItem selected = (MenuItem) event.widget;
-		        MainWin.loadDiskSet(selected.getText());
-		      }
-		    });
-		  }
-
-		  public void widgetSelected(SelectionEvent event) {
-		    if (event.detail == SWT.ARROW) {
-		      ToolItem item = (ToolItem) event.widget;
-		      Rectangle rect = item.getBounds();
-		      Point pt = item.getParent().toDisplay(new Point(rect.x, rect.y));
-		      menu.setLocation(pt.x, pt.y + rect.height);
-		      menu.setVisible(true);
-		    }
-		  }
-
-		public void clear() 
-		{
-			menu.dispose();
-			menu = new Menu(dropdown.getParent().getShell());
-		}
-	}
+	private static boolean ready = false;
+	private Composite compositeList;
+	
+	private static Image diskLEDgreen;
+	private static Image diskLEDred;
+	private static Image diskLEDdark;
+	protected static Image diskBigLEDgreen;
+	protected static Image diskBigLEDred;
+	protected static Image diskBigLEDdark;
+	
+	private static DiskTableUpdateThread diskTableUpdater;
+	protected static boolean safeshutdown = false;
+	
+	
+	private static ServerConfigWin serverconfigwin;
+	
 	
 	
 	
 	
 	public static void main(String[] args) 
 	{
+		
 		Thread.currentThread().setName("dwuiMain-" + Thread.currentThread().getId());
 		Thread.currentThread().setContextClassLoader(MainWin.class.getClassLoader());
+		
+		// setup logging
+		BasicConfigurator.configure();
+		Logger.getRootLogger().setLevel(Level.INFO);
+		Logger.getRootLogger().removeAllAppenders();
+		Logger.getRootLogger().addAppender(new ConsoleAppender(logLayout));
+		
+		
+		
+		// get our client config
 		loadConfig();
 		
-		startDWServer(args);
-		System.out.println("wtf");
+		// fire up a server
+		if (config.getBoolean("LocalServer",true))
+			startDWServer(args);
+
+		
 		try 
 		{
-			applyServerSync();
-
+			
+			// make ourselves look pretty
 			Display.setAppName("DriveWire");
 			Display.setAppVersion(MainWin.DWUIVersion);
 		
 			display = new Display();
 			
-			/*
-			 try {
-					UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
-					//don't care if this works..
-				} catch (ClassNotFoundException e) {
-					
-				} catch (InstantiationException e) {
-					
-				} catch (IllegalAccessException e) {
-					
-				} catch (UnsupportedLookAndFeelException e) {
-					
-				}
-			*/
+			colorWhite = new Color(display, 255,255,255);
+			colorRed = new Color(display, 255,0,0);
+			colorGreen = new Color(display, 0,255,0);
+			colorBlack = new Color(display, 0,0,0);
+			colorDiskBG = new Color(display, 0x49,0x48,0x48);
+			colorDiskFG = new Color(display, 0xb5,0xb5,0xb5);
+			colorDiskGraphBG = new Color(display, 0x89,0x89,0x89);
+			colorDiskGraphLSN = new Color(display, 0x2d, 0x2d, 0x2d);
+			colorDiskDirty = new Color(display, 255,0,0);
+			colorDiskClean = new Color(display, 150,0,0);
 			
+			fontDiskNumber = new Font(display, "Franklin Gothic", 36, SWT.BOLD);
+			fontDiskGraph = new Font(display, "Sans",8, SWT.NONE);
+			
+			diskLEDgreen = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/disk/diskdrive-ledgreen.png");
+			diskLEDred = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/disk/diskdrive-ledred.png");
+			diskLEDdark = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/disk/diskdrive-leddark.png");
+			diskBigLEDgreen = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/disk/diskdrive-ledgreen-big.png");
+			diskBigLEDred = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/disk/diskdrive-ledred-big.png");
+			diskBigLEDdark = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/disk/diskdrive-leddark-big.png");
 			
 			MainWin window = new MainWin();
 
+			// macs are special, special things
 			doMacStuff();
 			
-			logThread = new Thread(new LogInputThread());
-			logThread.start();
+			// sync
+			restartServerConn();
+		
+			UIUtils.loadFonts();
 			
+			// get this party started
 			window.open(display, args);
 			
 			
@@ -271,6 +298,7 @@ public class MainWin {
 		
 		}
 		
+		// game over.  let threads know.
 		host = null;
 				
 	}
@@ -290,13 +318,14 @@ public class MainWin {
 				} 
 				catch (ConfigurationException e) 
 				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.fatal(e.getMessage());
+					System.exit(-1);
 				}
 			}
 			
 		});
 		
+		dwThread.setDaemon(true);
 		dwThread.start();
 	}
 
@@ -333,32 +362,23 @@ public class MainWin {
 	}
 
 
-	public static void applyServerSync() 
-	{
-		if (config.getBoolean("ServerSync",true))
-		{
-			if ((syncThread == null) || (syncThread.isAlive() == false))
-			{
-				syncThread = new Thread(new SyncThread());
-				syncThread.start();
-			}
-		}
-	}
+
 
 	private static void loadConfig() 
 	{
 		try 
     	{
+			// dwui config..
 			
 			File f = new File(configfile);
 			
 			if (f.exists())
 			{
-				config = new XMLConfiguration(configfile);
+				config = new XMLConfiguration(configfile);	
 			}
 			else
 			{
-				
+				logger.info("Creating new UI config file");
 				config = new XMLConfiguration();
 				config.setFileName(configfile);
 				config.addProperty("AutoCreated", true);
@@ -374,6 +394,38 @@ public class MainWin {
 			MainWin.port = config.getInt("LastPort",default_Port);
 			MainWin.instance = config.getInt("LastInstance",default_Instance);
 			
+			
+			
+			// server
+			
+			if (config.getBoolean("LocalServer",true))
+			{
+				f = new File(config.getString("ServerConfigFile", "config.xml"));
+				
+				if (!f.exists())
+				{
+					// try to make a default server config
+					f = new File("default/serverconfig.xml");
+					if (!f.exists())
+					{
+						logger.fatal("LocalServer is true, but server config can not be found or created.");
+						System.exit(-1);
+					}
+					else
+					{
+						logger.info("Creating new server config file");
+						try 
+						{
+							UIUtils.fileCopy(f.getCanonicalPath(), config.getString("ServerConfigFile", "config.xml"));
+						} 
+						catch (IOException e) 
+						{
+							logger.fatal("Error copying default server config: " + e.getMessage());
+							System.exit(-1);
+						}
+					}
+				}
+			}
 		} 
     	catch (ConfigurationException e1) 
     	{
@@ -384,59 +436,92 @@ public class MainWin {
 		
 	}
 
-	/**
-	 * Open the window.
-	 */
-	public void open(Display display, String[] args) {
+
+	
+	
+
+
+	public void open(final Display display, String[] args) {
 		
 		createContents();
 		
-		applyFont();
+		MainWin.diskTableUpdater = new DiskTableUpdateThread();
+		Thread dtuThread = new Thread(MainWin.diskTableUpdater);
+		dtuThread.setDaemon(true);
+		dtuThread.start();
+		
+		
+		//applyFont();
+		
+		if (!connected)
+		{
+			MainWin.setItemsConnectionEnabled(false);
+	
+		}
 		
 		shell.open();
 		shell.layout();
 
-		if (MainWin.getHost() != null) syncConfig(); 
-
-		for (int i = 0;i<256;i++)
-		{	
-			TableItem item = new TableItem(table, SWT.NONE);
-			item.setText(0,i+"");
-		}
-		
-		MainWin.currentDisk = new DiskDef();
-		displayCurrentDisk();
 		
 		
-		FontData f = MainWin.getMainFont();
-		
-		
-		MainWin.setFont(f);
-		
+		//FontData f = MainWin.getMainFont();
+		//MainWin.setFont(f);
 		
 		
 		
 		if (firsttimer)
 		{
-		 MessageBox messageBox = new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES | SWT.NO);
-		        
-		 messageBox.setMessage("It looks like this is the first time the client has been started.\n\nWould you like to go through a simple, step by step configuration wizard now?");
-		 messageBox.setText("No client configuration found... but that's OK!");
-		        int response = messageBox.open();
-		        if (response == SWT.YES)
-		        {
-		        	InitialConfigWin icw = new InitialConfigWin(shell,SWT.DIALOG_TRIM);
-		        	icw.open();
-		        	
-		        }
+			MainWin.addToDisplay("Welcome to DriveWire 4!");
+			MainWin.addToDisplay(" ");
+			MainWin.addToDisplay("Please choose a serial device using the Config, Instance tool.");
+			MainWin.addToDisplay(" ");
 		}
+		
+		// drive light
+		
+		 Runnable drivelightoff = new Runnable() 
+		 	{
+		      public void run() 
+		      {
+		    	  
+		    	  if ((MainWin.driveactivity.booleanValue() == true))
+		    	  {
+	    			  
+	    			  for (int i=0;i<256;i++)
+	    			  {
+	    				  if (MainWin.table.getItem(i) != null)
+	    				  {
+	    					  if ((disks[i] != null) && (disks[i].isLoaded()))
+	    						  MainWin.diskTableUpdater.addUpdate(i,"LED",MainWin.diskLEDdark);
+	    					 
+	    				  }
+	    				 
+	    			  }
+
+		    		  MainWin.driveactivity = false;
+		    	  }
+			  	  	
+		    	  display.timerExec(1000, this);
+		      }
+		    };
+		    
+	    display.timerExec(1000, drivelightoff);
+		
+	    
+	    MainWin.ready = true;
 		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
 			}
 		}
+		
 	}
+
+	
+	
+	
+
 
 	public static FontData getMainFont() 
 	{
@@ -492,6 +577,7 @@ public class MainWin {
 
 	private static void applyFont() 
 	{
+		/*
 		FontData f = MainWin.getDialogFont();
 		
 		
@@ -501,7 +587,7 @@ public class MainWin {
 		{
 			controls[i].setFont(new Font(display, f));
 		}
-		
+		*/
 	}
 
 	private static void updateTitlebar() 
@@ -516,30 +602,50 @@ public class MainWin {
 	 */
 	protected void createContents() {
 		shell = new Shell();
-		shell.setImage(SWTResourceManager.getImage(MainWin.class, "/dw4square.jpg"));
+		
+
+		
+		shell.setImage(SWTResourceManager.getImage(MainWin.class, "/dw/dw4square.jpg"));
 		shell.addShellListener(new ShellAdapter() {
+			
+
 			@Override
 			public void shellClosed(ShellEvent e) 
 			{
+				 doShutdown();
 				
-				doShutdown();
 			}
 		});
-		shell.setSize(770, 514);
+		
+		// 		shell.setSize(config.getInt("MainWin_Width",753), config.getInt("MainWin_Height", 486));
+		shell.setSize(config.getInt("MainWin_Width",753), config.getInt("MainWin_Height", 486));
+		
+		if (config.containsKey("MainWin_x") && config.containsKey("MainWin_y"))
+		{
+			Point p = new Point(config.getInt("MainWin_x",0), config.getInt("MainWin_y",0));
+			
+			if (MainWin.isValidDisplayPos(p))
+				shell.setLocation(p);
+		}
+		
 		shell.setText("DriveWire User Interface");
 		shell.setLayout(new BorderLayout(0, 2));
 		
 		Menu menu = new Menu(shell, SWT.BAR);
 		shell.setMenuBar(menu);
 		
-		MenuItem mntmFile = new MenuItem(menu, SWT.CASCADE);
+		
+		
+		// file menu
+		
+		mntmFile = new MenuItem(menu, SWT.CASCADE);
 		mntmFile.setText("File");
 		
-		Menu menu_1 = new Menu(mntmFile);
-		mntmFile.setMenu(menu_1);
+		menu_file = new Menu(mntmFile);
+		mntmFile.setMenu(menu_file);
 		
-		MenuItem mntmChooseServer = new MenuItem(menu_1, SWT.NONE);
-		mntmChooseServer.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/computer-go.png"));
+		MenuItem mntmChooseServer = new MenuItem(menu_file, SWT.NONE);
+		mntmChooseServer.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/computer-go.png"));
 		mntmChooseServer.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -551,8 +657,8 @@ public class MainWin {
 		});
 		mntmChooseServer.setText("Choose server...");
 		
-		MenuItem mntmChooseInstance = new MenuItem(menu_1, SWT.NONE);
-		mntmChooseInstance.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/view-list-tree-4.png"));
+		mntmChooseInstance = new MenuItem(menu_file, SWT.NONE);
+		mntmChooseInstance.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/view-list-tree-4.png"));
 		mntmChooseInstance.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -576,47 +682,44 @@ public class MainWin {
 		});
 		mntmChooseInstance.setText("Choose instance...");
 		
-		new MenuItem(menu_1, SWT.SEPARATOR);
+		new MenuItem(menu_file, SWT.SEPARATOR);
 		
-		MenuItem mntmExit = new MenuItem(menu_1, SWT.NONE);
-		mntmExit.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/application-exit-5.png"));
+		MenuItem mntmExit = new MenuItem(menu_file, SWT.NONE);
+		mntmExit.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/application-exit-5.png"));
 		mntmExit.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
+
 				shell.close();
-				System.exit(0);
 			}
 		});
 		mntmExit.setText("Exit");
 		
-		MenuItem mntmServer = new MenuItem(menu, SWT.CASCADE);
+		
+		
+		// tools menu
+		
+		mntmTools = new MenuItem(menu, SWT.CASCADE);
 
-		mntmServer.setText("Tools");
+		mntmTools.setText("Tools");
 		
-		Menu menu_4 = new Menu(mntmServer);
-		menu_4.addMenuListener(new MenuAdapter() {
-			@Override
-			public void menuShown(MenuEvent e) 
-			{
-				MainWin.syncConfig();
-			}
-		});
-		mntmServer.setMenu(menu_4);
+		menu_tools = new Menu(mntmTools);
+		mntmTools.setMenu(menu_tools);
 		
-		MenuItem mntmDisksetManager = new MenuItem(menu_4, SWT.NONE);
-		mntmDisksetManager.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/database-edit.png"));
+		MenuItem mntmDisksetManager = new MenuItem(menu_tools, SWT.NONE);
+		mntmDisksetManager.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/database-edit.png"));
 		mntmDisksetManager.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				DisksetManagerWin dmw = new DisksetManagerWin(shell,SWT.DIALOG_TRIM);
-				dmw.open();
+				//DisksetManagerWin dmw = new DisksetManagerWin(shell,SWT.DIALOG_TRIM);
+				//dmw.open();
 			}
 		});
 		mntmDisksetManager.setText("Diskset manager..");
 		
-		MenuItem mntmCreate = new MenuItem(menu_4, SWT.NONE);
-		mntmCreate.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/media-floppy-new.png"));
+		MenuItem mntmCreate = new MenuItem(menu_tools, SWT.NONE);
+		mntmCreate.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/media-floppy-new.png"));
 		mntmCreate.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -631,8 +734,8 @@ public class MainWin {
 		
 				mntmCreate.setText("Create dsk..");
 		
-		MenuItem mntmEjectAllDisks = new MenuItem(menu_4, SWT.NONE);
-		mntmEjectAllDisks.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/media-eject.png"));
+		MenuItem mntmEjectAllDisks = new MenuItem(menu_tools, SWT.NONE);
+		mntmEjectAllDisks.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/media-eject.png"));
 		mntmEjectAllDisks.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -642,11 +745,9 @@ public class MainWin {
 		});
 		mntmEjectAllDisks.setText("Eject all disks");
 		
-		MenuItem mntmRefreshDiskTable = new MenuItem(menu_4, SWT.NONE);
-		mntmRefreshDiskTable.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/view-refresh-6.png"));
-		mntmRefreshDiskTable.setText("Refresh disk table");
+		new MenuItem(menu_tools, SWT.SEPARATOR);
 		
-		mntmHdbdosTranslation = new MenuItem(menu_4, SWT.CHECK);
+		mntmHdbdosTranslation = new MenuItem(menu_tools, SWT.CHECK);
 		mntmHdbdosTranslation.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -665,10 +766,10 @@ public class MainWin {
 		});
 		mntmHdbdosTranslation.setText("HDBDOS translation");
 		
-		new MenuItem(menu_4, SWT.SEPARATOR);
+		new MenuItem(menu_tools, SWT.SEPARATOR);
 		
-		MenuItem mntmStatus = new MenuItem(menu_4, SWT.NONE);
-		mntmStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/computer-server.png"));
+		MenuItem mntmStatus = new MenuItem(menu_tools, SWT.NONE);
+		mntmStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/computer-server.png"));
 		mntmStatus.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -693,14 +794,18 @@ public class MainWin {
 		mntmStatus.setText("Server status");
 		
 		
+		
+
+		// config menu
+				
 		MenuItem mntmConfig = new MenuItem(menu, SWT.CASCADE);
 		mntmConfig.setText("Config");
 		
-		Menu menu_5 = new Menu(mntmConfig);
-		mntmConfig.setMenu(menu_5);
+		menu_config = new Menu(mntmConfig);
+		mntmConfig.setMenu(menu_config);
 		
-		MenuItem mntmInitialConfig = new MenuItem(menu_5, SWT.NONE);
-		mntmInitialConfig.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/wand.png"));
+		mntmInitialConfig = new MenuItem(menu_config, SWT.NONE);
+		mntmInitialConfig.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/wand.png"));
 		mntmInitialConfig.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -711,35 +816,48 @@ public class MainWin {
 		});
 		mntmInitialConfig.setText("Simple config wizard...");
 		
-		new MenuItem(menu_5, SWT.SEPARATOR);
+		new MenuItem(menu_config, SWT.SEPARATOR);
 		
-		MenuItem mntmServer_1 = new MenuItem(menu_5, SWT.NONE);
-		mntmServer_1.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/computer-edit.png"));
+		MenuItem mntmServer_1 = new MenuItem(menu_config, SWT.NONE);
+		mntmServer_1.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/computer-edit.png"));
 		mntmServer_1.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				ServerConfigWin window = new ServerConfigWin(shell,SWT.DIALOG_TRIM);
-
-				try 
+				/*
+				if ((MainWin.serverconfigwin == null) || (MainWin.serverconfigwin.shlServerConfiguration.isDisposed()))
 				{
-					window.open();
-				} 
-				catch (DWUIOperationFailedException e1) 
-				{
-					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
-				} 
-				catch (IOException e1) 
-				{
-					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+					serverconfigwin = new ServerConfigWin(shell,SWT.DIALOG_TRIM);
+					
+					try 
+					{
+						serverconfigwin.open();
+					} 
+					catch (DWUIOperationFailedException e1) 
+					{
+						showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+					} 
+					catch (IOException e1) 
+					{
+						showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+					}
 				}
+				else
+				{
+					serverconfigwin.shlServerConfiguration.setActive();
+				}
+				
+				*/
+				
+				ConfigEditor ce = new ConfigEditor(display);
+				ce.open();
 			
 			}
 		});
 		mntmServer_1.setText("Server...");
 		
-		MenuItem mntmInstanceConfig = new MenuItem(menu_5, SWT.NONE);
-		mntmInstanceConfig.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/cog-edit.png"));
+		MenuItem mntmInstanceConfig = new MenuItem(menu_config, SWT.NONE);
+		mntmInstanceConfig.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/cog-edit.png"));
 		mntmInstanceConfig.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -763,8 +881,8 @@ public class MainWin {
 		});
 		mntmInstanceConfig.setText("Instance...");
 		
-		MenuItem mntmUserInterface = new MenuItem(menu_5, SWT.NONE);
-		mntmUserInterface.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/image-edit.png"));
+		mntmUserInterface = new MenuItem(menu_config, SWT.NONE);
+		mntmUserInterface.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/image-edit.png"));
 		mntmUserInterface.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -776,29 +894,16 @@ public class MainWin {
 		});
 		mntmUserInterface.setText("User interface...");
 		
-		MenuItem mntmMidi = new MenuItem(menu_5, SWT.CASCADE);
-		mntmMidi.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				//doLoadMIDIMenus();
-			}
-		});
-		mntmMidi.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/audio-keyboard.png"));
+		mntmMidi = new MenuItem(menu_config, SWT.CASCADE);
+
+		mntmMidi.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/audio-keyboard.png"));
 		mntmMidi.setText("MIDI");
 		
 		Menu menu_6 = new Menu(mntmMidi);
 		mntmMidi.setMenu(menu_6);
 		
-		menu_6.addMenuListener(new MenuAdapter() {
-			@Override
-			public void menuShown(MenuEvent e) 
-			{
-				MainWin.syncConfig();
-			}
-		});
-		
-		MenuItem mntmSetOutput = new MenuItem(menu_6, SWT.CASCADE);
-		mntmSetOutput.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/audio-volume-high.png"));
+		mntmSetOutput = new MenuItem(menu_6, SWT.CASCADE);
+		mntmSetOutput.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/audio-volume-high.png"));
 		mntmSetOutput.setText("Set output");
 		
 		menuMIDIOutputs = new Menu(mntmSetOutput);
@@ -837,13 +942,13 @@ public class MainWin {
 			});
 			}
 		});
-		mntmLoadSoundbank.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/music.png"));
+		mntmLoadSoundbank.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/music.png"));
 		mntmLoadSoundbank.setText("Load soundbank...");
 		
 		
 		
 		mntmSetProfile = new MenuItem(menu_6, SWT.CASCADE);
-		mntmSetProfile.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/format-text-columns.png"));
+		mntmSetProfile.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/format-text-columns.png"));
 		mntmSetProfile.setText("Set profile");
 		
 		menuMIDIProfiles = new Menu(mntmSetProfile);
@@ -859,10 +964,10 @@ public class MainWin {
 		});
 		mntmLockInstruments.setText("Lock instruments");
 		
-		new MenuItem(menu_5, SWT.SEPARATOR);
+		new MenuItem(menu_config, SWT.SEPARATOR);
 		
-		MenuItem mntmResetInstanceDevice = new MenuItem(menu_5, SWT.NONE);
-		mntmResetInstanceDevice.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/document-quick_restart.png"));
+		MenuItem mntmResetInstanceDevice = new MenuItem(menu_config, SWT.NONE);
+		mntmResetInstanceDevice.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/document-quick_restart.png"));
 		mntmResetInstanceDevice.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -873,14 +978,18 @@ public class MainWin {
 		});
 		mntmResetInstanceDevice.setText("Reset instance device");
 		
+		
+		
+		// help menu
+		
 		MenuItem mntmHelp = new MenuItem(menu, SWT.CASCADE);
 		mntmHelp.setText("Help");
 		
-		Menu menu_3 = new Menu(mntmHelp);
-		mntmHelp.setMenu(menu_3);
+		menu_help = new Menu(mntmHelp);
+		mntmHelp.setMenu(menu_help);
 		
-		MenuItem mntmDocumentation = new MenuItem(menu_3, SWT.NONE);
-		mntmDocumentation.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/world-link.png"));
+		MenuItem mntmDocumentation = new MenuItem(menu_help, SWT.NONE);
+		mntmDocumentation.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/world-link.png"));
 		mntmDocumentation.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -890,8 +999,8 @@ public class MainWin {
 		});
 		mntmDocumentation.setText("Documentation Wiki");
 		
-		MenuItem mntmDwCommands = new MenuItem(menu_3, SWT.CASCADE);
-		mntmDwCommands.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/book-open.png"));
+		mntmDwCommands = new MenuItem(menu_help, SWT.CASCADE);
+		mntmDwCommands.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/book-open.png"));
 		mntmDwCommands.setText("Help on server");
 		
 		menuDWCmdHelp = new Menu(mntmDwCommands);
@@ -921,10 +1030,10 @@ public class MainWin {
 		mntmnoHelpTopics.setEnabled(false);
 		mntmnoHelpTopics.setText("(No help topics loaded)");
 		
-		new MenuItem(menu_3, SWT.SEPARATOR);
+		new MenuItem(menu_help, SWT.SEPARATOR);
 		
-		MenuItem mntmSubmitBugReport = new MenuItem(menu_3, SWT.NONE);
-		mntmSubmitBugReport.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/bug.png"));
+		MenuItem mntmSubmitBugReport = new MenuItem(menu_help, SWT.NONE);
+		mntmSubmitBugReport.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/bug.png"));
 		mntmSubmitBugReport.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -935,10 +1044,10 @@ public class MainWin {
 		});
 		mntmSubmitBugReport.setText("Submit bug report...");
 		
-		new MenuItem(menu_3, SWT.SEPARATOR);
+		new MenuItem(menu_help, SWT.SEPARATOR);
 		
-		MenuItem mntmAbout = new MenuItem(menu_3, SWT.NONE);
-		mntmAbout.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/help-about-3.png"));
+		MenuItem mntmAbout = new MenuItem(menu_help, SWT.NONE);
+		mntmAbout.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/help-about-3.png"));
 		mntmAbout.addSelectionListener(new SelectionAdapter() 
 		{
 			@Override
@@ -949,6 +1058,11 @@ public class MainWin {
 			}
 		});
 		mntmAbout.setText("About...");
+		
+		
+		
+		
+		
 		
 		txtYouCanEnter = new Text(shell, SWT.BORDER);
 		txtYouCanEnter.addMouseListener(new MouseAdapter() {
@@ -964,356 +1078,202 @@ public class MainWin {
 		txtYouCanEnter.setText("Hint: You can enter 'dw' commands here.  Enter dw by itself for help.");
 		txtYouCanEnter.setLayoutData(BorderLayout.SOUTH);
 		
-		Composite tbarcomp = new Composite(shell, SWT.RIGHT);
-		tbarcomp.setLayoutData(BorderLayout.NORTH);
-		tbarcomp.setLayout(null);
-	    
-		
-		ToolBar toolBar = new ToolBar(tbarcomp, SWT.RIGHT);
-		toolBar.setBounds(0, 0, 725, 30);
-		//toolBar.setLayoutData(BorderLayout.NORTH);
-		
-		ToolItem toolItem_1 = new ToolItem(toolBar, SWT.SEPARATOR);
-		toolItem_1.setWidth(4);
-		
-		ToolItem tltmX = new ToolItem(toolBar, SWT.NONE);
-		tltmX.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				SwingUtilities.invokeLater(new Runnable() {
-					
-					public void run() 
-					{	
-					 quickInDisk(0);
-					}
-				});
-			}
-		});
-		tltmX.setImage(SWTResourceManager.getImage(MainWin.class, "/floppy_in_16.png"));
-		tltmX.setText("Insert X0");
-		
-		ToolItem tltmInsertX = new ToolItem(toolBar, SWT.NONE);
-		tltmInsertX.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				quickInDisk(1);
-			}
-		});
-		tltmInsertX.setImage(SWTResourceManager.getImage(MainWin.class, "/floppy_in_16.png"));
-		tltmInsertX.setText("Insert X1");
-		
-		ToolItem tltmInsertX_1 = new ToolItem(toolBar, SWT.NONE);
-		tltmInsertX_1.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				quickInDisk(2);
-			}
-		});
-		tltmInsertX_1.setImage(SWTResourceManager.getImage(MainWin.class, "/floppy_in_16.png"));
-		tltmInsertX_1.setText("Insert X2");
-		
-		ToolItem tltmInsertX_2 = new ToolItem(toolBar, SWT.NONE);
-		tltmInsertX_2.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				quickInDisk(3);
-			}
-		});
-		tltmInsertX_2.setImage(SWTResourceManager.getImage(MainWin.class, "/floppy_in_16.png"));
-		tltmInsertX_2.setText("Insert X3");
-		
-		new ToolItem(toolBar, SWT.SEPARATOR);
-		
-		tltmLoadDiskSet = new ToolItem(toolBar, SWT.DROP_DOWN);
-		tltmLoadDiskSet.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/database-go.png"));
-		tltmLoadDiskSet.setText("No DiskSet");
-		
-	    disksetDDListener = new DropdownSelectionListener(tltmLoadDiskSet);
-	    tltmLoadDiskSet.addSelectionListener(disksetDDListener);
-	    
-	    new ToolItem(toolBar, SWT.SEPARATOR);
-	    
-	    
-	    
-	    ToolItem tltmSaveDiskSet = new ToolItem(toolBar, SWT.NONE);
-	    tltmSaveDiskSet.addSelectionListener(new SelectionAdapter() {
-	    	@Override
-	    	public void widgetSelected(SelectionEvent e) 
-	    	{
-	    		SaveDiskSetWin window = new SaveDiskSetWin(shell,SWT.DIALOG_TRIM);
-	    		try 
-	    		{
-	    			window.open();
-	    			MainWin.syncConfig();
-	    		} 
-	    		catch (IOException e1) 
-	    		{
-	    			showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
-	    		} 
-	    		catch (DWUIOperationFailedException e1) 
-	    		{
-	    			showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
-	    		}
-	    		
-	    	}
-	    });
-	    tltmSaveDiskSet.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/database-save.png"));
-	    tltmSaveDiskSet.setText("Write Diskset");
-	    
-	    new ToolItem(toolBar, SWT.SEPARATOR);
-	    
-	    ToolItem tltmDisksetManager = new ToolItem(toolBar, SWT.NONE);
-	    tltmDisksetManager.addSelectionListener(new SelectionAdapter() {
-	    	@Override
-	    	public void widgetSelected(SelectionEvent e) {
-	    		DisksetManagerWin dmw = new DisksetManagerWin(shell,SWT.DIALOG_TRIM);
-				dmw.open();
-	    	}
-	    });
-	    tltmDisksetManager.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/database-edit.png"));
-	    tltmDisksetManager.setText("Diskset Manager");
-	    
-	    lblConStatus = new Label(tbarcomp, SWT.NONE);
-	    lblConStatus.setBounds(731, 0, 23, 30);
-	    lblConStatus.setImage(null);
-		
-	    updateDisksetDD();
+	   
 	    
 	    
 	    
 		sashForm = new SashForm(shell, SWT.SMOOTH | SWT.VERTICAL);
+
 		sashForm.setLayoutData(BorderLayout.CENTER);
+
+		
+		compositeList = new Composite(sashForm, SWT.NONE);
+		compositeList.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
 		
+		// disk table
 		
-		sashForm_1 = new SashForm(sashForm, SWT.SMOOTH);
-		
-		table = new Table(sashForm_1, SWT.BORDER | SWT.FULL_SELECTION);
+		table = new Table(compositeList, SWT.FULL_SELECTION);
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDoubleClick(MouseEvent e) 
+			{
+				int drive = table.getSelectionIndex();
+				
+				if ((MainWin.disks != null) && (MainWin.disks[drive] != null))
+				{
+					if (MainWin.disks[drive].isLoaded())
+					{
+						if (MainWin.disks[drive].hasDiskwin())
+						{
+							MainWin.disks[drive].getDiskwin().shlDwDrive.setActive();
+						}
+						else
+						{
+							MainWin.disks[drive].setDiskwin(new DiskWin( MainWin.disks[drive],getDiskWinInitPos(drive).x,getDiskWinInitPos(drive).y));
+							MainWin.disks[drive].getDiskwin().open(display);
+
+						}
+					}
+					else
+					{
+						quickInDisk(drive);
+					}
+				
+				}
+			}
+		});
 		table.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				loadSelectedDiskDetails();
-				displayCurrentDisk();
+				MainWin.currentDisk = table.getSelectionIndex();
+				
+			
 			}
 		});
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
 		
-		TableColumn tblclmnDrive = new TableColumn(table, SWT.NONE);
-		tblclmnDrive.setWidth(28);
-		tblclmnDrive.setText("X#");
+		createDiskTableColumns();
 		
-		TableColumn tblclmnUri = new TableColumn(table, SWT.NONE);
-		tblclmnUri.setWidth(232);
-		tblclmnUri.setText("Path");
 		
-		composite = new Composite(sashForm_1, SWT.BORDER);
-		composite.setLayout(null);
 		
-		textDiskURI = new Combo(composite, SWT.BORDER);
-		textDiskURI.addKeyListener(new KeyAdapter() {
+		// rmb menu for disks...
+		
+		Menu diskPopup = new Menu (shell, SWT.POP_UP);
+		diskPopup.addMenuListener(new MenuAdapter() {
 			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == 13)
+			public void menuShown(MenuEvent e) 
+			{
+				
+				int sdisk = table.getSelectionIndex();
+				if (sdisk > -1)
 				{
-					MainWin.sendCommand("dw disk insert " + MainWin.currentDisk.getDrive() + " " + textDiskURI.getText());
-					MainWin.loadSelectedDiskDetails();
-					MainWin.displayCurrentDisk();
+					mitemInsert.setText ("Insert disk for drive " + sdisk + "...");
+					mitemExport.setText("Export image in drive " + sdisk + " to...");
+					mitemCreate.setText ("Create new disk for drive " + sdisk + "...");
+					mitemEject.setText ("Eject disk in drive " + sdisk);
+					mitemParameters.setText ("Drive " + sdisk + " parameters...");
+					
+					mitemInsert.setEnabled(false);
+					mitemCreate.setEnabled(false);
+					mitemExport.setEnabled(false);	
+					mitemEject.setEnabled(false);
+					mitemParameters.setEnabled(false);
+					
+					if ((MainWin.disks != null) && (MainWin.disks[sdisk] != null))
+					{
+						mitemInsert.setEnabled(true);
+						mitemCreate.setEnabled(true);
+							
+						if (MainWin.disks[sdisk].isLoaded())
+						{
+							mitemEject.setEnabled(true);
+							mitemParameters.setEnabled(true);
+							mitemExport.setEnabled(true);
+						}
+					}
+					
 				}
 			}
 		});
+		
+		
+		
+		mitemInsert = new MenuItem (diskPopup, SWT.PUSH);
+		mitemInsert.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				quickInDisk(table.getSelectionIndex());
+			}
+		});
+		mitemInsert.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/floppy_in_16.png"));
+		mitemInsert.setText ("Insert...");
+		
+		
+		mitemExport = new MenuItem (diskPopup, SWT.PUSH);
+		mitemExport.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				MainWin.writeDiskTo(MainWin.getCurrentDiskNo());
+			}
+		});
+		mitemExport.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/document-save-as-5.png"));
+		mitemExport.setText ("Export...");
+		
+		
+		mitemCreate = new MenuItem (diskPopup, SWT.PUSH);
+		mitemCreate.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				CreateDiskWin window = new CreateDiskWin(shell,SWT.DIALOG_TRIM);
+				
+				window.open();
+			}
+		});
+		mitemCreate.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/media-floppy-new.png"));
+		mitemCreate.setText ("Create...");
+		
+		
 	
-		textDiskURI.addSelectionListener(new SelectionAdapter() {
+		
+		
+		new MenuItem(diskPopup, SWT.SEPARATOR);
+		
+		
+		mitemEject = new MenuItem (diskPopup, SWT.PUSH);
+		mitemEject.addSelectionListener(new SelectionAdapter() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				MainWin.sendCommand("dw disk insert " + MainWin.currentDisk.getDrive() + " " + textDiskURI.getText());
-				MainWin.loadSelectedDiskDetails();
-				MainWin.displayCurrentDisk();
+			public void widgetSelected(SelectionEvent e) 
+			{
+				MainWin.sendCommand("dw disk eject " + table.getSelectionIndex());
 			}
 		});
-		textDiskURI.setToolTipText("Enter a file path or any valid URI that points to the disk image you would like to use");
+		mitemEject.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/media-eject.png"));
+		mitemEject.setText ("Eject");
+		
+		
+		
+		new MenuItem(diskPopup, SWT.SEPARATOR);
+		
+		mitemParameters = new MenuItem (diskPopup, SWT.PUSH);
+		mitemParameters.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				if (MainWin.disks[table.getSelectionIndex()].hasParamwin())
+				{
+					MainWin.disks[table.getSelectionIndex()].getParamwin().shell.setActive();
+				}
+				else
+				{
+					MainWin.disks[table.getSelectionIndex()].setParamwin(new DiskAdvancedWin(shell, SWT.DIALOG_TRIM, MainWin.disks[table.getSelectionIndex()]));
+					MainWin.disks[table.getSelectionIndex()].getParamwin().open();
 
-		textDiskURI.setBounds(10, 31, 408, 23);
-		
-		lblDiskUri = new Label(composite, SWT.NONE);
-		lblDiskUri.setBounds(10, 10, 408, 15);
-		lblDiskUri.setText("Disk X URI:");
-		
-		buttonFile = new Button(composite, SWT.NONE);
-		buttonFile.setToolTipText("Click to browse files");
-		buttonFile.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				quickInDisk(MainWin.currentDisk.getDrive());
-			}
-		});
-		buttonFile.setBounds(424, 31, 32, 23);
-		buttonFile.setText("...");
-		
-		btnEject = new Button(composite, SWT.NONE);
-		btnEject.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/media-eject.png"));
-		btnEject.setToolTipText("Eject this image");
-		btnEject.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				MainWin.sendCommand("dw disk eject " + MainWin.currentDisk.getDrive());
-				
-				loadSelectedDiskDetails();
-				displayCurrentDisk(); 
-				
-			}
-		});
-		btnEject.setBounds(10, 123, 71, 28);
-		btnEject.setText("Eject");
-		
-		btnWrite = new Button(composite, SWT.NONE);
-		btnWrite.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/document-save-4.png"));
-		btnWrite.setToolTipText("Write the current image to an alternate destination");
-		btnWrite.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				writeDiskTo(MainWin.currentDisk.getDrive());
-			}
-		});
-		btnWrite.setBounds(87, 123, 94, 28);
-		btnWrite.setText("Write to..");
-		
-		btnReload = new Button(composite, SWT.NONE);
-		btnReload.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/floppy_in_16.png"));
-		btnReload.setToolTipText("Reread the source image (losing any unsynced changes)");
-		btnReload.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				MainWin.sendCommand("dw disk reload " + MainWin.currentDisk.getDrive());
-				loadSelectedDiskDetails();
-				displayCurrentDisk();
-			}
-		});
-		btnReload.setText("Reload");
-		btnReload.setBounds(187, 123, 88, 28);
-		
-		lblSectors2 = new Label(composite, SWT.RIGHT);
-		lblSectors2.setBounds(10, 72, 75, 21);
-		lblSectors2.setText("Total sectors:");
-		
-		lblCurrentLsn = new Label(composite, SWT.RIGHT);
-		lblCurrentLsn.setText("Current LSN:");
-		lblCurrentLsn.setBounds(11, 94, 74, 23);
-		
-		lblReads = new Label(composite, SWT.RIGHT);
-		lblReads.setText("Reads:");
-		lblReads.setBounds(135, 72, 75, 21);
-		
-		lblWrites = new Label(composite, SWT.RIGHT);
-		lblWrites.setText("Writes:");
-		lblWrites.setBounds(135, 94, 75, 18);
-		
-		labelDiskSectors = new Label(composite, SWT.NONE);
-		labelDiskSectors.setToolTipText("The numbers of sectors that exist in this disk image");
-		labelDiskSectors.setBounds(91, 72, 60, 23);
-		
-		labelDiskLSN = new Label(composite, SWT.NONE);
-		labelDiskLSN.setToolTipText("The destination sector of the most recent seek operation");
-		labelDiskLSN.setBounds(91, 94, 60, 18);
-		
-		labelDiskReads = new Label(composite, SWT.NONE);
-		labelDiskReads.setToolTipText("The number of read requests made to this image");
-		labelDiskReads.setBounds(216, 72, 60, 23);
-		
-		labelDiskWrites = new Label(composite, SWT.NONE);
-		labelDiskWrites.setToolTipText("The number of write requests made to this image");
-		labelDiskWrites.setBounds(216, 94, 59, 18);
-		
-		btnAdvanced = new Button(composite, SWT.NONE);
-		btnAdvanced.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/kcontrol-3.png"));
-		btnAdvanced.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				DiskAdvancedWin window = new DiskAdvancedWin(shell,SWT.DIALOG_TRIM);
-				try 
-				{
-					window.open();
-					
-					loadSelectedDiskDetails();
-					displayCurrentDisk();
-					
-				} 
-				catch (Exception e1)
-				{
-					
 				}
 			}
 		});
-		btnAdvanced.setBounds(291, 123, 166, 28);
-		btnAdvanced.setText("Advanced options...");
+		mitemParameters.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/kcontrol-3.png"));
+		mitemParameters.setText ("Parameters...");
+		
+		table.setMenu(diskPopup);
 		
 		
-		//Composite lblDriveNo = new Composite(composite, SWT.NONE);
-		//lblDriveNo.setForeground(org.eclipse.wb.swt.SWTResourceManager.getColor(255, 255, 255));
-
-       
-        //mucking about with fonts
-       
-
-        FontData fd = MainWin.getMainFont();
-
-        fd.setHeight(6);
-        fd.setStyle(SWT.BOLD);
-      
-		
-		//set the transparent canvas on the shell
-        canvasDriveNo = new Canvas(composite, SWT.NO_TRIM);
-        canvasDriveNo.setBounds(310, 93, 25, 15);
-        canvasDriveNo.setVisible(false);
-        canvasDriveNo.setBackground(org.eclipse.wb.swt.SWTResourceManager.getColor(83, 83, 83));
-        
-        canvasDriveNo.setForeground(org.eclipse.wb.swt.SWTResourceManager.getColor(150,150,150));
-        canvasDriveNo.setFont(new Font(display, fd));
-        canvasDriveNo.addPaintListener(new PaintListener() {
-                            public void paintControl(PaintEvent e) {
-                            	if ((MainWin.currentDisk != null) && (MainWin.currentDisk.getDrive() > -1))
-                            	{
-                            		e.gc.drawString(String.format("%3d", MainWin.currentDisk.getDrive()), 0,0, true);
-                            	}
-                            	
-                            	
-                            }
-                        });
-
-  	
-		
-		lblDiskDriveLED = new Label(composite, SWT.NONE);
-		lblDiskDriveLED.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/diskdrive-leddark.png"));
-		lblDiskDriveLED.setBounds(313, 77, 12, 6);
-		lblDiskDriveLED.setVisible(false);
-		
-		lblDiskDriveImg = new Label(composite, SWT.NONE);
-		lblDiskDriveImg.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/diskdrive1.png"));
-		lblDiskDriveImg.setBounds(293, 68, 162, 46);
-		lblDiskDriveImg.setVisible(false);
-                        
-                        
-		sashForm_1.setWeights(new int[] {283, 468});
 		
 		tabFolderOutput = new TabFolder(sashForm, SWT.NONE);
 		tabFolderOutput.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				tabFolderOutput.getItems()[tabFolderOutput.getSelectionIndex()].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/user-invisible-2.png"));
+				tabFolderOutput.getItems()[tabFolderOutput.getSelectionIndex()].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/tabfolder/user-invisible-2.png"));
 			}
 		});
 		
 		TabItem tbtmUi = new TabItem(tabFolderOutput, SWT.NONE);
-	
+		
 		tbtmUi.setText("UI  ");
 		
 		textDWOutput = new Text(tabFolderOutput, SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
@@ -1328,28 +1288,41 @@ public class MainWin {
 		tbtmServer.setControl(composite_1);
 		composite_1.setLayout(new GridLayout(2, false));
 		
-		textServer = new Text(composite_1, SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
-		textServer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
-		textServer.setBackground(org.eclipse.wb.swt.SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		listServerLog = new org.eclipse.swt.widgets.List(composite_1, SWT.V_SCROLL);
+		listServerLog.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		
 		Composite compositeSrvControl = new Composite(composite_1, SWT.NONE);
 		compositeSrvControl.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		compositeSrvControl.setLayout(new FillLayout(SWT.VERTICAL));
 		
 		Button btnServerStart = new Button(compositeSrvControl, SWT.NONE);
+		btnServerStart.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				startDWServer(null);
+			}
+		});
 		
 		btnServerStart.setToolTipText("Start Local Server");
-		btnServerStart.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/media-playback-start-4.png"));
+		btnServerStart.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/server/media-playback-start-4.png"));
 		
 		Button btnServerStop = new Button(compositeSrvControl, SWT.NONE);
+		btnServerStop.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				sendCommand("ui server terminate");
+			}
+		});
 		
 		btnServerStop.setToolTipText("Stop Server");
-		btnServerStop.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/media-playback-stop-4.png"));
+		btnServerStop.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/server/media-playback-stop-4.png"));
 		
 		Button btnServerStatus = new Button(compositeSrvControl, SWT.NONE);
 		btnServerStatus.setToolTipText("Server Status");
-		btnServerStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/system-run-3.png"));
-		sashForm.setWeights(new int[] {161, 241});
+		btnServerStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/server/system-run-3.png"));
+		
+		
+		sashForm.setWeights(new int[] { config.getInt("SashForm_Weights(0)", 391), config.getInt("SashForm_Weights(1)", 136)});
 		
 		
 		txtYouCanEnter.addKeyListener(new KeyAdapter() {
@@ -1380,8 +1353,12 @@ public class MainWin {
 							if (cmdhist.size() > MainWin.cmdhistpos)
 							{
 								MainWin.cmdhistpos++;
+
 								txtYouCanEnter.setText(cmdhist.get(cmdhist.size() - MainWin.cmdhistpos));
 								txtYouCanEnter.setSelection(txtYouCanEnter.getText().length() + 1);
+								
+								e.doit = false;
+								
 							}
 						}
 						
@@ -1414,78 +1391,151 @@ public class MainWin {
 	}
 
 	
-	
-	
 
 
-	protected void doShutdown() 
+	private static void createDiskTableColumns()
 	{
+		synchronized(table)
+		{
+			for (String key: MainWin.getDiskTableParams())
+			{
+				TableColumn col = new TableColumn(table, SWT.NONE);
+				col.setMoveable(true);
+				col.setResizable(true);
+				col.setData("param", key);
+				
+				col.setWidth(config.getInt(key +"_ColWidth",50));
+				if (key.startsWith("_") && (key.length()>2))
+					col.setText(key.substring(1, 2).toUpperCase() + key.substring(2));
+				else if (!key.equals("LED") && key.length()>1)
+					col.setText(key.substring(0, 1).toUpperCase() + key.substring(1));
+			}
+		}
+	}
+
+
+	private static List<String> getDiskTableParams()
+	{
+		return(Arrays.asList(MainWin.config.getStringArray("DiskTable_Items")));
+	}
+
+
+	public static int getTPIndex(String key)
+	{
+		synchronized(table)
+		{
+			for (int i = 0;i<table.getColumnCount();i++)
+			{
+				if (table.getColumn(i).getData("param").equals(key))
+					return i;
+			}
+		}
+		
+		
+		return(-1);
+	}
+
+	protected static Point getDiskWinInitPos(int drive)
+	{
+		Point res = new Point(MainWin.config.getInt("DiskWin_"+ drive +"_x",shell.getLocation().x + 20), MainWin.config.getInt("DiskWin_"+ drive +"_y",shell.getLocation().y + 20));
+		
+		if (!isValidDisplayPos(res))
+				res = new Point(shell.getLocation().x + 20, shell.getLocation().y + 20);
+				
+		
+		return(res);
+	}
+
+
+	private static boolean isValidDisplayPos(Point p)
+	{
+		// check for invalid saved position
+		Monitor[] list = display.getMonitors();
+	
+		for (int i = 0; i < list.length; i++) 
+		{
+			if (list[i].getBounds().contains(p))
+				return true;
+		}
+		return false;
+	}
+
+
+
+
+
+	protected static void doShutdown() 
+	{
+	  
+		ShutdownWin sdwin = new ShutdownWin(shell, SWT.DIALOG_TRIM);
+		
+		sdwin.open();
+		
 		
 		if (config.getBoolean("TermServerOnExit",true))
 		{
+			sdwin.setStatus("Stopping DriveWire server...",20);
 			// sendCommand("ui server terminate");
-			MainWin.logThread.interrupt();
 			stopDWServer();
 		}
+		
+		// save window pos
+		sdwin.setStatus("Saving main window layout...",40);
+		
+		config.setProperty("MainWin_Width", shell.getSize().x);
+		config.setProperty("MainWin_Height", shell.getSize().y);
+		config.setProperty("MainWin_x", shell.getLocation().x);
+		config.setProperty("MainWin_y", shell.getLocation().y);
+		
+		config.setProperty("SashForm_Weights", sashForm.getWeights());
+		
+		for (int i = 0;i<table.getColumnCount();i++)
+		{
+			config.setProperty("DiskTable_Items("+ i +")", table.getColumn(table.getColumnOrder()[i]).getData("param") );
+			config.setProperty(table.getColumn(i).getData("param") +"_ColWidth", table.getColumn(i).getWidth());
+		}
+		
+		sdwin.setStatus("Saving disk window layouts...",65);
+		
+		for (int i = 0;i<256;i++)
+		{
+			
+			sdwin.setProgress(65 + (i / 8));
+			if (disks[i].hasDiskwin())
+			{
+				disks[i].getDiskwin().close();
+				config.setProperty("DiskWin_"+ i+"_open",true);
+				
+			}
+		
+		}
+		
+		sdwin.setStatus("Done...",100);
+	
 		
 	}
 
 
-	private static void updateDisksetDD() 
+	
+
+	
+	
+	
+	static void debug(String string)
 	{
-		 disksetDDListener.clear();
-		 MainWin.tltmLoadDiskSet.setText("No DiskSet");
-		 
-		if ((MainWin.dwconfig != null) && (MainWin.getInstanceConfig() != null))
-		{
-			
-			@SuppressWarnings("unchecked")
-			List<HierarchicalConfiguration> disksets = MainWin.dwconfig.configurationsAt("diskset");
-			
-			ArrayList<String> ps = new ArrayList<String>();
-			for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
-			{
-				ps.add(it.next().getString("Name","?noname?"));
-			}
-			
-			Collections.sort(ps);
-			
-			for (String ds: ps)
-			{
-				disksetDDListener.add(ds);
-				
-			}
-			
-			
-			if (MainWin.getInstanceConfig().containsKey("CurrentDiskSet"))
-			{
-				MainWin.tltmLoadDiskSet.setText(MainWin.getInstanceConfig().getString("CurrentDiskSet"));
-			}
-			
-		}
-		 
+		System.out.println(string);
+		
 	}
 
-	protected static void loadDiskSet(String dsname) 
-	{
-		MainWin.sendCommand("dw disk insert " + dsname);
-		MainWin.syncConfig();
-		updateDisksetDD();
-	}
 
-	
-
-	
-	
-	
 	protected void loadDWCmdHelpMenu() 
 	{
 
 		
-		ArrayList<String> topics;
+		List<String> topics;
 		try 
 		{
-			topics = UIUtils.loadArrayList(MainWin.instance, "ui server show helptopics");
+			topics = UIUtils.loadList(MainWin.instance, "ui server show helptopics");
 			
 			// clear menu
 			for (MenuItem mi : MainWin.menuDWCmdHelp.getItems())
@@ -1605,7 +1655,7 @@ public class MainWin {
 
 	}
 
-	protected void openURL(String url) 
+	public void openURL(String url) 
 	{
 		// this odd bit of code tries to use the org.eclipse.swt.program.Program.launch method to open a native browser with a url in it.
 		// usually that is straighforward, but on some systems it can crash the whole works, so we use invoke to call it carefully and catch crashes.
@@ -1652,111 +1702,130 @@ public class MainWin {
 		}
 	}
 
-	protected static void syncConfig() 
-	{
-		try 
-		{
-			UIUtils.getDWConfigSerial();
-			MainWin.updateTitlebar();
-			MainWin.updateDisksetDD();
-			
-			
-			if ((MainWin.dwconfig != null) && (MainWin.getInstanceConfig() != null))
-			{
-				MainWin.mntmHdbdosTranslation.setSelection(MainWin.getInstanceConfig().getBoolean("HDBDOSMode", false));
-				//MainWin.mntmLockInstruments.setSelection(MainWin.getInstanceConfig().getBoolean("MIDISynthLock", false));
-			
-				MainWin.updateMidiMenus();
-			}
 
-			
-		} 
-		catch (IOException e) 
-		{
-			// ignore..
-		} 
-		catch (DWUIOperationFailedException e) 
-		{
-			// ignore..?
-		}
-		
-	}
-
-	private static void updateMidiMenus() throws IOException, DWUIOperationFailedException 
-	{
-		ArrayList<String> mds = UIUtils.loadArrayList(MainWin.getInstance(), "ui instance midistatus");
-		
-		String mididev = "none";
-		String midiprof = "none";
 	
+	
+	private static void updateMidiMenus()
+	{
+
+		// much more complicated than necessary so that changes are reflected in real time
 		
-		if (mds.size() == 2)
+		if (MainWin.midiStatus.isEnabled())
 		{
-			mididev = mds.get(0).trim();
-			midiprof = mds.get(1).trim();
-		}
-		
-		mds = UIUtils.loadArrayList("ui server show synthprofiles");
-		
-		MainWin.menuMIDIProfiles.dispose();
-		MainWin.menuMIDIProfiles = new Menu(MainWin.mntmSetProfile);
-		MainWin.mntmSetProfile.setMenu(MainWin.menuMIDIProfiles);
-				
-		for (String i : mds)
-		{
-			final String[] parts = i.split(" ");
+			mntmMidi.setEnabled(true);
 			
-			MenuItem tmp = new MenuItem(MainWin.menuMIDIProfiles, SWT.CHECK);
-			tmp.setText(i);
+			// is menu built ok
+			MenuItem[] profitems = MainWin.menuMIDIProfiles.getItems();
+			String[] profiles = MainWin.midiStatus.getProfiles().toArray(new String[0]);
 			
-			tmp.setSelection(parts[0].equals(midiprof));
-			tmp.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) 
-				{
-					sendCommand(("dw midi synth profile " + parts[0]));
-				}
-			});
-		}	
-		
-		
-		mds = UIUtils.loadArrayList("ui server show mididevs");
-		
-		for (String i : mds)
-		{
-			try
+			boolean profok = false;
+			
+			if (profitems.length == profiles.length)
 			{
-				String[] parts = i.split(" ");
-				final int j = Integer.parseInt(parts[0]);
+				profok = true;
 				
-				if (j < MainWin.menuMIDIOutputs.getItemCount())
+				for (int i = 0;i<profitems.length;i++)
 				{
-					// nop?
+					if (profitems[i].getText().equals(MainWin.midiStatus.getProfile(profiles[i]).getDesc()))
+					{
+						profitems[i].setSelection(profiles[i].equals(MainWin.midiStatus.getCurrentProfile()));
+					}
+					else
+					{
+						profok = false;
+					}
 				}
-				else
+			}
+			
+			if (!profok)
+			{
+				// rebuild the whole thing
+				MainWin.menuMIDIProfiles.dispose();
+				MainWin.menuMIDIProfiles = new Menu(MainWin.mntmSetProfile);
+				MainWin.mntmSetProfile.setMenu(MainWin.menuMIDIProfiles);
+			
+			
+				Iterator<String> itr = MainWin.midiStatus.getProfiles().iterator();
+			
+				while(itr.hasNext())
 				{
-					MenuItem tmp = new MenuItem(MainWin.menuMIDIOutputs, SWT.CHECK);
-					tmp.setText(i);
-					
+					final String key = itr.next();
+					MenuItem tmp = new MenuItem(MainWin.menuMIDIProfiles, SWT.CHECK);
+					tmp.setText(MainWin.midiStatus.getProfile(key).getDesc());
+				
+					tmp.setSelection(key.equals(MainWin.midiStatus.getCurrentProfile()));
 					tmp.addSelectionListener(new SelectionAdapter() {
 						@Override
 						public void widgetSelected(SelectionEvent e) 
 						{
-							sendCommand(("dw midi output " + j));
+						sendCommand(("dw midi synth profile " + key));
 						}
 					});
+				}	
+			}
+			
+			
+			// same for outputs.. is menu built ok
+			MenuItem[] outitems = MainWin.menuMIDIOutputs.getItems();
+			String[] outs = MainWin.midiStatus.getDevices().toArray(new String[0]);
+			
+			boolean outok = false;
+			
+			if (outitems.length == outs.length)
+			{
+				outok = true;
 				
+				for (int i = 0;i<outitems.length;i++)
+				{
+					if (outitems[i].getText().equals(outs[i]))
+					{
+						outitems[i].setSelection(outs[i].equals(MainWin.midiStatus.getCurrentDevice()));
+					}
+					else
+					{
+						outok = false;
+					}
+				}
+			}
+			
+			if (!outok)
+			{
+			
+				MainWin.menuMIDIOutputs.dispose();
+				MainWin.menuMIDIOutputs = new Menu(MainWin.mntmSetOutput);
+				MainWin.mntmSetOutput.setMenu(MainWin.menuMIDIOutputs);
+			
+				Iterator<String> itr = MainWin.midiStatus.getDevices().iterator();
+			
+				while (itr.hasNext())
+				{
+					final String key = itr.next();
+					MenuItem tmp = new MenuItem(MainWin.menuMIDIOutputs, SWT.CHECK);
+					tmp.setText(key);
+				
+						
+					tmp.addSelectionListener(new SelectionAdapter() 
+					{
+						@Override
+						public void widgetSelected(SelectionEvent e) 
+						{
+							sendCommand(("dw midi output " + MainWin.midiStatus.getDevice(key).getDevnum()));
+						}
+					});
+					
+				
+					tmp.setSelection(key.equals(MainWin.midiStatus.getCurrentDevice()));
 				}
 				
-				MainWin.menuMIDIOutputs.getItem(j).setSelection(i.endsWith(mididev));
+			}	
 			
-				
-			}
-			catch (NumberFormatException e)
-			{
-				// dont care
-			}
-		}	
+			// voice lock
+			mntmLockInstruments.setSelection(MainWin.midiStatus.isVoiceLock());
+		}
+		else
+		{
+			mntmMidi.setEnabled(false);
+		}
 	}
 
 
@@ -1788,455 +1857,227 @@ public class MainWin {
 
 	
 
-	public static void displayCurrentDiskAsync() 
-	{
-		display.asyncExec(
-				  new Runnable() {
-					  public void run()
-					  {
-						  // did disk change..
-						  MainWin.displayCurrentDiskStats(true);
-					  }
-				  });
-	}
 
-	public static void displayCurrentDiskStats(Boolean highlight) 
-	{
-		
-		lblDiskDriveLED.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/diskdrive-leddark.png"));
-		
-		if (highlight)
-		{
-			// highlight changes..
-			if (MainWin.labelDiskLSN.getText().equals(MainWin.currentDisk.getLsn()+""))
-			{
-				MainWin.labelDiskLSN.setForeground(new Color(display, 0,0,0));
-			}
-			else
-			{
-				MainWin.labelDiskLSN.setForeground(new Color(display, 0,0,255));
-				lblDiskDriveLED.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/diskdrive-ledgreen.png"));
-			}
-		
-			
-			if (MainWin.labelDiskReads.getText().equals(MainWin.currentDisk.getReads()+""))
-			{
-				MainWin.labelDiskReads.setForeground(new Color(display, 0,0,0));
-			}
-			else
-			{
-				MainWin.labelDiskReads.setForeground(new Color(display, 0,0,255));
-				lblDiskDriveLED.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/diskdrive-ledgreen.png"));
-			}
-		
-			if (MainWin.labelDiskWrites.getText().equals(MainWin.currentDisk.getWrites()+""))
-			{
-				MainWin.labelDiskWrites.setForeground(new Color(display, 0,0,0));
-			}
-			else
-			{
-				MainWin.labelDiskWrites.setForeground(new Color(display, 0,0,255));
-				lblDiskDriveLED.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/diskdrive-ledred.png"));
-			}
-		
-			if (MainWin.labelDiskSectors.getText().equals(MainWin.currentDisk.getSectors()+""))
-			{
-				MainWin.labelDiskSectors.setForeground(new Color(display, 0,0,0));
-			}
-			else
-			{
-				MainWin.labelDiskSectors.setForeground(new Color(display, 0,0,255));
-			}
-			
-			
-			
-			
-		}
-		
-		// set values
-		MainWin.labelDiskSectors.setText(MainWin.currentDisk.getSectors()+"");
-		MainWin.labelDiskLSN.setText(MainWin.currentDisk.getLsn()+"");
-		MainWin.labelDiskReads.setText(MainWin.currentDisk.getReads()+"");
-		MainWin.labelDiskWrites.setText(MainWin.currentDisk.getWrites()+"");
 
-	}
 	
 	
-	public static void displayCurrentDisk() 
-	{
-		if (MainWin.currentDisk.getDrive() > -1)
-		{
-			MainWin.lblDiskUri.setText("Disk " + MainWin.currentDisk.getDrive() + " URI:");
-			MainWin.textDiskURI.setEnabled(true);
-
-			MainWin.buttonFile.setEnabled(true);
-
-			
-		}
-		else
-		{
-			MainWin.lblDiskUri.setText("Select a drive from the list on the left to display details");
-			MainWin.textDiskURI.setEnabled(false);
-
-			MainWin.buttonFile.setEnabled(false);
-			
-		}
-		
-		MainWin.textDiskURI.removeAll();
-		
-		List<String> fh = MainWin.getDiskHistory();
-			
-		if (fh != null)
-		{
-			for (int i = fh.size() - 1;i > -1;i--)
-			{
-				MainWin.textDiskURI.add(fh.get(i));
-			}
-		
-		}
-			
 	
-		
-		if (MainWin.textDiskURI.indexOf(MainWin.currentDisk.getPath()) > -1)
-		{
-			MainWin.textDiskURI.select(MainWin.textDiskURI.indexOf(MainWin.currentDisk.getPath()));
-		}
-		else
-		{
-			MainWin.textDiskURI.setText(MainWin.currentDisk.getPath() );
-		}
-		
-		
-		MainWin.displayCurrentDiskStats(false);
-		
-		
-		if (MainWin.currentDisk.isLoaded())
-		{
 
-			
-			MainWin.labelDiskSectors.setEnabled(true);
-			MainWin.labelDiskLSN.setEnabled(true);
-			MainWin.labelDiskReads.setEnabled(true);
-			MainWin.labelDiskWrites.setEnabled(true);
-			
-			MainWin.btnEject.setEnabled(true);
-			MainWin.btnWrite.setEnabled(true);
-			MainWin.btnReload.setEnabled(true);
-			
 
-			MainWin.lblSectors2.setEnabled(true);
-			MainWin.lblCurrentLsn.setEnabled(true);
-			MainWin.lblReads.setEnabled(true);
-			MainWin.lblWrites.setEnabled(true);
-			
-			MainWin.btnAdvanced.setEnabled(true);
-			MainWin.lblDiskDriveLED.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/diskdrive-leddark.png"));
-			MainWin.lblDiskDriveLED.setVisible(true);
-			MainWin.lblDiskDriveImg.setVisible(true);
-			MainWin.canvasDriveNo.redraw();
-			MainWin.canvasDriveNo.setVisible(true);
-
-		}
-		else
-		{
-
-			
-			MainWin.labelDiskSectors.setEnabled(false);
-			MainWin.labelDiskLSN.setEnabled(false);
-			MainWin.labelDiskReads.setEnabled(false);
-			MainWin.labelDiskWrites.setEnabled(false);
-			
-			MainWin.btnEject.setEnabled(false);
-			MainWin.btnWrite.setEnabled(false);
-			MainWin.btnReload.setEnabled(false);
-
-			MainWin.lblSectors2.setEnabled(false);
-			MainWin.lblCurrentLsn.setEnabled(false);
-			MainWin.lblReads.setEnabled(false);
-			MainWin.lblWrites.setEnabled(false);
-			
-			MainWin.btnAdvanced.setEnabled(false);
-			MainWin.lblDiskDriveLED.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/diskdrive-leddark.png"));
-			MainWin.lblDiskDriveLED.setVisible(false);
-			MainWin.lblDiskDriveImg.setVisible(false);
-			MainWin.canvasDriveNo.setVisible(false);
-		}
-		
-	}
-
-	public static void loadSelectedDiskDetails() 
-	{
-		int target = -1;
-		
-		if (table.getSelectionIndex() > -1)
-		{
-			target = table.getSelectionIndex();
-		}
-		else if (MainWin.currentDisk.getDrive() > -1)
-		{
-			target = MainWin.currentDisk.getDrive();
-		}
-		
-		if (target > -1)
-		{
-			
-			try
-			{
-				MainWin.currentDisk = UIUtils.getDiskDef(MainWin.instance, target);
-				MainWin.currentDisk.setDrive(target);
-				table.getItem(target).setText(1,MainWin.shortenLocalURI(MainWin.currentDisk.getPath()));
-				
-			}
-			catch (DWUIOperationFailedException e1) 
-			{
-				showError("DW error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
-			} 
-			catch (IOException e1) 
-			{
-				showError("IO error sending command", e1.getMessage(), "You may have a connectivity problem, or the server may not be running.");
-			}
 	
-		}
-	}
-
-	public static void refreshDiskTableAsync() throws IOException, DWUIOperationFailedException 
+	public static void refreshDiskTable() 
 	{
-		if (display != null)
-		{
-			display.asyncExec(
-				  new Runnable() {
-					  public void run()
-					  {
-						try 
-						{
-							MainWin.refreshDiskTable();
-						} 
-						catch (IOException e) 
-						{
-							MainWin.addToDisplay("Error while refreshing disk table: " + e.getMessage());
-						} 
-						catch (DWUIOperationFailedException e) 
-						{
-							MainWin.addToDisplay("Error while refreshing disk table: " + e.getMessage());
-						}
-						  
-					  }
-				  });
-		}
-	}
-	
-	public static void refreshDiskTable() throws IOException, DWUIOperationFailedException 
-	{
-		MainWin.syncConfig();
 		
 		MainWin.table.setRedraw(false);
 		
 		for (int i = 0;i<256;i++)
 		{
-			TableItem item;
-			if (table.getItemCount() < i+1)
+			MainWin.clearDiskTableEntry(i);
+			
+			if ((disks[i] != null) && disks[i].isLoaded())
 			{
-				item = new TableItem(table, SWT.NONE);
-			}
-			else
-			{
-				item = table.getItem(i);
+				MainWin.setDiskTableEntryFile(i, disks[i].getPath());
+				
+				Iterator<String> itr = disks[i].getParams();
+				
+				while (itr.hasNext())
+				{
+					String key = itr.next();
+					setDiskTableEntry(i,key,disks[i].getParam(key).toString());
+				}
+				
 			}
 			
-			item.setText(0,i+"");
-			item.setText(1,"");
 		}
-				
-		ArrayList<String> disks = UIUtils.loadArrayList(MainWin.instance, "ui instance disk show");
 		
-		for (int i = 0;i<disks.size();i++)
+		if (MainWin.currentDisk >= 0)
 		{
-			String[] dp = disks.get(i).split(" ");
-			
-			if (dp.length > 1)
-			{
-				
-				table.getItem(Integer.parseInt(dp[0])).setText(1, MainWin.shortenLocalURI(disks.get(i).substring(dp[0].length()+1)));
-			}
-			
+			table.setSelection(MainWin.currentDisk);
 		}
-		
+	
 		MainWin.table.setRedraw(true);
 		
+	}
 		
-		loadSelectedDiskDetails();
-		displayCurrentDisk();
+
+
+	
+	public static void setDiskTableEntry(int disk, String key, String val)
+	{
+		int col = MainWin.getTPIndex(key);
 		
+		if (col > -1)
+			table.getItem(disk).setText(col,val);
 	}
 
-	protected void writeDiskTo(final int diskno) 
-	{
-		// create a file chooser
-		final DWServerFileChooser fileChooser;
 
-		if ((table.getItem(diskno) != null) && !table.getItem(diskno).getText(1).equals(""))
+	protected void quickInDisk(final int diskno)
+	{    
+		final String curpath;
+		
+		if ((disks[diskno] != null) && (disks[diskno].isLoaded()))
+			curpath = disks[diskno].getPath();
+		else
+			curpath = "";
+		
+		Thread t = new Thread(new Runnable() {
+			  public void run()
+			  {
+				  String res = getFile(false,false,curpath,"Choose an image for drive " + diskno + " to...", "Open");
+					
+					if (res != null)
+						MainWin.sendCommand("dw disk insert "+ diskno + " " + res);
+			  }
+			});
+
+		t.start();
+		
+	}
+	
+	
+	protected static void writeDiskTo(final int diskno) 
+	{
+		final String curpath;
+		
+		if (table.getItem(diskno) != null)
+			curpath = table.getItem(diskno).getText(2);
+		else
+			curpath = "";
+		
+		Thread t = new Thread(new Runnable() {
+					  public void run()
+					  {
+						  String res = getFile(true,false,curpath,"Write image in drive " + diskno + " to...", "Save");
+							
+							if (res != null)
+								MainWin.sendCommand("dw disk write "+ diskno + " " + res);
+					  }
+					});
+		
+		t.start();
+				
+				
+		
+	}
+	
+	
+	
+	public static String getFile(final boolean save, final boolean dir, final String startpath, final String title, final String buttontext)
+	{
+			
+		if (config.getBoolean("UseRemoteFilebrowser", false))
 		{
-			fileChooser = new DWServerFileChooser(table.getItem(diskno).getText(1));
+			// remote
+			
+			RemoteFileBrowser rfb = new RemoteFileBrowser(save,dir,startpath,title,buttontext);
+			
+			
+			try
+			{
+				SwingUtilities.invokeAndWait(rfb);
+			} 
+			catch (InterruptedException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			catch (InvocationTargetException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		
+			return (rfb.getSelected());
+			
+			
 		}
 		else
 		{
-			fileChooser = new DWServerFileChooser();
-		}
-		// 	configure the file dialog
-		
-		fileChooser.setFileHidingEnabled(false);
-		fileChooser.setMultiSelectionEnabled(false);
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-		fileChooser.setDialogTitle("Write image in drive " + diskno + " to...");
-		if ((table.getItem(diskno) != null) && !table.getItem(diskno).getText(1).equals(""))
-		{
-			fileChooser.setSelectedFile(new DWServerFile(table.getItem(diskno).getText(1)));
-		}
-		
-		// 	show the file dialog
-		int answer = fileChooser.showSaveDialog(fileChooser);
-					
-		// 	check if a file was selected
-		if (answer == JFileChooser.APPROVE_OPTION)
-		{
-			final File selected =  fileChooser.getSelectedFile();
-
-			MainWin.sendCommand("dw disk write "+ diskno + " " + selected.getPath());
-	
-		}		
-	
+			LocalFileBrowser lfb = new LocalFileBrowser(save,dir,startpath,title,buttontext);
+			display.syncExec(lfb);
 			
+			return (lfb.getSelected());
+		}
+		
+		
 	}
-
-
 	
-
 	
-	protected void quickInDisk(int diskno)
-	{    
-		
-		
-		// create a file chooser
-		final DWServerFileChooser fileChooser;
-
-		
-		//if ((table.getItem(diskno) != null) && !table.getItem(diskno).getText(1).equals(""))
-		//{
-		//	fileChooser = new DWServerFileChooser(table.getItem(diskno).getText(1));
-		//}
-		//else
-		//{
-			fileChooser = new DWServerFileChooser();
-		//}
-		
-		
-		// configure the file dialog
-
-		 
-		fileChooser.setFileHidingEnabled(false);
-		fileChooser.setMultiSelectionEnabled(false);
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		fileChooser.setDialogType(JFileChooser.OPEN_DIALOG);
-		fileChooser.setDialogTitle("Choose an image for drive " + diskno + "...");
-		
-		//if ((table.getItem(diskno) != null) && !table.getItem(diskno).getText(1).equals(""))
-		//{
-		//	fileChooser.setSelectedFile(new DWServerFile(table.getItem(diskno).getText(1)));
-		//}
-		
-		// show the file dialog
-		int answer = fileChooser.showOpenDialog(fileChooser);
-						
-		// check if a file was selected
-		if (answer == JFileChooser.APPROVE_OPTION)
-		{
-			final File selected =  fileChooser.getSelectedFile();
-
-        	sendCommand("dw disk insert "+ diskno + " " + selected.getPath());
-        	addDiskFileToHistory(selected.getPath());
-        	
-        	try {
-				refreshDiskTable();
-        	}
-        	catch (DWUIOperationFailedException e1) 
-        	{
-        		showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
-        	} 
-        	catch (IOException e1) 
-        	{
-        		showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
-        	}
-        	
-        	loadSelectedDiskDetails();
-			displayCurrentDisk();
-        	
-        }
-	}
 
 	protected static void sendCommand(String cmd)
 	{
 		sendCommand(cmd, true);
 	}
 	
-	protected static void sendCommand(String cmd, boolean errtomainwin) 
+	protected static void sendCommand(final String cmd, final boolean errtomainwin) 
 	{
-		
-		Connection connection = new Connection(host,port,instance);
-		
-		try 
+	
+		Thread cmdT = new Thread(new Runnable() 
 		{
+			  public void run() 
+			  {
+				  Connection connection = new Connection(host,port,instance);
+					
+				  try 
+				  {
+					  connection.Connect();
+					  connection.sendCommand(cmd,instance,errtomainwin);
+					  connection.close();
+				  } 
+				  catch (UnknownHostException e) 
+				  {
+					  showError("'Unknown host' while sending command", e.getMessage(), "You may have a DNS problem, or the server hostname may not be specified correctly." , errtomainwin);
+				  } 
+				  catch (IOException e1) 
+				  {
+					// UIUtils.getStackTrace(e1)
+				
+					  showError("IO error sending command", e1.getMessage(), "You may have a connectivity problem, or the server may not be running.", errtomainwin);
+						
+				  } 
+				  catch (DWUIOperationFailedException e2) 
+				  {
+					  showError("DW error sending command", e2.getMessage(), "", errtomainwin);
+				  } 
+			  } 
+		});
 		
-			connection.Connect();
-			connection.sendCommand(cmd,instance);
-			connection.close();
+		cmdT.start();
 
-		} 
-		catch (UnknownHostException e) 
-		{
+	}
+
+
+	public static void showError(String t, String s, String d)
+	{
+		showError(new DWError(t,s,d,true));
+	}
 	
-			showError("'Unknown host' error while sending command", e.getMessage(), "You may have a connectivity problem, or the server hostname may not be specified correctly." , errtomainwin);
-		} 
-		catch (IOException e1) 
-		{
-			// UIUtils.getStackTrace(e1)
+	public static void showError(String t, String s, String d, boolean gui)
+	{
+		showError(new DWError(t,s,d,!gui));
+	}
 	
-			showError("IO error sending command", e1.getMessage(), "You may have a connectivity problem, or the server may not be running.", errtomainwin);
+
+	public static void showError(final DWError dwerror)
+	{
+	
+		if (dwerror.isGui())
+		{
+			display.asyncExec(
+					  new Runnable() {
+						  public void run()
+						  {
+							  ErrorWin ew = new ErrorWin(shell,SWT.DIALOG_TRIM,dwerror);
+							  ew.open();
+						  }
+					  });
 			
-		} catch (DWUIOperationFailedException e2) 
-		{
-
-			showError("DW error sending command", e2.getMessage(), "", errtomainwin);
-		} 
-		
-		
-		
-		
-	}
-
-
-	public static void showError(final String title,final String summary,final String detail)
-	{
-		showError(title,summary,detail,false);
-	}
-
-	public static void showError(final String title,final String summary,final String detail, boolean errtm)
-	{
-	
-		if (errtm)
-		{
-			addToDisplay("\nError: " + summary + " " + detail);
 		}
 		else
 		{
-			display.asyncExec(
-				  new Runnable() {
-					  public void run()
-					  {
-						  ErrorWin ew = new ErrorWin(shell,SWT.DIALOG_TRIM,title,summary,detail);
-						  ew.open();
-					  }
-				  });
+			
+			addToDisplay(System.getProperty("line.separator") + dwerror.getTextError());
 		}
 	}
 
@@ -2249,32 +2090,48 @@ public class MainWin {
 				  new Runnable() {
 					  public void run()
 					  {
-						  
-						  textDWOutput.append(System.getProperty("line.separator") + txt);
-						  if (MainWin.tabFolderOutput.getSelectionIndex() != 0)
+						  if (!textDWOutput.isDisposed())
 						  {
-							  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/user-online-2.png"));
+							  textDWOutput.append(System.getProperty("line.separator") + txt);
+							  if (MainWin.tabFolderOutput.getSelectionIndex() != 0)
+							  {
+								  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/tabfolder/user-online-2.png"));
+							  }
 						  }
 					  }
 				  });
+		}
+		else
+		{
+			System.out.println(txt);
 		}
 	}
 	
 	public static void addToServerDisplay(final String txt) 
 	{
-		if (textServer != null)
+		
+		if (listServerLog != null)
 		{
-			display.asyncExec(
+			display.syncExec(
 				  new Runnable() {
 					  public void run()
 					  {
-						  textServer.append(txt);
+						  listServerLog.setRedraw(false);
+						  
+						  listServerLog.add(txt);
+						  // sort of crappy way to scroll.. ?
+						  listServerLog.setSelection(listServerLog.getItemCount()-1);
+						  listServerLog.deselectAll();
+						  
+						  listServerLog.setRedraw(true);
+						  
 						  if (MainWin.tabFolderOutput.getSelectionIndex() != 1)
 						  {
-							  MainWin.tabFolderOutput.getItems()[1].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/user-online-2.png"));
+							  MainWin.tabFolderOutput.getItems()[1].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/tabfolder/user-online-2.png"));
 						  }
 					  }
 				  });
+				  
 		}
 	}
 	
@@ -2361,18 +2218,13 @@ public class MainWin {
 	public static void setFont(FontData newFont) 
 	{
 		textDWOutput.setFont(new Font(display, newFont));
+		
 		config.setProperty("MainFont", newFont.getName());
         config.setProperty("MainFontSize", newFont.getHeight());
         config.setProperty("MainFontStyle", newFont.getStyle());
 	}
 
-	public static void setLogFont(FontData newFont) 
-	{
-		textServer.setFont(new Font(display, newFont));
-		config.setProperty("LogFont", newFont.getName());
-        config.setProperty("LogFontSize", newFont.getHeight());
-        config.setProperty("LogFontStyle", newFont.getStyle());
-	}
+
 
 	@SuppressWarnings("unchecked")
 	public static List<String> getServerHistory() 
@@ -2422,14 +2274,9 @@ public class MainWin {
         applyFont();
 	
 	}
-	protected Button getBtnAdvanced() {
-		return btnAdvanced;
-	}
+
 	
-	public static DiskDef getCurrentDisk()
-	{
-		return(MainWin.currentDisk);
-	}
+	
 
 	public static HierarchicalConfiguration getInstanceConfig() 
 	{
@@ -2445,84 +2292,115 @@ public class MainWin {
 		}
 		return(null);
 	}
-	protected Label getLblDiskDriveImg() {
-		return lblDiskDriveImg;
-	}
-	protected Label getLblDiskDriveLED() {
-		return lblDiskDriveLED;
-	}
-	protected Label getLblConStatus() {
-		return lblConStatus;
-	}
 
+	
 
 	public static void setConStatusConnect() 
 	{
-		if (MainWin.lblConStatus != null)
+		
+		if (MainWin.isReady())
 		{
-			display.asyncExec(
-				  new Runnable() {
-					  public void run()
-					  {
-						  MainWin.lblConStatus.setRedraw(false);
-						  MainWin.lblConStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/network-transmit-2.png"));
-						  MainWin.lblConStatus.setRedraw(true);
+			
+			synchronized(connected)
+			{
+				if (!connected)
+				{
+					display.syncExec(
+							new Runnable() {
+								public void run()
+								{
+							MainWin.connected = true;
+							/*
+							 MainWin.lblConStatus.setRedraw(false);
+							 MainWin.lblConStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/constatus/network-transmit-2.png"));
+							 MainWin.lblConStatus.setRedraw(true);
+							*/
+								
+							MainWin.setItemsConnectionEnabled(true);
+							
+						
 					  }
 				  });
+				}
+			}
 		}
+		
+		
 	}
 	
-	public static void setConStatusNone() 
+	protected static void setItemsConnectionEnabled(boolean en) 
 	{
-		if (MainWin.lblConStatus != null)
-		{
-			display.asyncExec(
-				  new Runnable() {
-					  public void run()
-					  {
-						  MainWin.lblConStatus.setRedraw(false);
-						  MainWin.lblConStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/network-idle-2.png"));
-						  MainWin.lblConStatus.setRedraw(true);
-					  }
-				  });
-		}
-	}
+		// enable/disable all controls requiring a server connection
+		
 	
-	public static void setConStatusRead() 
-	{
-		if (MainWin.lblConStatus != null)
-		{
-			display.asyncExec(
-				  new Runnable() {
-					  public void run()
-					  {
-						  MainWin.lblConStatus.setRedraw(false);
-						  MainWin.lblConStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/network-receive-2.png"));
-						  MainWin.lblConStatus.setRedraw(true);
-					  }
-				  });
-		}
-	}
 	
-	public static void setConStatusWrite() 
-	{
-		if (MainWin.lblConStatus != null)
+		MenuItem[] items = MainWin.menu_tools.getItems();
+		
+		for (int i = 0;i<items.length;i++)
 		{
-			display.asyncExec(
-				  new Runnable() {
-					  public void run()
-					  {
-						  MainWin.lblConStatus.setRedraw(false);
-						  MainWin.lblConStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/network-transmit-2.png"));
-						  MainWin.lblConStatus.setRedraw(true);
-					  }
-				  });
+			items[i].setEnabled(en);
 		}
+		
+		items = MainWin.menu_config.getItems();
+		
+		for (int i = 0;i<items.length;i++)
+		{
+			items[i].setEnabled(en);
+		}
+		
+		mntmDwCommands.setEnabled(en);
+		mntmChooseInstance.setEnabled(en);
+		
+		MainWin.table.setEnabled(en);
+		MainWin.txtYouCanEnter.setEnabled(en);
+		
+		// stuff that stays enabled
+		MainWin.mntmInitialConfig.setEnabled(true);
+		MainWin.mntmUserInterface.setEnabled(true);
+		
+		
 	}
+
+
 
 
 	public static void setConStatusError() 
 	{
+		/*
+		if (MainWin.lblConStatus != null)
+		{
+			synchronized(connected)
+			{
+				if (connected)
+				{
+					display.syncExec(
+							new Runnable() {
+								public void run()
+								{
+							  MainWin.lblConStatus.setRedraw(false);
+							  MainWin.lblConStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/constatus/network-error-2.png"));
+							  MainWin.lblConStatus.setRedraw(true);
+						  
+							  MainWin.connected = false;
+
+							  MainWin.setItemsConnectionEnabled(false);
+								
+						  
+					  }
+				  
+				  });
+				}
+			}
+		}
+	
+		*/
+	}
+
+
+	
+	public static void setConStatusTrying() 
+	{
+		/*
 		if (MainWin.lblConStatus != null)
 		{
 			display.asyncExec(
@@ -2530,41 +2408,399 @@ public class MainWin {
 					  public void run()
 					  {
 						  MainWin.lblConStatus.setRedraw(false);
-						  MainWin.lblConStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/network-error-2.png"));
+						  MainWin.lblConStatus.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/constatus/user-away.png"));
 						  MainWin.lblConStatus.setRedraw(true);
 					  }
 				  });
 		}
+		*/
 	}
 	
-	public static String shortenLocalURI(String df) 
-	{
-		if (df.startsWith("file:///"))
-		{
-			if (df.charAt(9) == ':')
-			{
-				return df.substring(8);
-			}
-			else
-			{
-				return df.substring(7);
-			}
-		}
-		return(df);
-	}
-	protected Canvas getCanvasDriveNo() {
-		return canvasDriveNo;
-	}
-	protected Text getTextServer() {
-		return textServer;
-	}
+	
+	
+	
+	
 
 
 	public static void doDisplayAsync(Runnable runnable) 
 	{
 		display.asyncExec(runnable);
 	}
+	
 	protected TabFolder getTabFolderOutput() {
 		return tabFolderOutput;
 	}
+
+
+	public static void setServerConfig(HierarchicalConfiguration serverConfig) 
+	{
+		MainWin.dwconfig = serverConfig;
+	}
+
+
+	public static void restartServerConn() 
+	{
+		if (syncObj != null)
+		{
+			MainWin.syncObj.die();
+		}
+		
+		// start threads that talk with server
+		syncObj = new SyncThread();
+		syncThread = new Thread(syncObj);
+		syncThread.setDaemon(true);
+		syncThread.start();
+
+		
+	}
+
+
+	public static void applyConfig() 
+	{
+		display.asyncExec(
+				  new Runnable() {
+					  public void run()
+					  {
+						  
+						  
+						  // hdbdos menu toggle
+						  MainWin.mntmHdbdosTranslation.setSelection(MainWin.getInstanceConfig().getBoolean("HDBDOSMode", false));
+						  
+						  
+					  }
+				  });
+		
+	}
+	
+	
+	public static void applyDisks() 
+	{
+		display.asyncExec(
+				  new Runnable() {
+					  public void run()
+					  {
+							refreshDiskTable();
+							
+					  }
+				  });
+		
+	}
+
+
+	
+	public static DiskDef getCurrentDisk() 
+	{
+		return disks[MainWin.currentDisk];
+	}
+
+	public static int getCurrentDiskNo()
+	{
+		return(MainWin.currentDisk);
+	}
+
+	public static DiskDef getDiskDef(int dno) 
+	{
+		return(disks[dno]);
+	}
+
+
+
+
+
+
+	public static void setMidiStatus(MIDIStatus serverMidiStatus) 
+	{
+		MainWin.midiStatus = serverMidiStatus;
+	}
+
+
+	public static void applyMIDIStatus() 
+	{
+		display.asyncExec(
+				  new Runnable() {
+					  public void run()
+					  {
+						  // midi menus
+						  updateMidiMenus();
+						  
+					  }
+				  });
+	}
+
+
+	public static MIDIStatus getMidiStatus() 
+	{
+		return(MainWin.midiStatus);
+	}
+
+
+	public static void setDisks(DiskDef[] serverDisks) 
+	{
+		MainWin.disks = new DiskDef[serverDisks.length];
+		System.arraycopy(serverDisks, 0, MainWin.disks, 0, serverDisks.length);
+	}
+
+
+	public static String getUIText() 
+	{
+		return MainWin.textDWOutput.getText();
+	}
+
+
+
+
+
+
+
+	public static void submitDiskEvent(final int disk, final String key, final String val)
+	{
+
+		
+		// local display items
+		
+		if (disks[disk] == null)
+		{
+			debug("NULL disk in submitevent: " + disk);
+			disks[disk] = new DiskDef(disk);
+		}
+
+		disks[disk].setParam(key, val);
+		
+		if (key.startsWith("*"))
+		{
+			if (key.equals("*insert"))
+			{
+				clearDiskTableEntry(disk);
+				
+				setDiskTableEntryFile(disk, val);
+				
+			}
+			else if (key.equals("*eject"))
+			{
+				clearDiskTableEntry(disk);
+			}
+		}
+		
+		// update disk table 
+		MainWin.diskTableUpdater.addUpdate(disk,key, val);
+		
+		if (key.equals("_reads") && !val.equals("0"))
+		{
+			MainWin.diskTableUpdater.addUpdate(disk,"LED",MainWin.diskLEDgreen);
+			MainWin.driveactivity = true;
+		}
+		else if (key.equals("_writes") && !val.equals("0"))
+		{
+			MainWin.diskTableUpdater.addUpdate(disk,"LED",MainWin.diskLEDred);
+			MainWin.driveactivity = true;
+		}
+		
+	}
+
+	
+	private static void setDiskTableEntryFile(final int disk, final String val)
+	{
+		// sync?
+		display.syncExec(new Runnable() {
+			  public void run()
+			  {
+		
+		// set file
+				  int filecol = MainWin.getTPIndex("File");
+				  if (filecol > -1)
+					  table.getItem(disk).setText(filecol, UIUtils.getFilenameFromURI(val));
+		 
+		// set location
+				  int loccol = MainWin.getTPIndex("Location");
+				  if (loccol > -1)
+					  table.getItem(disk).setText(loccol, UIUtils.getLocationFromURI(val));
+				  
+				  int ledcol = MainWin.getTPIndex("LED");
+				  if (ledcol > -1)
+					  table.getItem(disk).setImage(ledcol, MainWin.diskLEDdark);
+		
+			  }
+		  });
+
+	}
+
+
+	private static void clearDiskTableEntry(final int disk)
+	{
+		
+		
+		// sync?
+		display.syncExec(new Runnable() {
+			  public void run()
+			  {
+				  synchronized(table)
+				  {
+					  int drivecol = MainWin.getTPIndex("Drive");
+					  int ledcol = MainWin.getTPIndex("LED");
+					  
+					  String[] txt = new String[table.getColumnCount()];
+					  for (int i = 0;i<txt.length;i++)
+						  txt[i] = "";
+					  
+					  // make sure it exists
+					  while (table.getItemCount() < (disk + 1))
+					  {
+						  TableItem item = new TableItem(table, SWT.NONE);
+						  
+						 
+						  if (drivecol > -1)
+							  item.setText(drivecol, disk+"");
+					  }
+					  
+					  // clear all txt
+					  table.getItem(disk).setText(txt);
+					  
+					  // set Drive #
+					  if (drivecol > -1)
+						  table.getItem(disk).setText(drivecol, disk+"");
+					  
+					  // clear image
+					  if (ledcol > -1)
+						  table.getItem(disk).setImage(ledcol,null);
+					  
+				  }
+				  
+			  }
+		  });
+
+		
+	}
+
+
+
+	protected org.eclipse.swt.widgets.List getListServerLog() {
+		return listServerLog;
+	}
+
+
+	public static String getServerText()
+	{
+		StringBuilder sb = new StringBuilder(listServerLog.getItemCount() * 80);
+		for (String l : listServerLog.getItems())
+		{
+			sb.append(l + "\r\n");
+		}
+		
+		return(sb.toString());
+	}
+
+
+	public static void addToServerDisplay(List<String> lines)
+	{
+		for (String l : lines)
+		{
+			addToServerDisplay(l);
+		}
+	}
+
+
+	public static boolean isReady()
+	{
+		return MainWin.ready;
+	}
+
+
+	public static void updateDiskTableItem(final int item, final String key, final Object object)
+	{
+		
+		if (disks[item].isLoaded())
+		{
+			display.syncExec(new Runnable() {
+					  public void run()
+					  {
+						  int keycol = MainWin.getTPIndex(key);
+
+						  if (keycol > -1)
+						  {
+							  if (object.getClass().getSimpleName().equals("String"))
+								  table.getItem(item).setText(keycol, object.toString());
+							  else if (object.getClass().getSimpleName().equals("Image"))
+								  table.getItem(item).setImage(keycol, (Image) object);
+						  }
+						  
+					  }
+				  });
+		}
+	}
+
+
+	public static Display getDisplay()
+	{
+		return display;
+	}
+
+
+	
+
+
+	public static void addDiskTableColumn(String key)
+	{
+		synchronized(table)
+		{
+			if (MainWin.getTPIndex(key) < 0)
+			{
+				MainWin.config.addProperty("DiskTable_Items", key);
+				
+				while(table.getColumnCount() > 0)
+				{
+					table.getColumn(0).dispose();
+				}
+				
+				MainWin.createDiskTableColumns();
+				
+				MainWin.refreshDiskTable();
+				
+			}
+		}
+	}
+
+
+	public static void removeDiskTableColumn(String key)
+	{
+		synchronized(table)
+		{
+			if (MainWin.getTPIndex(key) > -1)
+			{
+				MainWin.config.clearProperty("DiskTable_Items(" + MainWin.getTPIndex(key) + ")");
+				
+				while(table.getColumnCount() > 0)
+				{
+					table.getColumn(0).dispose();
+				}
+				
+				MainWin.createDiskTableColumns();
+				
+				MainWin.refreshDiskTable();
+				
+			}
+		}
+		
+	}
+
+
+	public static void submitServerConfigEvent(String key, Object val)
+	{
+		if (val == null)
+		{
+			MainWin.dwconfig.clearProperty(key);
+		}
+		else
+		{
+			MainWin.dwconfig.setProperty(key, val);
+		}
+		
+		if ((serverconfigwin != null) && (!serverconfigwin.shlServerConfiguration.isDisposed()))
+		{
+			serverconfigwin.submitEvent(key,val);
+		}
+	}
+
+
+	
+	
 }

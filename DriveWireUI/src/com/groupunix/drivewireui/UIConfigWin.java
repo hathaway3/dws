@@ -3,36 +3,31 @@ package com.groupunix.drivewireui;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FontDialog;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.widgets.Text;
-import com.swtdesigner.SWTResourceManager;
 
 public class UIConfigWin extends Dialog {
 
 	protected Object result;
 	protected Shell shlUserInterfaceConfiguration;
 	protected Display display;
-	private Text textMainFont;
-	private Text textLogFont;
-	private Spinner spinnerDiskHist;
-	private Spinner spinnerServerHist;
-	private Text textTCPTimeout;
-	private Text textDialogFont;
+	private Button btnLocalServer;
+	private Button btnApply;
 	private Button btnTerminateServerOn;
-	private Button btnShowCommandsSent;
-	private Spinner spinnerCommandHistory;
-	private Text textServerSyncInterval;
-	private Button btnServerSync;
-	private Label lblServerSyncInterval;
-	private Label lblServerSyncIntervalMs;
+	private FormData fd_btnLocalServer;
+	private Button btnRememberWindowPositions;
+	private Button btnReopenDiskWindows;
+	private Button btnBackupConfigurationBefore;
+	private Button btnOpenLLog;
+	private Button btnRunInsafe;
+	private Button btnRemoteFileDialogs;
 	
 	
 	/**
@@ -56,8 +51,126 @@ public class UIConfigWin extends Dialog {
 		toggleStuff();
 		
 		
+		
+		btnRememberWindowPositions = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		FormData fd_btnRememberWindowPositions = new FormData();
+		fd_btnRememberWindowPositions.right = new FormAttachment(btnLocalServer, 0, SWT.RIGHT);
+		fd_btnRememberWindowPositions.top = new FormAttachment(0, 31);
+		fd_btnRememberWindowPositions.left = new FormAttachment(0, 26);
+		btnRememberWindowPositions.setLayoutData(fd_btnRememberWindowPositions);
+		btnRememberWindowPositions.setText("Remember window positions");
+		
+		btnReopenDiskWindows = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		fd_btnLocalServer.top = new FormAttachment(btnReopenDiskWindows, 15);
+		FormData fd_btnReopenDiskWindows = new FormData();
+		fd_btnReopenDiskWindows.top = new FormAttachment(btnRememberWindowPositions, 13);
+		fd_btnReopenDiskWindows.right = new FormAttachment(btnLocalServer, 0, SWT.RIGHT);
+		fd_btnReopenDiskWindows.left = new FormAttachment(0, 26);
+		btnReopenDiskWindows.setLayoutData(fd_btnReopenDiskWindows);
+		btnReopenDiskWindows.setText("Re-open disk windows at startup");
+		
+		btnBackupConfigurationBefore = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		FormData fd_btnBackupConfigurationBefore = new FormData();
+		fd_btnBackupConfigurationBefore.right = new FormAttachment(btnLocalServer, 0, SWT.RIGHT);
+		fd_btnBackupConfigurationBefore.top = new FormAttachment(btnLocalServer, 13);
+		fd_btnBackupConfigurationBefore.left = new FormAttachment(0, 52);
+		btnBackupConfigurationBefore.setLayoutData(fd_btnBackupConfigurationBefore);
+		btnBackupConfigurationBefore.setText("Backup configuration before run");
+		
+		btnOpenLLog = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		FormData fd_btnOpenLLog = new FormData();
+		fd_btnOpenLLog.right = new FormAttachment(btnLocalServer, 0, SWT.RIGHT);
+		fd_btnOpenLLog.top = new FormAttachment(btnBackupConfigurationBefore, 6);
+		fd_btnOpenLLog.left = new FormAttachment(0, 52);
+		btnOpenLLog.setLayoutData(fd_btnOpenLLog);
+		btnOpenLLog.setText("Open L5 log viewer");
+		
+		btnRunInsafe = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		FormData fd_btnRunInsafe = new FormData();
+		fd_btnRunInsafe.right = new FormAttachment(btnLocalServer, 0, SWT.RIGHT);
+		fd_btnRunInsafe.top = new FormAttachment(btnOpenLLog, 6);
+		fd_btnRunInsafe.left = new FormAttachment(0, 52);
+		btnRunInsafe.setLayoutData(fd_btnRunInsafe);
+		btnRunInsafe.setText("Run in \"safe mode\"");
+		
+		btnTerminateServerOn = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		
+		FormData fd_btnTerminateServerOn = new FormData();
+		fd_btnTerminateServerOn.right = new FormAttachment(btnLocalServer, 0, SWT.RIGHT);
+		fd_btnTerminateServerOn.top = new FormAttachment(btnRunInsafe, 16);
+		fd_btnTerminateServerOn.left = new FormAttachment(0, 26);
+		btnTerminateServerOn.setLayoutData(fd_btnTerminateServerOn);
+		btnTerminateServerOn.setText("Terminate server on exit");
+		
+		shlUserInterfaceConfiguration.pack();
+		
+		btnRemoteFileDialogs = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		FormData fd_btnRemoteFileDialogs = new FormData();
+		fd_btnRemoteFileDialogs.right = new FormAttachment(btnLocalServer, 0, SWT.RIGHT);
+		fd_btnRemoteFileDialogs.top = new FormAttachment(btnTerminateServerOn, 16);
+		fd_btnRemoteFileDialogs.left = new FormAttachment(0, 26);
+		btnRemoteFileDialogs.setLayoutData(fd_btnRemoteFileDialogs);
+		btnRemoteFileDialogs.setText("Use remote file dialogs");
+		
+		
+		
+
+		Composite composite = new Composite(shlUserInterfaceConfiguration, SWT.NONE);
+		
+		FormData fd_composite = new FormData();
+		fd_composite.bottom = new FormAttachment(100, -10);
+		fd_composite.right = new FormAttachment(100, -10);
+		fd_composite.left = new FormAttachment(0, 52);
+		fd_composite.top = new FormAttachment(btnRemoteFileDialogs, 20);
+		composite.setLayoutData(fd_composite);
+		
+		FillLayout fl_composite = new FillLayout(SWT.HORIZONTAL);
+		fl_composite.spacing = 10;
+		composite.setLayout(fl_composite);
+		
+		Button btnOk = new Button(composite, SWT.NONE);
+		btnOk.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				applySettings();
+				
+				e.display.getActiveShell().close();
+			}
+		});
+		btnOk.setText("Ok");
+		
+		Button btnCancel = new Button(composite, SWT.NONE);
+		btnCancel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				e.display.getActiveShell().close();
+			}
+		});
+		btnCancel.setText("Cancel");
+		
+		
+		
+		btnApply = new Button(composite, SWT.NONE);
+		btnApply.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				applySettings();
+			}
+		});
+		btnApply.setText("Apply");
+		
+		btnApply.setEnabled(false);
+		
+		
+		
+		shlUserInterfaceConfiguration.pack();
+		
 		shlUserInterfaceConfiguration.open();
 		shlUserInterfaceConfiguration.layout();
+		
+		
 		display = getParent().getDisplay();
 		while (!shlUserInterfaceConfiguration.isDisposed()) {
 			if (!display.readAndDispatch()) {
@@ -68,260 +181,46 @@ public class UIConfigWin extends Dialog {
 	}
 
 
+
+
+
 	private void toggleStuff() 
 	{
-		if (btnServerSync.getSelection())
-		{
-			lblServerSyncInterval.setEnabled(true);
-			lblServerSyncIntervalMs.setEnabled(true);
-			textServerSyncInterval.setEnabled(true);
-			
-		}
-		else
-		{
-			lblServerSyncInterval.setEnabled(false);
-			lblServerSyncIntervalMs.setEnabled(false);
-			textServerSyncInterval.setEnabled(false);
-			
-		}
+		
 	}
 
+	
 	private void loadSettings()
 	{
-		setFonts();
-		
-		this.spinnerDiskHist.setSelection(MainWin.config.getInt("DiskHistorySize",MainWin.default_DiskHistorySize));
-		this.spinnerServerHist.setSelection(MainWin.config.getInt("ServerHistorySize",MainWin.default_ServerHistorySize));
-		this.spinnerCommandHistory.setSelection(MainWin.config.getInt("CmdHistorySize",MainWin.default_CmdHistorySize));
-		
-		
-		this.textTCPTimeout.setText(MainWin.config.getInt("TCPTimeout",MainWin.default_TCPTimeout) +"");
-		
-		this.btnTerminateServerOn.setSelection(MainWin.config.getBoolean("TermServerOnExit",false));
-		
-		this.btnShowCommandsSent.setSelection(MainWin.config.getBoolean("ShowCommandsSent", false));
-	
-		this.btnServerSync.setSelection(MainWin.config.getBoolean("ServerSync", true));
-		this.textServerSyncInterval.setText(MainWin.config.getInt("ServerSyncInterval",MainWin.default_ServerSyncInterval) + "");
-	}
-	
-	private void setFonts() 
-	{
-		FontData fd = new FontData(MainWin.config.getString("MainFont", MainWin.default_MainFont), MainWin.config.getInt("MainFontSize", MainWin.default_MainFontSize), MainWin.config.getInt("MainFontStyle", MainWin.default_MainFontStyle) );
-		textMainFont.setFont(new Font(display, fd));
-		textMainFont.setText(fd.getName() + " " + fd.getHeight());
-		
-		fd = new FontData(MainWin.config.getString("LogFont", MainWin.default_LogFont), MainWin.config.getInt("LogFontSize", MainWin.default_LogFontSize), MainWin.config.getInt("LogFontStyle", MainWin.default_LogFontStyle) );
-		textLogFont.setFont(new Font(display, fd));
-		textLogFont.setText(fd.getName() + " " + fd.getHeight());
-		
-		fd = new FontData(MainWin.config.getString("DialogFont", MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
-		textDialogFont.setFont(new Font(display, fd));
-		textDialogFont.setText(fd.getName() + " " + fd.getHeight());
+		this.btnLocalServer.setSelection(MainWin.config.getBoolean("LocalServer", true));
 		
 		
 	}
+	
 
 	/**
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
 		shlUserInterfaceConfiguration = new Shell(getParent(), getStyle());
-		shlUserInterfaceConfiguration.setSize(411, 448);
+		shlUserInterfaceConfiguration.setSize(281, 344);
+		//shlUserInterfaceConfiguration.setSize(320, 307);
 		shlUserInterfaceConfiguration.setText("User Interface Configuration");
+		shlUserInterfaceConfiguration.setLayout(new FormLayout());
 		
-		spinnerDiskHist = new Spinner(shlUserInterfaceConfiguration, SWT.BORDER);
-		spinnerDiskHist.setMaximum(999);
-		spinnerDiskHist.setBounds(153, 145, 47, 22);
-		
-		spinnerServerHist = new Spinner(shlUserInterfaceConfiguration, SWT.BORDER);
-		spinnerServerHist.setMaximum(999);
-		spinnerServerHist.setBounds(153, 173, 47, 22);
-		
-		Label lblDiskPathHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblDiskPathHistory.setAlignment(SWT.RIGHT);
-		lblDiskPathHistory.setBounds(10, 147, 137, 22);
-		lblDiskPathHistory.setText("Disk path history:");
-		
-		Label lblServerHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblServerHistory.setAlignment(SWT.RIGHT);
-		lblServerHistory.setBounds(10, 176, 137, 19);
-		lblServerHistory.setText("Server history:");
-		
-		Button btnOk = new Button(shlUserInterfaceConfiguration, SWT.NONE);
-		btnOk.addSelectionListener(new SelectionAdapter() {
+		btnLocalServer = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
+		fd_btnLocalServer = new FormData();
+		fd_btnLocalServer.left = new FormAttachment(0, 26);
+		fd_btnLocalServer.right = new FormAttachment(100, -30);
+		btnLocalServer.setLayoutData(fd_btnLocalServer);
+		btnLocalServer.addSelectionListener(new SelectionAdapter() {
 			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				applySettings();
-				
-				e.display.getActiveShell().close();
+			public void widgetSelected(SelectionEvent e) {
+				btnApply.setEnabled(true);
 			}
 		});
-		btnOk.setBounds(166, 385, 75, 25);
-		btnOk.setText("Ok");
+		btnLocalServer.setText("Start local server when client opens");
 		
-		Button btnCancel = new Button(shlUserInterfaceConfiguration, SWT.NONE);
-		btnCancel.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				e.display.getActiveShell().close();
-			}
-		});
-		btnCancel.setBounds(316, 385, 75, 25);
-		btnCancel.setText("Cancel");
-		
-		Button btnUndo = new Button(shlUserInterfaceConfiguration, SWT.NONE);
-		btnUndo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				loadSettings();
-			}
-		});
-		btnUndo.setBounds(10, 385, 75, 25);
-		btnUndo.setText("Undo");
-		
-		Button btnSet = new Button(shlUserInterfaceConfiguration, SWT.NONE);
-		btnSet.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-		        FontDialog dialog = new FontDialog(shlUserInterfaceConfiguration, SWT.NONE);
-		        
-		        FontData newFont = dialog.open();
-		        if (newFont == null)
-		          return;
-		        
-		        textMainFont.setFont(new Font(display, newFont));
-		        textMainFont.setText(newFont.getName() + " " + newFont.getHeight());
-			}
-		});
-		btnSet.setBounds(344, 64, 47, 25);
-		btnSet.setText("Set...");
-		
-		Label lblMainFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblMainFont.setAlignment(SWT.RIGHT);
-		lblMainFont.setBounds(10, 69, 122, 20);
-		lblMainFont.setText("Terminal font:");
-		
-		textMainFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		textMainFont.setBounds(138, 66, 200, 23);
-		
-		Label lblLogFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblLogFont.setText("Log font:");
-		lblLogFont.setAlignment(SWT.RIGHT);
-		lblLogFont.setBounds(30, 100, 102, 20);
-		
-		textLogFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		textLogFont.setBounds(138, 97, 200, 23);
-		
-		Button button = new Button(shlUserInterfaceConfiguration, SWT.NONE);
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-        FontDialog dialog = new FontDialog(shlUserInterfaceConfiguration, SWT.NONE);
-		        
-		        FontData newFont = dialog.open();
-		        if (newFont == null)
-		          return;
-		        
-		        textLogFont.setFont(new Font(display, newFont));
-		        textLogFont.setText(newFont.getName() + " " + newFont.getHeight());
-	
-			
-			}
-		});
-		button.setText("Set...");
-		button.setBounds(344, 95, 47, 25);
-		
-		textTCPTimeout = new Text(shlUserInterfaceConfiguration, SWT.BORDER);
-		textTCPTimeout.setBounds(192, 217, 69, 21);
-		
-		Label lblServerTcpResponse = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblServerTcpResponse.setAlignment(SWT.RIGHT);
-		lblServerTcpResponse.setBounds(10, 220, 176, 18);
-		lblServerTcpResponse.setText("Server response timeout:");
-		
-		Label lblMs = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblMs.setBounds(267, 220, 47, 15);
-		lblMs.setText("ms");
-		
-		Label lblDialogFont = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblDialogFont.setText("Dialog font:");
-		lblDialogFont.setAlignment(SWT.RIGHT);
-		lblDialogFont.setBounds(30, 38, 102, 22);
-		
-		textDialogFont = new Text(shlUserInterfaceConfiguration, SWT.BORDER | SWT.READ_ONLY | SWT.CENTER);
-		textDialogFont.setText("<dynamic> 0");
-		textDialogFont.setFont(SWTResourceManager.getFont("<dynamic>", 0, SWT.NORMAL));
-		textDialogFont.setBounds(138, 35, 200, 23);
-		
-		Button button_1 = new Button(shlUserInterfaceConfiguration, SWT.NONE);
-		button_1.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				 FontDialog dialog = new FontDialog(shlUserInterfaceConfiguration, SWT.NONE);
-			        
-			        FontData newFont = dialog.open();
-			        if (newFont == null)
-			          return;
-			        
-			        textDialogFont.setFont(new Font(display, newFont));
-			        textDialogFont.setText(newFont.getName() + " " + newFont.getHeight());
-		
-			
-			
-			}
-		});
-		button_1.setText("Set...");
-		button_1.setBounds(344, 33, 47, 25);
-		
-		btnTerminateServerOn = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
-		btnTerminateServerOn.setBounds(58, 309, 243, 22);
-		btnTerminateServerOn.setText("Terminate server on exit");
-		
-		btnShowCommandsSent = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
-		btnShowCommandsSent.setBounds(58, 337, 243, 22);
-		btnShowCommandsSent.setText("Show commands sent");
-		
-		Label lblCommandHistory = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblCommandHistory.setText("Command history:");
-		lblCommandHistory.setAlignment(SWT.RIGHT);
-		lblCommandHistory.setBounds(206, 148, 122, 22);
-		
-		spinnerCommandHistory = new Spinner(shlUserInterfaceConfiguration, SWT.BORDER);
-		spinnerCommandHistory.setBounds(334, 145, 47, 22);
-		
-
-		
-		lblServerSyncInterval = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblServerSyncInterval.setText("Server sync interval:");
-		lblServerSyncInterval.setAlignment(SWT.RIGHT);
-		lblServerSyncInterval.setBounds(10, 280, 176, 18);
-		
-		lblServerSyncIntervalMs = new Label(shlUserInterfaceConfiguration, SWT.NONE);
-		lblServerSyncIntervalMs.setText("ms");
-		lblServerSyncIntervalMs.setBounds(267, 280, 47, 15);
-		
-		textServerSyncInterval = new Text(shlUserInterfaceConfiguration, SWT.BORDER);
-		textServerSyncInterval.setText("0");
-		textServerSyncInterval.setBounds(192, 277, 69, 21);
-		
-		btnServerSync = new Button(shlUserInterfaceConfiguration, SWT.CHECK);
-		btnServerSync.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				toggleStuff();
-			}
-		});
-		
-		btnServerSync.setBounds(58, 255, 159, 16);
-		btnServerSync.setText("Sync with server");
 		
 
 
@@ -329,47 +228,43 @@ public class UIConfigWin extends Dialog {
 
 	protected void applySettings() 
 	{
-		MainWin.setFont(textMainFont.getFont().getFontData()[0]);
-		MainWin.setLogFont(textLogFont.getFont().getFontData()[0]);
-		MainWin.setDialogFont(textDialogFont.getFont().getFontData()[0]);
+
 		
 		
-		MainWin.config.setProperty("DiskHistorySize", this.spinnerDiskHist.getSelection());
-		MainWin.config.setProperty("ServerHistorySize", this.spinnerServerHist.getSelection());
-		MainWin.config.setProperty("CmdHistorySize", this.spinnerCommandHistory.getSelection());
-		
-		if (UIUtils.validateNum(this.textTCPTimeout.getText(), 0))
-				MainWin.config.setProperty("TCPTimeout", this.textTCPTimeout.getText());
 		
 		MainWin.config.setProperty("TermServerOnExit", this.btnTerminateServerOn.getSelection());
 		
-		MainWin.config.setProperty("ShowCommandsSent", this.btnShowCommandsSent.getSelection());
+		MainWin.config.setProperty("LocalServer", this.btnLocalServer.getSelection());
 
-		MainWin.config.setProperty("ServerSync", this.btnServerSync.getSelection());
-		MainWin.config.setProperty("ServerSyncInterval", this.textServerSyncInterval.getText());
 		
-		MainWin.applyServerSync();
+	
+		btnApply.setEnabled(false);
+	}
+
+
+
+		protected Button getBtnLocalServer() {
+		return btnLocalServer;
+	}
+	protected Button getBtnRememberWindowPositions() {
+		return btnRememberWindowPositions;
+	}
+	protected Button getBtnReopenDiskWindows() {
+		return btnReopenDiskWindows;
+	}
+	protected Button getBtnBackupConfigurationBefore() {
+		return btnBackupConfigurationBefore;
+	}
+	protected Button getBtnOpenLLog() {
+		return btnOpenLLog;
+	}
+	protected Button getBtnRunInsafe() {
+		return btnRunInsafe;
 	}
 	protected Button getBtnTerminateServerOn() {
 		return btnTerminateServerOn;
 	}
-	protected Button getBtnShowCommandsSent() {
-		return btnShowCommandsSent;
-	}
-
-	protected Spinner getSpinnerCommandHistory() {
-		return spinnerCommandHistory;
-	}
-	protected Button getBtnServerSync() {
-		return btnServerSync;
-	}
-	protected Label getLblServerSyncInterval() {
-		return lblServerSyncInterval;
-	}
-	protected Text getTextServerSyncInterval() {
-		return textServerSyncInterval;
-	}
-	protected Label getLblServerSyncIntervalMs() {
-		return lblServerSyncIntervalMs;
+	protected Button getBtnRemoteFileDialogs() {
+		return btnRemoteFileDialogs;
 	}
 }

@@ -7,10 +7,10 @@ import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
@@ -33,34 +33,33 @@ public class DWCmdDiskCreate extends DWCommand {
 	
 	public String getShortHelp() 
 	{
-		return "Create new disk image or set";
+		return "Create new disk image";
 	}
 
 
 	public String getUsage() 
 	{
-		return "dw disk create {# path | dset}";
+		return "dw disk create # path";
 	}
 
 	public DWCommandResponse parse(String cmdline)  
 	{
-		if ((cmdline.length() == 0))
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk create requires at least 1 argument."));
-		}
-
+		
 		String[] args = cmdline.split(" ");
 
-		if (dwProto.getDiskDrives().isDiskNo(args[0]))
+		if (args.length == 2)
 		{
-			if (args.length < 2)
+			// create disk
+		
+			try
 			{
-				return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk create # requires a path."));
-			}
-			else
+				return(doDiskCreate(dwProto.getDiskDrives().getDriveNoFromString(args[0]), DWUtils.dropFirstToken(cmdline)));
+			} 
+			catch (DWDriveNotValidException e)
 			{
-				return(doDiskCreate(Integer.parseInt(args[0]), DWUtils.dropFirstToken(cmdline)));
+				return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
 			}
+
 		}
 		
 		
@@ -88,7 +87,7 @@ public class DWCmdDiskCreate extends DWCommand {
 		
 			fileobj.createFile();
 			
-			if (dwProto.getDiskDrives().diskLoaded(driveno))
+			if (dwProto.getDiskDrives().isLoaded(driveno))
 				dwProto.getDiskDrives().EjectDisk(driveno);
 				
 			dwProto.getDiskDrives().LoadDiskFromFile(driveno, filepath);
@@ -113,9 +112,9 @@ public class DWCmdDiskCreate extends DWCommand {
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
 		} 
-		catch (DWDisksetNotValidException e) 
+		catch (DWImageFormatException e)
 		{
-			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET, e.getMessage()));
+			return(new DWCommandResponse(false,DWDefs.RC_IMAGE_FORMAT_EXCEPTION, e.getMessage()));
 		}
 		
 	}

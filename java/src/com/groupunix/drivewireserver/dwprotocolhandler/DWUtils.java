@@ -3,14 +3,12 @@ package com.groupunix.drivewireserver.dwprotocolhandler;
 import gnu.io.CommPortIdentifier;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.configuration.HierarchicalConfiguration;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetDriveNotLoadedException;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class DWUtils
@@ -609,6 +607,71 @@ public class DWUtils
 			  }
 		}
 
+		
+		public static void copyFile(String fromFileName, String toFileName) throws IOException 
+		{
+	    
+			File fromFile = new File(fromFileName);
+		    File toFile = new File(toFileName);
+	
+		    if (!fromFile.exists())
+		      throw new IOException("no source file: " + fromFileName);
+		    if (!fromFile.isFile())
+		      throw new IOException("can't copy directory: " + fromFileName);
+		    if (!fromFile.canRead())
+		      throw new IOException("source file is unreadable: " + fromFileName);
+	
+		    if (toFile.isDirectory())
+		      toFile = new File(toFile, fromFile.getName());
+	
+		    if (toFile.exists()) {
+		      if (!toFile.canWrite())
+		        throw new IOException("destination file is unwriteable: " + toFileName);
+		     
+		      String parent = toFile.getParent();
+		      if (parent == null)
+		        parent = System.getProperty("user.dir");
+		      
+		      File dir = new File(parent);
+		      if (!dir.exists())
+		        throw new IOException("destination directory doesn't exist: " + parent);
+		      
+		      if (dir.isFile())
+		        throw new IOException("destination is not a directory: " + parent);
+		      if (!dir.canWrite())
+		        throw new IOException("destination directory is unwriteable: " + parent);
+		    }
+	
+		    FileInputStream from = null;
+		    FileOutputStream to = null;
+		    try 
+		    {
+		      from = new FileInputStream(fromFile);
+		      to = new FileOutputStream(toFile);
+		      byte[] buffer = new byte[4096];
+		      int bytesRead;
+	
+		      while ((bytesRead = from.read(buffer)) != -1)
+		        to.write(buffer, 0, bytesRead); // write
+		    } 
+		    finally 
+		    {
+		      if (from != null)
+		        try {
+		          from.close();
+		        } catch (IOException e) {
+		          ;
+		        }
+		      if (to != null)
+		        try {
+		          to.close();
+		        } catch (IOException e) {
+		          ;
+		        }
+		    }
+	  }
+		
+		
 		public static String shortenLocalURI(String df) 
 		{
 			if (df.startsWith("file:///"))
@@ -629,10 +692,22 @@ public class DWUtils
 		{
 			String res = "";
 			
-			//System.out.println("getFD: " + f.getPath());
-			
 			try {
-				res = File.separator + "|" + f.getCanonicalPath() + "|" + f.getParent() + "|" + f.length() + "|" + f.lastModified() + "|" + f.isDirectory();
+				res = File.separator;
+				res += "|" + f.getCanonicalPath();
+				res += "|" + f.getParent();
+				if (f.getParent() != null)
+				{
+					// these checks take a long time on removable media with no disk in the drive
+					res += "|" + f.length();
+					res += "|" + f.lastModified();
+					res += "|" + f.isDirectory();
+				}
+				else
+					res += "|0|0|true";
+				
+				
+				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -641,23 +716,54 @@ public class DWUtils
 			return(res);
 		}
 
-		public static HierarchicalConfiguration getDiskDef(HierarchicalConfiguration diskset, int driveno) throws DWDisksetDriveNotLoadedException 
+
+		
+		
+		
+		public String cocoString(byte[] bytes) 
 		{
+			// return string from 6809 style string
+			String ret = new String();
 			
-			@SuppressWarnings("unchecked")
-			List<HierarchicalConfiguration> disks = diskset.configurationsAt("disk");
+			int i = 0;
 			
-			for (HierarchicalConfiguration disk : disks)
+			// thanks Christopher Hawks
+			while ((i < bytes.length - 1) && (bytes[i] > 0))
 			{
-				if (disk.getInt("drive", -1) == driveno)
-				{
-					return(disk);
-				}
+				ret += Character.toString((char) bytes[i]);
+				i++;
 			}
 			
-			throw new DWDisksetDriveNotLoadedException("Disk " + driveno + " is not defined in diskset.");
+			ret += Character.toString((char) (bytes[i] + 128));
 			
+			return(ret);
+		}
 
+		public static String prettyFormat(int diskFormat)
+		{
+			String res = "unknown";
+			
+			switch(diskFormat)
+			{
+				case DWDefs.DISK_FORMAT_DMK:
+					res = "DMK";
+					break;
+				case DWDefs.DISK_FORMAT_JVC:
+					res = "JVC";
+					break;
+				case DWDefs.DISK_FORMAT_RAW:
+					res = "Raw sectors";
+					break;
+				case DWDefs.DISK_FORMAT_VDK:
+					res = "VDK";
+					break;
+				case DWDefs.DISK_FORMAT_NONE:
+					res = "none";
+					break;
+			}
+			
+			
+			return res;
 		}
 	   
 }

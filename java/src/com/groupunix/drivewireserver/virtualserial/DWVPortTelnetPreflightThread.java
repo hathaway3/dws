@@ -10,14 +10,10 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
-import org.jasypt.util.password.BasicPasswordEncryptor;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
-import com.maxmind.geoip.Location;
-import com.maxmind.geoip.LookupService;
-import com.maxmind.geoip.regionName;
 
 public class DWVPortTelnetPreflightThread implements Runnable
 {
@@ -28,12 +24,6 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	private Socket skt;
 	private int vport;
 
-	// telnet login prompt timeout, 50ms * X
-	private static int MAX_TIMEOUT = 900;
-	
-	private boolean loginOK = true;
-	private boolean auth = false;
-	private boolean protect = false;
 	private boolean banner = false;
 	private boolean telnet = false;
 	
@@ -41,12 +31,11 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	private DWVSerialPorts dwVSerialPorts;
 	private DWProtocolHandler dwProto;
 	
-	public DWVPortTelnetPreflightThread(DWProtocolHandler dwProto, int vport, Socket skt, boolean doTelnet, boolean doAuth, boolean doProtect, boolean doBanner)
+	public DWVPortTelnetPreflightThread(DWProtocolHandler dwProto, int vport, Socket skt, boolean doTelnet, boolean doBanner)
 	{
 		this.vport = vport;
 		this.skt = skt;
-		this.auth = doAuth;
-		this.protect = doProtect;
+
 		this.banner = doBanner;
 		this.telnet = doTelnet;
 		this.dwProto = dwProto;
@@ -67,50 +56,6 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			if (this.telnet)
 				skt.getOutputStream().write(("DriveWire Telnet Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
 
-			// GeoIP
-			
-			if (dwProto.getConfig().getBoolean("GeoIPLookup",false))
-			{
-				if (geoIPBanned(skt.getInetAddress().getHostAddress()) == true)
-				{
-					doBanned();
-				}
-			}
-			
-			if (skt.isClosed())
-			{
-				// bail out
-				logger.debug("thread exiting after geoip ban check");
-				return;
-			}
-			
-			
-			// check banned
-			if ((dwProto.getConfig().containsKey("TelnetBanned")) && (this.protect == true))
-			{
-				String[] thebanned = dwProto.getConfig().getStringArray("TelnetBanned");
-			
-				for (int i = 0;i<thebanned.length ;i++)
-				{
-					if (this.skt.getInetAddress().getHostAddress().startsWith(thebanned[i]))
-					{
-						logger.info("Connection from banned IP " + thebanned[i]);
-					
-						doBanned();
-
-					}
-				}
-			
-			}
-		
-		
-			if (skt.isClosed())
-			{
-				// bail out
-				logger.debug("thread exiting after IP ban check");
-				return;
-			}
-		
 
 			if (telnet == true)
 			{
@@ -138,51 +83,6 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				}
 			}
 				
-			// do auth
-			if (auth == true)
-			{
-				this.loginOK = false;
-				
-				// display preauth
-				if (dwProto.getConfig().containsKey("TelnetPreAuthFile"))
-				{
-					displayFile(skt.getOutputStream(), dwProto.getConfig().getString("TelnetPreAuthFile"));
-				}
-			
-				// username
-				if (skt.isClosed() == false)
-				{
-					skt.getOutputStream().write("Username: ".getBytes());
-					String username = readLine(true);
-					
-					if ((skt.isClosed() == false) && (username.length() > 0))
-					{
-						skt.getOutputStream().write("\r\nPassword: ".getBytes());
-						String password = readLine(false);
-						
-						if ((skt.isClosed() == false) && (password.length() > 0))
-						{
-							if (checkAuth(username,password))
-							{
-								this.loginOK = true;
-								logger.info("AUTH: login from " + username);
-								
-							}
-							else
-							{
-								logger.warn("AUTH: bad login from " + username);
-								skt.getOutputStream().write("\r\nBad login.\r\n".getBytes());
-							}
-						}
-					}
-					
-				}
-			}
-			
-			if (!this.loginOK)
-			{
-				skt.close();
-			}
 			
 			if (skt.isClosed())
 			{
@@ -247,282 +147,10 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	
 	
 
-	private void doBanned()
-	{
-		// IP is banned
-		
-		try
-		{
-				
-			if (dwProto.getConfig().containsKey("TelnetBannedFile"))
-			{
-				displayFile(skt.getOutputStream(), dwProto.getConfig().getString("TelnetBannedFile"));
-			}
-			else
-			{
-				skt.getOutputStream().write("No ports available.\r\n".getBytes());
-			}
 	
-		}
-		catch (IOException e1)
-		{
-			logger.warn("IOException: " + e1.getMessage());
-		}
-		
-			
-		if (skt.isConnected())
-		{
-			logger.debug("closing socket");
-			try
-			{
-				skt.close();
-			} catch (IOException e)
-			{
-				logger.warn("IOException closing socket: " + e.getMessage());
-			}
-			
-		}	
-	}
+
 
 	
-	
-	private boolean geoIPBanned(String hostAddress)
-	{
-		Location loc = lookupGeoIP(hostAddress);
-
-		
-		if (loc != null)
-		{
-			// log details
-			logger.info("GeoIP: cc='" + loc.countryCode + "' country='" + loc.countryName + "' region='" + regionName.regionNameByCode(loc.countryCode, loc.region) + "' city='" + loc.city + "'  lat: " + loc.latitude + " lng: " + loc.longitude );
-			
-			// do country, regionName, city
-			if (dwProto.getConfig().containsKey("GeoIPBannedCountries"))
-			{
-				String[] thebanned = dwProto.getConfig().getStringArray("GeoIPBannedCountries");
-				
-				for (int i = 0;i<thebanned.length ;i++)
-				{
-					try 
-					{
-						
-					
-						if ((loc.countryName.equalsIgnoreCase(thebanned[i])) || (loc.countryCode.equalsIgnoreCase(thebanned[i]))) 
-						{
-							logger.info("Connection from banned country: " + thebanned[i]);
-							return true;
-						}
-					}
-					catch (NullPointerException e) 
-					{
-						// don't care
-					}
-				}	
-			}
-			
-			if (dwProto.getConfig().containsKey("GeoIPBannedRegions"))
-			{
-				String[] thebanned = dwProto.getConfig().getStringArray("GeoIPBannedRegions");
-				
-				for (int i = 0;i<thebanned.length ;i++)
-				{
-					try
-					{
-						if ((loc.region.equalsIgnoreCase(thebanned[i])) || (regionName.regionNameByCode(loc.countryCode, loc.region).equalsIgnoreCase(thebanned[i]))) 
-						{
-							logger.info("Connection from banned region: " + thebanned[i]);
-							return true;
-						}
-					}
-					catch (NullPointerException e) 
-					{
-						// don't care
-					}
-				}	
-			}
-			
-			if (dwProto.getConfig().containsKey("GeoIPBannedCities"))
-			{
-				String[] thebanned = dwProto.getConfig().getStringArray("GeoIPBannedCities");
-				
-				for (int i = 0;i<thebanned.length ;i++)
-				{
-					try
-					{
-						if (loc.city.equalsIgnoreCase(thebanned[i]))
-						{
-							logger.info("Connection from banned city: " + thebanned[i]);
-							return true;
-						}
-					}
-					catch (NullPointerException e) 
-					{
-						// don't care
-					}
-				}	
-			}
-			
-		}
-		
-		return false;
-	}
-
-	
-	private boolean checkAuth(String username, String password) 
-	{
-		boolean result = false;
-		
-		if (dwProto.getConfig().containsKey("TelnetPasswdFile"))
-		{
-			// look for username in passwd file
-			FileInputStream fstream;
-			
-			BasicPasswordEncryptor bpe = new BasicPasswordEncryptor();
-			
-			try 
-			{
-				fstream = new FileInputStream(dwProto.getConfig().getString("TelnetPasswdFile"));
-			
-				DataInputStream in = new DataInputStream(fstream);
-					
-				BufferedReader br = new BufferedReader(new InputStreamReader(in));
-					
-				String strLine;
-				String founduser = null;
-				String foundpass = null;
-				int foundgroup = -1;
-				
-				
-				while (((strLine = br.readLine()) != null) && (founduser == null))
-				{
-					if (!strLine.startsWith("#"))
-					{
-						String[] parts = new String[3];
-				    	parts = strLine.split(",", 3);
-
-				    	if (parts.length == 3)
-				    	{
-				    		if (parts[0].equals(username))
-				    		{
-				    			founduser = parts[0];
-				    			foundpass = parts[1];
-				    			foundgroup = Integer.parseInt(parts[2]);
-				    			 
-				    			logger.info("AUTH: login from '" + founduser + "' group " + foundgroup);
-				    		}
-				    	}
-					}
-				}
-				
-				fstream.close();
-				
-				if (founduser == null)
-				{
-					logger.debug("AUTH: User not found: '" + username + "'");
-				}
-				else
-				{
-					// found user
-					
-			    	if (bpe.checkPassword(password, foundpass))
-			    	{
-			    		// match
-			    		result = true;
-			    		
-			    	}
-			    	else
-			    	{
-			    		logger.debug("AUTH: bad password from '" + username + "'");
-			    	}
-				}
-				
-				
-			} 
-			catch (FileNotFoundException e) 
-			{
-				logger.warn("TelnetPasswdFile not found");
-			} 
-			catch (IOException e1) 
-			{
-				logger.warn("IO Error reading passwd file: " + e1.getMessage());
-			}
-			catch (NumberFormatException e2) 
-			{
-				logger.error(e2.getMessage());
-			} 
-			
-			
-		}
-		
-		return(result);
-	}
-
-	private String readLine(boolean echo) 
-	{
-		String input = "";
-		
-		int lastchar = 0;
-		
-		try 
-		{
-		
-			while ((lastchar != 13) && (skt.isClosed() == false))
-			{
-				int timeout = 0;
-				
-				while ((skt.getInputStream().available() == 0) && (timeout < MAX_TIMEOUT))
-				{
-					Thread.sleep(50);
-					timeout++;
-				}
-				
-				if (timeout >= MAX_TIMEOUT)
-				{
-					logger.info("AUTH: timed out");
-					skt.close();
-				}
-				
-				lastchar = skt.getInputStream().read();
-				
-				if (echo)
-				{
-					skt.getOutputStream().write(lastchar);
-				}
-				else
-				{
-					if ((lastchar > 31) && (lastchar < 127))
-					{
-						skt.getOutputStream().write(42);
-					}
-				}
-				
-				if ((lastchar > 31) && (lastchar < 127))
-				{
-					input += Character.toString((char) lastchar);
-				}
-				else if (((lastchar == 8) || (lastchar == 127)) && (input.length() > 0))
-				{
-					input = input.substring(0, input.length() - 1);
-				}
-			}
-	
-		} 
-		catch (IOException e) 
-		{
-			logger.debug("IO error in readline: " + e.getMessage());
-			input = "";
-		}
-		catch (InterruptedException e1) 
-		{
-			logger.debug("Interrupted in readline sleep");
-			input = "";
-		}
-		
-		// logger.debug("Readline: '" + input + "'");
-			
-		return(input);
-	}
-
 
 
 	private void displayFile(OutputStream outputStream, String fname) 
@@ -563,30 +191,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	}
 	
 	
-	private Location lookupGeoIP(String ip)
-	{
-		try {
-		    LookupService cl = new LookupService(dwProto.getConfig().getString("GeoIPDatabaseFile"), LookupService.GEOIP_MEMORY_CACHE );
-	      
-		    
-		    Location l2 = cl.getLocation(ip);
-		    
-	          
-		    if (l2 == null)
-		    {
-		    	logger.debug("no results from GeoIP lookup");
-		    }
-		  
-		    cl.close();
-		    
-		    return(l2);
-		}
-		catch (IOException e) {
-		    System.out.println("IO Exception");
-		}
-		
-		return(null);
-	}
+	
 	
 	
 }

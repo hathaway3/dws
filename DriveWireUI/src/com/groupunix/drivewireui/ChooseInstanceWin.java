@@ -2,6 +2,7 @@ package com.groupunix.drivewireui;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -45,6 +46,12 @@ public class ChooseInstanceWin extends Dialog {
 		shlChooseAnInstance.open();
 		shlChooseAnInstance.layout();
 		Display display = getParent().getDisplay();
+		
+		int x = getParent().getBounds().x + (getParent().getBounds().width / 2) - (shlChooseAnInstance.getBounds().width / 2);
+		int y = getParent().getBounds().y + (getParent().getBounds().height / 2) - (shlChooseAnInstance.getBounds().height / 2);
+		
+		shlChooseAnInstance.setLocation(x, y);
+		
 		while (!shlChooseAnInstance.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -98,7 +105,7 @@ public class ChooseInstanceWin extends Dialog {
 	
 	private void loadInstances(Combo cmb) throws IOException, DWUIOperationFailedException 
 	{
-		ArrayList<String> inst = UIUtils.loadArrayList("ui server show instances");
+		List<String> inst = UIUtils.loadList("ui server show instances");
 
 		for(int i=0; i<inst.size(); i++)
 		{

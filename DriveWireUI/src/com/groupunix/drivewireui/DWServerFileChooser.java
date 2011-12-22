@@ -1,5 +1,7 @@
 package com.groupunix.drivewireui;
 
+import java.io.File;
+
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileSystemView;
 
@@ -8,6 +10,7 @@ public class DWServerFileChooser extends JFileChooser {
 	private static final long serialVersionUID = -1032049099726544597L;
 	private String lastdir = ".";
 	private String separator = "/";
+	private File[] rootcache = null;
 	
 	public DWServerFileChooser() 
 	{
@@ -54,5 +57,13 @@ public class DWServerFileChooser extends JFileChooser {
 		this.setSelectedFile(new DWServerFile(fname));
 	}
 	
+	public File[] getRootCache()
+	{
+		return this.rootcache;
+	}
 	
+	public void setRootCache(File[] rc)
+	{
+		this.rootcache = rc;
+	}
 }

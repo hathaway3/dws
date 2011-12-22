@@ -162,21 +162,7 @@ public class DWVPortHandler
 				}
 			}
 
-			/* else if (cmdparts[0].equalsIgnoreCase("serial"))
-			{
-				if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("con"))) 
-				{
-					doSerialCon(cmdparts[2]);
-				}
-				else if ((cmdparts.length == 2) && (cmdparts[1].equalsIgnoreCase("list"))) 
-				{
-					doSerialList();
-				}
-				else
-				{
-					respondFail(2,"Syntax error in serial command");
-				}
-			} */
+
 			else if (cmdparts[0].equalsIgnoreCase("dw"))
 			{
 				// start DWcmd thread
@@ -199,29 +185,7 @@ public class DWVPortHandler
 	}
 
 
-/*	private void doSerialList()
-	{
-		// list available serial ports
-		ArrayList<String> ports = DWUtils.getPortNames();
-		
-		String txt = new String();
-		
-		for (int i = 0;i<ports.size();i++)
-		{
-			txt += ports.get(i) + " ";
-		}
-		
-		respondOk(txt);
-		
-	}
 
-	private void doSerialCon(String args)
-	{
-		// attempt to bridge vport with serial port
-		Thread serconT = new Thread(new DWVPortSerialBridgeThread(this.handlerno, this.vport, args));
-		serconT.start();
-	}
-*/
 	
 	private void doTCPJoin(String constr) 
 	{
@@ -332,8 +296,6 @@ public class DWVPortHandler
 		
 		// simulate old behavior
 		listener.setMode(mode);
-		listener.setDo_auth(true);
-		listener.setDo_protect(true);
 		listener.setDo_banner(true);
 		listener.setDo_telnet(true);
 		
@@ -371,14 +333,6 @@ public class DWVPortHandler
 				else if (cmdparts[i].equalsIgnoreCase("httpd"))
 				{
 					listener.setMode(2);
-				}
-				else if (cmdparts[i].equalsIgnoreCase("auth"))
-				{
-					listener.setDo_auth(true);
-				}
-				else if (cmdparts[i].equalsIgnoreCase("protect"))
-				{
-					listener.setDo_protect(true);
 				}
 				else if (cmdparts[i].equalsIgnoreCase("banner"))
 				{

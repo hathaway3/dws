@@ -8,7 +8,8 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.dwhelp.DWHelp;
 
-
+// should really be an abstract class with much of dwprotocolhandler moved in
+// but until i work on mcx or another protocol some more doesnt matter
 
 
 public interface DWProtocol extends Runnable
@@ -28,5 +29,7 @@ public interface DWProtocol extends Runnable
 	Logger getLogger();
 	int getCMDCols();
 	DWHelp getHelp();
+	boolean isReady();
+	void submitConfigEvent(String propertyName, String string);
 	
 }

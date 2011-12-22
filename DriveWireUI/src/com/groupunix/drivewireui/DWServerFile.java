@@ -30,7 +30,7 @@ public class DWServerFile extends File {
 			try 
 			{
 				String vals;
-				vals = UIUtils.loadArrayList("ui server file info " + pathname).get(0);
+				vals = UIUtils.loadList("ui server file info " + pathname).get(0);
 				this.setVals(vals);
 			} 
 			catch (IOException e) 
@@ -137,6 +137,9 @@ public class DWServerFile extends File {
 	
     public String	getName() 
     {
+    	if (this.pathname == null)
+    		return(null);
+    	
     	String sep = this.aseparator;
     	
     	// stupid hack for windows separator
@@ -146,7 +149,10 @@ public class DWServerFile extends File {
     	}
     	
     	String[] parts = this.pathname.split(sep); 
-    	return parts[parts.length - 1];
+    	if (parts.length > 1)
+    		return parts[parts.length - 1];
+    	
+    	return(this.pathname);
     }
 
     public String getParent() 

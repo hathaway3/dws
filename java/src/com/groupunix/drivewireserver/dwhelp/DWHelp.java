@@ -32,22 +32,23 @@ public class DWHelp
 		this.reload();
 	}
 
+	
 	public DWHelp(DWProtocolHandler dwProto) 
 	{
-		try 
-		{
+		//try 
+		//{
 			help = new XMLConfiguration();
 			addAllTopics(new DWCmd(dwProto), "");
-			help.setFileName(DWDefs.HELP_DEFAULT_FILE);
-			help.save(DWDefs.HELP_DEFAULT_FILE);
-		} 
-		catch (ConfigurationException e) 
-		{
-			logger.warn(e.getMessage());
-		}
+			//help.setFileName(DWDefs.HELP_DEFAULT_FILE);
+			//help.save(DWDefs.HELP_DEFAULT_FILE);
+		//} 
+		//catch (ConfigurationException e) 
+	//	{
+	//		logger.warn(e.getMessage());
+	//	}
 		
 	}
-
+	
 	public void reload()
 	{
 		// load helpfile if possible
@@ -178,6 +179,7 @@ public class DWHelp
 				String key = itk.next();
 				if (key.endsWith(".text"))
 					res.add(this.dotToSpace(key.substring(0, key.length()-5)));
+				
 			}
 		}
 		

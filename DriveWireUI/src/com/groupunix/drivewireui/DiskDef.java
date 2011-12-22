@@ -1,150 +1,662 @@
 package com.groupunix.drivewireui;
 
-public class DiskDef 
+import java.util.HashMap;
+import java.util.Iterator;
+
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+
+public class DiskDef implements Cloneable
 {
 	private int drive = -1;
-	private String path = "";
-	private int offset = 0;
-	private int sizelimit = -1;
-	private boolean sync = true;
-	private boolean expand = true;
-	private boolean writeprotect = false;
-	
-	private boolean fswriteable = false;
-	private boolean writeable = false;
-	private boolean randomwriteable = false;
-	private boolean namedobject = false;
-	private boolean syncfromsource = false;
-	
-	private int sectors = 0;
-	private int dirty = 0;
-	private int lsn = 0;
-	private int reads = 0;
-	private int writes = 0;
-	
 	private boolean loaded = false;
-	private boolean padpartial;
+	
+	private boolean changed = true;
+	private boolean diskchanged = false;
+	
+		
+	
+	private HierarchicalConfiguration params;
+	
+	private Image diskgraph = new Image(null, DiskWin.DGRAPH_WIDTH, DiskWin.DGRAPH_HEIGHT);
+	private HashMap<Integer,Integer> sectors = new HashMap<Integer,Integer>();
 	
 	
-	public void setDrive(int drive) {
-		this.drive = drive;
+	private double graphscale = 1.0;
+	private GC gc;
+	
+	private int lastread = 0;
+	private int lastwrite = 0;
+	private int lastclean = 0;
+	private int coin = 0;
+	
+	private DiskWin diskwin = null;
+	private boolean graphchanged = true;
+	private DiskAdvancedWin paramwin = null;
+	
+	
+	
+	
+	public DiskDef(int driveno)
+	{
+		this.drive = driveno;
+		this.params = new HierarchicalConfiguration();
+		this.gc = new GC(this.diskgraph); 
+		this.makeNewDGraph();
+		
+		if (MainWin.config.getBoolean("DiskWin_" + driveno + "_open", false))
+		{
+			final DiskDef ref = this;
+			MainWin.getDisplay().asyncExec(new Runnable() {
+				  public void run()
+				  {
+					  setDiskwin(new DiskWin(ref , MainWin.getDiskWinInitPos(drive).x,MainWin.getDiskWinInitPos(drive).y));
+					  getDiskwin().open(MainWin.getDisplay());
+					  
+				  }
+			  });
+			
+		}
 	}
-	public int getDrive() {
-		return drive;
+	
+	
+	
+	private void makeNewDGraph()
+	{
+		synchronized(this.diskgraph)
+		{
+			
+			this.gc.setAdvanced(true);
+			
+			this.gc.setBackground(MainWin.colorDiskBG);
+			this.gc.fillRectangle(0,0, DiskWin.DGRAPH_WIDTH, DiskWin.DGRAPH_HEIGHT);
+		
+			this.gc.setTextAntialias(SWT.ON);
+			this.gc.setAntialias(SWT.ON);
+			
+			this.sectors = new HashMap<Integer,Integer>();
+			this.lastclean = 0;
+			this.lastread = 0;
+			this.lastwrite = 0;
+			this.graphchanged = true;
+		}
+		
 	}
-	public void setPath(String path) {
-		this.path = path;
+
+
+
+	public void setParam(final String key, final Object val)
+	{
+	
+		// actions don't go into params..
+		if (key.startsWith("*"))
+		{
+				
+			if (key.equals("*clean"))
+			{
+				markGraphClean(Integer.parseInt(val.toString()));
+			}
+			else if (key.equals("*insert"))
+			{
+				this.loaded = true;
+				this.makeNewDGraph();
+				
+			}	
+			else if (key.equals("*eject"))
+			{
+				this.loaded = false;
+				this.makeNewDGraph();
+			}
+			
+		}
+		else
+		{
+			// parameters
+			this.params.setProperty(key, val);
+			
+			
+			// graph params
+			if (key.equals("_reads") && !val.equals("0") && this.params.containsKey("_reads"))
+			{
+				markGraphRead(this.getLsn());
+			}
+			else if (key.equals("_writes") && !val.equals("0") && this.params.containsKey("_writes"))
+			{
+				markGraphWrite(this.getLsn());
+			}
+			else if (key.equals("_sectors"))
+			{
+				this.graphchanged = true;
+			}
+			
+		
+		}
+		
+		// notify our paramwin 
+		if (this.hasParamwin())
+		{
+			MainWin.getDisplay().asyncExec(new Runnable() {
+				  public void run()
+				  {
+					  if (hasParamwin())
+						  if (val == null)
+								paramwin.submitEvent(key, "");
+							else
+								paramwin.submitEvent(key, val.toString());
+						  
+				  }
+			  });
+			
+		}
+		
+		// notify our diskwin
+		if (this.hasDiskwin())
+		{
+				MainWin.getDisplay().asyncExec(new Runnable() {
+					  public void run()
+					  {
+						 if (hasDiskwin())
+						 {
+							if (val == null)
+								diskwin.submitEvent(key, "");
+							else
+								diskwin.submitEvent(key, val.toString());
+						 }
+					  }
+				  });
+			
+		}
+		
+		
+		
 	}
-	public String getPath() {
-		return path;
+	
+	private void markGraphClean(int sector)
+	{
+	//	synchronized(this.diskgraph)
+	//	{
+			this.lastclean = sector;
+			this.sectors.put(sector, 50);
+			this.graphchanged = true;
+	//	}
 	}
-	public void setOffset(int offset) {
-		this.offset = offset;
+
+	
+
+	
+
+
+
+	private void markGraphWrite(int lsn)
+	{
+	//	synchronized(this.diskgraph)
+	//	{
+			this.lastwrite = lsn;
+			this.sectors.put(lsn,100);
+			this.graphchanged = true;
+	//	}
 	}
-	public int getOffset() {
-		return offset;
+
+
+
+	private void markGraphRead(int lsn)
+	{
+	//	synchronized(this.diskgraph)
+	//	{
+			this.lastread = lsn;
+			this.sectors.put(lsn, -50);
+			this.graphchanged = true;
+	//	}
 	}
-	public void setSizelimit(int sizelimit) {
-		this.sizelimit = sizelimit;
+
+
+
+	public Object getParam(String key)
+	{
+		return(this.params.getProperty(key));
 	}
-	public int getSizelimit() {
-		return sizelimit;
+	
+	
+	public String getPath() 
+	{
+		return this.params.getString("_path","");
 	}
-	public void setSync(boolean sync) {
-		this.sync = sync;
+	
+	
+	public int getSectors() 
+	{
+		return this.params.getInt("_sectors", 0);
 	}
-	public boolean isSync() {
-		return sync;
+	
+	
+	public int getLsn() 
+	{
+		return this.params.getInt("_lsn", 0);
 	}
-	public void setExpand(boolean expand) {
-		this.expand = expand;
+	
+		
+	public int getReads() 
+	{
+		return this.params.getInt("_reads", 0);
 	}
-	public boolean isExpand() {
-		return expand;
+	
+	public int getWrites() 
+	{
+		return this.params.getInt("_writes", 0);
 	}
-	public void setWriteprotect(boolean writeprotect) {
-		this.writeprotect = writeprotect;
-	}
-	public boolean isWriteprotect() {
-		return writeprotect;
-	}
-	public void setFswriteable(boolean fswriteable) {
-		this.fswriteable = fswriteable;
-	}
-	public boolean isFswriteable() {
-		return fswriteable;
-	}
-	public void setWriteable(boolean writeable) {
-		this.writeable = writeable;
-	}
-	public boolean isWriteable() {
-		return writeable;
-	}
-	public void setRandomwriteable(boolean randomwriteable) {
-		this.randomwriteable = randomwriteable;
-	}
-	public boolean isRandomwriteable() {
-		return randomwriteable;
-	}
-	public void setSectors(int sectors) {
-		this.sectors = sectors;
-	}
-	public int getSectors() {
-		return sectors;
-	}
-	public void setDirty(int dirty) {
-		this.dirty = dirty;
-	}
-	public int getDirty() {
-		return dirty;
-	}
-	public void setLsn(int lsn) {
-		this.lsn = lsn;
-	}
-	public int getLsn() {
-		return lsn;
-	}
-	public void setReads(int reads) {
-		this.reads = reads;
-	}
-	public int getReads() {
-		return reads;
-	}
-	public void setWrites(int writes) {
-		this.writes = writes;
-	}
-	public int getWrites() {
-		return writes;
-	}
-	public void setLoaded(boolean loaded) {
+	
+	
+	public void setLoaded(boolean loaded) 
+	{	
+
 		this.loaded = loaded;
+		
+		if (loaded != this.loaded)
+		{
+			this.changed = true;
+		}
 	}
-	public boolean isLoaded() {
-		return loaded;
-	}
-
-	public void setNamedobject(boolean namedobject) {
-		this.namedobject = namedobject;
-	}
-	public boolean isNamedobject() {
-		return namedobject;
-	}
-	public void setSyncfromsource(boolean syncfromsource) {
-		this.syncfromsource = syncfromsource;
-	}
-	public boolean isSyncfromsource() {
-		return syncfromsource;
-	}
-	public boolean isPadPartial() 
+	
+	
+	public boolean isLoaded() 
 	{
-		return padpartial;
+		return this.loaded;
 	}
-	public void setPadPartial(boolean tf)
+
+	
+	
+	
+	public boolean isChanged() 
 	{
-		this.padpartial = tf;
+		return this.changed;
+	}
+	
+	public void setChanged(boolean changed) {
+		this.changed = changed;
+	}
+
+	public boolean isDiskChanged() 
+	{
+		return this.diskchanged;
+	}
+
+	public void setDiskChanged(boolean b) 
+	{
+		this.diskchanged  = b;
 	}
 
 
+
+
+	
+	@SuppressWarnings("unchecked")
+	public Iterator<String> getParams()
+	{
+		return this.params.getKeys();
+		
+	}
+
+	public boolean isSyncTo()
+	{
+		return(this.params.getBoolean("syncto", false));
+	}
+	
+	public boolean isSyncFrom()
+	{
+		return(this.params.getBoolean("syncfrom", false));
+	}
+
+	public boolean hasParam(String key)
+	{
+		
+		return(this.params.containsKey(key));
+	}
+
+	public String getFileName()
+	{
+		String res = "";
+		
+		if (this.params.containsKey("_path"))
+		{
+			res = UIUtils.getFilenameFromURI(this.params.getString("_path"));
+			
+			if ((res.indexOf('/') > -1) && (res.indexOf('/') < (res.length()-1)))
+				res = res.substring(res.lastIndexOf('/')+1);
+		}
+		
+		return(res);
+	}
+
+	
+	public String getFormat()
+	{
+		return(this.params.getString("_format","unknown"));
+	}
+
+	public boolean isWriteProtect()
+	{
+		return(this.params.getBoolean("writeprotect", false));
+	}
+
+	public int getOffset()
+	{
+		return(this.params.getInt("offset",0));
+	}
+
+	public void setDiskgraph(Image diskgraph)
+	{
+		this.diskgraph = diskgraph;
+	}
+
+
+
+
+	public Image getDiskGraph()
+	{
+	 	//synchronized(this.diskgraph)
+		//{
+	 		
+	 	if (this.graphchanged)
+	 	{
+			this.graphscale = ((double)DiskWin.DGRAPH_WIDTH / (double)(this.getSectors() - this.getOffset()));
+			
+			//System.out.println("diskdef get graph: " + this.graphscale + "  cache size: " + this.sectors.size() + " advanced: " + gc.getAdvanced());
+	  
+			int[] tri = new int[6];
+				
+			this.gc.setFont(DiskWin.fontDiskGraph);
+			this.gc.setBackground(DiskWin.colorDiskBG);
+			this.gc.fillRectangle(0,0, DiskWin.DGRAPH_WIDTH, 15);
+			
+			
+			this.gc.setForeground(DiskWin.colorDiskFG);
+			this.gc.setBackground(DiskWin.colorDiskBG);
+			this.gc.drawText("" + this.getOffset(), 1, 0, true);
+			this.gc.drawText("" + this.getSectors() , DiskWin.DGRAPH_WIDTH - gc.textExtent("" + this.getSectors()).x, 0, true);
+			
+			int p1 = DiskWin.DGRAPH_WIDTH / 4;
+			int p2 = DiskWin.DGRAPH_WIDTH / 2 + 10;
+			int p3 = p2 + p1 + 20;
+			
+			int cleanpos,writepos,readpos;
+			
+			if (this.lastclean < this.lastread)
+			{
+				if (this.lastclean < this.lastwrite)
+				{
+					cleanpos = p1;
+					
+					if (this.lastread < this.lastwrite)
+					{
+						readpos = p2;
+						writepos = p3;
+					}
+					else
+					{
+						writepos = p2;
+						readpos = p3;
+					}
+					
+				}
+				else
+				{
+					writepos = p1;
+					cleanpos = p2;
+					readpos = p3;
+				}
+			}
+			else if (this.lastclean < this.lastwrite)
+			{
+				readpos = p1;
+				cleanpos = p2;
+				writepos = p3;
+			}
+			else
+			{
+				cleanpos = p3;
+				if (this.lastread < this.lastwrite)
+				{
+					readpos = p1;
+					writepos = p2;
+				}
+				else
+				{
+					writepos = p1;
+					readpos = p2;
+				}
+			}
+				
+			
+			
+				
+			String tmp = "LAST READ ";
+			Point textsize = gc.textExtent(tmp);
+			
+			this.gc.drawText(tmp, readpos -  textsize.x, 0, true);
+			this.gc.drawText(this.lastread + "", readpos+10, 0, true);
+			
+			
+			tri[0] = readpos;
+			tri[1] = (textsize.y - 9) / 2;
+			tri[2] = tri[0];
+			tri[3] = tri[1]+9;
+			tri[4] = tri[0]+7;
+			tri[5] = tri[1]+5;
+			
+			this.gc.setBackground(MainWin.colorGreen);
+			this.gc.fillPolygon(tri);
+			
+			
+			tmp = "LAST DIRTY ";
+			this.gc.drawText(tmp, writepos - gc.textExtent(tmp).x , 0, true);
+			this.gc.drawText(this.lastwrite + "", writepos+10, 0, true);
+			
+			tri[0] = writepos;
+			tri[2] = tri[0];
+			tri[4] = tri[0]+7;
+			
+			this.gc.setBackground(MainWin.colorDiskDirty);
+			this.gc.fillPolygon(tri);
+			
+			
+			tmp = "LAST CLEAN ";
+			this.gc.drawText(tmp, cleanpos - gc.textExtent(tmp).x , 0, true);
+			this.gc.drawText(this.lastclean + "", cleanpos+10, 0, true);
+			
+			tri[0] = cleanpos;
+			tri[2] = tri[0];
+			tri[4] = tri[0]+7;
+
+			
+			this.gc.setBackground(MainWin.colorDiskClean);
+			this.gc.fillPolygon(tri);
+			
+			
+		
+			this.coin ++;
+			
+			
+			int lastchange = 0;
+			int changes = 0;
+			
+			this.gc.setBackground(MainWin.colorBlack);
+			this.gc.setForeground(MainWin.colorDiskBG);
+			
+			for (int i = 0;i<DiskWin.DGRAPH_WIDTH;i++)
+			{
+				Color curcol = getGraphColorFor(i);
+				if (!curcol.equals(gc.getBackground()))
+				{					
+					gc.fillGradientRectangle(lastchange, 20, lastchange + i, DiskWin.DGRAPH_HEIGHT-35, true);
+					gc.setBackground(curcol);
+					lastchange = i;
+					changes++;
+				}
+			}
+			
+			gc.fillGradientRectangle(lastchange, 20, DiskWin.DGRAPH_WIDTH - lastchange, DiskWin.DGRAPH_HEIGHT-35, true);
+			
+			//System.out.println("-- changed: " + changes);
+			
+			
+			
+			// footer
+			this.gc.setBackground(MainWin.colorDiskBG);
+			this.gc.fillRectangle(0,DiskWin.DGRAPH_HEIGHT-15, DiskWin.DGRAPH_WIDTH, DiskWin.DGRAPH_HEIGHT);
+			
+
+			
+			
+			tri[0] = (int) (this.graphscale * this.lastread)+1;
+			tri[1] = DiskWin.DGRAPH_HEIGHT-15;
+			tri[2] = tri[0]+7;
+			tri[3] = DiskWin.DGRAPH_HEIGHT-7;
+			tri[4] = tri[0]-7;
+			tri[5] = DiskWin.DGRAPH_HEIGHT-7;
+			
+			this.gc.setBackground(MainWin.colorGreen);
+			this.gc.fillPolygon(tri);
+			
+			tri[0] = (int) (this.graphscale * this.lastwrite)+1;
+			tri[2] = tri[0]+7;
+			tri[4] = tri[0]-7;
+			
+			this.gc.setBackground(MainWin.colorDiskDirty);
+			this.gc.fillPolygon(tri);
+			
+			tri[0] = (int) (this.graphscale * this.lastclean)+1;
+			tri[2] = tri[0]+7;
+			tri[4] = tri[0]-7;
+			
+			this.gc.setBackground(MainWin.colorDiskClean);
+			this.gc.fillPolygon(tri);
+			
+			this.graphchanged = false;
+	 	}	
+			
+		
+		return(this.diskgraph);
+	}
+
+	
+
+	private Color getGraphColorFor(int x)
+	{
+		
+		// figure out effective LSN
+		int elsn = (int) Math.round(((double)x) / this.graphscale);
+		
+	
+		synchronized(sectors)
+		{
+			if (this.sectors.containsKey(elsn))
+			{
+		
+				
+				int scache = this.sectors.get(elsn);
+				
+				if (scache < 0)
+					return(MainWin.colorGreen);
+				
+				if (scache <= 50)
+					return(MainWin.colorDiskClean);
+				
+				return(MainWin.colorDiskDirty);
+				
+			}
+		}
+		
+		return MainWin.colorDiskGraphBG;
+	}
+
+
+
+	public boolean isExpand()
+	{
+		return(this.params.getBoolean("expand", false));
+	}
+	
+
+	public int getLimit()
+	{
+		return(this.params.getInt("sizelimit", -1));
+	}
+
+
+
+	public void setDiskwin(DiskWin diskwin)
+	{
+		this.diskwin = diskwin;
+	}
+
+
+
+	public DiskWin getDiskwin()
+	{
+		return diskwin;
+	}
+
+
+
+	public boolean hasDiskwin()
+	{
+		if (this.diskwin == null)
+			return false;
+		
+		if (this.diskwin.shlDwDrive == null)
+			return false;
+		
+		if (this.diskwin.shlDwDrive.isDisposed())
+			return false;
+		
+		return true;
+	}
+
+
+
+	public int getDriveNo()
+	{
+		return this.drive;
+	}
+
+
+
+	public void setParamwin(DiskAdvancedWin win)
+	{
+		this.paramwin = win;
+	}
+	
+	public DiskAdvancedWin getParamwin()
+	{
+		return paramwin;
+	}
+
+
+
+	public boolean hasParamwin()
+	{
+		if (this.paramwin == null)
+			return false;
+		
+		if (this.paramwin.shell == null)
+			return false;
+		
+		if (this.paramwin.shell.isDisposed())
+			return false;
+		
+		return true;
+	}
+
+
+
+	public boolean isGraphchanged()
+	{
+		return this.graphchanged;
+	}
 	
 	
 }

@@ -22,8 +22,6 @@ public class DWVPortTCPListenerThread implements Runnable
 	private DWVSerialPorts dwVSerialPorts;
 	
 	private int mode = 0;
-	private boolean do_auth = false;
-	private boolean do_protect = false;
 	private boolean do_banner = false;
 	private boolean do_telnet = false;
 	private boolean wanttodie = false;
@@ -104,7 +102,7 @@ public class DWVPortTCPListenerThread implements Runnable
 				else
 				{
 					// run telnet preflight, let it add the connection to the pool if things work out
-					Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.dwProto, this.vport, skt, this.do_telnet, this.do_auth, this.do_protect, this.do_banner));
+					Thread pfthread = new Thread(new DWVPortTelnetPreflightThread(this.dwProto, this.vport, skt, this.do_telnet, this.do_banner));
 					pfthread.start();
 				}
 			
@@ -146,25 +144,6 @@ public class DWVPortTCPListenerThread implements Runnable
 
 
 	
-	public void setDo_auth(boolean do_auth)
-	{
-		this.do_auth = do_auth;
-	}
-
-	public boolean isDo_auth()
-	{
-		return do_auth;
-	}
-
-	public void setDo_protect(boolean do_protect)
-	{
-		this.do_protect = do_protect;
-	}
-
-	public boolean isDo_protect()
-	{
-		return do_protect;
-	}
 
 	public void setDo_banner(boolean do_banner)
 	{

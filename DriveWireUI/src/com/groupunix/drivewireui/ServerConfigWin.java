@@ -1,31 +1,35 @@
 package com.groupunix.drivewireui;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-import javax.swing.JFileChooser;
+import javax.swing.SwingUtilities;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 
 public class ServerConfigWin extends Dialog {
 
 	protected Object result;
-	protected static Shell shlServerConfiguration;
+	protected Shell shlServerConfiguration;
 	
 	
 	private Button btnLogToConsole;
@@ -34,14 +38,25 @@ public class ServerConfigWin extends Dialog {
 	private Text textLogFile;
 	private Text textLogFormat;
 	private Button btnUIEnabled;
-	private Text textUIPort;
-	private Text textLazyWrite;
+	private Spinner textUIPort;
+	private Spinner textLazyWrite;
 	private Text textLocalDiskDir;
 	
-	private static Group grpLogging;
-	private static Group grpMiscellaneous;
-	private static Group grpUserInterfaceSupport;
-	
+	private static Composite grpLogging;
+	private static Composite grpMiscellaneous;
+	private static Composite grpUserInterfaceSupport;
+	private Button btnLogUIConnections;
+	private static Button btnApply; 
+	private Button btnUseRxtx;
+	private Button btnLoadRxtx;
+	private boolean dataReady = false;
+	private static Composite grpRxtx;
+	private Composite composite;
+	private TabFolder tabFolder;
+	private TabItem tbtmLogging;
+	private TabItem tbtmUISupport;
+	private TabItem tbtmDisk;
+	private TabItem tbtmRXTX;
 
 	
 	/**
@@ -62,13 +77,12 @@ public class ServerConfigWin extends Dialog {
 	 */
 	public Object open() throws DWUIOperationFailedException, IOException {
 		createContents();
-		applyFont();		
-		 UIUtils.getDWConfigSerial();
-		applySettings();
+		displaySettings();
 		
 		shlServerConfiguration.open();
 		shlServerConfiguration.layout();
 		Display display = getParent().getDisplay();
+		this.dataReady = true;
 		while (!shlServerConfiguration.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -78,46 +92,25 @@ public class ServerConfigWin extends Dialog {
 	}
 
 	
-	private static void applyFont() 
+
+	
+	
+	private void updateApply()
 	{
-		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
-		
-		
-		Control[] controls = shlServerConfiguration.getChildren();
-		
-		for (int i = 0;i<controls.length;i++)
+		if (this.dataReady )
 		{
-			controls[i].setFont(new Font(shlServerConfiguration.getDisplay(), f));
-			
+			HashMap<String,String> res = getChangedValues();
+		
+			if (res.size() > 0)
+			{
+				ServerConfigWin.btnApply.setEnabled(true);
+			}	
+			else
+			{
+				ServerConfigWin.btnApply.setEnabled(false);
+			}
 		}
-	
-		controls = grpMiscellaneous.getChildren();
-		
-		for (int i = 0;i<controls.length;i++)
-		{
-			controls[i].setFont(new Font(shlServerConfiguration.getDisplay(), f));
-			
-		}
-		
-		controls = grpUserInterfaceSupport.getChildren();
-		
-		for (int i = 0;i<controls.length;i++)
-		{
-			controls[i].setFont(new Font(shlServerConfiguration.getDisplay(), f));
-			
-		}
-		
-		controls = grpLogging.getChildren();
-		
-		for (int i = 0;i<controls.length;i++)
-		{
-			controls[i].setFont(new Font(shlServerConfiguration.getDisplay(), f));
-			
-		}
-		
 	}
-	
-	
 	
 
 	
@@ -135,7 +128,10 @@ public class ServerConfigWin extends Dialog {
 		addIfChanged(res,"DiskLazyWriteInterval",this.textLazyWrite.getText());
 		addIfChanged(res,"LocalDiskDir",this.textLocalDiskDir.getText());
 		addIfChanged(res,"LogLevel",this.comboLogLevel.getItem(this.comboLogLevel.getSelectionIndex()));
-	
+		addIfChanged(res,"LogUIConnections",UIUtils.bTos(this.btnLogUIConnections.getSelection()));
+		addIfChanged(res,"UseRXTX",UIUtils.bTos(this.btnUseRxtx.getSelection()));
+		addIfChanged(res,"LoadRXTX",UIUtils.bTos(this.btnLoadRxtx.getSelection()));
+		
 		return(res);
 	}
 
@@ -148,31 +144,14 @@ public class ServerConfigWin extends Dialog {
 		
 	}
 
-	private boolean validateValues() 
-	{
-		if (!UIUtils.validateNum(this.textLazyWrite.getText(),0))
-		{
-			MainWin.showError("Invalid value entered", "Data entered for DiskLazyWriteInterval is not valid" , "Valid range is positive integers");
-			return false;
-		}
-		
-		
-		if (!UIUtils.validateNum(this.textUIPort.getText(),1,65535))
-		{
-			MainWin.showError("Invalid value entered", "Data entered for UI Port is not valid" , "Valid range is TCP port numbers, 1-65535.");
-			return false;
-		}
-		
-		
-		
-		return true;
-	}
+	
 
 
 
-	private void applySettings() 
+	private void displaySettings() 
 	{
 		// apply settings, considering defaults
+		
 		
 		this.btnLogToConsole.setSelection(MainWin.dwconfig.getBoolean("LogToConsole",true));
 		this.btnLogToFile.setSelection(MainWin.dwconfig.getBoolean("LogToFile", false));
@@ -181,167 +160,301 @@ public class ServerConfigWin extends Dialog {
 		this.textLogFile.setText(MainWin.dwconfig.getString("LogFile",""));
 		
 		this.textLogFormat.setText(MainWin.dwconfig.getString("LogFormat","%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n"));
-		this.textUIPort.setText(MainWin.dwconfig.getString("UIPort",""));
-		this.textLazyWrite.setText(MainWin.dwconfig.getString("DiskLazyWriteInterval","15000"));
 		this.textLocalDiskDir.setText(MainWin.dwconfig.getString("LocalDiskDir",""));
 		this.comboLogLevel.select(this.comboLogLevel.indexOf(MainWin.dwconfig.getString("LogLevel","WARN")));
+		this.btnLogUIConnections.setSelection(MainWin.dwconfig.getBoolean("LogUIConnections",false));
+		
+		this.btnLoadRxtx.setSelection(MainWin.dwconfig.getBoolean("LoadRXTX",true));
+		this.btnUseRxtx.setSelection(MainWin.dwconfig.getBoolean("UseRXTX",true));
+		
+		this.textLazyWrite.setSelection(MainWin.dwconfig.getInt("DiskLazyWriteInterval", 15000));
+		this.textUIPort.setSelection(MainWin.dwconfig.getInt("UIPort",6800));
+		updateApply();
 		
 	}
 
-	/**
-	 * Create contents of the dialog.
-	 */
-	private void createContents() {
-		shlServerConfiguration = new Shell(getParent(), getStyle());
-		shlServerConfiguration.setSize(414, 508);
-		shlServerConfiguration.setText("Server Configuration");
-		shlServerConfiguration.setLayout(null);
+	private void createContents() 
+	{
 		
-		grpLogging = new Group(shlServerConfiguration, SWT.NONE);
-		grpLogging.setText(" Logging ");
-		grpLogging.setBounds(15, 21, 378, 180);
+		shlServerConfiguration = new Shell(getParent(), getStyle());
+		shlServerConfiguration.setSize(449, 290);
+		
+		
+		shlServerConfiguration.setText("Server Configuration");
+		shlServerConfiguration.setLayout(new FormLayout());
+			
+
+		
+		
+		
+		tabFolder = new TabFolder(shlServerConfiguration, SWT.NONE);
+		FormData fd_tabFolder = new FormData();
+		fd_tabFolder.right = new FormAttachment(100, -10);
+		fd_tabFolder.bottom = new FormAttachment(0, 212);
+		fd_tabFolder.top = new FormAttachment(0, 10);
+		fd_tabFolder.left = new FormAttachment(0, 10);
+		tabFolder.setLayoutData(fd_tabFolder);
+		tabFolder.setBounds(5, 5, 440, 200);
+		
+		tbtmLogging = new TabItem(tabFolder, SWT.NONE);
+		tbtmLogging.setText("Logging");
+		
+		grpLogging = new Composite(tabFolder, SWT.NONE);
+		tbtmLogging.setControl(grpLogging);
+		grpLogging.setLayout(null);
 		
 		btnLogToConsole = new Button(grpLogging, SWT.CHECK);
-		btnLogToConsole.setBounds(30, 53, 214, 23);
+		btnLogToConsole.setBounds(240, 16, 165, 23);
+		btnLogToConsole.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateApply();
+			}
+		});
 		btnLogToConsole.setText("Log to console");
 		
 		btnLogToFile = new Button(grpLogging, SWT.CHECK);
-		btnLogToFile.setBounds(30, 75, 214, 23);
+		btnLogToFile.setBounds(240, 40, 165, 23);
+		btnLogToFile.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateApply();
+			}
+		});
 		btnLogToFile.setText("Log to file");
 		
 		comboLogLevel = new Combo(grpLogging, SWT.READ_ONLY);
+		comboLogLevel.setBounds(101, 17, 112, 23);
+		comboLogLevel.setLocation(101, 22);
+		comboLogLevel.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				updateApply();
+			}
+		});
 		comboLogLevel.setItems(new String[] {"ALL", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"});
-		comboLogLevel.setBounds(105, 20, 91, 23);
 		
 		Label lblLogLevel = new Label(grpLogging, SWT.NONE);
+		lblLogLevel.setBounds(20, 20, 75, 24);
+		lblLogLevel.setLocation(20, 24);
 		lblLogLevel.setAlignment(SWT.RIGHT);
-		lblLogLevel.setBounds(17, 23, 82, 24);
 		lblLogLevel.setText("Log level:");
 		
 		Label lblLogFile = new Label(grpLogging, SWT.NONE);
+		lblLogFile.setBounds(10, 92, 75, 18);
 		lblLogFile.setAlignment(SWT.RIGHT);
-		lblLogFile.setBounds(20, 106, 82, 18);
 		lblLogFile.setText("Log file:");
 		
 		textLogFile = new Text(grpLogging, SWT.BORDER);
-		textLogFile.setBounds(110, 103, 214, 21);
+		textLogFile.setBounds(91, 89, 259, 24);
+		textLogFile.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				updateApply();
+			}
+		});
 		
 		Button button = new Button(grpLogging, SWT.NONE);
+		button.setBounds(356, 83, 40, 32);
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				// create a file chooser
-				final DWServerFileChooser fileChooser = new DWServerFileChooser(textLogFile.getText());
+				final FileChooser fc = new FileChooser(textLogFile.getText(),"Choose a log file..",false);
 				
-				// 	configure the file dialog
-				
-				fileChooser.setFileHidingEnabled(false);
-				fileChooser.setMultiSelectionEnabled(false);
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-				fileChooser.setSelectedFile(textLogFile.getText());
-				
-				// 	show the file dialog
-				int answer = fileChooser.showDialog(fileChooser, "Choose log file...");
-							
-				// 	check if a file was selected
-				if (answer == JFileChooser.APPROVE_OPTION)
+				SwingUtilities.invokeLater(new Runnable() 
 				{
-					final File selected =  fileChooser.getSelectedFile();
+					@Override
+					public void run() 
+					{
+						final String fname = fc.getFile();
+						
+						if (!(fname == null) && (!textLogFile.isDisposed()))
+						{
+							Display.getDefault().asyncExec(new Runnable() 
+							{
 
-					textLogFile.setText(selected.getPath());
-			
-				}		
-			
+								@Override
+								public void run() 
+								{
+									textLogFile.setText(fname);	
+								}
+							});
+						}
+					}
+				});
 			}
 		});
-		button.setBounds(324, 101, 29, 25);
 		button.setText("...");
 		
 		Label lblLineFormat = new Label(grpLogging, SWT.NONE);
+		lblLineFormat.setBounds(10, 124, 75, 15);
 		lblLineFormat.setAlignment(SWT.RIGHT);
-		lblLineFormat.setBounds(11, 141, 91, 18);
 		lblLineFormat.setText("Log format:");
 		
 		textLogFormat = new Text(grpLogging, SWT.BORDER);
-		textLogFormat.setBounds(110, 138, 243, 21);
+		textLogFormat.setBounds(101, 121, 301, 24);
+		textLogFormat.setBounds(91, 121, 304, 24);
+		textLogFormat.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				updateApply();
+			}
+		});
 		
-		grpUserInterfaceSupport = new Group(shlServerConfiguration, SWT.NONE);
-		grpUserInterfaceSupport.setText(" User Interface Support");
-		grpUserInterfaceSupport.setBounds(15, 218, 378, 67);
+		
+		tbtmUISupport = new TabItem(tabFolder, SWT.NONE);
+		tbtmUISupport.setToolTipText("UI Support");
+		tbtmUISupport.setText("UI Support");
+		
+		
+		
+		grpUserInterfaceSupport = new Composite(tabFolder, SWT.NONE);
+		tbtmUISupport.setControl(grpUserInterfaceSupport);
 		
 		btnUIEnabled = new Button(grpUserInterfaceSupport, SWT.CHECK);
-		btnUIEnabled.setBounds(30, 30, 130, 19);
+		btnUIEnabled.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateApply();
+			}
+		});
+		btnUIEnabled.setBounds(30, 30, 138, 19);
 		btnUIEnabled.setText("UI Enabled");
 		
-		textUIPort = new Text(grpUserInterfaceSupport, SWT.BORDER);
-		textUIPort.setBounds(299, 28, 55, 21);
+		textUIPort = new Spinner(grpUserInterfaceSupport, SWT.BORDER);
+		textUIPort.setPageIncrement(1000);
+		textUIPort.setMaximum(65535);
+		textUIPort.setMinimum(1);
+		textUIPort.setBounds(311, 29, 79, 24);
 		
 		Label lblListenOnTcp = new Label(grpUserInterfaceSupport, SWT.NONE);
 		lblListenOnTcp.setAlignment(SWT.RIGHT);
-		lblListenOnTcp.setBounds(155, 31, 138, 18);
+		lblListenOnTcp.setBounds(174, 32, 131, 18);
 		lblListenOnTcp.setText("Listen on TCP port:");
 		
-		grpMiscellaneous = new Group(shlServerConfiguration, SWT.NONE);
-		grpMiscellaneous.setText(" Disk Settings ");
-		grpMiscellaneous.setBounds(15, 305, 378, 119);
+		btnLogUIConnections = new Button(grpUserInterfaceSupport, SWT.CHECK);
+		btnLogUIConnections.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateApply();
+			}
+		});
+		btnLogUIConnections.setBounds(30, 55, 225, 16);
+		btnLogUIConnections.setText("Log UI Connections");
+	
+		
+		tbtmDisk = new TabItem(tabFolder, SWT.NONE);
+		tbtmDisk.setText("Disk");
+		
+		
+		grpMiscellaneous = new Composite(tabFolder, SWT.NONE);
+		tbtmDisk.setControl(grpMiscellaneous);
 		
 		Label lblDiskSyncLazy = new Label(grpMiscellaneous, SWT.NONE);
 		lblDiskSyncLazy.setAlignment(SWT.RIGHT);
-		lblDiskSyncLazy.setBounds(10, 30, 231, 18);
+		lblDiskSyncLazy.setBounds(22, 49, 200, 18);
 		lblDiskSyncLazy.setText("Disk sync lazy write interval (ms):");
 		
-		textLazyWrite = new Text(grpMiscellaneous, SWT.BORDER);
-		textLazyWrite.setToolTipText("Test test test");
-		textLazyWrite.setBounds(247, 27, 65, 21);
+		textLazyWrite = new Spinner(grpMiscellaneous, SWT.BORDER);
+		textLazyWrite.setIncrement(100);
+		textLazyWrite.setPageIncrement(1000);
+		textLazyWrite.setMaximum(60000);
+		textLazyWrite.setMinimum(1000);
+		textLazyWrite.setBounds(228, 46, 79, 24);
 		
 		textLocalDiskDir = new Text(grpMiscellaneous, SWT.BORDER);
-		textLocalDiskDir.setBounds(22, 80, 307, 21);
+		textLocalDiskDir.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				updateApply();
+			}
+		});
+		textLocalDiskDir.setBounds(22, 105, 317, 24);
 		
 		Label lblLocalDiskDirectory = new Label(grpMiscellaneous, SWT.NONE);
-		lblLocalDiskDirectory.setBounds(22, 61, 171, 18);
+		lblLocalDiskDirectory.setBounds(22, 86, 171, 18);
 		lblLocalDiskDirectory.setText("Default disk directory:");
 		
 		Button btnChooseDiskDir = new Button(grpMiscellaneous, SWT.NONE);
-		btnChooseDiskDir.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+		btnChooseDiskDir.addSelectionListener(new SelectionAdapter() 
+		{
+		
+			public void widgetSelected(SelectionEvent e) 
+			{
+				final FileChooser fc = new FileChooser(textLocalDiskDir.getText(),"Choose disk directory...", true);
 				
-				// create a file chooser
-				final DWServerFileChooser fileChooser = new DWServerFileChooser();
-				
-				// 	configure the file dialog
-				
-				fileChooser.setFileHidingEnabled(false);
-				fileChooser.setMultiSelectionEnabled(false);
-				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-				
-				// 	show the file dialog
-				int answer = fileChooser.showDialog(fileChooser, "Choose default disk directory...");
-							
-				// 	check if a file was selected
-				if (answer == JFileChooser.APPROVE_OPTION)
+				SwingUtilities.invokeLater(new Runnable() 
 				{
-					final File selected =  fileChooser.getSelectedFile();
+				@Override
+					public void run() 
+					{
+						final String fname = fc.getFile();
+						if (!(fname == null) && (!textLocalDiskDir.isDisposed()))
+						{
+							Display.getDefault().asyncExec(new Runnable() 
+							{
 
-					textLocalDiskDir.setText(selected.getPath());
-			
-				}		
-				
+								@Override
+								public void run() 
+								{
+									textLocalDiskDir.setText(fname);	
+								}
+							});
+						}
+					}
+				});
 			}
 		});
-		btnChooseDiskDir.setBounds(331, 79, 29, 23);
-		btnChooseDiskDir.setText("...");
 		
-		Button btnOk = new Button(shlServerConfiguration, SWT.NONE);
+			btnChooseDiskDir.setBounds(345, 100, 40, 32);
+			btnChooseDiskDir.setText("...");
+		
+		
+		tbtmRXTX = new TabItem(tabFolder, SWT.NONE);
+		tbtmRXTX.setText("RXTX");
+		
+		
+		grpRxtx = new Composite(tabFolder, SWT.NONE);
+		tbtmRXTX.setControl(grpRxtx);
+		
+		btnUseRxtx = new Button(grpRxtx, SWT.CHECK);
+		btnUseRxtx.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateApply();
+			}
+		});
+		btnUseRxtx.setBounds(28, 47, 363, 16);
+		btnUseRxtx.setText("Use RXTX (needed for any serial connections)");
+		
+		btnLoadRxtx = new Button(grpRxtx, SWT.CHECK);
+		btnLoadRxtx.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateApply();
+			}
+		});
+		btnLoadRxtx.setBounds(28, 76, 363, 16);
+		btnLoadRxtx.setText("Load internal RXTX (disable if provided by system)");
+		
+	
+	
+		
+		
+		composite = new Composite(shlServerConfiguration, SWT.NONE);
+		FormData fd_composite = new FormData();
+		fd_composite.right = new FormAttachment(100, -13);
+		fd_composite.left = new FormAttachment(0, 166);
+		fd_composite.bottom = new FormAttachment(100, -10);
+		fd_composite.top = new FormAttachment(0, 225);
+		composite.setLayoutData(fd_composite);
+
+		FillLayout fl_composite = new FillLayout(SWT.HORIZONTAL);
+		fl_composite.spacing = 10;
+		composite.setLayout(fl_composite);
+		
+		Button btnOk = new Button(composite, SWT.NONE);
 		btnOk.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				if (validateValues())
-				{
 					
 					try 
 					{
@@ -370,24 +483,12 @@ public class ServerConfigWin extends Dialog {
 					
 				}
 				
-			}
+		
 		});
-		btnOk.setBounds(163, 444, 75, 25);
 		btnOk.setText("Ok");
+	
 		
-		Button btnUndo = new Button(shlServerConfiguration, SWT.NONE);
-		btnUndo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				applySettings();
-				
-			}
-		});
-		btnUndo.setBounds(10, 444, 75, 25);
-		btnUndo.setText("Undo");
-		
-		Button btnCancel = new Button(shlServerConfiguration, SWT.NONE);
+		Button btnCancel = new Button(composite, SWT.NONE);
 		btnCancel.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -396,8 +497,42 @@ public class ServerConfigWin extends Dialog {
 				//shlServerConfiguration.close();
 			}
 		});
-		btnCancel.setBounds(318, 444, 75, 25);
 		btnCancel.setText("Cancel");
+		
+		btnApply = new Button(composite, SWT.NONE);
+		btnApply.setEnabled(false);
+		btnApply.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				try 
+				{
+					UIUtils.setServerSettings(getChangedValues());
+					updateApply();
+				} 
+				catch (IOException e1) 
+				{
+					MainWin.showError("Failed to apply settings", "One or more items could not be set", e1.getMessage());
+				} 
+				catch (DWUIOperationFailedException e1) 
+				{
+					MainWin.showError("Failed to apply settings", "One or more items could not be set", e1.getMessage());
+				}
+			}
+		});
+		btnApply.setText("Apply");
+		
+		
+	}
+	
+	
+	
+	
+	
 
+	public void submitEvent(String key, Object val)
+	{
+		System.out.println("ci: " + key + " / " + val);
+		
 	}
 }

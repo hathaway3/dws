@@ -247,6 +247,8 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
         {
         	printFile = this.getPrinterFile();
     		
+        	
+        	
             ImageIO.write(rImage, config.getString("ImageFormat","PNG"), printFile);
             //Logger.getLogger().info("wrote last print page image to: " + printFile.getAbsolutePath());
             

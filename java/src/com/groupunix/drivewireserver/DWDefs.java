@@ -85,7 +85,7 @@ public class DWDefs
 	// result codes for DW virtual channel API calls - all subject to change until I know of anyone actually using these on client side
 	public static final byte RC_SUCCESS 						= (byte) 0;
 	
-	public static final byte RC_SYNTAX_ERROR 					= (byte) 1;
+	public static final byte RC_SYNTAX_ERROR 					= (byte) 10;
 	
 	public static final byte RC_DRIVE_ERROR						= (byte) 100;
 	public static final byte RC_INVALID_DRIVE 					= (byte) 101;
@@ -118,7 +118,15 @@ public class DWDefs
 	public static final byte RC_SERVER_IO_EXCEPTION 			= (byte) 202;
 	public static final byte RC_SERVER_FILE_NOT_FOUND 			= (byte) 203;
 	public static final byte RC_SERVER_NOT_IMPLEMENTED 			= (byte) 204;
-
+	public static final byte RC_SERVER_NOT_READY 				= (byte) 205;
+	public static final byte RC_INSTANCE_NOT_READY				= (byte) 206;
+	
+	public static final byte RC_UI_ERROR 			 			= (byte) 220;
+	public static final byte RC_UI_MALFORMED_REQUEST  			= (byte) 221;
+	public static final byte RC_UI_MALFORMED_RESPONSE 			= (byte) 222;
+	
+	public static final byte RC_HELP_TOPIC_NOT_FOUND 			= (byte) 230;
+	
 	public static final byte RC_FAIL 							= (byte) 255;
 
 	
@@ -133,6 +141,7 @@ public class DWDefs
 	public static final int DISK_FORMAT_DMK = 2;
 	public static final int DISK_FORMAT_JVC = 3;
 	public static final int DISK_FORMAT_VDK = 4;
+	public static final int DISK_FORMAT_CCB = 5;
 	
 	public static final int DISK_CONSIDER_NO = 0;
 	public static final int DISK_CONSIDER_MAYBE = 1;
@@ -140,13 +149,13 @@ public class DWDefs
 	
 	public static final Boolean DISK_DEFAULT_EXPAND = true;
 	public static final Boolean DISK_DEFAULT_SYNCTO = true;
-	public static final Boolean DISK_DEFAULT_SYNCFROM = true;
+	public static final Boolean DISK_DEFAULT_SYNCFROM = false;
 	public static final Boolean DISK_DEFAULT_WRITEPROTECT = false;
 	public static final Boolean DISK_DEFAULT_NAMEDOBJECT = false;
 	public static final int DISK_DEFAULT_OFFSET = 0;
 	public static final int DISK_DEFAULT_SIZELIMIT = -1;
 
-	public static final Boolean DISK_DEFAULT_PADSECTORS = false;
+	public static final int DISK_IMAGE_HEADER_SIZE = 256;
 
 	// help
 	
@@ -162,6 +171,37 @@ public class DWDefs
 	public static final byte EVENT_TYPE_MIDI = 'M';
 	public static final byte EVENT_TYPE_NET = 'N';
 	public static final byte EVENT_TYPE_PRINT = 'P';
+	public static final byte EVENT_TYPE_VSERIAL = 'S';
+
+	public static final String EVENT_ITEM_KEY = "k";
+	public static final String EVENT_ITEM_VALUE = "v";
+	public static final String EVENT_ITEM_DRIVE = "d";
+	public static final String EVENT_ITEM_INSTANCE = "i";
+	public static final String EVENT_ITEM_LOGLINE = "l";
+	public static final int EVENT_MAX_QUEUE_SIZE = 20000;
+	public static final int EVENT_QUEUE_LOGDROP_SIZE = 800;
+	public static final int LOGGING_MAX_BUFFER_EVENTS = 500;
+
+	public static final long UITHREAD_WAIT_TICK = 200;
+	public static final long UITHREAD_SERVER_WAIT_TIME = 3000;
+	public static final long UITHREAD_INSTANCE_WAIT_TIME = 3000;
+
+	
+	
+	
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+	
+	
 
 	
 

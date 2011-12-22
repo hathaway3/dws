@@ -1,17 +1,20 @@
 package com.groupunix.drivewireserver.dwdisk;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Map.Entry;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.vfs.FileContent;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
+import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
@@ -26,7 +29,7 @@ public class DWDiskDrives
 {
 
 	
-	private DWDisk[] diskDrives;
+	private DWDiskDrive[] diskDrives;
 	private static final Logger logger = Logger.getLogger("DWServer.DWDiskDrives");
 
 	private DWProtocolHandler dwProto;
@@ -39,7 +42,38 @@ public class DWDiskDrives
 	{
 		logger.debug("disk drives init for handler #" + dwProto.getHandlerNo());
 		this.dwProto = dwProto;
-		this.diskDrives = new DWDisk[getMaxDrives()];
+		this.diskDrives = new DWDiskDrive[getMaxDrives()];
+		
+		for (int i=0;i<getMaxDrives();i++)
+		{
+			this.diskDrives[i] = new DWDiskDrive(this,i);
+			
+			if (dwProto.getConfig().getBoolean("RestoreDrivePaths", true) && (dwProto.getConfig().getString("Drive"+i+"Path",null) != null))
+			{
+				try
+				{
+					logger.debug("Restoring drive " + i + " from " + dwProto.getConfig().getString("Drive"+i+"Path"));
+					this.LoadDiskFromFile(i, dwProto.getConfig().getString("Drive"+i+"Path"));
+				} 
+				catch (DWDriveNotValidException e)
+				{
+					logger.warn("Restoring drive " + i + ": " + e.getMessage());
+				} 
+				catch (DWDriveAlreadyLoadedException e)
+				{
+					logger.warn("Restoring drive " + i + ": " + e.getMessage());
+				} 
+				catch (IOException e)
+				{
+					logger.warn("Restoring drive " + i + ": " + e.getMessage());
+				} 
+				catch (DWImageFormatException e)
+				{
+					logger.warn("Restoring drive " + i + ": " + e.getMessage());
+				}
+			}
+		}
+		
 	}
 	
 
@@ -59,25 +93,20 @@ public class DWDiskDrives
 			throw new DWDriveNotValidException("There is no drive " + driveno + ". Valid drives numbers are 0 - "  + (dwProto.getConfig().getInt("DiskMaxDrives", DWDefs.DISK_MAXDRIVES) - 1));
 		}
 		
-		// make sure we have a disk
-		if (!isLoaded(driveno))
-		{
-			throw new DWDriveNotLoadedException("There is no disk in drive " + driveno);
-		}
 		
-		return(diskDrives[driveno]);
+		return(diskDrives[driveno].getDisk());
 	}
 	
 	
 	
 	public void writeSector(int driveno, byte[] data) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDriveWriteProtectedException, IOException
 	{
-		getDisk(driveno).writeSector(data);
+		this.diskDrives[driveno].writeSector(data);
 	}
 	
 	public byte[] readSector(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException, DWImageFormatException
 	{
-		return(getDisk(driveno).readSector());
+		return(this.diskDrives[driveno].readSector());
 	}
 	
 	
@@ -96,7 +125,7 @@ public class DWDiskDrives
 			this.hdbdrive = driveno;
 		}
 
-		getDisk(driveno).seekSector(lsn);
+		this.diskDrives[driveno].seekSector(lsn);
 	}
 	
 	
@@ -115,10 +144,7 @@ public class DWDiskDrives
 	
 	public boolean isLoaded(int driveno)
 	{
-		if (this.diskDrives[driveno] == null)
-			return false;
-		
-		return true;
+		return(this.diskDrives[driveno].isLoaded());
 	}
 	
 	
@@ -132,28 +158,29 @@ public class DWDiskDrives
 	{
 		for (int i=0;i<getMaxDrives();i++)
 		{
-				try
-				{
-					if (isLoaded(i))
-						getDisk(i).reload();
-				} 
-				catch (DWDriveNotLoadedException e)
-				{
-					logger.warn(e.getMessage());
-				} 
-				catch (DWDriveNotValidException e)
-				{
-					logger.warn(e.getMessage());
-				}
+			try
+			{
+				if (isLoaded(i))
+					getDisk(i).reload();
+			} 
+			catch (DWDriveNotLoadedException e)
+			{
+				logger.warn(e.getMessage());
+			} 
+			catch (DWDriveNotValidException e)
+			{
+				logger.warn(e.getMessage());
+			}
 		}
 	}
 	
 	
-	public void EjectDisk(int driveno) throws DWDriveNotValidException, DWDriveNotLoadedException, DWDisksetNotValidException
+	public void EjectDisk(int driveno) throws DWDriveNotValidException, DWDriveNotLoadedException
 	{
-		getDisk(driveno).eject();
+		diskDrives[driveno].eject();
 		
-		diskDrives[driveno] = null;
+		if (dwProto.getConfig().getBoolean("SaveDrivePaths", true))
+			dwProto.getConfig().setProperty("Drive" + driveno + "Path", null);
 		
 		logger.info("ejected disk from drive " + driveno);
 		incDiskDriveSerial();
@@ -178,10 +205,7 @@ public class DWDiskDrives
 				{
 					logger.warn(e.getMessage());
 				} 
-				catch (DWDisksetNotValidException e) 
-				{
-					logger.warn(e.getMessage());
-				}
+				
 			}
 		}
 	}
@@ -202,7 +226,7 @@ public class DWDiskDrives
 	
 
 
-	public void LoadDiskFromFile(int driveno, String path) throws DWDriveNotValidException, DWDriveAlreadyLoadedException, IOException, DWDisksetNotValidException, DWImageFormatException
+	public void LoadDiskFromFile(int driveno, String path) throws DWDriveNotValidException, DWDriveAlreadyLoadedException, IOException, DWImageFormatException
 	{
 		// Determine what kind of disk we have
 		
@@ -215,31 +239,61 @@ public class DWDiskDrives
 			if (fileobj.exists() && fileobj.isReadable())
 			{
 				
+				FileContent fc = fileobj.getContent();
+				long fobjsize = fc.getSize();
+				
+				// size check
+				if (fobjsize > Integer.MAX_VALUE)
+					throw new DWImageFormatException("Image too big, maximum size is " + Integer.MAX_VALUE + " bytes.");
+				
+				// get header
+				int hdrsize = (int) Math.min(DWDefs.DISK_IMAGE_HEADER_SIZE, fobjsize);
+				
+				byte[] header = new byte[hdrsize];
+				
+				if (hdrsize > 0)
+				{
+					int readres = 0;
+					InputStream fis = fc.getInputStream();
+					
+					while (readres < hdrsize)
+				    	readres += fis.read(header, readres, hdrsize - readres);
+					
+					fis.close();
+				}
+				
+				
+				// collect votes
 				Hashtable<Integer,Integer> votes = new Hashtable<Integer, Integer>();
 				
-				votes.put(DWDefs.DISK_FORMAT_DMK, DWDMKDisk.considerImage(fileobj));
-				votes.put(DWDefs.DISK_FORMAT_RAW, DWRawDisk.considerImage(fileobj));
-				votes.put(DWDefs.DISK_FORMAT_VDK, DWVDKDisk.considerImage(fileobj));
-				votes.put(DWDefs.DISK_FORMAT_JVC, DWJVCDisk.considerImage(fileobj));
+				votes.put(DWDefs.DISK_FORMAT_DMK, DWDMKDisk.considerImage(header, fobjsize));
+				votes.put(DWDefs.DISK_FORMAT_RAW, DWRawDisk.considerImage(header, fobjsize));
+				votes.put(DWDefs.DISK_FORMAT_VDK, DWVDKDisk.considerImage(header, fobjsize));
+				votes.put(DWDefs.DISK_FORMAT_JVC, DWJVCDisk.considerImage(header, fobjsize));
+				votes.put(DWDefs.DISK_FORMAT_CCB, DWCCBDisk.considerImage(header, fobjsize));
 				
 				int format = getBestFormat(votes);
 				
 				switch(format)
 				{
 					case DWDefs.DISK_FORMAT_DMK:
-						this.LoadDisk(driveno, new DWDMKDisk(this.dwProto, fileobj));
+						this.LoadDisk(driveno, new DWDMKDisk(fileobj));
 						break;
 						
 					case DWDefs.DISK_FORMAT_VDK:
-						this.LoadDisk(driveno, new DWVDKDisk(this.dwProto, fileobj));
+						this.LoadDisk(driveno, new DWVDKDisk(fileobj));
 						break;
 						
 					case DWDefs.DISK_FORMAT_JVC:
-						this.LoadDisk(driveno, new DWJVCDisk(this.dwProto, fileobj));
+						this.LoadDisk(driveno, new DWJVCDisk(fileobj));
+						break;
+						
+					case DWDefs.DISK_FORMAT_CCB:
+						this.LoadDisk(driveno, new DWCCBDisk(fileobj));
 						break;
 					
 					case DWDefs.DISK_FORMAT_RAW:
-						this.LoadDisk(driveno, new DWRawDisk(this.dwProto, fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
+						this.LoadDisk(driveno, new DWRawDisk(fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
 						break;
 						
 						
@@ -318,33 +372,31 @@ public class DWDiskDrives
 	}
 
 
-	public void LoadDisk(int driveno, DWDisk disk) throws DWDriveNotValidException, DWDriveAlreadyLoadedException, DWDisksetNotValidException
+	public void LoadDisk(int driveno, DWDisk disk) throws DWDriveNotValidException, DWDriveAlreadyLoadedException
 	{
-//	 	eject existing disk if necessary
+		//	 eject existing disk if necessary
 		if (this.isLoaded(driveno))
     	{
-    		try {
-				EjectDisk(driveno);
-			} catch (DWDriveNotLoadedException e) 
+			try
 			{
-				logger.warn("bug - not loaded exception when loaded is true?");
+				this.diskDrives[driveno].eject();
+			} 
+			catch (DWDriveNotLoadedException e)
+			{
+				logger.warn("Loaded but not loaded.. well what is this about then?");
 			}
     	}
 		
 		// put into use
-		disk.setDiskNo(driveno);
-		diskDrives[driveno] = disk;
-
+		diskDrives[driveno].insert(disk);
+		
+		if (dwProto.getConfig().getBoolean("SaveDrivePaths", true))
+			dwProto.getConfig().setProperty("Drive" + driveno + "Path", disk.getFilePath());
+		
 		logger.info("loaded disk '" + disk.getFilePath() + "' in drive " + driveno);
 		incDiskDriveSerial();
 		
 	}
-	
-
-
-
-
-
 	
 
 
@@ -376,6 +428,7 @@ public class DWDiskDrives
 	
 	
 	
+	
 
 
 	public void shutdown()
@@ -387,8 +440,6 @@ public class DWDiskDrives
 		
 	}
 
-
-	
 
 	public void sync() 
 	{
@@ -437,9 +488,6 @@ public class DWDiskDrives
 		return res;
 	}
 	
-	
-	
-
 
 
 	public void incDiskDriveSerial() 
@@ -472,15 +520,19 @@ public class DWDiskDrives
 	}
 
 
-	
-	
+	public void submitEvent(int driveno, String key, String val)
+	{
+		DriveWireServer.submitDiskEvent(this.dwProto.getHandlerNo(), driveno, key, val);
+		
+	}
 
 
+	public HierarchicalConfiguration getConfig()
+	{
+		return this.dwProto.getConfig();
+		
+	}
 
-	
-	
-	
-	
 
 	
 	

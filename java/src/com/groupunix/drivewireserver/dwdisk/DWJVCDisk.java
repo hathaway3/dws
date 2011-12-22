@@ -11,7 +11,6 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class DWJVCDisk extends DWDisk
 {
@@ -19,9 +18,9 @@ public class DWJVCDisk extends DWDisk
 	private DWJVCDiskHeader header;
 	
 	
-	public DWJVCDisk(DWProtocol dwproto, FileObject fileobj) throws IOException, DWImageFormatException
+	public DWJVCDisk(FileObject fileobj) throws IOException, DWImageFormatException
 	{
-		super(dwproto,fileobj);
+		super(fileobj);
 		
 		this.setParam("_format", "jvc");
 		
@@ -92,7 +91,7 @@ public class DWJVCDisk extends DWDisk
 	    	while (readres < header.getSectorSize())
 		    	readres += fis.read(buf, readres, header.getSectorSize() - readres);
 	    	
-	    	this.sectors.set(i, new DWDiskSector(i, header.getSectorSize()));
+	    	this.sectors.set(i, new DWDiskSector(this, i, header.getSectorSize()));
 	    	this.sectors.get(i).setData(buf, false);
 	    	
 	    	
@@ -156,48 +155,30 @@ public class DWJVCDisk extends DWDisk
 
 
 
-	public static int considerImage(FileObject fobj)
+	public static int considerImage(byte[] hdr, long fobjsize)
 	{
-		try
-		{
 			 
-			DWJVCDiskHeader header = new DWJVCDiskHeader();
-			    
+		DWJVCDiskHeader header = new DWJVCDiskHeader();
 		
-			int filelen = (int) fobj.getContent().getSize();
-			int headerlen = (filelen % 256);
-			   
-			// only consider jvc with header
-			if (headerlen > 0)
-		    {
-				InputStream fis;
-			    
-			    fis = fobj.getContent().getInputStream();
-				
-		    	int readres = 0;
-		    	byte[] buf = new byte[headerlen];
-		    	
-		    	while (readres < headerlen)
-			    	readres += fis.read(buf, readres, headerlen - readres);
-
-		    	fis.close();
-		    	
-		    	header.setData(buf);
-		    	
-		    	// we dont read sector attributed files
-		    	if (header.getSectorAttributes() == 0)
-		    	{
-		    		// is filesize right..
-		    		if ((filelen - headerlen) % header.getSectorSize() == 0)
-		    			return DWDefs.DISK_CONSIDER_MAYBE;
-		    	}
-		    	
-		    }
-		}
-		catch (IOException e)
-		{
-		} 
-		
+		int headerlen = (int) (fobjsize % 256);
+		   
+		// only consider jvc with header
+		if (headerlen > 0)
+	    {
+			byte[] buf = new byte[headerlen];
+			System.arraycopy(hdr, 0, buf, 0, headerlen);
+	    	header.setData(buf);
+	    	
+	    	// we dont read sector attributed files
+	    	if (header.getSectorAttributes() == 0)
+	    	{
+	    		// is filesize right..
+	    		if ((fobjsize - headerlen) % header.getSectorSize() == 0)
+	    			return DWDefs.DISK_CONSIDER_MAYBE;
+	    	}
+	    	
+	    }
+	
 		return DWDefs.DISK_CONSIDER_NO;
 	}
 

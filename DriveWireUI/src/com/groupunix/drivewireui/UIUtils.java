@@ -1,10 +1,17 @@
 package com.groupunix.drivewireui;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,64 +21,35 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.configuration.AbstractHierarchicalFileConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+
+import com.groupunix.drivewireserver.DWDefs;
 
 public class UIUtils {
 
 
 	
-	public static ArrayList<String> loadArrayList(String arg) throws IOException, DWUIOperationFailedException
+	public static List<String> loadList(String arg) throws IOException, DWUIOperationFailedException
 	{
-		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
-		
-		ArrayList<String> res = new ArrayList<String>();
-		
-		conn.Connect();
-			
-		res = conn.loadArrayList(arg);
-			
-		conn.close();
-			
-		if (res.size() < 1)
-		{
-			// throw new DWUIOperationFailedException("Null result from server");
-		}
-		else if (res.get(0).startsWith("FAIL"))
-		{
-			throw new DWUIOperationFailedException(res.get(0));
-		}
-		
-		
-		return(res);
-		
+		return(loadList(-1,arg));
 	}
 	
-	public static ArrayList<String> loadArrayList(int instance, String arg) throws IOException, DWUIOperationFailedException
+	public static List<String> loadList(int instance, String arg) throws IOException, DWUIOperationFailedException
 	{
 		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
 		
-		ArrayList<String> res = new ArrayList<String>();
+		List<String> res = new ArrayList<String>();
 		
 		conn.Connect();
 		
-		conn.attach(instance);
-		
-		res = conn.loadArrayList(arg);
+		res = conn.loadList(instance, arg);
 			
 		conn.close();
-			
-		if (res.size() < 1)
-		{
-			// throw new DWUIOperationFailedException("Null result from server");
-		}
-		else if (res.get(0).startsWith("FAIL"))
-		{
-			throw new DWUIOperationFailedException(res.get(0));
-		}
-		
 		
 		return(res);
 		
@@ -101,24 +79,8 @@ public class UIUtils {
 		
 		for (int i = 0;i<settings.size();i++)
 		{
-			ArrayList<String> res = conn.loadArrayList("ui server config show " + settings.get(i));
-			
-			if (res.size() < 1)
-			{
-				throw new DWUIOperationFailedException("Null result from server");
-			}
-			else if (res.get(0).startsWith("FAIL -36"))
-			{
-				// don't care
-			}
-			else if (res.get(0).startsWith("FAIL"))
-			{
-				throw new DWUIOperationFailedException(res.get(0));
-			}
-			else
-			{
-				values.put(settings.get(i), res.get(0));
-			}
+			List<String> res = conn.loadList(-1, "ui server config show " + settings.get(i));
+			values.put(settings.get(i), res.get(0));
 		}
 		
 		conn.close();
@@ -229,32 +191,12 @@ public class UIUtils {
 		
 		conn.Connect();
 		
-		// connect to instance
-		conn.attach(instance);
 		
 		for (int i = 0;i<settings.size();i++)
 		{
-			ArrayList<String> res = conn.loadArrayList("ui instance config show " + settings.get(i));
-			
-			if (res.size() < 1)
-			{
-				// config item is null..
-				//throw new DWUIOperationFailedException("Null result from server");
-			}
-			else if (res.get(0).startsWith("FAIL -36"))
-			{
-				// config item is not set
-				//values.put(settings.get(i), null);
-			}
-			else if (res.get(0).startsWith("FAIL"))
-			{
-				
-				throw new DWUIOperationFailedException(res.get(0));
-			}
-			else
-			{
-				values.put(settings.get(i), res.get(0));
-			}
+			List<String> res = conn.loadList(instance, "ui instance config show " + settings.get(i));
+			values.put(settings.get(i), res.get(0));
+		
 		}
 		
 		conn.close();
@@ -300,7 +242,7 @@ public class UIUtils {
 		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
 		
 		conn.Connect();
-		
+		/*
 		conn.sendCommand("dw disk set " + diskno + " offset " + ddef.getOffset(), instance);
 		conn.sendCommand("dw disk set " + diskno + " sizelimit " + ddef.getSizelimit(), instance);
 		conn.sendCommand("dw disk set " + diskno + " syncto " + ddef.isSync(), instance);
@@ -309,6 +251,7 @@ public class UIUtils {
 		conn.sendCommand("dw disk set " + diskno + " namedobject " + ddef.isNamedobject(), instance);
 		conn.sendCommand("dw disk set " + diskno + " syncfrom " + ddef.isSyncfromsource(), instance);
 		conn.sendCommand("dw disk set " + diskno + " padpartial " + ddef.isPadPartial(), instance);
+		*/
 		
 		conn.close();
 	}
@@ -316,76 +259,32 @@ public class UIUtils {
 	public static DiskDef getDiskDef(int instance,int diskno) throws IOException, DWUIOperationFailedException
 	{
 		
-		DiskDef disk = new DiskDef();
+		DiskDef disk = new DiskDef(diskno);
 		
 		
 		try 
 		{
-			ArrayList<String> res = UIUtils.loadArrayList(instance, "ui instance disk show " + diskno);
+			List<String> res = UIUtils.loadList(instance, "ui instance disk show " + diskno);
 			
 			
 			for (int i = 0;i<res.size();i++)
 			{
 				Pattern p_item = Pattern.compile("^(.+):\\s(.+)");
 				Matcher m = p_item.matcher(res.get(i));
-			  
+				
 				if (m.find())
 				{
+					if (m.group(1).startsWith("*"))
+					{
+						if (m.group(1).equals("*loaded"))
+							disk.setLoaded(Boolean.parseBoolean(m.group(2)));
+					}
+					else
+					{
+						disk.setParam(m.group(1), m.group(2));
+					}
+					
 				
-					if (m.group(1).equals("path"))
-						disk.setPath(m.group(2));
-					
-					if (m.group(1).equals("sizelimit"))
-						disk.setSizelimit(Integer.parseInt(m.group(2)));
-					
-					if (m.group(1).equals("offset"))
-						disk.setOffset(Integer.parseInt(m.group(2)));
-					
-					if (m.group(1).equals("writeprotect"))
-						disk.setWriteprotect(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("syncto"))
-						disk.setSync(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("expand"))
-						disk.setExpand(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("fswriteable"))
-						disk.setFswriteable(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("writeable"))
-						disk.setWriteable(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("randomwriteable"))
-						disk.setRandomwriteable(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("_sectors"))
-						disk.setSectors(Integer.parseInt(m.group(2)));
-					
-					if (m.group(1).equals("_dirty"))
-						disk.setDirty(Integer.parseInt(m.group(2)));
-					
-					if (m.group(1).equals("_lsn"))
-						disk.setLsn(Integer.parseInt(m.group(2)));
-					
-					if (m.group(1).equals("_reads"))
-						disk.setReads(Integer.parseInt(m.group(2)));
-					
-					if (m.group(1).equals("_writes"))
-						disk.setWrites(Integer.parseInt(m.group(2)));
-					
-					if (m.group(1).equals("loaded"))
-						disk.setLoaded(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("namedobject"))
-						disk.setNamedobject(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("syncfrom"))
-						disk.setSyncfromsource(UIUtils.sTob(m.group(2)));
-					
-					if (m.group(1).equals("padpartial"))
-						disk.setPadPartial(UIUtils.sTob(m.group(2)));
-					
 				}
 				
 			}
@@ -400,13 +299,13 @@ public class UIUtils {
 		
 	}
 
-	public static HierarchicalConfiguration getServerConfig() throws UnknownHostException, IOException, ConfigurationException 
+	public static HierarchicalConfiguration getServerConfig() throws UnknownHostException, IOException, ConfigurationException, DWUIOperationFailedException 
 	{
 		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
 		
 		conn.Connect();
 		
-		StringReader sr = conn.loadReader("ui server config write");
+		StringReader sr = conn.loadReader(-1,"ui server config write");
 		conn.close();
 
 		XMLConfiguration res = new XMLConfiguration();
@@ -414,220 +313,98 @@ public class UIUtils {
 		return (HierarchicalConfiguration) res.clone();
 	}
 
-	public static int getDWConfigSerial() throws IOException, DWUIOperationFailedException 
+	public static MIDIStatus getServerMidiStatus() throws IOException, DWUIOperationFailedException 
 	{
-		int ser = -1;
+		List<String> res = UIUtils.loadList(MainWin.getInstance(), "ui instance midi");
 		
-		ArrayList<String> res = UIUtils.loadArrayList("ui server config serial");
-		if (res.size() != 1)
-		{
-			throw new DWUIOperationFailedException("invalid response size: " + res.size());
-		}
+		MIDIStatus st = new MIDIStatus();
 		
-		try
+		for (String l : res)
 		{
-			ser = Integer.parseInt(res.get(0));
+			String[] kv = l.trim().split("\\|");
 			
-			if (ser != MainWin.dwconfigserial)
+			// ignore anything odd
+			if (kv.length > 1)
 			{
-				MainWin.dwconfig = UIUtils.getServerConfig();
-				MainWin.dwconfigserial = ser;
-			}
-			
-		}
-		catch (NumberFormatException e)
-		{
-			throw new DWUIOperationFailedException("invalid response: '" + res.get(0) + "'");
-		} 
-		catch (ConfigurationException e) 
-		{
-			throw new DWUIOperationFailedException("returned config did not work!: " + e.getMessage());
-		}
-		
-		return(ser);
-	}
-
-	public static DiskStatus getDiskStatus(int instance, int drive) throws IOException, DWUIOperationFailedException 
-	{
-		DiskStatus res = new DiskStatus();
-		
-		ArrayList<String> dstat = UIUtils.loadArrayList(instance, "ui instance disk status " + drive);
-	
-		Pattern p_item = Pattern.compile("^(.+):\\s(.+)");
-		
-						
-		for (int i = 0;i<dstat.size();i++)
-		{
-			Matcher m = p_item.matcher(dstat.get(i));
-		  
-			if (m.find())
-			{
-				if (m.group(1).equals("serial"))
-					res.setSerial(Integer.parseInt(m.group(2)));
+				String key = kv[0];
 				
-				if (m.group(1).equals("loaded"))
-					res.setLoaded(UIUtils.sTob(m.group(2)));
-				
-				if (m.group(1).equals("sectors"))
-					res.setSectors(Integer.parseInt(m.group(2)));
-				
-				if (m.group(1).equals("dirty"))
-					res.setDirty(Integer.parseInt(m.group(2)));
-				
-				if (m.group(1).equals("lsn"))
-					res.setLsn(Integer.parseInt(m.group(2)));
-				
-				if (m.group(1).equals("reads"))
-					res.setReads(Integer.parseInt(m.group(2)));
-				
-				if (m.group(1).equals("writes"))
-					res.setWrites(Integer.parseInt(m.group(2)));
-				
-			}
-		}
-		
-		return(res);
-	}
-
-	
-	
-	public static int getNextFreeDisk(String dsname) 
-	{
-		
-		
-		HierarchicalConfiguration dset = getDiskset(dsname);
-		
-		if (dset != null)
-		{
-			for (int i = 0;i < MainWin.getInstanceConfig().getInt("DiskMaxDrives",255);i++)
-			{
-				if (getDisksetDisk(dsname, i) == null)
+				if (key.equals("cprofile"))
 				{
-					return(i);
+					st.setCurrentProfile(kv[1]);
 				}
+				else if (key.equals("cdevice"))
+				{
+					st.setCurrentDevice(kv[1]);
+				}
+				else if (key.equals("enabled"))
+				{
+					st.setEnabled(Boolean.parseBoolean(kv[1]));
+				}
+				else if (key.equals("profile"))
+				{
+					if (kv.length == 3)
+						st.addProfile(kv[1], kv[2]);
+				}
+				else if (key.equals("device"))
+				{
+					if (kv.length == 7)
+						st.addDevice(Integer.parseInt(kv[1]), kv[2], kv[3], kv[4], kv[5], kv[6]);
+				}
+
+				
 			}
 		}
 		
-		return -1;
+		return(st);
+		
+	}
+	
+	
+	public static DiskDef[] getServerDisks() throws IOException, DWUIOperationFailedException 
+	{
+		DiskDef[] disks = new DiskDef[256];
+		
+		List<String> res = UIUtils.loadList(MainWin.getInstance(), "ui instance disk show");
+		
+		// get info for loaded drives
+		for (String l : res)
+		{
+			String[] parts = l.trim().split("\\|");
+			
+			if (parts.length == 2)
+			{
+				int drive = Integer.parseInt(parts[0]);
+				disks[drive] = getDiskDef(MainWin.getInstance(), drive);
+			}
+		}
+		
+		// create blank defs for the rest
+		
+		for (int i = 0;i<256;i++)
+		{
+			if (disks[i] == null)
+				disks[i] = new DiskDef(i);
+		}
+		
+		return(disks);
 	}
 
 	
-	public static HierarchicalConfiguration getDiskset(String dsname)
-	{
-		HierarchicalConfiguration res = null;
-		 
-		@SuppressWarnings("unchecked")
-		List<HierarchicalConfiguration> disksets = MainWin.dwconfig.configurationsAt("diskset");
-		
-		for(Iterator<HierarchicalConfiguration> it = disksets.iterator(); it.hasNext();)
-		{
-			HierarchicalConfiguration dset = it.next();
-			if (dset.getString("Name").equals(dsname))
-			{
-				res = dset;
-			}
-		}
-		
-		return res;
-	}
 	
-	public static HierarchicalConfiguration getDisksetDisk(String dsname, int diskno)
-	{
-		HierarchicalConfiguration res = null;
-		 
-		HierarchicalConfiguration dset = getDiskset(dsname);
-		
-		if (dset != null)
-		{
-			@SuppressWarnings("unchecked")
-			List<HierarchicalConfiguration> disks = dset.configurationsAt("disk");
-		
-			for(Iterator<HierarchicalConfiguration> it = disks.iterator(); it.hasNext();)
-			{
-				HierarchicalConfiguration disk = it.next();
-				if (disk.getInt("drive") == diskno)
-				{
-					res = disk;
-				}
-			}
-		
-		}
-		
-		return res;
-	}
 
-	public static void createDiskset(String dsname, String cp) throws IOException, DWUIOperationFailedException 
-	{
-		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
-		
-		conn.Connect();
-		
-		// conn.sendCommand("dw disk dset create " + dsname, MainWin.getInstance());
-		MainWin.addToDisplay("dw disk dset create " + dsname);
-		
-		if (cp != null)
-		{
-			HierarchicalConfiguration  cpdset = UIUtils.getDiskset(cp);
-			
-			if (cpdset != null)
-			{
-				// copy diskset settings
-				
-				for(@SuppressWarnings("unchecked")
-				Iterator<String> itk = cpdset.getKeys(); itk.hasNext();)
-				{
-					String option = itk.next();
-					
-					if (!option.equals("Name") && !option.startsWith("disk."))
-					{
-						// conn.sendCommand("dw disk dset set " + dsname + " " + option + " " + cpdset.getString(option)  , MainWin.getInstance());
-						MainWin.addToDisplay("dw disk dset set " + dsname + " " + option + " " + cpdset.getString(option));
-					}
-				}
-					
-				
-				// copy disks and settings
-				
-				@SuppressWarnings("unchecked")
-				List<HierarchicalConfiguration> disks = cpdset.configurationsAt("disk");
-			
-				for(Iterator<HierarchicalConfiguration> itd = disks.iterator(); itd.hasNext();)
-				{
-					HierarchicalConfiguration disk = itd.next();
-					
-					if (disk.containsKey("drive") && disk.containsKey("path"))
-					{
-						//conn.sendCommand("dw disk dset adddisk " + dsname + " " + disk.getInt("drive") + " " + disk.getString("path") , MainWin.getInstance());
-						MainWin.addToDisplay("dw disk dset adddisk " + dsname + " " + disk.getInt("drive") + " " + disk.getString("path"));
-						
-						for(@SuppressWarnings("unchecked")
-						Iterator<String> itk = disk.getKeys(); itk.hasNext();)
-						{
-							String option = itk.next();
-							
-							if (!option.equals("drive") && !option.equals("path"))
-							{
-								//conn.sendCommand("dw disk dset setdisk " + dsname + " " + disk.getInt("drive") + " " + option + " " + disk.getString(option)  , MainWin.getInstance());
-								MainWin.addToDisplay("dw disk dset setdisk " + dsname + " " + disk.getInt("drive") + " " + option + " " + disk.getString(option) );
-							}
-						}
-					}
-					
-				}
-			}
-			
-		}
-		
-		conn.close();	
-		
-	}
+	
+	
+	
+	
+	
+	
 
 	public static DWServerFile[] getFileArray(String uicmd) throws IOException, DWUIOperationFailedException 
 	{
 
 		DWServerFile[] res = null;
 			
-		ArrayList<String> roots = UIUtils.loadArrayList(uicmd);
+		List<String> roots = UIUtils.loadList(uicmd);
 				
 		res = new DWServerFile[roots.size()];
 				
@@ -637,13 +414,183 @@ public class UIUtils {
 			res[i].setVals(roots.get(i));
 					
 		}
-				
-
-			
 			
 		return(res);
 		
 	}
+
+	public static void fileCopy(String infile, String outfile) throws IOException 
+	{
+		File f1 = new File(infile);
+		File f2 = new File(outfile);
+		InputStream in = new FileInputStream(f1);
+		  
+		OutputStream out = new FileOutputStream(f2);
+
+		byte[] buf = new byte[1024];
+		int len;
+		while ((len = in.read(buf)) > 0)
+		{
+			out.write(buf, 0, len);
+		}
+		in.close();
+		out.close();
+		
+	}
+
+
+	public static String prettyDWError(int err)
+	{
+		// use reflection to grab names of constants in dwdefs..
+		
+		String res = "Unknown error (" + err + ")";
+		
+		Field[] fields = DWDefs.class.getFields();
+		
+		for (Field f : fields)
+		{
+			if (f.getName().startsWith("RC_"))
+			{
+				try
+				{
+					if (f.getByte(null) == (byte)err)
+					{
+						res = f.getName();
+					}
+				} 
+				catch (IllegalArgumentException e)
+				{
+				} 
+				catch (IllegalAccessException e)
+				{
+				}
+			}
+				
+			
+		}
+		
+		
+		return(res);
+	}
+
+	public static List<String> getServerLogHistory() throws IOException, DWUIOperationFailedException
+	{
 	
+		List<String> res = UIUtils.loadList(MainWin.getInstance(), "ui server show log");
+		
+		return(res);
+	}
+
+	public static String getFilenameFromURI(String string)
+	{
+		String res = string;
+		
+		if ((res.indexOf('/') > -1) && (res.indexOf('/') < (res.length()-1)))
+					res = res.substring(res.lastIndexOf('/')+1);
+			
+		return(res);
+	}
+	
+	public static String shortenLocalURI(String df) 
+	{
+		if ((df != null ) && df.startsWith("file:///"))
+		{
+			if (df.charAt(9) == ':')
+			{
+				return df.substring(8);
+			}
+			else
+			{
+				return df.substring(7);
+			}
+		}
+		return(df);
+	}
+	
+	public static String getLocationFromURI(String string)
+	{
+		String res = string;
+		
+		if ((res.indexOf('/') > -1) && (res.indexOf('/') < (res.length()-1)))
+					res = res.substring(0,res.lastIndexOf('/'));
+		
+		
+		return(shortenLocalURI(res));
+	}
+	
+	
+	public static void loadFonts()
+	{
+		
+		MainWin.debug("load fonts");
+		
+		class OnlyExt implements FilenameFilter 
+		{ 
+			String ext; 
+			public OnlyExt(String ext) 
+			{ 
+				this.ext = "." + ext; 
+			} 
+			
+				
+			public boolean accept(File dir, String name) 
+			{ 
+				return name.endsWith(ext); 
+			}	 
+		}
+		
+		
+		File fontdir = new File("fonts");
+		
+		if (fontdir.exists() && fontdir.isDirectory())
+		{
+			String[] files = fontdir.list(new OnlyExt("ttf"));
+			
+			for(int i = 0;i<files.length;i++)
+			{
+				if (!MainWin.getDisplay().loadFont("fonts/" + files[i])) 
+				{
+		                MainWin.debug("Failed to load font from " + files[i]);
+				}
+				else
+				{
+					MainWin.debug("Loaded font from " + files[i]);
+				}
+			}
+			
+		}
+		else
+		{
+			MainWin.debug("No font dir");
+		}
+		
+	}
+	
+	
+	public static Font findSizedFont(String fname, String txt, int maxw, int maxh, int style) 
+	{
+        
+        int size = 8;
+        int width = 0;
+        int height = 0;
+        
+        Image test = new Image(null, maxw*2,maxh*2);
+        GC gc = new GC(test);
+        Font font = null;
+        
+        while ((width < maxw) && (height < maxh))
+        {
+        	font = new Font(MainWin.getDisplay(), fname, size, style);
+        
+        	gc.setFont(font);
+        	width = gc.textExtent(txt).x;
+        	height = gc.textExtent(txt).y;
+        	MainWin.debug("fontdim @ " + size + " = " + width + " x " + height);
+        	
+        	size++;
+        }
+        
+        return font;
+	}
 	
 }

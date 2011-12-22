@@ -241,7 +241,11 @@ public class DWCommandList {
 				maxlen = curlen;
         }
 		
-		maxlen++;
+		// leave spaces between cols
+		if (cols>32)
+			maxlen += 2;
+		else
+			maxlen++;
 		
 		it = ps.iterator();
 		int i = 0;

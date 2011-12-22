@@ -10,28 +10,24 @@ import org.apache.commons.configuration.event.ConfigurationListener;
 import org.apache.commons.vfs.Capability;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public abstract class DWDisk 
 {
 	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 	
 	protected HierarchicalConfiguration params;
-	protected DWProtocol dwproto;
 	protected Vector<DWDiskSector> sectors = new Vector<DWDiskSector>();	
-	protected int diskno = -1;
 	protected FileObject fileobj;
-	protected FileSystemManager fsManager;
 	protected DWDiskConfigListener configlistener;
+	private DWDiskDrive drive;
 	
 	
 	// required for format implementation:
@@ -41,10 +37,12 @@ public abstract class DWDisk
 	public abstract byte[] readSector() throws IOException, DWImageFormatException;
 	protected abstract void load() throws IOException, DWImageFormatException;
 	
+	public abstract int getDiskFormat();
 	
-	public DWDisk(DWProtocol dwproto, FileObject fileobj) throws IOException, DWImageFormatException
+	
+	public DWDisk(FileObject fileobj) throws IOException, DWImageFormatException
 	{
-		this.dwproto = dwproto;
+
 		this.fileobj = fileobj;
 		
 		this.params = new HierarchicalConfiguration();
@@ -52,6 +50,10 @@ public abstract class DWDisk
 		// internal 
 		this.setParam("_path", fileobj.getName().getURI());
 		this.setLastModifiedTime(fileobj.getContent().getLastModifiedTime());
+		this.setParam("_reads", 0);
+		this.setParam("_writes", 0);
+		this.setParam("_lsn", 0);
+		
 		
 		// user options
 		this.setParam("writeprotect",DWDefs.DISK_DEFAULT_WRITEPROTECT);
@@ -119,49 +121,7 @@ public abstract class DWDisk
 	}
 	
 	
-	public void setDiskNo(int d)
-	{
-		
-		
-		if (d < 0)
-		{
-			// disk is not in play
-			
-			// remove listener
-			if (this.configlistener != null)
-				this.params.removeConfigurationListener(this.configlistener);
-			// send null path event
-			DriveWireServer.submitDiskEvent(this.dwproto.getHandlerNo(), this.diskno,  "_path","");
-			
-		}
-		else
-		{
-			// disk is active in drive d
-			
-			// remove any existing listeners
-			@SuppressWarnings("unchecked")
-			Iterator<ConfigurationListener> citr = this.params.getConfigurationListeners().iterator();
-			while (citr.hasNext())
-			{
-				this.params.removeConfigurationListener(citr.next());
-			}
-
-			// add for this drive
-			this.configlistener = new DWDiskConfigListener(this.dwproto.getHandlerNo(), d);
-			this.params.addConfigurationListener(this.configlistener);
-		
-			// announce drive info to any event listeners
-			@SuppressWarnings("unchecked")
-			Iterator<String> itr = this.params.getKeys();
-			while(itr.hasNext())
-			{
-				String key = itr.next();
-				DriveWireServer.submitDiskEvent(this.dwproto.getHandlerNo(), d,  key, this.params.getProperty(key).toString());
-			}
-		}
-		
-		this.diskno = d;
-	}
+	
 	
 	
 	public void reload() throws IOException, DWImageFormatException
@@ -175,19 +135,9 @@ public abstract class DWDisk
 	}
 
 	
-	public void eject()
+	public void eject() throws IOException
 	{
-		
-		try
-		{
-			sync();
-		} 
-		catch (IOException e)
-		{
-			logger.warn("While ejecting disk in drive " + this.diskno + ": " + e.getMessage());
-		}
-		
-		this.setDiskNo(-1);
+		sync();
 	}
 
 	
@@ -208,7 +158,7 @@ public abstract class DWDisk
 		// write in memory image to specified path (raw format)
 		// using most efficient method available
 		
-		FileObject altobj = fsManager.resolveFile(path);
+		FileObject altobj = VFS.getManager().resolveFile(path);
 		
 		if (altobj.isWriteable())
 		{
@@ -291,6 +241,49 @@ public abstract class DWDisk
 		return(this.params.getBoolean("writeprotect",DWDefs.DISK_DEFAULT_WRITEPROTECT));
 	}
 	
+	public Object getParam(String key)
+	{
+		if (this.params.containsKey(key))
+			return(this.params.getProperty(key));
+		
+		return(null);
+	}
+
+	
+	public void insert(DWDiskDrive drive)
+	{
+		this.drive = drive;
+		
+		// remove any existing listeners
+		@SuppressWarnings("unchecked")
+		Iterator<ConfigurationListener> citr = this.params.getConfigurationListeners().iterator();
+		while (citr.hasNext())
+		{
+			this.params.removeConfigurationListener(citr.next());
+		}
+
+		// add for this drive
+		this.params.addConfigurationListener(new DWDiskConfigListener(this));
+	
+		// announce drive info to any event listeners
+		@SuppressWarnings("unchecked")
+		Iterator<String> itr = this.params.getKeys();
+		while(itr.hasNext())
+		{
+			String key = itr.next();
+			this.drive.submitEvent(key, this.params.getProperty(key).toString());
+		}
+		
+	}
+	
+	public void submitEvent(String key, String val)
+	{
+		if (this.drive != null)
+		{
+			this.drive.submitEvent(key, val);
+		}
+	}
+
 
 	
 }

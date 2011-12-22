@@ -45,14 +45,14 @@ public class UICmdInstanceDiskStatus extends DWCommand {
 			
 					int driveno = Integer.parseInt(cmdline);
 				
-					if ((!(dwProto.getDiskDrives() == null)) && (dwProto.getDiskDrives().diskLoaded(driveno)))
+					if ((!(dwProto.getDiskDrives() == null)) && (dwProto.getDiskDrives().isLoaded(driveno)))
 					{
 						res += "loaded: true\n";
-						res += "sectors: " + dwProto.getDiskDrives().getDisk(driveno).getDiskSectors() + "\n";
-						res += "dirty: " + dwProto.getDiskDrives().getDisk(driveno).getDirtySectors() + "\n";
-						res += "lsn: " + dwProto.getDiskDrives().getDisk(driveno).getLSN() + "\n";
-						res += "reads: " + dwProto.getDiskDrives().getDisk(driveno).getReads() + "\n";
-						res += "writes: " + dwProto.getDiskDrives().getDisk(driveno).getWrites() + "\n";
+						res += "sectors: " + dwProto.getDiskDrives().getDisk(driveno).getParams().getInt("_sectors") + "\n";
+						res += "dirty: " + dwProto.getDiskDrives().getDisk(driveno).getParams().getInt("_dirty") + "\n";
+						res += "lsn: " + dwProto.getDiskDrives().getDisk(driveno).getParams().getInt("_lsn") + "\n";
+						res += "reads: " + dwProto.getDiskDrives().getDisk(driveno).getParams().getInt("_reads") + "\n";
+						res += "writes: " + dwProto.getDiskDrives().getDisk(driveno).getParams().getInt("_writes") + "\n";
 
 					}
 					else

@@ -21,7 +21,7 @@ public class UICmdInstanceDiskSerial extends DWCommand {
 	public String getCommand() 
 	{
 		return command;
-	}
+	} 
 
 	public DWCommandResponse parse(String cmdline)
 	{

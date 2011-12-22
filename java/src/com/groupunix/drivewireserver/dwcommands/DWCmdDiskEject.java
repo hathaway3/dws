@@ -1,8 +1,6 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetDriveNotLoadedException;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
@@ -24,73 +22,37 @@ public class DWCmdDiskEject extends DWCommand
 
 	public DWCommandResponse parse(String cmdline) 
 	{
-		if (cmdline.length() == 0)
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error: dw disk eject requires one or two arguments"));
-		}
 		
 		String[] args = cmdline.split(" ");
 		
-		if (args[0].equals("all"))
+		if (args.length == 1)
 		{
-			// eject all disks
-			return(doDiskEjectAll());
-		}
-		else if (this.dwProto.getDiskDrives().isDiskNo(args[0]))
-		{
-			// eject a disk
-			return(doDiskEject(Integer.parseInt(args[0])));
-		}
-		else if ((args.length == 2) && this.dwProto.getDiskDrives().isDiskSetName(args[0]))
-		{
-			if (args[1].equals("all"))
+		
+		
+			if (args[0].equals("all"))
 			{
 				// eject all disks
-				return(doDiskEjectAll(args[0]));
+				return(doDiskEjectAll());
 			}
-			else if (this.dwProto.getDiskDrives().isDiskNo(args[1]))
+			else
 			{
-				// eject a disk from a set
-				return(doDiskEject(args[0], Integer.parseInt(args[1])));
+				// eject specified disk
+				try
+				{
+					return(doDiskEject(dwProto.getDiskDrives().getDriveNoFromString(args[0])));
+				} 
+				catch (DWDriveNotValidException e)
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
+				}
 			}
-			
 		}
-		
+	
 		return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error"));
 		
 	}
 
-	private DWCommandResponse doDiskEjectAll(String set) 
-	{
-		try 
-		{
-			this.dwProto.getDiskDrives().clearDisksetDisks(set);
-			return(new DWCommandResponse("Ejected all disks from set '" + set + "'.\r\n"));
-		} 
-		catch (DWDisksetNotValidException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
-		}
-		
-	}
-
-	private DWCommandResponse doDiskEject(String set, int driveno)
-	{
-		try 
-		{
-			this.dwProto.getDiskDrives().clearDisksetDisk(set, driveno);
-			return(new DWCommandResponse("Removed disk " + driveno + " from set '" + set + "'.\r\n"));
-		} 
-		catch (DWDisksetNotValidException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
-		} 
-		catch (DWDisksetDriveNotLoadedException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED, e.getMessage()));
-		}
-	}
-
+	
 	private DWCommandResponse doDiskEjectAll()
 	{
 		dwProto.getDiskDrives().EjectAllDisks();
@@ -114,10 +76,7 @@ public class DWCmdDiskEject extends DWCommand
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
 		} 
-		catch (DWDisksetNotValidException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
-		}
+
 
 		
 	}
@@ -130,7 +89,7 @@ public class DWCmdDiskEject extends DWCommand
 
 	public String getUsage() 
 	{
-		return "dw disk eject [dset] {# | all}";
+		return "dw disk eject {# | all}";
 	}
 	
 	public boolean validate(String cmdline) 

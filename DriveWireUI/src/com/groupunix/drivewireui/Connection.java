@@ -1,20 +1,28 @@
 package com.groupunix.drivewireui;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import com.groupunix.drivewireserver.DWDefs;
 
 
 public class Connection 
 {
 	
+	private static final int BUFFER_SIZE = 2048;
 	private int port;
 	private String host;
 	private int instance;
 	
 	private Socket sock;
+
+	private BufferedReader in;
 	
 	
 	public Connection(String host, int port, int instance)
@@ -30,6 +38,7 @@ public class Connection
 		MainWin.setConStatusConnect();
 		this.sock = new Socket(this.host, this.port);
 		this.sock.setSoTimeout(MainWin.config.getInt("TCPTimeout",MainWin.default_TCPTimeout));
+		this.in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 	}
 	
 	
@@ -49,7 +58,6 @@ public class Connection
 
 	public void close() throws IOException 
 	{
-		MainWin.setConStatusNone();
 		this.sock.close();
 	}
 
@@ -64,27 +72,34 @@ public class Connection
 		return true;
 	}
 
-
-
-	public void sendCommand(String cmd, int instance) throws IOException, DWUIOperationFailedException 
+	
+	
+	public void sendCommand(String cmd, int instance) throws IOException, DWUIOperationFailedException
 	{
-		// attach to instance
-		attach(instance);
+		sendCommand(cmd, instance, false);
+	}
+	
+
+	public void sendCommand(String cmd, int instance, boolean disp) throws IOException, DWUIOperationFailedException 
+	{
 		
 		// send command
-		ArrayList<String> resp = loadArrayList(cmd);	
+		List<String> resp = loadList(instance,cmd);	
 			
 		if ((resp.size() > 0) && (resp.get(0).startsWith("FAIL")))
 		{
-			throw new DWUIOperationFailedException(resp.get(0));
+			throw new DWUIOperationFailedException(resp.get(0).trim());
 			
 		}
 		else
 		{
-			addToDisplay("");
-			for (int i = 0;i<resp.size();i++)
+			if (disp)
 			{
-				addToDisplay(resp.get(i));
+				MainWin.addToDisplay("");
+				for (int i = 0;i<resp.size();i++)
+				{
+					MainWin.addToDisplay(resp.get(i).trim());
+				}
 			}
 		}
 		
@@ -93,11 +108,6 @@ public class Connection
 	}
 
 
-	
-	private void addToDisplay(String txt)
-	{
-		MainWin.addToDisplay(txt);
-	}
 
 
 	public void setInstance(int instance) {
@@ -110,127 +120,79 @@ public class Connection
 	}
 	
 	
-	public StringReader loadReader(String arg) throws IOException 
+	public StringReader loadReader(int instance, String arg) throws IOException, DWUIOperationFailedException 
 	{
-		if (MainWin.config.getBoolean("ShowCommandsSent",false))
+		//if (MainWin.config.getBoolean("ShowCommandsSent",false))
 		{
-			addToDisplay(">>> " + arg);
+			MainWin.addToDisplay("R>>> " + arg);
 		}
 		
-		String strres = new String();
-		MainWin.setConStatusWrite();
+		sock.getOutputStream().write((instance + "").getBytes());
+		sock.getOutputStream().write(0);
 		sock.getOutputStream().write((arg + "\n").getBytes());
-			
-		String line = readLine(sock);
-			
-		// eat welcome
-		while ((!sock.isClosed()) && (!line.equals(">>")))
-		{
-			line = readLine(sock);
-		}
-			
-		// data
-		line = readLine(sock);
 		
-		while ((!sock.isClosed()) && (!line.endsWith("<<")))
-		{
-			strres += line;
-			
-			line = readLine(sock);
-		}
-		
-		if  ((line.length() > 2) && (line.endsWith("<<")))
-		{
-			strres += (line.substring(0, line.length() - 2));
-		}
-		
-		StringReader res = new StringReader(strres);
-		
-		return res;
+		return(new StringReader(getResponse()));
 	}
 
 	
 	
 	
-	public ArrayList<String> loadArrayList(String arg) throws IOException 
+	private String getResponse() throws IOException, DWUIOperationFailedException
 	{
-		if (MainWin.config.getBoolean("ShowCommandsSent",false))
+		StringBuilder buffer = new StringBuilder(BUFFER_SIZE * 2);
+		char[] cbuf = new char[BUFFER_SIZE];
+		
+		int readres = in.read(cbuf, 0, BUFFER_SIZE);
+		
+		while (!this.sock.isClosed() && (readres > -1))
 		{
-			addToDisplay(">>> " + arg);
-		}
-		
-		ArrayList<String> res = new ArrayList<String>();
-		
-		
-		MainWin.setConStatusWrite();
-		sock.getOutputStream().write((arg + "\n").getBytes());
+			buffer.append(cbuf, 0, readres);
+			readres = in.read(cbuf, 0, BUFFER_SIZE);
 			
-		String line = readLine(sock);
-			
-		// eat welcome
-		while ((!sock.isClosed()) && (!line.equals(">>")))
-		{
-			line = readLine(sock);
-		}
-			
-		// data
-		line = readLine(sock);
-		
-		while ((!sock.isClosed()) && (!line.endsWith("<<")))
-		{
-			res.add(line);
-			
-			line = readLine(sock);
-		}
-		
-		if  ((line.length() > 2) && (line.endsWith("<<")))
-		{
-			res.add(line.substring(0, line.length() - 2));
 		}
 		
 		
-		return res;
-	}
-
-	private static String readLine(Socket sock) throws IOException 
-	{
-		String line = new String();
-		
-		MainWin.setConStatusRead();
-		
-		int data = sock.getInputStream().read();
-		
-		while ((!sock.isClosed()) && (data != -1) && (data != 10))
-		{
-			line += Character.toString((char) data);
-			data = sock.getInputStream().read();
-		}
-		
-		return line;
-	}
-
-
-	public void attach(int inst) throws IOException, DWUIOperationFailedException 
-	{
-	// attach to instance
-		
-		ArrayList<String> resp = loadArrayList("ui instance attach " + instance);
-		
-		if (resp.size() > 0)
-		{
-			if (resp.get(0).startsWith("FAIL"))
-			{
-				throw new DWUIOperationFailedException("Error attaching to instance: " + resp.get(0));
-			}
+		// check for DW header
+		if (buffer.length() < 3)
+			throw new DWUIOperationFailedException(com.groupunix.drivewireserver.DWDefs.RC_UI_MALFORMED_RESPONSE, "Incomplete or missing header");
 			
-			
+		if ((buffer.charAt(0) == 0) && (buffer.charAt(2) == 0))
+		{
+			// check for DW error response
+			if (buffer.charAt(1) != 0)
+				throw new DWUIOperationFailedException((byte) buffer.charAt(1),buffer.substring(3));
 		}
 		else
 		{
-			throw new DWUIOperationFailedException("Unknown error attaching to instance");
+			// dont have 0 x 0
+			throw new DWUIOperationFailedException(com.groupunix.drivewireserver.DWDefs.RC_UI_MALFORMED_RESPONSE, "Corrupt header (Old server version?)");
 		}
 		
+		// strip header, send along
+		buffer.delete(0,3);
+		return(buffer.toString());
 	}
+
+
+	public List<String> loadList(int instance, String arg) throws IOException, DWUIOperationFailedException 
+	{
+		//if (MainWin.config.getBoolean("ShowCommandsSent",false))
+		{
+			MainWin.addToDisplay("A>>> " + arg);
+		}
+		
+		sock.getOutputStream().write((instance + "").getBytes());
+		sock.getOutputStream().write(0);
+		sock.getOutputStream().write((arg + "\n").getBytes());
+		
+		List<String> res = Arrays.asList(getResponse().split("\n"));
+		
+		return res;
+	}
+
+	
+
+
 	
 	
 	

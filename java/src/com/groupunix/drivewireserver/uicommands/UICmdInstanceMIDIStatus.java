@@ -1,5 +1,15 @@
 package com.groupunix.drivewireserver.uicommands;
 
+import java.util.Iterator;
+import java.util.List;
+
+import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+
+import org.apache.commons.configuration.HierarchicalConfiguration;
+
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
@@ -36,16 +46,47 @@ public class UICmdInstanceMIDIStatus extends DWCommand {
 	@Override
 	public DWCommandResponse parse(String cmdline) 
 	{
-		String res = "none\r\nnone\r\n";
+		String res = "enabled|false";
 		
 		if (this.dwuithread.getInstance() > -1)
 		{
 			DWProtocolHandler dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
-		
+			
+			
+			
 			if (!(dwProto == null) && !(dwProto.getVPorts() == null) &&  !(dwProto.getVPorts().getMidiDeviceInfo() == null) )
 			{
-    			res = dwProto.getVPorts().getMidiDeviceInfo().getName() + "\r\n";
-				res += dwProto.getVPorts().getMidiProfileName() + "\r\n";
+				try
+				{
+					res = "enabled|" + DriveWireServer.getHandler(this.dwuithread.getInstance()).getConfig().getBoolean("UseMIDI", false) + "\r\n";
+					res += "cdevice|" + dwProto.getVPorts().getMidiDeviceInfo().getName() + "\r\n";
+					res += "cprofile|" +dwProto.getVPorts().getMidiProfileName() + "\r\n";
+				
+					MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+		
+					for (int j = 0;j<infos.length;j++)
+					{
+						MidiDevice.Info i = infos[j];
+						MidiDevice dev = MidiSystem.getMidiDevice(i);
+						
+						res += "device|" + j + "|" + dev.getClass().getSimpleName() + "|" + i.getName() +"|"+ i.getDescription() +"|" + i.getVendor() + "|" + i.getVersion() +"\r\n";
+						
+					}
+
+					@SuppressWarnings("unchecked")
+					List<HierarchicalConfiguration> profiles = DriveWireServer.serverconfig.configurationsAt("midisynthprofile");
+			    	
+					for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
+					{
+					    HierarchicalConfiguration mprof = it.next();
+					    
+					    res += "profile|" + mprof.getString("name") +"|" + mprof.getString("desc") + "\r\n";
+					}
+				}
+				catch (MidiUnavailableException e)
+				{
+					res = "enabled|false\n\n";
+				}
 			}
 		}
 		

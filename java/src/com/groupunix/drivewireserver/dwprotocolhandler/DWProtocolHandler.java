@@ -13,12 +13,11 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetInvalidDiskDefException;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
-import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
+import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
+import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
@@ -74,6 +73,9 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 
 
 	private DWHelp dwhelp;
+
+
+	private boolean ready = false;
 	
 	
 
@@ -83,7 +85,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		this.handlerno = handlerno;
 		this.config = hconf;
 		
-		//config.addConfigurationListener(new DWProtocolConfigListener());   
+		config.addConfigurationListener(new DWProtocolConfigListener(this));   
 		
 	}
 
@@ -124,7 +126,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		
 		Thread.currentThread().setName("dwproto-" + handlerno + "-" +  Thread.currentThread().getId());
 		
-		// this thread has got to run a LOT or we might lose bytes on the serial port
+		// this thread should run a LOT or we might lose bytes on the serial port on slow computers
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		
 		setupProtocolDevice();
@@ -136,49 +138,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 
 			// setup drives
 			diskDrives = new DWDiskDrives(this);
-			
-			// set current to default
-			if (config.containsKey("DefaultDiskSet"))
-			{
-				synchronized (DriveWireServer.serverconfig)
-				{
-					config.setProperty("CurrentDiskSet", config.getString("DefaultDiskSet"));
-				}
-			}
-			
-			// load current disk set
-			if (config.containsKey("CurrentDiskSet"))
-			{
-				try 
-				{
-					diskDrives.LoadDiskSet(config.getString("CurrentDiskSet"));
-				} 
-				catch (DWDisksetInvalidDiskDefException e) 
-				{
-					logger.warn(e.getMessage());
-				} 
-				catch (DWDisksetNotValidException e) 
-				{
-					logger.warn(e.getMessage());
-				} 
-				catch (IOException e) 
-				{
-					logger.warn(e.getMessage());
-				} 
-				catch (DWDriveNotValidException e) 
-				{
-					logger.warn(e.getMessage());
-				} 
-				catch (DWDriveNotLoadedException e) 
-				{
-					logger.warn(e.getMessage());
-				} 
-				catch (DWDriveAlreadyLoadedException e) 
-				{
-					logger.warn(e.getMessage());
-				}
-			}
-				
 			
 			// setup virtual ports
 			this.dwVSerialPorts = new DWVSerialPorts(this);	
@@ -196,6 +155,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				logger.debug("handler #" + handlerno + ": starting term device listener thread");
 				this.termHandler = new DWVPortTermThread(this, config.getInt("TermPort"));
 				this.termT = new Thread(termHandler);
+				this.termT.setDaemon(true);
 				this.termT.start();
 			}
 			
@@ -211,6 +171,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			
 		}			
 
+		this.ready = true;
 		logger.info("handler #" + handlerno + " is ready");
 		
 		// protocol loop
@@ -363,7 +324,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 					// take a break, reset, hope things work themselves out
 					try 
 					{
-						Thread.sleep(config.getInt("FailedPortRetryTime",3000));
+						Thread.sleep(config.getInt("DeviceFailRetryTime",6000));
 						resetProtocolDevice();
 					
 					} 
@@ -417,7 +378,8 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			String objname = new String(namebuf);
 			
 			
-			int result = diskDrives.nameObjMount(objname);
+			//int result = diskDrives.nameObjMount(objname);
+			int result = -1;
 			
 			// artificial delay test
 			if (config.containsKey("NameObjMountDelay"))
@@ -830,6 +792,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			logger.error("DoOP_READEX: " + e6.getMessage());
 			result = DWDefs.DWERROR_READ;
 		} 
+		catch (DWImageFormatException e7)
+		{
+			sector = diskDrives.nullSector();
+			logger.error("DoOP_READEX: " + e7.getMessage());
+			result = DWDefs.DWERROR_READ;
+		} 
+		
 				
 		// artificial delay test
 		if (config.containsKey("ReadDelay"))
@@ -871,7 +840,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				return;
 			}
 
-			if (((mysum[0] == cocosum[0]) && (mysum[1] == cocosum[1])) || config.getBoolean("LieAboutCRC",false))
+			if (((mysum[0] == cocosum[0]) && (mysum[1] == cocosum[1])) || config.getBoolean("ProtocolLieAboutCRC",false))
 			{
 				// Good checksum, all is well
 				sectorsRead++;
@@ -1440,18 +1409,18 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			}	
 			else
 			{
-				logger.error("Serial mode requires both SerialDevice and CocoModel to be set, cannot use this configuration");
+				logger.error("Serial mode requires both SerialDevice and CocoModel to be set, please configure this instance.");
 				//wanttodie = true;
 			}
 		}
-		else if (config.getString("DeviceType").equalsIgnoreCase("tcp"))
+		else if (config.getString("DeviceType").equalsIgnoreCase("tcp") || config.getString("DeviceType").equalsIgnoreCase("tcp-server"))
 		{
 			// create TCP device
-			if (config.containsKey("TCPDevicePort"))		
+			if (config.containsKey("TCPServerPort"))		
 			{
 				try 
 				{
-					protodev = new DWTCPDevice(this.handlerno, config.getInt("TCPDevicePort"));
+					protodev = new DWTCPDevice(this.handlerno, config.getInt("TCPServerPort"));
 				} 
 				catch (IOException e) 
 				{
@@ -1461,7 +1430,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			}	
 			else
 			{
-				logger.error("TCP mode requires TCPDevicePort to be set, cannot use this configuration");
+				logger.error("TCP server mode requires TCPServerPort to be set, cannot use this configuration");
 				//wanttodie = true;
 			}
 			
@@ -1483,7 +1452,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			}	
 			else
 			{
-				logger.error("TCP mode requires TCPClientPort and TCPClientHost to be set, cannot use this configuration");
+				logger.error("TCP client mode requires TCPClientPort and TCPClientHost to be set, cannot use this configuration");
 				//wanttodie = true;
 			}
 			
@@ -1509,25 +1478,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		// text += "Total Read Sectors:  " + String.format("%6d",DriveWireServer.getHandler(handlerno).getSectorsRead()) + "  (" + DriveWireServer.getHandler(handlerno).getReadRetries() + " retries)\r\n";
 		//text += "Total Write Sectors: " + String.format("%6d",DriveWireServer.getHandler(handlerno).getSectorsWritten()) + "  (" + DriveWireServer.getHandler(handlerno).getWriteRetries() + " retries)\r\n";
 	
-		text += "\r\n";
-	
-		text += "D#     Sectors        LSN   WP       Reads  Writes  Dirty \r\n";
-	
-		for (int i = 0;i<this.diskDrives.getMaxDrives();i++)
-		{
-			if (this.getDiskDrives().diskLoaded(i))
-			{
-			 
-				text += "X"+ String.format("%-3d ",i);
-				text += String.format("%9d ", this.getDiskDrives().getDiskSectors(i));
-				text += String.format(" %9d ", this.getDiskDrives().getLSN(i));
-				text += String.format("  %5s  ", this.getDiskDrives().getWriteProtect(i));
-				text += String.format(" %6d ", this.getDiskDrives().getReads(i));
-				text += String.format(" %6d ", this.getDiskDrives().getWrites(i));
-				text += String.format(" %5d ", this.getDiskDrives().getDirtySectors(i));
-				text += "\r\n";
-			}
-		}
+		
 		
 		return(text);
 	}
@@ -1537,7 +1488,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 
 	public String getName()
 	{
-		return (this.config.getString("Name","Unnamed #" + this.handlerno));
+		return (this.config.getString("[@name]","Unnamed #" + this.handlerno));
 			
 	}
 	
@@ -1581,6 +1532,20 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	public DWHelp getHelp() 
 	{
 		return dwhelp;
+	}
+
+
+	@Override
+	public boolean isReady() 
+	{
+		return this.ready ;
+	}
+
+
+	@Override
+	public void submitConfigEvent(String key, String val)
+	{
+		DriveWireServer.submitInstanceConfigEvent(this.handlerno, key, val);
 	}
 
 

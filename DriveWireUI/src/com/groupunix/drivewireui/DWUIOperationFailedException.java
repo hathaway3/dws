@@ -9,4 +9,14 @@ public class DWUIOperationFailedException extends Exception
 	{
 		super(msg);
 	}
+
+	public DWUIOperationFailedException(byte err)
+	{
+		super(UIUtils.prettyDWError(0xFF & err));
+	}
+
+	public DWUIOperationFailedException(byte err, String msg)
+	{
+		super(UIUtils.prettyDWError(0xFF & err) + ": " + msg);
+	}
 }

@@ -12,7 +12,6 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class DWDMKDisk extends DWDisk
 {
@@ -22,9 +21,9 @@ public class DWDMKDisk extends DWDisk
 	private DWDMKDiskHeader header;
 	
 	
-	public DWDMKDisk(DWProtocol dwproto, FileObject fileobj) throws IOException, DWImageFormatException
+	public DWDMKDisk(FileObject fileobj) throws IOException, DWImageFormatException
 	{
-		super(dwproto,fileobj);
+		super(fileobj);
 		
 		this.setParam("_format", "dmk");
 		
@@ -160,8 +159,8 @@ public class DWDMKDisk extends DWDisk
 		
 		if ((lsn > -1) && (lsn < this.sectors.size()))
 		{
-			this.sectors.set(lsn, new DWDiskSector(lsn, idam.getSectorSize()));
-			this.sectors.get(lsn).setData(getSectorDataFrom(idam, track));
+			this.sectors.set(lsn, new DWDiskSector(this, lsn, idam.getSectorSize()));
+			this.sectors.get(lsn).setData(getSectorDataFrom(idam, track), false);
 		}
 		else
 		{
@@ -288,46 +287,26 @@ public class DWDMKDisk extends DWDisk
 
 
 
-	public static int considerImage(FileObject fobj)
+	public static int considerImage(byte[] hdr, long fobjsize)
 	{
-		// check this object for valid DMK, vote mess style
-		int vote = DWDefs.DISK_CONSIDER_NO;
-		
-		try
-		{
-		
-		    long fobjsize = fobj.getContent().getSize();
 		    
-			// is it big enough to have a header
-			if (fobjsize > 16)
-			{
-				// read disk header
-				int readres = 0;
-				byte[] hbuff = new byte[16];
-				InputStream fis = fobj.getContent().getInputStream();
-				
-				while (readres < 16)
-					readres += fis.read(hbuff, readres, 16 - readres);
-				
-				fis.close();
-				
-				// make a header object
-				DWDMKDiskHeader header = new DWDMKDiskHeader(hbuff);
-				
-				// is the size right?
-				if (fobjsize ==  (16 + (header.getSides() * header.getTracks() * header.getTrackLength())))
-				{
-					// good enough for mess, good enough for me
-					vote = DWDefs.DISK_CONSIDER_YES;
-				}
-				
-			}
-		}
-		catch (IOException e)
+		// is it big enough to have a header
+		if (fobjsize > 16)
 		{
+
+			// make a header object
+			DWDMKDiskHeader header = new DWDMKDiskHeader(hdr);
+			
+			// is the size right?
+			if (fobjsize ==  (16 + (header.getSides() * header.getTracks() * header.getTrackLength())))
+			{
+				// good enough for mess, good enough for me
+				return(DWDefs.DISK_CONSIDER_YES);
+			}
+			
 		}
 		
-		return vote;
+		return(DWDefs.DISK_CONSIDER_NO);
 	}
 
 }

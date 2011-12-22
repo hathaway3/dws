@@ -1,7 +1,7 @@
 package com.groupunix.drivewireserver;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -26,12 +26,15 @@ public class DWUIClientThread implements Runnable {
 	private LinkedBlockingQueue<DWEvent> eventQueue = new LinkedBlockingQueue<DWEvent>();
 
 	private LinkedList<DWUIClientThread> clientThreads;
+
+	private BufferedOutputStream bufferedout;
 	
 	
 	public DWUIClientThread(Socket skt, LinkedList<DWUIClientThread> clientThreads) 
 	{
 		this.skt = skt;
 		this.clientThreads = clientThreads;
+		
 		
 		commands = new DWCommandList(null);
 		commands.addcommand(new UICmd(this));
@@ -41,7 +44,10 @@ public class DWUIClientThread implements Runnable {
 	
 	public void run() 
 	{
-		this.clientThreads.add(this);
+		synchronized(this.clientThreads)
+		{
+			this.clientThreads.add(this);
+		}
 		
 		Thread.currentThread().setName("dwUIcliIn-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
@@ -53,8 +59,7 @@ public class DWUIClientThread implements Runnable {
 		
 		try 
 		{
-			skt.getOutputStream().write(("Connected to DriveWire " + DriveWireServer.DWServerVersion + "\r\n").getBytes());
-			
+			this.bufferedout = new BufferedOutputStream(skt.getOutputStream());
 			
 			// cmd loop
 			
@@ -77,33 +82,32 @@ public class DWUIClientThread implements Runnable {
 						if (cmd.length() > 0)
 						{
 							doCmd(cmd.trim());
+							wanttodie = true;
 							cmd = "";
 						}
 					}
-					else
+					else if ((databyte > -1) && (databyte != 13))
 					{
-						if ((databyte == 8) && (cmd.length() > 0))
-						{
-							cmd = cmd.substring(0, cmd.length() - 1);
-						}
-						else if ((databyte > 0) && (databyte != 13))
-						{
-							cmd += Character.toString((char) databyte);
-						}
+						cmd += Character.toString((char) databyte);
 					}
+					
 				}
 			}
 			
+			this.bufferedout.close();
 			skt.close();
 			
 			
 		} 
 		catch (IOException e) 
 		{
-			logger.warn("IO Exception: " + e.getMessage());
+			logger.debug("IO Exception: " + e.getMessage());
 		}
-
-		this.clientThreads.remove(this);
+		
+		synchronized(this.clientThreads)
+		{
+			this.clientThreads.remove(this);
+		}
 		
 		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
 			logger.debug("exit");
@@ -115,62 +119,125 @@ public class DWUIClientThread implements Runnable {
 	
 	private void doCmd(String cmd) throws IOException 
 	{
-		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
-			logger.debug("got command '" + cmd + "'");
 		
-		skt.getOutputStream().write(("\n>>\n").getBytes());
+		// grab instance
+		int div = cmd.indexOf(0);
+		
+		// malformed command
+		if (div < 1)
+		{
+			sendUIresponse(new DWCommandResponse(false, DWDefs.RC_UI_MALFORMED_REQUEST, "Malformed UI request (no instance.. old UI?)"));
+			return;
+		}
+		else
+		{
+			// non numeric instance..
+			try
+			{
+				this.setInstance(Integer.parseInt(cmd.substring(0, div)));
+			}
+			catch (NumberFormatException e)
+			{
+				sendUIresponse(new DWCommandResponse(false, DWDefs.RC_UI_MALFORMED_REQUEST, "Malformed UI request (bad instance)"));
+				return;
+			}
+			
+			// invalid length
+			if (cmd.length() < div+2)
+			{
+				sendUIresponse(new DWCommandResponse(false, DWDefs.RC_UI_MALFORMED_REQUEST, "Malformed UI request (no command)"));
+				return;
+			}
+			
+		}
+		
+		// strip instance 
+		cmd = cmd.substring(div+1);
+		
+		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+			logger.debug("UI command '" + cmd + "' for instance " + this.instance);
 		
 		// wait for server/instance ready
-		while (!DriveWireServer.isReady())
+		int waits = 0;
+		while (!DriveWireServer.isReady() && (waits < DWDefs.UITHREAD_SERVER_WAIT_TIME))
 		{
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			try 
+			{
+				Thread.sleep(DWDefs.UITHREAD_WAIT_TICK);
+				waits += DWDefs.UITHREAD_WAIT_TICK;
+			} 
+			catch (InterruptedException e) 
+			{
+				logger.warn("Interrupted while waiting for server to be ready");
+				sendUIresponse(new DWCommandResponse(false, DWDefs.RC_SERVER_NOT_READY, "Interrupted while waiting for server to be ready"));
+				return;
 			}
 		}
+		
+		if (!DriveWireServer.isReady())
+		{
+			logger.warn("Timed out waiting for server to be ready");
+			sendUIresponse(new DWCommandResponse(false, DWDefs.RC_SERVER_NOT_READY, "Timed out waiting for server to be ready"));
+			return;
+		}
+		
 		
 		// wait for instance ready..
 		if (this.instance > -1)
 		{
-			while (!DriveWireServer.getHandler(instance).isReady())
+			waits = 0;
+			while (!DriveWireServer.getHandler(instance).isReady() && (waits < DWDefs.UITHREAD_INSTANCE_WAIT_TIME))
 			{
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				try 
+				{
+					Thread.sleep(DWDefs.UITHREAD_WAIT_TICK);
+					waits += DWDefs.UITHREAD_WAIT_TICK;
+				} 
+				catch (InterruptedException e) 
+				{
+					logger.warn("Interrupted while waiting for instance ready");
+					sendUIresponse(new DWCommandResponse(false, DWDefs.RC_INSTANCE_NOT_READY, "Interrupted while waiting for instance ready"));
+					return;
 				}
+			}
+			
+			if (!DriveWireServer.getHandler(instance).isReady())
+			{
+				logger.warn("Timed out waiting for instance #" + instance + " to be ready");
+				sendUIresponse(new DWCommandResponse(false, DWDefs.RC_INSTANCE_NOT_READY, "Timed out waiting for instance #" + instance + " to be ready"));
+				return;
 			}
 		}
 		
 		
 		DWCommandResponse resp = this.commands.parse(cmd);
 		
-		if (resp.getSuccess())
-		{
+		sendUIresponse(resp);
 
-			sendUIresponse(skt.getOutputStream(),resp.getResponseText());
-		}
-		else
-		{
-
-			sendUIresponse(skt.getOutputStream(),"FAIL " + (resp.getResponseCode() & 0xFF) + " " + resp.getResponseText());
-
-		}
-		
-
-		
-		skt.getOutputStream().write(("<<\n").getBytes());
+		this.bufferedout.flush();
 	}
 
 
-	private void sendUIresponse(OutputStream outputStream, String txt) throws IOException 
+	private void sendUIresponse(DWCommandResponse resp) throws IOException 
 	{
-		if (!(txt == null))
-			outputStream.write(txt.getBytes());
-
+		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+		{
+			if (resp.getResponseCode() == 0)
+				logger.debug("UI command success");
+			else
+				logger.debug("UI command failed: #" + (0xFF + resp.getResponseCode()) + ": " + resp.getResponseText() );
+		}
+		
+		// response header 0, (single byte RC), 0
+		this.bufferedout.write(0);
+		this.bufferedout.write(resp.getResponseCode() & 0xFF);
+		this.bufferedout.write(0);
+		
+		// data
+		if (resp.isUsebytes() && (resp.getResponseBytes() != null))
+			this.bufferedout.write(resp.getResponseBytes());
+		else if (resp.getResponseText() != null)
+			this.bufferedout.write(resp.getResponseText().getBytes());
 	}
 
 
@@ -178,8 +245,13 @@ public class DWUIClientThread implements Runnable {
 	public void setInstance(int handler) 
 	{
 		this.instance = handler;
-		if (!this.commands.validate("dw"))
-			this.commands.addcommand(new DWCmd(DriveWireServer.getHandler(handler)));
+		
+		// valid instances get a dw cmd mapping
+		if (handler > -1)
+		{
+			if (!this.commands.validate("dw"))
+				this.commands.addcommand(new DWCmd(DriveWireServer.getHandler(handler)));
+		}
 	}
 
 	public int getInstance() 
@@ -187,9 +259,9 @@ public class DWUIClientThread implements Runnable {
 		return this.instance;
 	}
 
-	public OutputStream getOutputStream() throws IOException 
+	public BufferedOutputStream getOutputStream() throws IOException 
 	{
-		return skt.getOutputStream();
+		return this.bufferedout;
 	}
 
 	public Socket getSocket() {

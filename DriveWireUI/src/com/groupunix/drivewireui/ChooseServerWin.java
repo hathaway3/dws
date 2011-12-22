@@ -40,6 +40,12 @@ public class ChooseServerWin extends Dialog {
 		shlChooseServer.open();
 		shlChooseServer.layout();
 		Display display = getParent().getDisplay();
+		
+		int x = getParent().getBounds().x + (getParent().getBounds().width / 2) - (shlChooseServer.getBounds().width / 2);
+		int y = getParent().getBounds().y + (getParent().getBounds().height / 2) - (shlChooseServer.getBounds().height / 2);
+		
+		shlChooseServer.setLocation(x, y);
+		
 		while (!shlChooseServer.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -84,6 +90,8 @@ public class ChooseServerWin extends Dialog {
 						MainWin.addServerToHistory(cmbHost.getText());
 						MainWin.setHost(hp[0]);
 						MainWin.setPort(hp[1]);
+						MainWin.restartServerConn();
+						
 					
 						e.display.getActiveShell().close();
 					}

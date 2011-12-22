@@ -10,6 +10,7 @@ public class DWServerFileSystemView extends FileSystemView {
 
 	private String lastdir = ".";
 	private DWServerFileChooser chooser = null;
+
 	
 	public DWServerFileSystemView(DWServerFileChooser chooser) 
 	{
@@ -26,22 +27,25 @@ public class DWServerFileSystemView extends FileSystemView {
 	@Override
 	public File[] getRoots()
 	{
-		File[] res = null;
+		if (this.chooser.getRootCache() == null)
+		{
 		
-		try 
-		{
-			res = UIUtils.getFileArray("ui server file roots");
-		} 
-		catch (IOException e) 
-		{
-			MainWin.showError("An IO error occured", "Unable to retrieve a list of file system roots.", e.getMessage());
-		} 
-		catch (DWUIOperationFailedException e) 
-		{
-			MainWin.showError("A DW error occured", "Unable to retrieve a list of file system roots.", e.getMessage());
+			try 
+			{
+				this.chooser.setRootCache(UIUtils.getFileArray("ui server file roots"));
+			} 
+			catch (IOException e) 
+			{
+				MainWin.showError("An IO error occured", "Unable to retrieve a list of file system roots.", e.getMessage());
+			} 
+			catch (DWUIOperationFailedException e) 
+			{	
+				MainWin.showError("A DW error occured", "Unable to retrieve a list of file system roots.", e.getMessage());
+			}
 		}
 		
-		return(res);
+		
+		return(this.chooser.getRootCache());
 	}
 	
 	@Override
@@ -112,7 +116,6 @@ public class DWServerFileSystemView extends FileSystemView {
 	
 	 public DWServerFile createFileObject(DWServerFile dir, String filename)
 	 {
-		 System.out.println("Create FO1: " + dir.getAbsolutePath() + dir.getSeparator() + filename);
 		DWServerFile f = new DWServerFile(dir.getAbsolutePath() + dir.getSeparator() + filename);
 		return f;
 		 
@@ -125,8 +128,7 @@ public class DWServerFileSystemView extends FileSystemView {
 		 
 		 if ((path == null) || (this.chooser == null) || (this.chooser.getSeparator() == null))
 		 {
-			 System.out.println("No sir, you cannot have the non existent file!");
-			 return(new DWServerFile("THERE IS NO FILE DAMMIT"));
+			 return(new DWServerFile("THERE IS NO FILE YOU INSENSITIVE CLOD"));
 		 }
 		 
 		 
@@ -147,7 +149,6 @@ public class DWServerFileSystemView extends FileSystemView {
      
 	 public File getChild(File parent, String fileName)
 	 {
-		 System.out.println("getChild");
 		return null; 
 	 }
       
@@ -168,13 +169,11 @@ public class DWServerFileSystemView extends FileSystemView {
 
 	 public Icon getSystemIcon(File f)
 	 {
-		 System.out.println("getSystemIcon for " + f.getPath());
 		return null;
 	 }
      
 	 public String	getSystemTypeDescription(File f)
 	 {
-		 System.out.println("getSystemTypeDescription");
 		return "description";
 	 }
 	 
@@ -196,7 +195,6 @@ public class DWServerFileSystemView extends FileSystemView {
      
 	 public boolean isFileSystemRoot(File dir)
 	 {
-		 System.out.println("isFileSystemRoot");
 		return false;
 	 }
      

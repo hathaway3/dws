@@ -20,7 +20,10 @@ public class UICmdServerShow extends DWCommand {
 		commands.addcommand(new UICmdServerShowLocalDisks());
 		commands.addcommand(new UICmdServerShowSerialDevs());
 		commands.addcommand(new UICmdServerShowStatus());
-		commands.addcommand(new UICmdServerShowHelpTopics(dwuiClientThread));
+		commands.addcommand(new UICmdServerShowNet());
+		commands.addcommand(new UICmdServerShowLog(dwuiClientThread));
+		commands.addcommand(new UICmdServerShowTopics(dwuiClientThread));
+		commands.addcommand(new UICmdServerShowHelp(dwuiClientThread));
 	}
 
 	

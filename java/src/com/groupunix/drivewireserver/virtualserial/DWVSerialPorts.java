@@ -63,7 +63,7 @@ public class DWVSerialPorts {
 		bytelog = dwProto.getConfig().getBoolean("LogVPortBytes", false);
 		
 		
-		if (dwProto.getConfig().getBoolean("UseMIDI", true))
+		if (dwProto.getConfig().getBoolean("UseMIDI", false))
 		{
 			// initialize MIDI device to internal synth
 			logger.debug("initialize internal midi synth");
@@ -678,6 +678,8 @@ public class DWVSerialPorts {
 		try 
 		{
 			this.midiDevice.open();
+			DriveWireServer.submitMIDIEvent(this.dwProto.getHandlerNo(), "device", this.midiDevice.getDeviceInfo().getName());
+	    	
 			logger.info("midi: opened " + this.midiDevice.getDeviceInfo().getName());
 		} 
 		catch (MidiUnavailableException e) 
@@ -750,6 +752,8 @@ public class DWVSerialPorts {
 	public void setMidiVoicelock(boolean lock)
 	{
 		this.midiVoicelock = lock;
+		DriveWireServer.submitMIDIEvent(this.dwProto.getHandlerNo(), "voicelock", String.valueOf(lock));
+    	
 		logger.debug("MIDI: synth voicelock = " + lock);
 	}
 
@@ -780,6 +784,9 @@ public class DWVSerialPorts {
 				logger.warn("Failed to set soundbank '" + filename + "'");
 				return;
 			}
+			
+			DriveWireServer.submitMIDIEvent(this.dwProto.getHandlerNo(), "soundbank", filename);
+	    	
 			
 		}
 		else
@@ -821,11 +828,13 @@ public class DWVSerialPorts {
 		{
 		    HierarchicalConfiguration mprof = it.next();
 		    
-		    if (mprof.getString("name").equalsIgnoreCase(profile))
+		    if (mprof.containsKey("[@name]") && mprof.getString("[@name]").equalsIgnoreCase(profile))
 		    {
 		    	
 		    	this.midiProfConf = (HierarchicalConfiguration) mprof.clone();
 		    	doMidiTranslateCurrentVoices();
+		    	
+		    	DriveWireServer.submitMIDIEvent(this.dwProto.getHandlerNo(), "profile", profile);
 		    	
 		    	logger.debug("MIDI: set profile to '" + profile + "'");
 		    	return(true);

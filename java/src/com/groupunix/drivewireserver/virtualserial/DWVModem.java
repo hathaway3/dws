@@ -459,6 +459,7 @@ public class DWVModem {
 		
 		// start TCP thread
 		this.tcpthread = new Thread(new DWVModemConnThread(this.handlerno, this.vport, tcphost, tcpport));
+		this.tcpthread.setDaemon(true);
 		//this.tcpthread = new Thread(new DWVPortTCPConnectionThread(this.handlerno, this.vport, tcphost, tcpport));
 		
 		this.tcpthread.start();

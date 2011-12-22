@@ -3,7 +3,6 @@ package com.groupunix.drivewireserver.dwcommands;
 import java.io.IOException;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwexceptions.DWDisksetNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
@@ -34,88 +33,48 @@ public class DWCmdDiskWrite extends DWCommand {
 
 	public String getUsage() 
 	{
-		return "dw disk write {# [path] | dset [dset]}";
+		return "dw disk write # [path]";
 	}
 
 
 	public DWCommandResponse parse(String cmdline) 
 	{
 		if (cmdline.length() == 0)
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk write requires at least one argument."));
-		}
-
+			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error"));
+		
 		String[] args = cmdline.split(" ");
 		
-
-		
-		if (dwProto.getDiskDrives().isDiskNo(args[0]))
+		if (args.length == 1)
 		{
-			// write disk in drive..
+			try
+			{
+				return(doDiskWrite(dwProto.getDiskDrives().getDriveNoFromString(args[0])));
+			}
+			catch (DWDriveNotValidException e)
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
+			}
+		}
+		else if (args.length == 2)
+		{
 			
-			if (args.length > 1)
+			try
 			{
-				// write to new .dsk path
-				return(doDiskWrite(Integer.parseInt(args[0]), DWUtils.dropFirstToken(cmdline)));
-				
+				return(doDiskWrite(dwProto.getDiskDrives().getDriveNoFromString(args[0]), args[1] ));
 			}
-			else
+			catch (DWDriveNotValidException e)
 			{
-				// write to current .dsk
-				return(doDiskWrite(Integer.parseInt(args[0])));
+				// its an int, but its not a valid drive
+				return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,"Invalid drive number."));
 			}
+			
 		}
-		else if (args.length > 2)
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw disk write takes up to 2 arguments."));
-		}
-		else if (args.length == 1)
-		{
-			// write current drives to set..
-			return(doDiskWrite(args[0]));
-		}
-		else
-		{
-			if (this.dwProto.getDiskDrives().isDiskSetName(args[0]))
-			{
-				// write one set to another..
-				return(doDiskWrite(args[0], args[1]));
-			}
-			else
-			{
-				return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,"Unknown diskset '" + args[0] + "'."));
-			}
-		}
+			
+		return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error"));
+		
 	}
 
 	
-	private DWCommandResponse doDiskWrite(String srcset, String dstset) 
-	{
-
-			try 
-			{
-				this.dwProto.getDiskDrives().SaveDiskSet(srcset, dstset);
-				return(new DWCommandResponse("Wrote set '" + srcset + "' to set '" + dstset + "'."));
-			} 
-			catch (DWDisksetNotValidException e) 
-			{
-				return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
-			}
-	}
-	
-	
-	private DWCommandResponse doDiskWrite(String setname) 
-	{
-		try 
-		{
-			this.dwProto.getDiskDrives().SaveDiskSet(setname);
-			return(new DWCommandResponse("Wrote current disk definitions to set '" + setname + "'."));
-		} 
-		catch (DWDisksetNotValidException e) 
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_NO_SUCH_DISKSET,e.getMessage()));
-		}
-	}
 		
 	private DWCommandResponse doDiskWrite(int driveno)
 	{
@@ -149,6 +108,7 @@ public class DWCmdDiskWrite extends DWCommand {
 		
 		try
 		{
+			System.out.println("write " + path);
 			
 			dwProto.getDiskDrives().writeDisk(driveno,path);
 					

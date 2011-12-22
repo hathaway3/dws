@@ -1,7 +1,6 @@
 package com.groupunix.drivewireserver.dwdisk;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.apache.commons.vfs.Capability;
 import org.apache.commons.vfs.FileObject;
@@ -15,7 +14,6 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 
 public class DWRawDisk extends DWDisk {
@@ -25,15 +23,14 @@ public class DWRawDisk extends DWDisk {
 	private static final Logger logger = Logger.getLogger("DWServer.DWRawDisk");
 	
 	
-	public DWRawDisk(DWProtocol dwproto, FileObject fileobj, int sectorsize, int maxsectors) throws IOException, DWImageFormatException
+	public DWRawDisk(FileObject fileobj, int sectorsize, int maxsectors) throws IOException, DWImageFormatException
 	{
-		super(dwproto,fileobj);
+		super(fileobj);
 		
 		// set internal info
 		this.setParam("_sectorsize", sectorsize);
 		this.setParam("_maxsectors", maxsectors);
 		this.setParam("_format", "raw");
-		this.setParam("_padsectors", false);
 		
 		// expose user options
 		this.setParam("syncfrom",DWDefs.DISK_DEFAULT_SYNCFROM);
@@ -41,7 +38,7 @@ public class DWRawDisk extends DWDisk {
 		
 		this.setParam("offset", DWDefs.DISK_DEFAULT_OFFSET);
 		this.setParam("sizelimit",DWDefs.DISK_DEFAULT_SIZELIMIT);
-		
+		this.setParam("expand",DWDefs.DISK_DEFAULT_EXPAND);
 		load();
 		
 		logger.debug("New DWRawDisk for '" + this.getFilePath() + "'");
@@ -120,7 +117,7 @@ public class DWRawDisk extends DWDisk {
 		   	if (bytesRead == sectorsize)
 		   	{
 		   		
-		   		this.sectors.set(sector, new DWDiskSector(sector, sectorsize));
+		   		this.sectors.set(sector, new DWDiskSector(this, sector, sectorsize));
 		   		this.sectors.get(sector).setData(buffer, false);
 		   		
 		   		sector++;
@@ -134,17 +131,7 @@ public class DWRawDisk extends DWDisk {
 		if (bytesRead > 0)
 		{
 			
-			if (this.isPadPartialSectors())
-			{
-				this.sectors.add(sector, new DWDiskSector(sector, this.getSectorSize()));
-		   		this.sectors.get(sector).setData(buffer, false);
-		   		sector++;
-		   		logger.info("File length doesn't match current sector size of " + this.getSectorSize() + ", the last " + bytesRead + " bytes were padded to form a full sector.");
-			}
-			else
-			{
-				logger.warn("File length doesn't match current sector size of " + this.getSectorSize() + ", the last " + bytesRead + " bytes are ignored and may be overwritten.");
-			}
+			throw new DWImageFormatException("Incomplete sector data on sector " + sector);
 		}
 		
 		
@@ -197,7 +184,7 @@ public class DWRawDisk extends DWDisk {
 			
 			// expand disk
 			expandDisk(effLSN);
-			this.sectors.add(effLSN, new DWDiskSector(effLSN, this.getSectorSize()));
+			this.sectors.add(effLSN, new DWDiskSector(this, effLSN, this.getSectorSize()));
 		}
 		
 		return(this.sectors.get(effLSN).getData());	
@@ -215,7 +202,7 @@ public class DWRawDisk extends DWDisk {
 		
 		for (int i = this.sectors.size();i < target;i++)
 		{
-			this.sectors.add(i, new DWDiskSector(0, this.getSectorSize()));
+			this.sectors.add(i, new DWDiskSector(this, 0, this.getSectorSize()));
 		}
 		this.setParam("_sectors", target);
 	}
@@ -238,7 +225,7 @@ public class DWRawDisk extends DWDisk {
 			{
 				// expand disk / add sector
 				expandDisk(effLSN);
-				this.sectors.add(effLSN, new DWDiskSector(effLSN, this.getSectorSize()));
+				this.sectors.add(effLSN, new DWDiskSector(this, effLSN, this.getSectorSize()));
 				//logger.debug("new sector " + effLSN);
 			}
 			
@@ -352,11 +339,6 @@ public class DWRawDisk extends DWDisk {
 		return this.params.getBoolean("syncto",DWDefs.DISK_DEFAULT_SYNCTO);
 	}
 	
-	private boolean isPadPartialSectors() 
-	{
-		return this.params.getBoolean("_padsectors",DWDefs.DISK_DEFAULT_PADSECTORS);
-	}
-
 
 
 	private int getOffset() 
@@ -382,48 +364,29 @@ public class DWRawDisk extends DWDisk {
 
 	
 	
-	public static int considerImage(FileObject fobj)
+	public static int considerImage(byte[] header, long fobjsize)
 	{
-		int vote = DWDefs.DISK_CONSIDER_NO;
-		
-		try
+		// is it right size for raw sectors
+		if (fobjsize % DWDefs.DISK_SECTORSIZE == 0) 
 		{
-		
-			long fobjsize = fobj.getContent().getSize();
 			
-			// is it right size for raw sectors
-			if (fobjsize % 256 == 0)
+			// is it an os9 filesystem
+			if (fobjsize > 3)
 			{
-				// sized right
-				vote = DWDefs.DISK_CONSIDER_MAYBE;
 				
-				// is it an os9 filesystem
-				if (fobjsize > 0)
+				if (fobjsize == ((0xFF & header[0]) * 65535 + (0xFF & header[1]) * 256 + (0xFF & header[2]))*256)
 				{
-					// read LSN0 DD_TOT
-					int readres = 0;
-					byte[] hbuff = new byte[3];
-					InputStream fis = fobj.getContent().getInputStream();
-			    
-					while (readres < 3)
-						readres += fis.read(hbuff, readres, 3 - readres);
-					
-					fis.close();
-				
-					if (fobjsize == ((0xFF & hbuff[0]) * 65535 + (0xFF & hbuff[1]) * 256 + (0xFF & hbuff[2]))*256)
-					{
-						// exact match, lets claim it
-						vote = DWDefs.DISK_CONSIDER_YES;
-					}
+					// exact match, lets claim it
+					return(DWDefs.DISK_CONSIDER_YES);
 				}
 			}
-		}
-		catch (IOException e)
-		{
+			
+			// not os9 so can't be sure?
+			return(DWDefs.DISK_CONSIDER_MAYBE);
 		}
 		
-
-		return(vote);
+		// not /256
+		return(DWDefs.DISK_CONSIDER_NO);
 	}
 	
 }

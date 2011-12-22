@@ -18,8 +18,8 @@ public class UICmd extends DWCommand
 		commands = new DWCommandList(null);
 		commands.addcommand(new UICmdInstance(ct));
 		commands.addcommand(new UICmdServer(ct));
-		commands.addcommand(new UICmdDiskset(ct));
-		commands.addcommand(new UICmdLogview(ct));
+		commands.addcommand(new UICmdSync(ct));
+		commands.addcommand(new UICmdTest(ct));
 	} 
 
 	
