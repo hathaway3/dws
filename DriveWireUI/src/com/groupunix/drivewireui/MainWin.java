@@ -856,30 +856,7 @@ public class MainWin {
 		});
 		mntmServer_1.setText("Server...");
 		
-		MenuItem mntmInstanceConfig = new MenuItem(menu_config, SWT.NONE);
-		mntmInstanceConfig.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/cog-edit.png"));
-		mntmInstanceConfig.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				InstanceConfigWin window = new InstanceConfigWin(shell,SWT.DIALOG_TRIM);
 
-				try 
-				{
-					window.open();
-				} 
-				catch (DWUIOperationFailedException e1) 
-				{
-					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
-				} 
-				catch (IOException e1) 
-				{
-					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
-				}
-			
-			}
-		});
-		mntmInstanceConfig.setText("Instance...");
 		
 		mntmUserInterface = new MenuItem(menu_config, SWT.NONE);
 		mntmUserInterface.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/image-edit.png"));
