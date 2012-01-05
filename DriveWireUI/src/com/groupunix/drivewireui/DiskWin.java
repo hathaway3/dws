@@ -3,13 +3,19 @@ package com.groupunix.drivewireui;
 
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Color;
@@ -43,20 +49,22 @@ public class DiskWin {
 	
 	private Composite compositeDisk;
 	
-	public static Color colorWhite;
-	public static Color colorRed;
-	public static Color colorGreen;
-	public static Color colorBlack;
-	public static Color colorDiskBG;
-	public static Color colorDiskFG;
-	public static Color colorDiskGraphBG;
-	public static Color colorDiskGraphLSN;
-	public static Color colorDiskClean;
-	public static Color colorDiskDirty;
-	public static Color colorShadow;
+	public static Color colorWhite = new Color(Display.getDefault(), 255,255,255);
+	public static Color colorRed = new Color(Display.getDefault(), 255,0,0);
+	public static Color colorGreen = new Color(Display.getDefault(), 0,255,0);
+	public static Color colorBlack = new Color(Display.getDefault(), 0,0,0);
+	public static Color colorDiskBG = new Color(Display.getDefault(), 0x49,0x48,0x48);
+
+	public static Color colorDiskFG = new Color(Display.getDefault(), 0xb5,0xb5,0xb5);
+	public static Color colorDiskGraphFG  = new Color(Display.getDefault(), 0xa5,0xa5,0xa5);
+	public static Color colorDiskGraphBG  = new Color(Display.getDefault(), 0x89,0x89,0x89);
+
+	public static Color colorDiskDirty = new Color(Display.getDefault(), 255,0,0);
+	public static Color colorDiskClean = new Color(Display.getDefault(), 150,0,0);
+	public static Color colorShadow = new Color(Display.getDefault(), 0x31,0x31,0x31);
 	
-	protected static Font fontDiskNumber;
-	protected static Font fontDiskGraph;
+	public static Font fontDiskNumber;
+	public static Font fontDiskGraph;
 	
 	private Boolean driveactivity = false;
 	
@@ -70,6 +78,7 @@ public class DiskWin {
 	private int inity;
 	
 	protected static Image background;
+	private Button btnDiskFile;
 	
 	
 	public DiskWin(DiskDef cdisk, int x, int y)
@@ -78,28 +87,27 @@ public class DiskWin {
 
 		this.initx = x;
 		this.inity = y;
-		
-		colorWhite = new Color(display, 255,255,255);
-		colorRed = new Color(display, 255,0,0);
-		colorGreen = new Color(display, 0,255,0);
-		colorBlack = new Color(display, 0,0,0);
-		colorDiskBG = new Color(display, 0x49,0x48,0x48);
-		colorDiskFG = new Color(display, 0xb5,0xb5,0xb5);
-		colorDiskGraphBG = new Color(display, 0x89,0x89,0x89);
-		colorDiskGraphLSN = new Color(display, 0x2d, 0x2d, 0x2d);
-		colorDiskDirty = new Color(display, 255,0,0);
-		colorDiskClean = new Color(display, 150,0,0);
-		colorShadow = new Color(display, 0x31,0x31,0x31);
-		
-		fontDiskNumber = UIUtils.findSizedFont("Liberation Sans","255",90,50,SWT.BOLD);
-		
-		
-	
-		fontDiskGraph = UIUtils.findSizedFont("Liberation Sans Narrow","Aaron",29,17,SWT.NORMAL);
 			
 		background = org.eclipse.wb.swt.SWTResourceManager.getImage(DiskWin.class, "/disk/driveinfo_bg.png");
 		
+		
+		
+		if (DiskWin.fontDiskNumber == null)
+		{
+			HashMap<String,Integer> fontmap = new HashMap<String,Integer>();
 			
+			fontmap.put("Droid Sans", SWT.BOLD);
+			DiskWin.fontDiskNumber = UIUtils.findFont(this.display, fontmap, "255", 81, 57);
+		}
+		
+		
+		if (DiskWin.fontDiskGraph == null)
+		{
+			HashMap<String,Integer> fontmap = new HashMap<String,Integer>();
+			
+			fontmap.put("Droid Sans", SWT.NORMAL);
+			DiskWin.fontDiskGraph = UIUtils.findFont(this.display, fontmap, "255", 20, 15);
+		}
 	}
 
 
@@ -248,7 +256,7 @@ public class DiskWin {
 	
 	protected void createContents() 
 	{
-		shlDwDrive = new Shell();
+		shlDwDrive = new Shell(SWT.DOUBLE_BUFFERED | SWT.DIALOG_TRIM);
 		//shlDwDrive.setMinimumSize(new Point(465, 430));
 		
 
@@ -271,7 +279,7 @@ public class DiskWin {
 		
 		shlDwDrive.setMinimumSize(background.getImageData().width, background.getImageData().height);
 		
-		setCompositeDisk(new Composite(shlDwDrive, SWT.NONE));
+		setCompositeDisk(new Composite(shlDwDrive, SWT.DOUBLE_BUFFERED));
 			
 		
 			
@@ -296,7 +304,7 @@ public class DiskWin {
 					if (currentDisk.isLoaded())
 					{
 						e.gc.setForeground(DiskWin.colorShadow); 
-						e.gc.drawText(currentDisk.getDriveNo()+"",75,138);
+						e.gc.drawText(currentDisk.getDriveNo()+"",75,138,true);
 					}
 										
 					e.gc.setForeground(DiskWin.colorDiskFG); 
@@ -322,12 +330,10 @@ public class DiskWin {
 					// disk status
 					if (currentDisk.isLoaded())
 					{
-						comboDiskPath.setText(UIUtils.shortenLocalURI(currentDisk.getPath()));
 						e.gc.drawImage(org.eclipse.wb.swt.SWTResourceManager.getImage(DiskWin.class, "/disk/disk_lever_inserted.png"), 320, 152);
 					}
 					else
 					{
-						comboDiskPath.setText("");
 						e.gc.drawImage(org.eclipse.wb.swt.SWTResourceManager.getImage(DiskWin.class, "/disk/disk_lever_ejected.png"), 320, 152);
 						
 						if (diskStatusItems != null)
@@ -341,29 +347,106 @@ public class DiskWin {
 					}
 					
 					
-					
 				}
 			});
 			getCompositeDisk().setBackground(colorDiskBG);
 			getCompositeDisk().setLayout(null);
 			
 			comboDiskPath = new Combo(getCompositeDisk(), SWT.NONE);
+			comboDiskPath.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					
+					loadDisk(comboDiskPath.getText());
+				}
+			});
+			
+			comboDiskPath.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					if (e.keyCode == 13)
+					{
+						loadDisk(comboDiskPath.getText());
+					}
+					else if ((e.keyCode == 16777217) || (e.keyCode == 16777218))
+					{
+						e.doit = false;
+					}
+				}
+			});
+			
 			comboDiskPath.setBounds(25, 25, 365, 23);
 			
-			Button btnDiskFile = new Button(getCompositeDisk(), SWT.FLAT | SWT.CENTER);
+			// path combo
+			updatePathCombo();
+			
+			btnDiskFile = new Button(getCompositeDisk(), SWT.FLAT | SWT.CENTER);
+			btnDiskFile.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					MainWin.quickInDisk(shlDwDrive, currentDisk.getDriveNo());
+				}
+			});
 			btnDiskFile.setBounds(396, 24, 30, 26);
 			btnDiskFile.setBackground(DiskWin.colorDiskBG);
 			btnDiskFile.setText("...");
-			
-			
+			btnDiskFile.setFocus();
 			shlDwDrive.pack();
 	}
 
 	
 	
+	protected void updatePathCombo()
+	{
+		comboDiskPath.setRedraw(false);
+		String spath = UIUtils.shortenLocalURI(currentDisk.getPath());
+		
+		// reload history
+		comboDiskPath.removeAll();
+		List<String> dhist = MainWin.getDiskHistory();
+		for (String d : dhist)
+		{
+			comboDiskPath.add(d, 0);
+		}
+		
+		if (currentDisk.isLoaded())
+		{
+			if (comboDiskPath.indexOf(spath) > -1)
+			{
+				comboDiskPath.select(comboDiskPath.indexOf(spath));
+			}
+			else
+			{
+				comboDiskPath.setText(spath);
+			}
+		}
+		else
+		{
+			comboDiskPath.setText("");
+			
+		}
+		
+		if (btnDiskFile != null)
+			btnDiskFile.setFocus();
+		
+		comboDiskPath.setRedraw(true);
+	}
+
+
+
+
+	private void loadDisk(String path)
+	{
+		List<String> cmds = new ArrayList<String>();
+		cmds.add("dw disk insert " + currentDisk.getDriveNo() + " " + path);
+		
+		sendCommandDialog(cmds, "Loading disk image..", "Please wait while the server loads the disk image.");
+		MainWin.addDiskFileToHistory(path);
+		
+	}
+
+
 	
-
-
 	
 	
 
@@ -434,6 +517,8 @@ public class DiskWin {
 		this.compositeDisk.redraw();
 		this.updateTitlebar();
 		this.diskGraph.redraw();
+
+		updatePathCombo();
 	}
 
 
@@ -528,9 +613,25 @@ public class DiskWin {
 
 
 
+	protected void sendCommandDialog(final List<String> cmd, final String title, final String message) 
+	{
+		final Shell shell = this.shlDwDrive;
+		
+		display.asyncExec(
+				  new Runnable() {
+					  public void run()
+					  {
+						  SendCommandWin win = new SendCommandWin(shell, SWT.DIALOG_TRIM, cmd,title, message);
+						  win.open();
+		
+					  }
+				  });
+	}
 
-
 	
 	
 	
+	protected Button getBtnDiskFile() {
+		return btnDiskFile;
+	}
 }

@@ -12,11 +12,11 @@ public class DWUIOperationFailedException extends Exception
 
 	public DWUIOperationFailedException(byte err)
 	{
-		super(UIUtils.prettyDWError(0xFF & err));
+		super(MainWin.errorHelpCache.getErrMessage((int)(0xFF & err)));
 	}
 
 	public DWUIOperationFailedException(byte err, String msg)
 	{
-		super(UIUtils.prettyDWError(0xFF & err) + ": " + msg);
+		super(MainWin.errorHelpCache.getErrMessage((int)(0xFF & err)) + ": " + msg);
 	}
 }

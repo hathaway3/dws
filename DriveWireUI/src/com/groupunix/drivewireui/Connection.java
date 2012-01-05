@@ -9,8 +9,6 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
-import com.groupunix.drivewireserver.DWDefs;
-
 
 public class Connection 
 {
@@ -74,13 +72,13 @@ public class Connection
 
 	
 	
-	public void sendCommand(String cmd, int instance) throws IOException, DWUIOperationFailedException
+	public void sendCommand(int tid, String cmd, int instance) throws IOException, DWUIOperationFailedException
 	{
-		sendCommand(cmd, instance, false);
+		sendCommand(tid, cmd, instance, false);
 	}
 	
 
-	public void sendCommand(String cmd, int instance, boolean disp) throws IOException, DWUIOperationFailedException 
+	public void sendCommand(int tid, String cmd, int instance, boolean disp) throws IOException, DWUIOperationFailedException 
 	{
 		
 		// send command
@@ -93,14 +91,13 @@ public class Connection
 		}
 		else
 		{
-			if (disp)
-			{
-				MainWin.addToDisplay("");
+				String txt = "";
 				for (int i = 0;i<resp.size();i++)
 				{
-					MainWin.addToDisplay(resp.get(i).trim());
+					txt += resp.get(i) + "\n";
 				}
-			}
+				MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE, txt);
+			
 		}
 		
 		
@@ -122,10 +119,6 @@ public class Connection
 	
 	public StringReader loadReader(int instance, String arg) throws IOException, DWUIOperationFailedException 
 	{
-		//if (MainWin.config.getBoolean("ShowCommandsSent",false))
-		{
-			MainWin.addToDisplay("R>>> " + arg);
-		}
 		
 		sock.getOutputStream().write((instance + "").getBytes());
 		sock.getOutputStream().write(0);
@@ -176,10 +169,6 @@ public class Connection
 
 	public List<String> loadList(int instance, String arg) throws IOException, DWUIOperationFailedException 
 	{
-		//if (MainWin.config.getBoolean("ShowCommandsSent",false))
-		{
-			MainWin.addToDisplay("A>>> " + arg);
-		}
 		
 		sock.getOutputStream().write((instance + "").getBytes());
 		sock.getOutputStream().write(0);

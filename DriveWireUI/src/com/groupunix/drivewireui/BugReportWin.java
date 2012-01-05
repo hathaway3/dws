@@ -24,10 +24,7 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -221,14 +218,7 @@ public class BugReportWin extends Dialog {
 		lblDataToInclude.setText("What data would you like to include in this bug report?");
 		
 		
-		Control[] controls = shlBugReport.getChildren();
-		
-		/*
-		for (int i = 0;i<controls.length;i++)
-		{
-			controls[i].setFont(new Font(shlBugReport.getDisplay(), f));
-		}
-		*/
+	
 	}
 
 	/*
@@ -396,6 +386,9 @@ public class BugReportWin extends Dialog {
 		{
 			// 	finally.. submit this thing
 		
+			int tid = MainWin.taskman.addTask("Submit bug report");
+			MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE, "Submitting bug report...");
+			
 			URL url;
 			try 
 			{
@@ -408,13 +401,16 @@ public class BugReportWin extends Dialog {
 				
 				BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 				String line;
+				String txt = "";
 				while ((line = rd.readLine()) != null) 
 				{
-					MainWin.addToDisplay(line);  
+					txt += line;  
 				}
 				wr.close();
 				rd.close();
 
+				MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE, "Bug report accepted, thank you.");
+				
 				res = true;
 			} 
 			catch (MalformedURLException e) 

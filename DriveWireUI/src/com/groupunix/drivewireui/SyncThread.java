@@ -21,6 +21,8 @@ public class SyncThread implements Runnable
 	
 	private HashMap<String, String> params = new HashMap<String, String>();
 	private StringBuilder buffer = new StringBuilder(READ_BUFFER_SIZE * 2);
+	private LogItem logbuf = new LogItem();
+	private ServerStatusItem ssbuf = new ServerStatusItem();
 	
 	public SyncThread()
 	{
@@ -50,20 +52,20 @@ public class SyncThread implements Runnable
 		while (!wanttodie)
 		{
 			// change/establish connection
-			if (!(MainWin.getHost() == null) && !this.host.equals(MainWin.getHost()) || !(this.port == MainWin.getPort()) || (this.sock == null))		
+			if (!wanttodie && !(MainWin.getHost() == null) && !this.host.equals(MainWin.getHost()) || !(this.port == MainWin.getPort()) || (this.sock == null))		
 			{
 				
 				
 				if (!(sock == null))
 				{
-					MainWin.addToDisplay("Sync: Disconnecting from server..");
+					// TODO MainWin.addToDisplay("Sync: Disconnecting from server..");
 					try 
 					{
 						sock.close();
 					} 
 					catch (IOException e) 
 					{
-						MainWin.addToDisplay("Sync: " + e.getMessage());
+						// TODO MainWin.addToDisplay("Sync: " + e.getMessage());
 					}
 				}
 				
@@ -73,7 +75,8 @@ public class SyncThread implements Runnable
 				try 
 				{
 					MainWin.setConStatusTrying();
-					MainWin.addToDisplay("Sync: Connecting to server..");
+					// TODO MainWin.addToDisplay("Sync: Connecting to server..");
+					MainWin.debug("Sync: Connecting...");
 					sock = new Socket(host, port);
 					
 					this.out = sock.getOutputStream();
@@ -81,10 +84,13 @@ public class SyncThread implements Runnable
 				    
 				    // get initial state
 				    
-				     
+				    // cache error meanings
+				    MainWin.errorHelpCache.load();
+				    
 				    // load full config
 				    MainWin.setServerConfig(UIUtils.getServerConfig());
 				    MainWin.applyConfig();
+				    
 				    
 				    // load all disk info
 				    MainWin.setDisks(UIUtils.getServerDisks());
@@ -97,10 +103,9 @@ public class SyncThread implements Runnable
 				    MainWin.setConStatusConnect();
 				    			
 				    
-				    // load log history
-				    MainWin.addToServerDisplay(UIUtils.getServerLogHistory());
+				   
 				    
-				    //MainWin.addToDisplay("Sync: Connected.");
+				    MainWin.debug("Sync: Connected.");
 				    
 				    // start sync feed
 				    
@@ -110,10 +115,10 @@ public class SyncThread implements Runnable
 				} 
 				catch (Exception e) 
 				{
-					//e.printStackTrace();
+					e.printStackTrace();
 					
 					MainWin.setConStatusError();
-					MainWin.addToDisplay("Sync: " + e.getMessage());
+					// TODO MainWin.addToDisplay("Sync: " + e.getMessage());
 					
 					
 					sock = null;
@@ -128,7 +133,7 @@ public class SyncThread implements Runnable
 			}
 			
 			
-			if ((sock != null) && !sock.isInputShutdown())
+			if (!wanttodie && (sock != null) && !sock.isInputShutdown())
 			{
 				MainWin.setConStatusConnect();
 
@@ -144,7 +149,7 @@ public class SyncThread implements Runnable
 						} 
 						catch (IOException e1) 
 						{
-							MainWin.addToDisplay("Sync: " + e1.getMessage());
+							// TODO MainWin.addToDisplay("Sync: " + e1.getMessage());
 						}
 						
 						sock = null;
@@ -160,7 +165,7 @@ public class SyncThread implements Runnable
 				} 
 				catch (IOException e) 
 				{
-					MainWin.addToDisplay("Sync: " + e.getMessage());
+					// TODO MainWin.addToDisplay("Sync: " + e.getMessage());
 					
 					if (sock != null)
 					try 
@@ -169,7 +174,7 @@ public class SyncThread implements Runnable
 					} 
 					catch (IOException e1) 
 					{
-						MainWin.addToDisplay("Sync: " + e.getMessage());
+						// TODO MainWin.addToDisplay("Sync: " + e.getMessage());
 					}
 					
 					sock = null;
@@ -213,17 +218,94 @@ public class SyncThread implements Runnable
 				}
 				catch (NumberFormatException e)
 				{
-					MainWin.addToDisplay("Sync: " + e.getMessage());
+					// ignore
 				}
 				
 			}
 		}
-		
+		// server status
+		else if (line.equals("@"))
+		{
+			try
+			{
+				if (this.params.containsKey("0"))
+				{
+					this.ssbuf.setInterval(Integer.parseInt(params.get("0")));
+				}
+				
+				if (this.params.containsKey("1"))
+				{
+					this.ssbuf.setMemtotal(Long.parseLong(params.get("1")));
+				}
+				
+				if (this.params.containsKey("2"))
+				{
+					this.ssbuf.setMemfree(Long.parseLong(params.get("2")));
+				}
+				
+				if (this.params.containsKey("3"))
+				{
+					this.ssbuf.setOps(Long.parseLong(params.get("3")));
+				}
+				
+				if (this.params.containsKey("4"))
+				{
+					this.ssbuf.setDiskops(Long.parseLong(params.get("4")));
+				}
+				
+				if (this.params.containsKey("5"))
+				{
+					this.ssbuf.setVserialops(Long.parseLong(params.get("5")));
+				}
+				
+				if (this.params.containsKey("6"))
+				{
+					this.ssbuf.setInstances(Integer.parseInt(params.get("6")));
+				}
+				
+				if (this.params.containsKey("7"))
+				{
+					this.ssbuf.setInstancesalive(Integer.parseInt(params.get("7")));
+				}
+				
+				if (this.params.containsKey("8"))
+				{
+					this.ssbuf.setThreads(Integer.parseInt(params.get("8")));
+				}
+				
+				if (this.params.containsKey("9"))
+				{
+					this.ssbuf.setUIClients(Integer.parseInt(params.get("9")));
+				}
+				
+				MainWin.submitServerStatusEvent(ssbuf);
+			}
+			catch (NumberFormatException e)
+			{
+				
+			}
+			
+		}
 		// logging
 		else if (line.equals("L"))
 		{
 			if (this.params.containsKey("l"))
-				MainWin.addToServerDisplay(this.params.get("l").trim() + System.getProperty("line.separator"));
+				logbuf.setLevel(this.params.get("l"));
+			
+			if (this.params.containsKey("t"))
+				logbuf.setTimestamp(Long.valueOf(this.params.get("t")));
+			
+			if (this.params.containsKey("m"))
+				logbuf.setMessage(this.params.get("m"));
+			
+			if (this.params.containsKey("r"))
+				logbuf.setThread(this.params.get("r"));
+			
+			if (this.params.containsKey("s"))
+				logbuf.setSource(this.params.get("s"));
+			
+			MainWin.addToServerLog(logbuf.clone());
+				
 		}
 		// instance config
 		else if (line.equals("I"))

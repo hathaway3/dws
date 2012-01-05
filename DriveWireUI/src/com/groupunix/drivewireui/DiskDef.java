@@ -72,7 +72,7 @@ public class DiskDef implements Cloneable
 			
 			this.gc.setAdvanced(true);
 			
-			this.gc.setBackground(MainWin.colorDiskBG);
+			this.gc.setBackground(DiskWin.colorDiskBG);
 			this.gc.fillRectangle(0,0, DiskWin.DGRAPH_WIDTH, DiskWin.DGRAPH_HEIGHT);
 		
 			this.gc.setTextAntialias(SWT.ON);
@@ -327,6 +327,10 @@ public class DiskDef implements Cloneable
 			if ((res.indexOf('/') > -1) && (res.indexOf('/') < (res.length()-1)))
 				res = res.substring(res.lastIndexOf('/')+1);
 		}
+		else
+		{
+			res = "(in memory)";
+		}
 		
 		return(res);
 	}
@@ -373,8 +377,9 @@ public class DiskDef implements Cloneable
 			this.gc.fillRectangle(0,0, DiskWin.DGRAPH_WIDTH, 15);
 			
 			
-			this.gc.setForeground(DiskWin.colorDiskFG);
+			this.gc.setForeground(DiskWin.colorDiskGraphFG );
 			this.gc.setBackground(DiskWin.colorDiskBG);
+			
 			this.gc.drawText("" + this.getOffset(), 1, 0, true);
 			this.gc.drawText("" + this.getSectors() , DiskWin.DGRAPH_WIDTH - gc.textExtent("" + this.getSectors()).x, 0, true);
 			
@@ -383,6 +388,8 @@ public class DiskDef implements Cloneable
 			int p3 = p2 + p1 + 20;
 			
 			int cleanpos,writepos,readpos;
+			
+			// just for kicks..
 			
 			if (this.lastclean < this.lastread)
 			{
@@ -459,7 +466,7 @@ public class DiskDef implements Cloneable
 			tri[2] = tri[0];
 			tri[4] = tri[0]+7;
 			
-			this.gc.setBackground(MainWin.colorDiskDirty);
+			this.gc.setBackground(DiskWin.colorDiskDirty);
 			this.gc.fillPolygon(tri);
 			
 			
@@ -472,7 +479,7 @@ public class DiskDef implements Cloneable
 			tri[4] = tri[0]+7;
 
 			
-			this.gc.setBackground(MainWin.colorDiskClean);
+			this.gc.setBackground(DiskWin.colorDiskClean);
 			this.gc.fillPolygon(tri);
 			
 			
@@ -483,8 +490,8 @@ public class DiskDef implements Cloneable
 			int lastchange = 0;
 			int changes = 0;
 			
-			this.gc.setBackground(MainWin.colorBlack);
-			this.gc.setForeground(MainWin.colorDiskBG);
+			this.gc.setBackground(DiskWin.colorBlack);
+			this.gc.setForeground(DiskWin.colorDiskBG);
 			
 			for (int i = 0;i<DiskWin.DGRAPH_WIDTH;i++)
 			{
@@ -505,7 +512,7 @@ public class DiskDef implements Cloneable
 			
 			
 			// footer
-			this.gc.setBackground(MainWin.colorDiskBG);
+			this.gc.setBackground(DiskWin.colorDiskBG);
 			this.gc.fillRectangle(0,DiskWin.DGRAPH_HEIGHT-15, DiskWin.DGRAPH_WIDTH, DiskWin.DGRAPH_HEIGHT);
 			
 
@@ -525,14 +532,14 @@ public class DiskDef implements Cloneable
 			tri[2] = tri[0]+7;
 			tri[4] = tri[0]-7;
 			
-			this.gc.setBackground(MainWin.colorDiskDirty);
+			this.gc.setBackground(DiskWin.colorDiskDirty);
 			this.gc.fillPolygon(tri);
 			
 			tri[0] = (int) (this.graphscale * this.lastclean)+1;
 			tri[2] = tri[0]+7;
 			tri[4] = tri[0]-7;
 			
-			this.gc.setBackground(MainWin.colorDiskClean);
+			this.gc.setBackground(DiskWin.colorDiskClean);
 			this.gc.fillPolygon(tri);
 			
 			this.graphchanged = false;
@@ -563,14 +570,14 @@ public class DiskDef implements Cloneable
 					return(MainWin.colorGreen);
 				
 				if (scache <= 50)
-					return(MainWin.colorDiskClean);
+					return(DiskWin.colorDiskClean);
 				
-				return(MainWin.colorDiskDirty);
+				return(DiskWin.colorDiskDirty);
 				
 			}
 		}
 		
-		return MainWin.colorDiskGraphBG;
+		return DiskWin.colorDiskGraphBG;
 	}
 
 

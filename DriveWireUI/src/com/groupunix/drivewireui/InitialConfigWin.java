@@ -95,8 +95,7 @@ public class InitialConfigWin extends Dialog {
 	
 	private static void applyFont() 
 	{
-		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
-		
+		/*
 		
 		Control[] controls = shlInitialConfiguration.getChildren();
 		
@@ -132,7 +131,7 @@ public class InitialConfigWin extends Dialog {
 		{
 			controls[i].setFont(new Font(shlInitialConfiguration.getDisplay(), f));
 		}
-		
+		*/
 	}
 	
 	

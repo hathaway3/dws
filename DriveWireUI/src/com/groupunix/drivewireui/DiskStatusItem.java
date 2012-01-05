@@ -133,7 +133,7 @@ public abstract class DiskStatusItem
 	{
 		canvas = new Canvas(composite, SWT.NONE);
 		
-		canvas.setBackground(MainWin.colorDiskBG);
+		canvas.setBackground(DiskWin.colorDiskBG);
 		canvas.setLocation(this.getX(), this.getY());
 		canvas.setSize(getWidth(), getHeight());
 		

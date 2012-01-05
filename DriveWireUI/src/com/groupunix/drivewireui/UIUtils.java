@@ -11,13 +11,16 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.reflect.Field;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,10 +28,10 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-
-import com.groupunix.drivewireserver.DWDefs;
+import org.eclipse.swt.widgets.Display;
 
 public class UIUtils {
 
@@ -39,8 +42,10 @@ public class UIUtils {
 		return(loadList(-1,arg));
 	}
 	
+	
 	public static List<String> loadList(int instance, String arg) throws IOException, DWUIOperationFailedException
 	{
+		//TODO - ignoring instance?
 		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
 		
 		List<String> res = new ArrayList<String>();
@@ -104,6 +109,10 @@ public class UIUtils {
 	{
 		if (values.size() > 0)
 		{
+			int tid = MainWin.taskman.addTask("Server settings dump");
+			
+			MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE, "Connecting to server...");
+			
 			Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
 		
 			conn.Connect();
@@ -114,7 +123,7 @@ public class UIUtils {
 			while(itr.hasNext())
 			{
 				String val = itr.next();
-				conn.sendCommand("ui server config set " + val + " " + values.get(val),0);
+				conn.sendCommand(tid, "ui server config set " + val + " " + values.get(val),0);
 			}
 		
 			conn.close();
@@ -219,6 +228,10 @@ public class UIUtils {
 	{
 		if (values.size() > 0)
 		{
+			int tid = MainWin.taskman.addTask("Instance settings dump");
+			
+			MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE, "Connecting to server...");
+			
 			Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
 		
 			conn.Connect();
@@ -229,7 +242,7 @@ public class UIUtils {
 			while(itr.hasNext())
 			{
 				String val = itr.next();
-				conn.sendCommand("dw config set " + val + " " + values.get(val),instance);
+				conn.sendCommand(tid,"dw config set " + val + " " + values.get(val),instance);
 			}
 		
 			conn.close();
@@ -439,47 +452,9 @@ public class UIUtils {
 	}
 
 
-	public static String prettyDWError(int err)
-	{
-		// use reflection to grab names of constants in dwdefs..
-		
-		String res = "Unknown error (" + err + ")";
-		
-		Field[] fields = DWDefs.class.getFields();
-		
-		for (Field f : fields)
-		{
-			if (f.getName().startsWith("RC_"))
-			{
-				try
-				{
-					if (f.getByte(null) == (byte)err)
-					{
-						res = f.getName();
-					}
-				} 
-				catch (IllegalArgumentException e)
-				{
-				} 
-				catch (IllegalAccessException e)
-				{
-				}
-			}
-				
-			
-		}
-		
-		
-		return(res);
-	}
-
-	public static List<String> getServerLogHistory() throws IOException, DWUIOperationFailedException
-	{
 	
-		List<String> res = UIUtils.loadList(MainWin.getInstance(), "ui server show log");
-		
-		return(res);
-	}
+	
+
 
 	public static String getFilenameFromURI(String string)
 	{
@@ -554,9 +529,13 @@ public class UIUtils {
 				}
 				else
 				{
+					
+					
 					MainWin.debug("Loaded font from " + files[i]);
 				}
 			}
+			
+			
 			
 		}
 		else
@@ -585,12 +564,163 @@ public class UIUtils {
         	gc.setFont(font);
         	width = gc.textExtent(txt).x;
         	height = gc.textExtent(txt).y;
-        	MainWin.debug("fontdim @ " + size + " = " + width + " x " + height);
         	
         	size++;
         }
         
+        MainWin.debug("chose font " + fname + " @ " + size + " = " + width + " x " + height);
+    	
+        
         return font;
 	}
+
+	public static Font findFont(Display display, HashMap<String,Integer> candidates , String text, int maxw, int maxh)
+	{
+		FontData[] fd = MainWin.getDisplay().getFontList(null, true);
+		
+		
+		for (FontData f : fd)
+		{
+			for (Entry<String,Integer> e : candidates.entrySet())
+			{
+				if (f.getName().equals(e.getKey()) && (f.getStyle() == e.getValue()))
+				{
+					return(findSizedFont(f.getName(), text, maxw, maxh, f.getStyle()));
+				}
+			}
+			
+		}
+		
+		MainWin.debug("Failed to find a font");
+		return Display.getCurrent().getSystemFont();
+		
+	}
+
+	
+	
+	public static String listFonts()
+	{
+		String res = "";
+		
+		 FontData[] fd = Display.getDefault().getFontList(null, true);
+		 
+		 for (FontData f : fd)
+			{
+				res += f.getName() + " gh:" + f.getHeight() + " st: " + f.getStyle() + " ht: " + f.height + "\n";
+		
+			}
+		
+		return res;
+	}
+
+	
+	
+	
+	
+	
+	public static void simpleConfigServer(Integer cocomodel, String device, boolean usemidi, String printertype, String printerdir) throws IOException, DWUIOperationFailedException 
+	{
+		// configure device
+		
+		ArrayList<String> cmds = new ArrayList<String>();
+		
+		cmds.add("dw config set DeviceType serial");
+		cmds.add("dw config set SerialDevice " + device);
+		
+		switch(cocomodel)
+		{
+			case 1:
+				cmds.add("dw config set SerialRate 38400");
+				break;
+			case 2:
+				cmds.add("dw config set SerialRate 57600");
+				break;
+			case 3:
+				cmds.add("dw config set SerialRate 115200");
+				break;
+		}
+		
+		cmds.add("dw config set [@name] CoCo " + cocomodel + " on " + device);
+		cmds.add("dw config set [@desc] Autocreated " +  new java.sql.Timestamp(Calendar.getInstance().getTime().getTime()).toString() );
+		
+		cmds.add("dw config set UseMIDI " + usemidi);
+		
+		
+		for (int i = 0;i<=MainWin.getInstanceConfig().getMaxIndex("Printer");i++)
+		{
+			if (MainWin.getInstanceConfig().getString("Printer("+i+")[@name]").equals(printertype))
+				cmds.add("dw config set CurrentPrinter " + printertype);
+			
+			if (MainWin.getInstanceConfig().getString("Printer("+i+")[@name]").equals("Text"))
+				cmds.add("dw config set Printer("+i+").OutputDir " + printerdir);
+			
+			if (MainWin.getInstanceConfig().getString("Printer("+i+")[@name]").equals("FX80"))
+				cmds.add("dw config set Printer("+i+").OutputDir " + printerdir);
+		}
+	
+		
+		int tid = MainWin.taskman.addTask("Configure server for a CoCo " + cocomodel + " on " + device);
+		String res = "";
+		
+			
+		try
+		{
+			for (String cmd : cmds)
+			{	
+				res += "Sending command: " + cmd; 
+				MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE, res);
+			
+				UIUtils.loadList(MainWin.getInstance(), cmd);
+				res += "\tOK\n";
+			}
+			
+			res += "\nRestarting device handler...";
+			MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE, res);
+			UIUtils.loadList(MainWin.getInstance(), "ui instance reset protodev");
+			res += "\tOK\n";
+			MainWin.taskman.updateTask(tid,UITaskMaster.TASK_STATUS_COMPLETE, res);
+			
+			
+		} 
+		catch (IOException e)
+		{
+			res += "\tFAIL\n\n" + e.getMessage();
+			
+			MainWin.taskman.updateTask(tid,UITaskMaster.TASK_STATUS_FAILED, res);
+			throw  new IOException(e);
+			
+		} 
+		catch (DWUIOperationFailedException e)
+		{
+			res += "\tFAIL\n\n" + e.getMessage();
+			
+			MainWin.taskman.updateTask(tid,UITaskMaster.TASK_STATUS_FAILED, res);
+			
+			throw new DWUIOperationFailedException(e.getMessage());
+		}
+		
+		
+		
+	}
+
+
+	public static String dumpMIDIStatus(MIDIStatus midiStatus)
+	{
+		String res = "";
+		
+		res += "curdev: " + midiStatus.getCurrentDevice() + "\n";
+		res += "curprof: " + midiStatus.getCurrentProfile() + "\n";
+		for (String s : midiStatus.getProfiles())
+		{
+			res += "profile: " + s + "\n";
+		}
+		
+		return res;
+	}
+
+	
+
+	
+	
 	
 }

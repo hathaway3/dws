@@ -24,7 +24,7 @@ public class DWError
 		Matcher m = Pattern.compile("FAIL \\d+").matcher(summary);
 		while (m.find()) 
 		{
-		    m.appendReplacement(myStringBuffer, UIUtils.prettyDWError( Integer.parseInt(summary.substring(m.start()+5, m.end()))) + ": ");
+		    m.appendReplacement(myStringBuffer, MainWin.errorHelpCache.getErrMessage( Integer.parseInt(summary.substring(m.start()+5, m.end()))) + ": ");
 		}
 		m.appendTail(myStringBuffer);
 		
@@ -37,11 +37,6 @@ public class DWError
 		return errno;
 	}
 	
-	public String getErrnoDesc()
-	{
-		return(UIUtils.prettyDWError(this.errno));
-	}
-
 
 	public String getTitle()
 	{

@@ -16,9 +16,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -100,26 +98,11 @@ public class DiskAdvancedWin extends Dialog {
 		
 		
 		tableParams = new Table(shell, SWT.BORDER | SWT.FULL_SELECTION);
-		tableParams.addMouseTrackListener(new MouseTrackAdapter() {
-			@Override
-			public void mouseEnter(MouseEvent e) {
-				tableParams.setData("freeze","sure");
-			}
-			@Override
-			public void mouseExit(MouseEvent e) {
-				tableParams.setData("freeze","nah");
-			}
-		});
-		tableParams.setData("c", 0);
-		tableParams.setData("cc", 0);
-		tableParams.setData("freeze", "nah");
+				
 		tableParams.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if (Integer.parseInt(tableParams.getData("c").toString()) > 1)
-					openURL(doLinky((tableParams.getSelectionIndex() + Integer.parseInt(tableParams.getData("cc").toString())) % 32 ));
-				else
-					displayItem(tableParams.getItem(tableParams.getSelectionIndex()).getText(0), tableParams.getSelectionIndex());
+				displayItem(tableParams.getItem(tableParams.getSelectionIndex()).getText(0), tableParams.getSelectionIndex());
 			}
 
 			
@@ -203,7 +186,7 @@ public class DiskAdvancedWin extends Dialog {
 					@Override
 					public void run() 
 					{
-						openURL(wikiurl);
+						MainWin.openURL(this.getClass(),wikiurl);
 					}
 					
 				});
@@ -333,7 +316,7 @@ public class DiskAdvancedWin extends Dialog {
 			
 			this.textItemTitle.setText("");
 			this.textDescription.setText("No disk is inserted in drive " + this.disk.getDriveNo());
-			this.doCC();
+
 		}
 		else
 		{
@@ -388,17 +371,7 @@ public class DiskAdvancedWin extends Dialog {
 	
 	
 	
-	private void applyFont() 
-	{
-		FontData f = MainWin.getDialogFont();
-		
-		Control[] controls = shell.getChildren();
-		
-		for (int i = 0;i<controls.length;i++)
-		{
-			controls[i].setFont(new Font(shell.getDisplay(), f));
-		}
-	}
+	
 	
 	
 	
@@ -408,7 +381,6 @@ public class DiskAdvancedWin extends Dialog {
 	private void applySettings() 
 	{
 
-		@SuppressWarnings("unchecked")
 		Iterator<String> itr = this.disk.getParams();
 		
 		String key;
@@ -490,16 +462,6 @@ public class DiskAdvancedWin extends Dialog {
 	{
 		int i;
 		
-		synchronized(tableParams)
-		{
-			if (Integer.parseInt(tableParams.getData("c").toString()) > 0)
-			{
-				this.setLayout();
-				tableParams.setData("c",0);
-			}
-		}
-		
-		
 		if (key.equals("*eject"))
 		{
 			this.tableParams.removeAll();
@@ -568,175 +530,10 @@ public class DiskAdvancedWin extends Dialog {
 
 	
 	
-	protected Text getTextDescription() {
-		return textDescription;
-	}
-	protected Link getLinkWiki() {
-		return linkWiki;
-	}
-	
-	public void openURL(String url) 
-	{
-		if (url != null)
-		{
-			boolean failed = false;
-			
-			Class<?> c;
-			try {
-				
-				c = Class.forName("org.eclipse.swt.program.Program", true, this.getClass().getClassLoader() );
-				java.lang.reflect.Method launch = c.getMethod("launch",new Class[]{ String.class });
-				launch.invoke((Object)null, url);
-				
-				
-			} 
-			catch (ClassNotFoundException e) 
-			{
-				failed = true;
-			} 
-			catch (SecurityException e) 
-			{
-				failed = true;
-			} 
-			catch (NoSuchMethodException e) 
-			{
-				failed = true;
-			} 
-			catch (IllegalArgumentException e) 
-			{
-				failed = true;
-			} 
-			catch (IllegalAccessException e) 
-			{
-				failed = true;
-			} 
-			catch (InvocationTargetException ex)
-		    {
-	        	failed = true;
-			}	
-			
-			if (failed)
-			{
-				MainWin.addToDisplay("Could not open a browser automatically on this system.");
-	        	MainWin.addToDisplay("The URL I wanted to show you was:  " + url);
-			}
-		}
-	}
-	protected Button getBtnToggle() {
-		return btnToggle;
-	}
-	protected Button getBtnApply() {
-		return btnApply;
-	}
 	
 
-	
-	private void doCC()
-	{
-		final Font thefont = SWTResourceManager.getFont("Liberation Mono", 10, SWT.BOLD);
-		tableParams.setData("c", 1);
-		 
-		Runnable scroller = new Runnable() 
-		{
-		      public void run() 
-		      {
-		    	  
-		    	  if ((tableParams != null) && !tableParams.isDisposed())
-		    	  {
-			    	  synchronized(tableParams)
-			    	  {
-			    		  int credits = Integer.parseInt(tableParams.getData("c").toString());
-			    		  if (credits > 0)
-			    		  {
-			    			  if (!tableParams.getData("freeze").toString().equals("sure"))
-			    			  {
-				    			  tableParams.setRedraw(false);
-				    			  
-				    			  if (credits == 1)
-				    			  {
-				    				  tableParams.setBackground(MainWin.colorBlack);
-				    		  		  tableParams.setLinesVisible(false);
-				    		  		  tableParams.setHeaderVisible(false);
-				    		  		  tableParams.setData("c",2);
-				    			  }
-				    			  
-				    			  tableParams.removeAll();
-				    			  
-				    			  int cc = 0;
-				    			  if (tableParams.getData("cc") != null)
-				    				  cc = Integer.parseInt(tableParams.getData("cc").toString());
-				    			  tableParams.setData("cc", cc+1);
-				    		
-				    			  for (int i = 0; i < 14; i++)
-				    			  {
-				    				  TableItem item = new TableItem(tableParams, SWT.NONE);
-				    				  if (i>0)
-				    					  item.setBackground(1, MainWin.colorGreen);
-				    			
-				    				  item.setText(1, this.getl((cc + i) % 32).toUpperCase() );
-				    				  item.setFont(1,thefont);
-				    			  }
-				    			 
-			    				  
-				    			  tableParams.setRedraw(true);
-			    			  }
-			    			  display.timerExec(1000, this);
-			    		  }
-			    	  }
-		    	  }
-		      }
-
-			private String getl(int i)
-			{
-				String[] c = { " "," ", " ", " ", " ", " ", " ", " ", " ",	"DriveWire " + MainWin.DWUIVersion + " (" + MainWin.DWUIVersionDate + ")", 
-						"by mobster #3", " ", "With special thanks to:", " ", "Cloud-9", "#coco_chat", "Malted Media", "The Glenside Color Computer Club", "Darren Atkinson", "Boisy Pitre", 
-						"John Linville", "RandomRodder", "lorddragon", "lostwizard", "Gary Becker", "Gene Heskett", "Wayne Campbell", "Stephen Fischer", "Christopher Hawks", " ", 
-						"...and apologies to those", "that I've undoubtedly forgotten" };
-				return(c[i]);
-			}
-			
-		    };
-		    
-		    display.timerExec(5000, scroller);
-		
-	}
 
 	
+	
 
-	private String doLinky(int i)
-	{
-		switch(i)
-		{
-		case 10:
-			return("https://sites.google.com/site/drivewire4/");
-		case 11:
-			return("http://cococoding.com");
-		case 15:
-			return("http://www.cloud9tech.com");
-		case 16:
-			return("http://webchat.freenode.net/?channels=coco_chat");
-		case 17:
-			return("http://five.pairlist.net/mailman/listinfo/coco");
-		case 18:
-			return("http://glensideccc.com/");
-		case 20:
-			return("http://tee-boy.com/");
-		case 22:
-			return("http://tandycoco.com/");
-		case 23:
-			return("http://twitter.com/lorddragon");
-		case 24:
-			return("http://lost.l-w.ca/0x04/coco-stuff/");
-		case 26:
-			return("http://coyoteden.dyndns-free.com:85/gene/");
-		}
-		
-		return(null);
-	}
-	protected Label getLblInt() {
-		return lblInt;
-	}
-	protected Text getTextInt() {
-		return textInt;
-	}
 }

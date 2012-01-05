@@ -5,7 +5,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 
 public class DiskTableUpdateThread implements Runnable
 {

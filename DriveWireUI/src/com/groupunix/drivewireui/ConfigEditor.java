@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -68,7 +69,6 @@ public class ConfigEditor extends Shell
 	private Spinner spinnerInt;
 	private TreeColumn trclmnNewColumn;
 	
-	private HashMap<Node,Object> changes = new HashMap<Node,Object>();
 	private ModifyListener spinnerModifyListener;
 	private Combo comboList;
 	private Label lblList;
@@ -76,7 +76,7 @@ public class ConfigEditor extends Shell
 	private Text textString;
 	private Label lblString;
 	private Button btnFileDir;
-	private ToolItem tltmNetworking_1;
+
 	
 	
 	
@@ -84,15 +84,22 @@ public class ConfigEditor extends Shell
 	class ConfigItem implements Comparable<ConfigItem>
 	{
 		private Node node;
+		private int index;
 		
-		public ConfigItem(Node node)
+		public ConfigItem(Node node, int index)
 		{
+			this.index = index;
 			this.node = node;
 		}
 		
 		public Node getNode()
 		{
 			return this.node;
+		}
+		
+		public int getIndex()
+		{
+			return this.index;
 		}
 		
 		@Override
@@ -160,9 +167,9 @@ public class ConfigEditor extends Shell
 		tltmMidi.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/music.png"));
 		tltmMidi.setText("MIDI");
 		
-		tltmNetworking_1 = new ToolItem(toolBar, SWT.RADIO);
-		tltmNetworking_1.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/preferences-system-network-2.png"));
-		tltmNetworking_1.setText("Networking");
+		tltmNetworking = new ToolItem(toolBar, SWT.RADIO);
+		tltmNetworking.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/preferences-system-network-2.png"));
+		tltmNetworking.setText("Networking");
 		
 		tltmLogging = new ToolItem(toolBar, SWT.RADIO);
 		tltmLogging.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/documentation.png"));
@@ -185,7 +192,7 @@ public class ConfigEditor extends Shell
 				if (tree.getSelection()[0].getData("param") != null)
 				{
 					selected = (Node) tree.getSelection()[0].getData("param");
-					displayParam(selected);
+					displayParam(tree.getSelection()[0]);
 				}
 			}
 		});
@@ -216,7 +223,7 @@ public class ConfigEditor extends Shell
 		
 		
 		textDescription = new Label(scrolledComposite, SWT.WRAP);
-		textDescription.setBounds(10, 40, 647, 67);
+		textDescription.setBounds(10, 40, 647, 60);
 		textDescription.setText("");
 		textDescription.setVisible(true);
 		
@@ -243,6 +250,12 @@ public class ConfigEditor extends Shell
 		label.setText(" ");
 		
 		Button btnBackup = new Button(composite_1, SWT.NONE);
+		btnBackup.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				doBackup();
+			}
+		});
 		btnBackup.setText("Backup");
 		
 		Button btnRestore = new Button(composite_1, SWT.NONE);
@@ -255,9 +268,21 @@ public class ConfigEditor extends Shell
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(composite_1, SWT.NONE);
+		btnCancel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				close();
+			}
+		});
 		btnCancel.setText("Cancel");
 		
 		btnApply = new Button(composite_1, SWT.NONE);
+		btnApply.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				applyChanges();
+			}
+		});
 		btnApply.setText("Apply");
 		btnApply.setEnabled(false);
 		
@@ -318,10 +343,12 @@ public class ConfigEditor extends Shell
 		btnFileDir.setText("Choose...");
 		
 		lblString = new Label(scrolledComposite, SWT.NONE);
-		lblString.setBounds(409, 116, 248, 18);
+		lblString.setBounds(20, 98, 248, 18);
 		composite_1.setLayoutData(new RowData(this.getSize().x, 100));
 		
+	
 		createContents();
+	
 	}
 
 	
@@ -332,17 +359,78 @@ public class ConfigEditor extends Shell
 
 
 
+	protected void doBackup()
+	{
+		String path = MainWin.getFile(true, false, "backup.xml", "Backup current config...", "Save");
+		
+		if (path != null)
+		{
+			XMLConfiguration xmlc = new XMLConfiguration(MainWin.dwconfig);
+			
+			try
+			{
+				xmlc.save(path);
+			} 
+			catch (ConfigurationException e)
+			{
+				MainWin.showError("Error backing up configuration", "A configuration exception occured", e.getMessage(), true);
+			}
+			
+		}
+	}
+
+
+
+
+
+
+
+
+
+	protected void applyChanges()
+	{
+		
+		
+			
+	}
+
+
+
+
+
+
+
+
+
+	private String getTreePath(TreeItem ti)
+	{
+		String res = ((Node)ti.getData("param")).getName();
+		
+		if ((Integer) ti.getData("index") > 0)
+			res += "(" + ((Integer) ti.getData("index")) + ")";
+		
+		if (ti.getParentItem() != null)
+			res = getTreePath(ti.getParentItem()) + "." + res;
+		
+		return res;
+	}
+
+
+
+
+
+
+
+
+
 	protected void updateBoolean(Node node, boolean selection)
 	{
 		if (node.getValue().equals(selection+""))
 		{
-			if (changes.containsKey(node))
-				changes.remove(node);
 			tree.getSelection()[0].setText(2,"");
 		}
 		else
 		{
-			changes.put(node, selection);
 			tree.getSelection()[0].setText(2,selection+"");
 		}
 		
@@ -365,13 +453,10 @@ public class ConfigEditor extends Shell
 		
 		if (cmp.equals(selection+""))
 		{
-			if (changes.containsKey(node))
-				changes.remove(node);
 			tree.getSelection()[0].setText(2,"");
 		}
 		else
 		{
-			changes.put(node, selection);
 			tree.getSelection()[0].setText(2,selection+"");
 		}
 		
@@ -383,7 +468,8 @@ public class ConfigEditor extends Shell
 	{
 		String cmp;
 		
-		if (node.getValue() != null)
+		
+		if ((node !=null) && node.getValue() != null)
 		{
 			cmp = node.getValue().toString();
 		}
@@ -391,21 +477,15 @@ public class ConfigEditor extends Shell
 		{
 			cmp = "";
 		}
-		
-		
+
 		if (cmp.equals(selection))
 		{
-			if (changes.containsKey(node))
-				changes.remove(node);
 			tree.getSelection()[0].setText(2,"");
 		}
 		else
 		{
-			changes.put(node, selection);
 			tree.getSelection()[0].setText(2,selection);
 		}
-			
-		
 		
 		updateApply();
 	}
@@ -415,7 +495,7 @@ public class ConfigEditor extends Shell
 
 	private void updateApply()
 	{
-		if (this.changes.size() > 0)
+		if (hasChanges(tree.getItems()))
 			this.btnApply.setEnabled(true);
 		else
 			this.btnApply.setEnabled(false);
@@ -423,15 +503,26 @@ public class ConfigEditor extends Shell
 
 
 
-
-
-
-
+	private boolean hasChanges(TreeItem[] items)
+	{
+		for (TreeItem ti : items)
+		{
+			
+			if (!ti.getText(2).equals(""))
+				return(true);
+			
+			if (ti.getItemCount() > 0)
+				if (hasChanges(ti.getItems()))
+					return(true);
+		}
+		return false;
+	}
 
 
 	private String getKeyPath(Node node)
 	{
 		String res = node.getName();
+		
 		
 		if (node.getParent() != null)
 		{
@@ -443,11 +534,13 @@ public class ConfigEditor extends Shell
 	}
 
 
+	
+	
 
 
-
-	protected void displayParam(Node node)
+	protected void displayParam(TreeItem ti)
 	{
+		Node node = (Node) ti.getData("param");
 		
 		if (this.getAttributeVal(node.getAttributes(), "type") == null)
 		{
@@ -460,7 +553,7 @@ public class ConfigEditor extends Shell
 		{
 			String type = this.getAttributeVal(node.getAttributes(), "type").toString();
 			
-			setDisplayFor(node, type);
+			setDisplayFor(ti, type);
 			
 		}
 			
@@ -474,8 +567,9 @@ public class ConfigEditor extends Shell
 	
 	
 	
-	private void setDisplayFor(Node node, String type)
+	private void setDisplayFor(TreeItem ti, String type)
 	{
+		
 		this.setRedraw(false);
 		// all off
 		this.lblItemTitle.setVisible(false);
@@ -489,16 +583,25 @@ public class ConfigEditor extends Shell
 		this.btnFileDir.setVisible(false);
 		this.textString.setVisible(false);
 		
+		if (ti == null)
+		{
+			this.setRedraw(true);
+			return;
+		}
+		
+		Node node = (Node) ti.getData("param");
+		
 		if (type.equals("boolean"))
 		{
 			this.lblItemTitle.setVisible(true);
 			this.lblItemTitle.setText(node.getName());
 			this.btnToggle.setVisible(true);
 			
-			if (changes.containsKey(node))
-				this.btnToggle.setSelection(Boolean.parseBoolean(changes.get(node).toString()));
-			else
+			if (ti.getText(2).equals(""))
 				this.btnToggle.setSelection(Boolean.parseBoolean(node.getValue().toString()));
+			else
+				this.btnToggle.setSelection(Boolean.parseBoolean(ti.getText(2)));
+			
 			this.textDescription.setVisible(true);
 			this.btnToggle.setText("Enable " + node.getName());
 			showHelpFor(node);
@@ -521,11 +624,14 @@ public class ConfigEditor extends Shell
 			if (this.hasAttribute(node.getAttributes(), "max"))
 				this.spinnerInt.setMaximum(Integer.parseInt(this.getAttributeVal(node.getAttributes(), "max").toString()));
 			
-			if (changes.containsKey(node))
-				this.spinnerInt.setSelection(Integer.parseInt(changes.get(node).toString()));
-			else if (node.getValue() != null)
-				this.spinnerInt.setSelection(Integer.parseInt(node.getValue().toString()));
 			
+			if (ti.getText(2).equals(""))
+			{
+				if (node.getValue() != null)
+					this.spinnerInt.setSelection(Integer.parseInt(node.getValue().toString()));
+			}
+			else
+				this.spinnerInt.setSelection(Integer.parseInt(ti.getText(2)));
 			
 			this.spinnerInt.addModifyListener(this.spinnerModifyListener);
 			
@@ -554,11 +660,13 @@ public class ConfigEditor extends Shell
 				
 			}
 			
-			
-			if (changes.containsKey(node))
-				this.comboList.select(this.comboList.indexOf(changes.get(node).toString()));
-			else if ((node.getValue() != null) && (this.comboList.indexOf(node.getValue().toString()) > -1))
-				this.comboList.select(this.comboList.indexOf(node.getValue().toString()));
+			if (ti.getText(2).equals(""))
+			{
+				if (node.getValue() != null)
+					this.comboList.select(this.comboList.indexOf(node.getValue().toString()));
+			}
+			else
+				this.comboList.select(this.comboList.indexOf(ti.getText(2)));
 			
 			this.comboList.addModifyListener(this.comboModifyListener);
 			
@@ -592,10 +700,11 @@ public class ConfigEditor extends Shell
 			}
 			
 			
-			if (changes.containsKey(node))
-				this.comboList.select(this.comboList.indexOf(changes.get(node).toString()));
-			else
+			if (ti.getText(2).equals(""))
 				this.comboList.select(this.comboList.indexOf(node.getValue().toString()));
+			else
+				this.comboList.select(this.comboList.indexOf(ti.getText(2)));
+			
 			
 			this.comboList.addModifyListener(this.comboModifyListener);
 			
@@ -613,12 +722,13 @@ public class ConfigEditor extends Shell
 			this.textDescription.setVisible(true);
 			showHelpFor(node);
 			
-			if (changes.containsKey(node))
-				this.textString.setText(changes.get(node).toString());
-			else if (node.getValue() != null)
-				this.textString.setText(node.getValue().toString());
+			if (ti.getText(2).equals(""))
+				if (node.getValue() != null)
+					this.textString.setText(node.getValue().toString());
+				else
+					this.textString.setText("");
 			else
-				this.textString.setText("");
+				this.textString.setText(ti.getText(2));
 			
 			this.textString.setVisible(true);
 			this.lblString.setVisible(true);
@@ -633,18 +743,21 @@ public class ConfigEditor extends Shell
 			this.textDescription.setVisible(true);
 			showHelpFor(node);
 			
-			if (changes.containsKey(node))
-				this.textString.setText(changes.get(node).toString());
-			else if (node.getValue() != null)
-				this.textString.setText(node.getValue().toString());
+
+			if (ti.getText(2).equals(""))
+				if (node.getValue() != null)
+					this.textString.setText(node.getValue().toString());
+				else
+					this.textString.setText("");
 			else
-				this.textString.setText("");
+				this.textString.setText(ti.getText(2));
 			
 			this.textString.setVisible(true);
 			this.btnFileDir.setVisible(true);
 		}
 		
 		this.setRedraw(true);
+		
 	}
 
 
@@ -659,6 +772,7 @@ public class ConfigEditor extends Shell
 	{
 		textDescription.setText("Loading help for " + node.getName() + "...");
 		
+			
 		Thread t = new Thread(
 				  new Runnable() {
 					  public void run()
@@ -667,12 +781,15 @@ public class ConfigEditor extends Shell
 						  
 						  try
 							{
+							  
 								List<String> help = UIUtils.loadList(MainWin.getInstance(),"ui server show help " + getKeyPath(node));
+								
 								
 								for (String t:help)
 								{
 									txt += t;
 								}
+								
 								
 							}
 							catch (IOException e)
@@ -691,7 +808,7 @@ public class ConfigEditor extends Shell
 							getDisplay().asyncExec( new Runnable() {
 								public void run()
 								{
-									if (!textDescription.isDisposed() && selected.getName().equals(fname))
+									if (!textDescription.isDisposed() && (!lblItemTitle.isDisposed()) && lblItemTitle.getText().equals(fname))
 										textDescription.setText(ftxt);
 								}});
 					  }
@@ -713,14 +830,12 @@ public class ConfigEditor extends Shell
 	 */
 	protected void createContents()
 	{
-		setText("Configuration Editor");
-		setSize(684, 534);
-		
-		
+		setText("Configuration Editor - WARNING - BUGGY - DOES NOT WORK");
+		setSize(684, 634);
 		loadConfig(null, MainWin.dwconfig.getRootNode().getChildren());
-		
 	}
 
+	
 	private void loadConfig(TreeItem ti, List<Node> nodes)
 	{
 		setDisplayFor(null,"none");
@@ -742,7 +857,7 @@ public class ConfigEditor extends Shell
 			if (t.getData("param").equals(node))
 			{
 				tree.select(t);
-				this.displayParam(node);
+				this.displayParam(t);
 				return;
 			}
 		}
@@ -793,12 +908,21 @@ public class ConfigEditor extends Shell
 	
 		List<ConfigItem> items = new ArrayList<ConfigItem>();
 		
+		HashMap<String,Integer> count = new HashMap<String,Integer>();
+		
 		for (Node t : nodes)
 		{
-			items.add(new ConfigItem(t));
+			
+			if (count.containsKey(t.getName()))
+				count.put(t.getName() , count.get(t.getName()) + 1);
+			else
+				count.put(t.getName(), 0);
+			
+			items.add(new ConfigItem(t,count.get(t.getName())));
+			
 		}
 			
-	 
+		
 		Collections.sort(items);
 		
 		for (ConfigItem item : items)
@@ -819,6 +943,7 @@ public class ConfigEditor extends Shell
 				tmp.setText(0, item.getNode().getName() + ": " + getAttributeVal(item.getNode().getAttributes(),"name").toString());
 			
 			tmp.setData("param", item.getNode());
+			tmp.setData("index", item.getIndex());
 			
 			if (item.getNode().getValue() == null)
 			{
@@ -834,8 +959,8 @@ public class ConfigEditor extends Shell
 				tmp.setText(1,item.getNode().getValue().toString());
 			}
 		
-			if (changes.containsKey(item.getNode()))
-				tmp.setText(2, changes.get(item.getNode()).toString());
+		//	if (changes.containsKey(item.getNode()))
+		//		tmp.setText(2, changes.get(item.getNode()).toString());
 			
 			if (item.getNode().hasChildren())
 			{

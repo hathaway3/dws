@@ -1,7 +1,6 @@
 package com.groupunix.drivewireui;
 
 import java.io.File;
-import java.io.IOException;
 
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
@@ -19,6 +18,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class CreateDiskWin extends Dialog {
 
@@ -56,6 +56,10 @@ public class CreateDiskWin extends Dialog {
 		
 		shlCreateANew.setLocation(x, y);
 		
+		Label lblNewLabel = new Label(shlCreateANew, SWT.NONE);
+		lblNewLabel.setImage(SWTResourceManager.getImage(CreateDiskWin.class, "/wizard/new-disk-32.png"));
+		lblNewLabel.setBounds(319, 18, 32, 32);
+		
 		if (MainWin.getCurrentDiskNo() > -1)
 		{
 			this.spinnerDrive.setSelection(MainWin.getCurrentDiskNo());
@@ -72,6 +76,7 @@ public class CreateDiskWin extends Dialog {
 	
 	private static void applyFont() 
 	{
+		/*
 		FontData f = new FontData(MainWin.config.getString("DialogFont",MainWin.default_DialogFont), MainWin.config.getInt("DialogFontSize", MainWin.default_DialogFontSize), MainWin.config.getInt("DialogFontStyle", MainWin.default_DialogFontStyle) );
 		
 		
@@ -86,7 +91,7 @@ public class CreateDiskWin extends Dialog {
 		{
 			controls[i].setFont(new Font(shlCreateANew.getDisplay(), f));
 		}
-		
+	*/	
 	}
 	
 	private void createContents() {
@@ -96,17 +101,17 @@ public class CreateDiskWin extends Dialog {
 		shlCreateANew.setLayout(null);
 		
 		spinnerDrive = new Spinner(shlCreateANew, SWT.BORDER);
-		spinnerDrive.setBounds(227, 26, 47, 22);
+		spinnerDrive.setBounds(202, 26, 47, 22);
 		spinnerDrive.setMaximum(255);
 		
 		Label lblInsertNewDisk = new Label(shlCreateANew, SWT.NONE);
-		lblInsertNewDisk.setBounds(36, 29, 185, 19);
+		lblInsertNewDisk.setBounds(22, 29, 174, 19);
 		lblInsertNewDisk.setAlignment(SWT.RIGHT);
 		lblInsertNewDisk.setText("Create new disk for drive:");
 		
 		Label lblPath = new Label(shlCreateANew, SWT.NONE);
 		lblPath.setBounds(22, 68, 277, 19);
-		lblPath.setText("File for new disk image:");
+		lblPath.setText("File for new disk image (optional):");
 		
 		textPath = new Text(shlCreateANew, SWT.BORDER);
 		textPath.setBounds(21, 89, 298, 21);
@@ -199,5 +204,4 @@ public class CreateDiskWin extends Dialog {
 	protected Button getBtnFile() {
 		return btnFile;
 	}
-
 }
