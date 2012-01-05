@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -11,6 +12,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWJVCDisk extends DWDisk
 {
@@ -44,9 +46,7 @@ public class DWJVCDisk extends DWDisk
 	    InputStream fis;
 		    
 	    fis = this.fileobj.getContent().getInputStream();
-	    
-	    this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
-	    
+	     
 	    this.header = new DWJVCDiskHeader();
 	    
 	    int filelen = (int) this.fileobj.getContent().getSize();
@@ -99,7 +99,8 @@ public class DWJVCDisk extends DWDisk
 	    	    
 		fis.close();
 		
-		
+		this.setParam("_filesystem", DWUtils.prettyFileSystem(DWDiskDrives.getDiskFSType(this.sectors)));
+		 
 	}
 
 

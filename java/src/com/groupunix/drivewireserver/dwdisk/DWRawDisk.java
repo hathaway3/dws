@@ -12,8 +12,10 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
+import com.groupunix.drivewireserver.dwexceptions.DWImageHasNoSourceException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 
 public class DWRawDisk extends DWDisk {
@@ -44,6 +46,26 @@ public class DWRawDisk extends DWDisk {
 		logger.debug("New DWRawDisk for '" + this.getFilePath() + "'");
 		
 	}
+	
+	public DWRawDisk(int sectorsize, int maxsectors)
+	{
+		super();
+		
+		// set internal info
+		this.setParam("_sectorsize", sectorsize);
+		this.setParam("_maxsectors", maxsectors);
+		this.setParam("_format", "raw");
+		
+		// expose user options
+		
+		this.setParam("offset", DWDefs.DISK_DEFAULT_OFFSET);
+		this.setParam("sizelimit",DWDefs.DISK_DEFAULT_SIZELIMIT);
+		this.setParam("expand",DWDefs.DISK_DEFAULT_EXPAND);
+		
+		logger.debug("New DWRawDisk for '" + this.getFilePath() + "'");
+		
+	}
+	
 	
 	public int getDiskFormat()
 	{
@@ -96,7 +118,19 @@ public class DWRawDisk extends DWDisk {
 	    
 	    BufferedInputStream fis = new BufferedInputStream(this.fileobj.getContent().getInputStream());
 	    
-	    this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
+	    
+	    long lastmodtime = -1;
+	    
+	    try
+	    {
+	    	lastmodtime = this.fileobj.getContent().getLastModifiedTime();
+	    }
+	    catch (FileSystemException e)
+	    {
+	    	logger.warn(e.getMessage());
+	    }
+	    
+	    this.setLastModifiedTime(lastmodtime); 
 	    
 	    int sector = 0;
 	    int sectorsize = this.getSectorSize();
@@ -139,8 +173,11 @@ public class DWRawDisk extends DWDisk {
 			
 		//logger.error("Encoding: " + this.fileobj.getContent().getContentInfo().getContentEncoding() + "  Type: " + this.fileobj.getContent().getContentInfo().getContentType());
 		
-		this.setParam("_sectors", sector);
 		fis.close();
+		
+		this.setParam("_sectors", sector);
+		this.setParam("_filesystem", DWUtils.prettyFileSystem(DWDiskDrives.getDiskFSType(this.sectors)));
+		 
 			
 	}
 
@@ -155,7 +192,7 @@ public class DWRawDisk extends DWDisk {
 		
 		
 		// check source for changes...
-		if (this.isSyncFrom())
+		if (this.isSyncFrom() && (this.fileobj != null))
 		{
 			if (this.fileobj.getContent().getLastModifiedTime() != this.getLastModifiedTime())
 			{
@@ -164,7 +201,14 @@ public class DWRawDisk extends DWDisk {
 				{
 					// doh
 					logger.warn("Sync conflict on " + getFilePath() + ", both the source and our cached image have changed.  Source will be overwritten!");
-					this.write();
+					try
+					{
+						this.write();
+					} 
+					catch (DWImageHasNoSourceException e)
+					{
+						//don't care
+					}
 				}
 				else
 				{
@@ -204,7 +248,7 @@ public class DWRawDisk extends DWDisk {
 		{
 			this.sectors.add(i, new DWDiskSector(this, 0, this.getSectorSize()));
 		}
-		this.setParam("_sectors", target);
+		this.setParam("_sectors", target+1);
 	}
 
 
@@ -248,9 +292,13 @@ public class DWRawDisk extends DWDisk {
 	
 	
 	
-	public synchronized void write() throws IOException
+	public synchronized void write() throws IOException, DWImageHasNoSourceException
 	{
 		// write in memory image to source 
+		if (this.fileobj == null)
+		{
+			throw (new DWImageHasNoSourceException("The image has no source object, must specify write path."));
+		}
 		
 		if (this.fileobj.isWriteable())
 		{
@@ -358,8 +406,17 @@ public class DWRawDisk extends DWDisk {
 
 	public void sync() throws IOException
 	{
-		if (this.getDirtySectors() > 0)
-			this.write();
+		if (this.isSyncTo())
+			if (this.fileobj != null)
+				if (this.getDirtySectors() > 0)
+					try
+					{
+						this.write();
+					} 
+					catch (DWImageHasNoSourceException e)
+					{
+						// dont care
+					}
 	}
 
 	

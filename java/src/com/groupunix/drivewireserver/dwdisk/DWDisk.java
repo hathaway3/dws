@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
+import com.groupunix.drivewireserver.dwexceptions.DWImageHasNoSourceException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
 
@@ -25,7 +26,7 @@ public abstract class DWDisk
 	
 	protected HierarchicalConfiguration params;
 	protected Vector<DWDiskSector> sectors = new Vector<DWDiskSector>();	
-	protected FileObject fileobj;
+	protected FileObject fileobj = null;
 	protected DWDiskConfigListener configlistener;
 	private DWDiskDrive drive;
 	
@@ -40,6 +41,7 @@ public abstract class DWDisk
 	public abstract int getDiskFormat();
 	
 	
+	// file image
 	public DWDisk(FileObject fileobj) throws IOException, DWImageFormatException
 	{
 
@@ -49,7 +51,20 @@ public abstract class DWDisk
 		
 		// internal 
 		this.setParam("_path", fileobj.getName().getURI());
-		this.setLastModifiedTime(fileobj.getContent().getLastModifiedTime());
+		
+	    long lastmodtime = -1;
+	    
+	    try
+	    {
+	    	lastmodtime = this.fileobj.getContent().getLastModifiedTime();
+	    }
+	    catch (FileSystemException e)
+	    {
+	    	logger.warn(e.getMessage());
+	    }
+	    
+	    this.setLastModifiedTime(lastmodtime); 
+		
 		this.setParam("_reads", 0);
 		this.setParam("_writes", 0);
 		this.setParam("_lsn", 0);
@@ -60,6 +75,25 @@ public abstract class DWDisk
 		
 	}
 	
+	// memory image
+	public DWDisk()
+	{
+
+		this.fileobj = null;
+		
+		this.params = new HierarchicalConfiguration();
+		
+		// internal 
+		this.setParam("_path", "");
+		this.setParam("_reads", 0);
+		this.setParam("_writes", 0);
+		this.setParam("_lsn", 0);
+		
+		
+		// user options
+		this.setParam("writeprotect",DWDefs.DISK_DEFAULT_WRITEPROTECT);
+		
+	}
 	
 	
 	public HierarchicalConfiguration getParams()
@@ -88,7 +122,10 @@ public abstract class DWDisk
 	
 	public String getFilePath()
 	{
-		return this.fileobj.getName().getURI();
+		if (this.fileobj != null)
+			return this.fileobj.getName().getURI();
+		else
+			return("(in memory only)");
 	}
 
 	public FileObject getFileObject()
@@ -126,12 +163,19 @@ public abstract class DWDisk
 	
 	public void reload() throws IOException, DWImageFormatException
 	{
-		logger.debug("reloading disk sectors from " + this.getFilePath());
-
-		this.sectors.clear();
-		
-		// load from path 
-		load();
+		if (this.getFileObject() != null)
+		{
+			logger.debug("reloading disk sectors from " + this.getFilePath());
+	
+			this.sectors.clear();
+			
+			// load from path 
+			load();
+		}
+		else
+		{
+			throw (new DWImageFormatException("Image is in memory only, so cannot reload."));
+		}
 	}
 
 	
@@ -146,7 +190,7 @@ public abstract class DWDisk
 		// NOP on readonly image formats
 	}
 
-	public void write() throws IOException
+	public void write() throws IOException, DWImageHasNoSourceException
 	{
 		// Fail on readonly image formats
 		throw new IOException("Image is read only");
@@ -204,7 +248,8 @@ public abstract class DWDisk
 			   
 		 fos.close();
 		   
-		 this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
+		 if (this.fileobj != null)
+			 this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
 	   
 	 }
 	

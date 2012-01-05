@@ -157,6 +157,12 @@ public class DWDefs
 
 	public static final int DISK_IMAGE_HEADER_SIZE = 256;
 
+	public static final int DISK_FILESYSTEM_OS9 = 0;
+	public static final int DISK_FILESYSTEM_DECB = 1;
+	public static final int DISK_FILESYSTEM_LWFS = 2;
+	public static final int DISK_FILESYSTEM_CCB = 3;
+	public static final int DISK_FILESYSTEM_UNKNOWN = -1;
+	
 	// help
 	
 	public static final String HELP_DEFAULT_FILE = "help.xml";
@@ -172,12 +178,32 @@ public class DWDefs
 	public static final byte EVENT_TYPE_NET = 'N';
 	public static final byte EVENT_TYPE_PRINT = 'P';
 	public static final byte EVENT_TYPE_VSERIAL = 'S';
+	public static final byte EVENT_TYPE_STATUS = '@';
 
 	public static final String EVENT_ITEM_KEY = "k";
 	public static final String EVENT_ITEM_VALUE = "v";
 	public static final String EVENT_ITEM_DRIVE = "d";
 	public static final String EVENT_ITEM_INSTANCE = "i";
-	public static final String EVENT_ITEM_LOGLINE = "l";
+	
+	public static final String EVENT_ITEM_LOGLEVEL = "l";
+	public static final String EVENT_ITEM_TIMESTAMP = "t";
+	public static final String EVENT_ITEM_LOGMSG = "m";
+	public static final String EVENT_ITEM_THREAD = "r";
+	public static final String EVENT_ITEM_LOGSRC = "s";
+	
+	public static final String EVENT_ITEM_INTERVAL = "0";
+	public static final String EVENT_ITEM_MEMTOTAL = "1";
+	public static final String EVENT_ITEM_MEMFREE = "2";
+	public static final String EVENT_ITEM_OPS = "3";
+	public static final String EVENT_ITEM_DISKOPS = "4";
+	public static final String EVENT_ITEM_VSERIALOPS = "5";
+	public static final String EVENT_ITEM_INSTANCES = "6";
+	public static final String EVENT_ITEM_INSTANCESALIVE = "7";
+	public static final String EVENT_ITEM_THREADS = "8";
+	public static final String EVENT_ITEM_UICLIENTS = "9";
+	
+	
+	
 	public static final int EVENT_MAX_QUEUE_SIZE = 20000;
 	public static final int EVENT_QUEUE_LOGDROP_SIZE = 800;
 	public static final int LOGGING_MAX_BUFFER_EVENTS = 500;
@@ -185,6 +211,17 @@ public class DWDefs
 	public static final long UITHREAD_WAIT_TICK = 200;
 	public static final long UITHREAD_SERVER_WAIT_TIME = 3000;
 	public static final long UITHREAD_INSTANCE_WAIT_TIME = 3000;
+
+	public static final long SERVER_MEM_UPDATE_INTERVAL = 30000;
+
+	
+
+	
+
+	
+
+	
+
 
 	
 	

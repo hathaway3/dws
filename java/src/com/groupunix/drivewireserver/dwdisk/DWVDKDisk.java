@@ -11,6 +11,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWVDKDisk extends DWDisk
 {
@@ -187,7 +188,8 @@ follow the disk name.
 	    	    
 		fis.close();
 		
-		
+		this.setParam("_filesystem", DWUtils.prettyFileSystem(DWDiskDrives.getDiskFSType(this.sectors)));
+		 
 	}
 
 

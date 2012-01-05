@@ -11,6 +11,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWCCBDisk extends DWDisk
 {
@@ -43,8 +44,6 @@ public class DWCCBDisk extends DWDisk
 	    InputStream fis;
 		    
 	    fis = this.fileobj.getContent().getInputStream();
-	    
-	    this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
 	    
 	    long fobjsize = fileobj.getContent().getSize();
 	    
@@ -89,6 +88,7 @@ public class DWCCBDisk extends DWDisk
 	    }
 	    
 	    this.setParam("_sectors", sec);
+	    this.setParam("_filesystem", DWUtils.prettyFileSystem(DWDefs.DISK_FILESYSTEM_CCB));
 	    
 		fis.close();
 		

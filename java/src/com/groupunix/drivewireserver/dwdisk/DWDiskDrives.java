@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Vector;
 import java.util.Map.Entry;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -13,6 +15,7 @@ import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DECBDefs;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
@@ -20,6 +23,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
+import com.groupunix.drivewireserver.dwexceptions.DWImageHasNoSourceException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
@@ -211,7 +215,7 @@ public class DWDiskDrives
 	}
 	
 	
-	public void writeDisk(int driveno) throws IOException, DWDriveNotLoadedException, DWDriveNotValidException
+	public void writeDisk(int driveno) throws IOException, DWDriveNotLoadedException, DWDriveNotValidException, DWImageHasNoSourceException
 	{
 		getDisk(driveno).write();
 	}
@@ -277,18 +281,22 @@ public class DWDiskDrives
 				switch(format)
 				{
 					case DWDefs.DISK_FORMAT_DMK:
+						logger.debug("trying dmk image load");
 						this.LoadDisk(driveno, new DWDMKDisk(fileobj));
 						break;
 						
 					case DWDefs.DISK_FORMAT_VDK:
+						logger.debug("trying vdk image load");
 						this.LoadDisk(driveno, new DWVDKDisk(fileobj));
 						break;
 						
 					case DWDefs.DISK_FORMAT_JVC:
+						logger.debug("trying jvc image load");
 						this.LoadDisk(driveno, new DWJVCDisk(fileobj));
 						break;
 						
 					case DWDefs.DISK_FORMAT_CCB:
+						logger.debug("trying ccb image load");
 						this.LoadDisk(driveno, new DWCCBDisk(fileobj));
 						break;
 					
@@ -534,6 +542,94 @@ public class DWDiskDrives
 	}
 
 
+	public void createDisk(int driveno) throws DWDriveAlreadyLoadedException
+	{
+		if (this.isLoaded(driveno))
+			throw (new DWDriveAlreadyLoadedException("Already a disk in drive " + driveno));
+		
+		this.diskDrives[driveno].insert(new DWRawDisk(DWDefs.DISK_SECTORSIZE, DWDefs.DISK_MAXSECTORS));
+	}
+
+
+	public void formatDOSFS(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, DWInvalidSectorException, DWSeekPastEndOfDeviceException, DWDriveWriteProtectedException, IOException
+	{
+		if (!this.isLoaded(driveno))
+			throw (new DWDriveNotLoadedException("No disk in drive " + driveno));
+		
+		DWDECBFileSystem.format(this.getDisk(driveno));
+		
+	}
+	
+
+
+	public static int getDiskFSType(Vector<DWDiskSector> sectors)
+	{
+		
+		if (!sectors.isEmpty())
+		{
+			// OS9 ?
+			if ((sectors.get(0).getData()[3] == 18) && (sectors.get(0).getData()[73] == 18) && (sectors.get(0).getData()[75] == 18))
+			{
+				return(DWDefs.DISK_FILESYSTEM_OS9);
+			}
+			
+			// LWFS
+			byte[] lwfs = new byte[4];
+			System.arraycopy( sectors.get(0).getData(), 0, lwfs, 0, 4 );
+			
+			if (new String(lwfs).equals("LWFS") || new String(lwfs).equals("LW16"))
+			{
+				return(DWDefs.DISK_FILESYSTEM_LWFS);
+			}
+			
+			// TODO - outdated? cocoboot isave
+			if (sectors.get(0).getData()[0] == (byte) 'f' && sectors.get(0).getData()[1] == (byte) 'c')
+			{
+				return(DWDefs.DISK_FILESYSTEM_CCB);
+			}
+			
+			
+			// DECB? no 100% sure way that i know of
+			if (sectors.size() == 630)
+			{
+				DWDECBFileSystem fs = new DWDECBFileSystem(sectors);
+				
+				List<DWDECBFileSystemDirEntry> dir = fs.getDirectory();
+				
+				// look for wacky directory entries?
+				boolean wacky = false;
+				for (DWDECBFileSystemDirEntry e : dir)
+				{
+					
+					if ((e.getFirstGranule() > DECBDefs.FAT_SIZE) || (e.getFileType() > 3) || ((e.getFileFlag() != 0) && (e.getFileFlag() != (byte)255)) )
+					{
+						wacky = true;
+					}
+				}
+				
+				// look for wacky fat
+				for (int i = 0; i < 256;i++)
+				{
+					int val = (0xFF & sectors.get(0).getData()[i]);
+					
+					if ((val > DECBDefs.FAT_SIZE) && (val < 0xC0))
+						wacky = true;
+					
+					if ((val > 0xC9) && (val < 0xFF))
+						wacky = true;
+					
+				}
+				
+				
+				if (!wacky)
+					return(DWDefs.DISK_FILESYSTEM_DECB);
+			}
+			
+		}
+		
+		return(DWDefs.DISK_FILESYSTEM_UNKNOWN);
+	}
+	
 	
 	
 }

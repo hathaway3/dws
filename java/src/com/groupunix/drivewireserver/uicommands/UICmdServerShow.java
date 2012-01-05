@@ -24,6 +24,7 @@ public class UICmdServerShow extends DWCommand {
 		commands.addcommand(new UICmdServerShowLog(dwuiClientThread));
 		commands.addcommand(new UICmdServerShowTopics(dwuiClientThread));
 		commands.addcommand(new UICmdServerShowHelp(dwuiClientThread));
+		commands.addcommand(new UICmdServerShowErrors(dwuiClientThread));
 	}
 
 	

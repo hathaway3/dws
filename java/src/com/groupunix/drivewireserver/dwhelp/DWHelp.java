@@ -11,11 +11,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWHelp 
@@ -197,28 +195,6 @@ public class DWHelp
 		return topic.replaceAll("\\.", " ");
 	}
 
-	public void genTopics(DWProtocol dwProto) throws ConfigurationException, IOException 
-	{
-		if (this.help != null)
-		{
-			this.help.clearTree("topics");
-		}
-		else
-		{
-			this.help = new XMLConfiguration();
-			this.help.setFileName(dwProto.getConfig().getString("HelpFile", DWDefs.HELP_DEFAULT_FILE));
-			this.help.save(dwProto.getConfig().getString("HelpFile", DWDefs.HELP_DEFAULT_FILE));
-		}
-		
-		addAllTopics(new DWCmd((DWProtocolHandler) dwProto), "");
-		
-		if (help.containsKey("wikiurl"))
-		{
-			this.loadWikiTopics(help.getString("wikiurl"));
-		}
-		
-		help.save();
-	}
 	
 	private void addAllTopics(DWCommand dwc, String prefix)
 	{
@@ -244,6 +220,24 @@ public class DWHelp
 			}
 		}
 		
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public ArrayList<String> getSectionTopics(String section)
+	{
+		ArrayList<String> res = new ArrayList<String>();
+		if (this.help != null)
+		{
+			for(Iterator<String> itk = help.configurationAt("topics." + section).getKeys(); itk.hasNext();)
+			{
+				String key = itk.next();
+				if (key.endsWith(".text"))
+					res.add(this.dotToSpace(key.substring(0, key.length()-5)));
+				
+			}
+		}
+		return(res);
 	}
 	
 	

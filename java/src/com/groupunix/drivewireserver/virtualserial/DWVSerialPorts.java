@@ -72,7 +72,11 @@ public class DWVSerialPorts {
 		
 			try 
 			{
+				
+				
+				
 				midiSynth = MidiSystem.getSynthesizer();
+				
 				setMIDIDevice(midiSynth);
 			
 				if (dwProto.getConfig().containsKey("MIDISynthDefaultSoundbank"))
@@ -95,10 +99,6 @@ public class DWVSerialPorts {
 			}
 		}
 	}
-
-
-
-
 
 
 
@@ -663,7 +663,7 @@ public class DWVSerialPorts {
 	}
 	
 	
-	public void setMIDIDevice(MidiDevice device) 
+	public void setMIDIDevice(MidiDevice device) throws MidiUnavailableException, IllegalArgumentException
 	{
 		if (this.midiDevice != null)
 		{
@@ -674,18 +674,14 @@ public class DWVSerialPorts {
 			}
 		}
 		
+		device.open();
+		
 		this.midiDevice = device;
-		try 
-		{
-			this.midiDevice.open();
-			DriveWireServer.submitMIDIEvent(this.dwProto.getHandlerNo(), "device", this.midiDevice.getDeviceInfo().getName());
+
+		DriveWireServer.submitMIDIEvent(this.dwProto.getHandlerNo(), "device", this.midiDevice.getDeviceInfo().getName());
 	    	
-			logger.info("midi: opened " + this.midiDevice.getDeviceInfo().getName());
-		} 
-		catch (MidiUnavailableException e) 
-		{
-			logger.warn(e.getMessage());
-		}
+		logger.info("midi: opened " + this.midiDevice.getDeviceInfo().getName());
+
 		
 	}
 
@@ -803,7 +799,7 @@ public class DWVSerialPorts {
 	{
 		if (this.midiProfConf != null)
 		{
-			return(this.midiProfConf.getString("name","none"));
+			return(this.midiProfConf.getString("[@name]","none"));
 		}
 		else
 		{
@@ -885,7 +881,7 @@ public class DWVSerialPorts {
 			if (sub.getInt("[@dev]") == voice)
 			{
 				xvoice = sub.getInt("[@gm]");
-				logger.debug("MIDI: profile '" + this.midiProfConf.getString("name") + "' translates device inst " + voice + " to GM instr " + xvoice);
+				logger.debug("MIDI: profile '" + this.midiProfConf.getString("[@name]") + "' translates device inst " + voice + " to GM instr " + xvoice);
 				return(xvoice);
 			}
 			

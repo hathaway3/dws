@@ -18,6 +18,11 @@ public class DWEvent {
 		this.params.put(key,val);
 	}
 	
+	public boolean hasParam(String key)
+	{
+		return(this.params.containsKey(key));
+	}
+	
 	public String getParam(String key)
 	{
 		if (this.params.containsKey(key))

@@ -47,6 +47,9 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private int lastChecksum = 0;
 	private int lastError = 0;
 	private byte[] lastLSN = new byte[3];
+	private long total_ops = 0;
+	private long disk_ops = 0;
+	private long vserial_ops = 0;
 	
 	private GregorianCalendar dwinitTime = new GregorianCalendar();
 	
@@ -76,6 +79,9 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 
 
 	private boolean ready = false;
+
+
+	private boolean resetPending = false;
 	
 	
 
@@ -177,11 +183,10 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		// protocol loop
 		while(!wanttodie)
 		{ 
-						
+			opcodeint = -1;
+			
 			// try to get an opcode
-			if (protodev == null)
-				opcodeint = -1;
-			else
+			if (!(protodev == null) && !resetPending)
 			{
 				try 
 				{
@@ -190,19 +195,20 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				catch (IOException e) 
 				{
 					// this should not actually ever get thrown, since we call comRead1 with timeout = false..
-					logger.error(e.getMessage());
-					opcodeint = -1;
+					logger.error("Strange result in proto read loop: "  + e.getMessage());
 				}
 			}
 				
 			if (opcodeint > -1)
 			{
 				lastOpcode = (byte) opcodeint;
+				total_ops++;
 				
 				// fast writes
 				if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_COCO_PORTS - 1)))
 				{
 					DoOP_FASTSERWRITE(lastOpcode);
+					vserial_ops++;
 				}
 				else
 				{
@@ -232,21 +238,25 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 						case DWDefs.OP_REREAD:
 						case DWDefs.OP_READ:
 							DoOP_READ(lastOpcode);
+							disk_ops++;
 							break;
 
 						case DWDefs.OP_REREADEX:
 						case DWDefs.OP_READEX:
 							DoOP_READEX(lastOpcode);
+							disk_ops++;
 							break;
 
 						case DWDefs.OP_WRITE:
 						case DWDefs.OP_REWRITE:
 							DoOP_WRITE(lastOpcode);
+							disk_ops++;
 							break;
 
 						case DWDefs.OP_GETSTAT:
 						case DWDefs.OP_SETSTAT:
 							DoOP_STAT(lastOpcode);
+							disk_ops++;
 							break;
 
 						case DWDefs.OP_TIME:
@@ -263,30 +273,37 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 							
 						case DWDefs.OP_SERREADM:
 							DoOP_SERREADM();
+							vserial_ops++;
 							break;
 
 						case DWDefs.OP_SERREAD:
 							DoOP_SERREAD();
+							vserial_ops++;
 							break;
 
 						case DWDefs.OP_SERWRITE:
 							DoOP_SERWRITE();
+							vserial_ops++;
 							break;
 
 						case DWDefs.OP_SERSETSTAT:
 							DoOP_SERSETSTAT();
+							vserial_ops++;
 							break;
 							      
 						case DWDefs.OP_SERGETSTAT:
 							DoOP_SERGETSTAT();
+							vserial_ops++;
 							break;
 			    
 						case DWDefs.OP_SERINIT:
 							DoOP_SERINIT();
+							vserial_ops++;
 							break;
 							      
 						case DWDefs.OP_SERTERM:
 							DoOP_SERTERM();
+							vserial_ops++;
 							break;	
 									
 						case DWDefs.OP_NOP:
@@ -319,14 +336,19 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			{
 				if (!this.wanttodie)
 				{
-					logger.debug("cannot access the device.. maybe it has not been configured or maybe it does not exist");
+					if (this.resetPending)
+						logger.debug("device is resetting...");
+					else if (!config.getString("DeviceType","").equals("dummy"))
+						logger.debug("device unavailable, will retry in " + config.getInt("DeviceFailRetryTime",6000) + "ms");
 				
 					// take a break, reset, hope things work themselves out
 					try 
 					{
+						
 						Thread.sleep(config.getInt("DeviceFailRetryTime",6000));
-						resetProtocolDevice();
-					
+						
+						setupProtocolDevice();
+						
 					} 
 					catch (InterruptedException e) 
 					{	
@@ -717,20 +739,104 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	
 	private void DoOP_READ(int opcode)
 	{
-		// READ / REREAD is not defined in current spec?
-		// yet it exists in the linux source of drivewire 3 server.. 
-		// leaving it out for now
+		byte[] mysum = new byte[2];
+		byte[] responsebuf = new byte[4];
+		byte[] sector = new byte[getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE)];
+		byte result = DWDefs.DWOK; 
 		
-		logger.error("got OP_READ??");
-		try {
-			Thread.sleep(275);
-		} 
-		catch (InterruptedException e) 
+		try 
 		{
-			logger.info(e.getMessage());
+			// read rest of packet
+			
+			responsebuf = protodev.comRead(4);
+			
+			lastDrive = responsebuf[0] & 0xff;
+			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
+					
+			// seek to requested LSN
+			diskDrives.seekSector(lastDrive, DWUtils.int3(lastLSN));
+			
+			// load lastSector with bytes from file
+			sector = diskDrives.readSector(lastDrive);
+				
+		} 
+		catch (DWDriveNotLoadedException e1) 
+		{
+			// zero sector
+			sector = diskDrives.nullSector();
+			logger.warn("DoOP_READ: " + e1.getMessage());
+			result = DWDefs.DWERROR_NOTREADY;
+		} 
+		catch (DWDriveNotValidException e2) 
+		{
+			// zero sector
+			sector = diskDrives.nullSector();
+			logger.warn("DoOP_READ: " + e2.getMessage());
+			result = DWDefs.DWERROR_NOTREADY;
+		} 
+		catch (IOException e3) 
+		{
+			// zero sector
+			sector = diskDrives.nullSector();
+			logger.warn("DoOP_READ: " + e3.getMessage());
+			result = DWDefs.DWERROR_READ;
+		} 
+		catch (DWInvalidSectorException e5) 
+		{
+			sector = diskDrives.nullSector();
+			logger.error("DoOP_READ: " + e5.getMessage());
+			result = DWDefs.DWERROR_READ;
+		} 
+		catch (DWSeekPastEndOfDeviceException e6) 
+		{
+			sector = diskDrives.nullSector();
+			logger.error("DoOP_READ: " + e6.getMessage());
+			result = DWDefs.DWERROR_READ;
+		} 
+		catch (DWImageFormatException e7)
+		{
+			sector = diskDrives.nullSector();
+			logger.error("DoOP_READ: " + e7.getMessage());
+			result = DWDefs.DWERROR_READ;
+		} 
+
+		// send result to coco
+		
+		protodev.comWrite1(result, true);
+		
+		if (result == DWDefs.DWOK)
+		{
+			// no error, send sector
+			
+			// write out response sector
+			protodev.comWrite(sector, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE), true);
+			
+			// calc checksum
+			lastChecksum = computeChecksum(sector, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE));
+
+			mysum[0] = (byte) ((lastChecksum >> 8) & 0xFF);
+			mysum[1] = (byte) ((lastChecksum << 0) & 0xFF);
+			
+			// send checksum
+			protodev.comWrite(mysum, 2, true);
+			
+			sectorsRead++;
+	
+			if (opcode == DWDefs.OP_REREAD)
+			{
+				readRetries++;
+				logger.warn("DoOP_REREAD lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+			}
+			else
+			{
+				if (config.getBoolean("LogOpCode", false))
+				{
+					logger.info("DoOP_READ lastDrive: " + lastDrive + " LSN: " + DWUtils.int3(lastLSN));
+				}
+			}
+			
 		}
 		
-		return;
 	}
 
 	
@@ -1368,9 +1474,15 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	{
 		if (!this.wanttodie)
 		{
-			logger.info("resetting protocol device");
-			// 	do we need to do anything else here?
-			setupProtocolDevice();
+			logger.info("requesting protocol device reset");
+			
+			// flag that we want a reset
+			this.resetPending = true;
+			
+			// kill device
+			if (protodev != null)
+				this.protodev.shutdown();
+			
 		}
 	}
 	
@@ -1378,18 +1490,26 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private void setupProtocolDevice()
 	{
 		
-		if (protodev != null)
+		if ((protodev != null) && (!resetPending))
 			protodev.shutdown();
 		
-		if (config.getString("DeviceType","serial").equalsIgnoreCase("serial") )
+		
+		
+		
+		if (config.getString("DeviceType","dummy").equalsIgnoreCase("dummy") )
+		{
+			this.resetPending = false;
+		}
+		else if (config.getString("DeviceType").equalsIgnoreCase("serial") )
 		{
 		
 			// create serial device
-			if ((config.containsKey("SerialDevice") && config.containsKey("CocoModel")))		
+			if ((config.containsKey("SerialDevice") && config.containsKey("SerialRate")))		
 			{
 				try 
 				{
-					protodev = new DWSerialDevice(this, config.getString("SerialDevice"), config.getInt("CocoModel"));
+					protodev = new DWSerialDevice(this);
+					this.resetPending = false;
 				}
 				catch (NoSuchPortException e1)
 				{
@@ -1409,7 +1529,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			}	
 			else
 			{
-				logger.error("Serial mode requires both SerialDevice and CocoModel to be set, please configure this instance.");
+				logger.error("Serial mode requires both SerialDevice and SerialRate to be set, please configure this instance.");
 				//wanttodie = true;
 			}
 		}
@@ -1469,7 +1589,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		text += "Last GetStat:  " + DWUtils.prettySS(getLastGetStat()) + "\r\n";
 		text += "Last SetStat:  " + DWUtils.prettySS(getLastSetStat()) + "\r\n";
 		text += "Last Drive:    " + getLastDrive() + "\r\n";
-		text += "Last LSN:      " + getLastLSN() + "\r\n";
+		text += "Last LSN:      " + DWUtils.int3(getLastLSN()) + "\r\n";
 		text += "Last Error:    " + ((int) getLastError() & 0xFF) + "\r\n";
 	
 		text += "\r\n";
@@ -1546,6 +1666,30 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	public void submitConfigEvent(String key, String val)
 	{
 		DriveWireServer.submitInstanceConfigEvent(this.handlerno, key, val);
+	}
+
+
+	@Override
+	public long getNumOps()
+	{
+		// TODO Auto-generated method stub
+		return this.total_ops;
+	}
+
+
+	@Override
+	public long getNumDiskOps()
+	{
+		// TODO Auto-generated method stub
+		return this.disk_ops;
+	}
+
+
+	@Override
+	public long getNumVSerialOps()
+	{
+		// TODO Auto-generated method stub
+		return this.vserial_ops;
 	}
 
 

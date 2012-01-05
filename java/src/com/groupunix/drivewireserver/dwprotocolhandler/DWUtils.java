@@ -766,4 +766,39 @@ public class DWUtils
 			return res;
 		}
 	   
+		
+		public static String prettyFileSystem(int format)
+		{
+			String res = "unknown";
+			
+			switch(format)
+			{
+				case DWDefs.DISK_FILESYSTEM_OS9:
+					res = "OS9";
+					break;
+				case DWDefs.DISK_FILESYSTEM_DECB:
+					res = "DECB";
+					break;
+				case DWDefs.DISK_FILESYSTEM_LWFS:
+					res = "LWFS";
+					break;
+				case DWDefs.DISK_FILESYSTEM_CCB:
+					res = "CCB";
+					break;
+
+			}
+			
+			
+			return res;
+		}
+
+		public static ThreadGroup getRootThreadGroup( ) {
+
+	    ThreadGroup tg = Thread.currentThread( ).getThreadGroup( );
+	    ThreadGroup ptg;
+	    while ( (ptg = tg.getParent( )) != null )
+	        tg = ptg;
+	    return tg;
+	}
+		
 }

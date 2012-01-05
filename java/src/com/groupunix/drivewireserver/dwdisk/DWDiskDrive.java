@@ -58,13 +58,14 @@ public class DWDiskDrive
 
 	public void eject() throws DWDriveNotLoadedException
 	{
+		
+		if (this.disk == null)
+		{
+			throw new DWDriveNotLoadedException("There is no disk in drive " + this.driveno);
+		}
+		
 		synchronized(this.disk)
 		{
-			if (this.disk == null)
-			{
-				throw new DWDriveNotLoadedException("There is no disk in drive " + this.driveno);
-			}
-			
 			try
 			{
 				this.disk.eject();
@@ -87,6 +88,7 @@ public class DWDiskDrive
 		this.loaded = true;
 		this.submitEvent("*insert", this.disk.getFilePath());
 		this.disk.insert(this);
+		
 	}
 
 

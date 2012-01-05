@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWImageHasNoSourceException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
@@ -98,6 +99,11 @@ public class DWCmdDiskWrite extends DWCommand {
 		catch (DWDriveNotValidException e) 
 		{
 			return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
+		} 
+		catch (DWImageHasNoSourceException e)
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILE_NOT_FOUND,e.getMessage()));
+			
 		}
 	}
 	

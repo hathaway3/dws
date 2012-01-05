@@ -706,8 +706,8 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 			{
 				try 
 				{
-					// set cocomodel to 1 = 38400
-					protodev = new DWSerialDevice(this, config.getString("SerialDevice"), 1);
+					
+					protodev = new DWSerialDevice(this);
 				}
 				catch (NoSuchPortException e1)
 				{
@@ -843,6 +843,30 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	{
 		// TODO Auto-generated method stub
 		
+	}
+
+
+	@Override
+	public long getNumOps()
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public long getNumDiskOps()
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public long getNumVSerialOps()
+	{
+		// TODO Auto-generated method stub
+		return 0;
 	}
 	
 }

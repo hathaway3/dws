@@ -36,7 +36,7 @@ public class DWVPrinter
 		
 		for (HierarchicalConfiguration printer : printers)
 		{
-			if (printer.containsKey("Name") && printer.containsKey("Driver"))
+			if (printer.containsKey("[@name]") && printer.containsKey("Driver"))
 			{
 				// definition appears valid, now can we instantiate the requested driver...
 				
@@ -46,43 +46,43 @@ public class DWVPrinter
 					Constructor<DWVPrinterDriver> pconst = (Constructor<DWVPrinterDriver>) Class.forName(("com.groupunix.drivewireserver.virtualprinter.DWVPrinter" + printer.getString("Driver")), true, this.getClass().getClassLoader()).getConstructor(Class.forName("org.apache.commons.configuration.HierarchicalConfiguration"));
 					this.drivers.add((DWVPrinterDriver) pconst.newInstance(printer));
 					// yes we can
-					logger.info("init printer '" + printer.getString("Name") + "' using driver '" + printer.getString("Driver") + "'");
+					logger.info("init printer '" + printer.getString("[@name]") + "' using driver '" + printer.getString("Driver") + "'");
 					
 				} 
 				// so many ways to fail...
 				catch (ClassNotFoundException e) 
 				{
-					logger.warn("Invalid printer definition '" + printer.getString("Name") + "' in config, '" + printer.getString("Driver") + "' is not a known driver.");
+					logger.warn("Invalid printer definition '" + printer.getString("[@name]") + "' in config, '" + printer.getString("Driver") + "' is not a known driver.");
 				} 
 				catch (InstantiationException e) 
 				{
-					logger.warn("InstantiationException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+					logger.warn("InstantiationException on printer '" + printer.getString("[@name]") + "': " + e.getMessage());
 				} 
 				catch (IllegalAccessException e) 
 				{
-					logger.warn("IllegalAccessException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+					logger.warn("IllegalAccessException on printer '" + printer.getString("[@name]") + "': " + e.getMessage());
 				} 
 				catch (SecurityException e) 
 				{
-					logger.warn("SecurityException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+					logger.warn("SecurityException on printer '" + printer.getString("[@name]") + "': " + e.getMessage());
 				} 
 				catch (NoSuchMethodException e) 
 				{
-					logger.warn("NoSuchMethodException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+					logger.warn("NoSuchMethodException on printer '" + printer.getString("[@name]") + "': " + e.getMessage());
 				} 
 				catch (IllegalArgumentException e) 
 				{
-					logger.warn("IllegalArgumentException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+					logger.warn("IllegalArgumentException on printer '" + printer.getString("[@name]") + "': " + e.getMessage());
 				} 
 				catch (InvocationTargetException e) 
 				{
-					logger.warn("InvocationTargetException on printer '" + printer.getString("Name") + "': " + e.getMessage());
+					logger.warn("InvocationTargetException on printer '" + printer.getString("[@name]") + "': " + e.getMessage());
 				}
 				
 			}
 			else
 			{
-				logger.warn("Invalid printer definition in config, name " + printer.getString("Name","not defined") + " driver " + printer.getString("Driver","not defined"));
+				logger.warn("Invalid printer definition in config, name " + printer.getString("[@name]","not defined") + " driver " + printer.getString("Driver","not defined"));
 			}
 		}
 	}

@@ -31,5 +31,8 @@ public interface DWProtocol extends Runnable
 	DWHelp getHelp();
 	boolean isReady();
 	void submitConfigEvent(String propertyName, String string);
+	long getNumOps();
+	long getNumDiskOps();
+	long getNumVSerialOps();
 	
 }

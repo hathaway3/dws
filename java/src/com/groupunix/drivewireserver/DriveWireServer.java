@@ -3,6 +3,10 @@ package com.groupunix.drivewireserver;
 
 
 
+import gnu.io.CommPort;
+import gnu.io.CommPortIdentifier;
+import gnu.io.SerialPort;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +14,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -39,8 +44,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "4.0.0RC1";
-	public static final String DWServerVersionDate = "12/18/2011";
+	public static final String DWServerVersion = "4.0.1";
+	public static final String DWServerVersionDate = "01/04/2012";
 	
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
@@ -53,8 +58,8 @@ public class DriveWireServer
 	
 	public static int configserial = 0;
 	
-	private static Thread[] dwProtoHandlerThreads;
-	private static DWProtocol[] dwProtoHandlers;
+	private static Vector<Thread> dwProtoHandlerThreads = new Vector<Thread>();
+	private static Vector<DWProtocol> dwProtoHandlers = new Vector<DWProtocol>();
 
 	private static Thread lazyWriterT;
 	private static DWUIThread uiObj;
@@ -67,6 +72,11 @@ public class DriveWireServer
 	private static boolean useLF5 = false;
 	private static LF5Appender lf5appender;
 	private static boolean useBackup = false;
+	private static SerialPort testSerialPort;
+	
+	private static DWEvent statusEvent = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+	private static long lastMemoryUpdate = 0;
+	private static ArrayList<DWEvent> logcache = new ArrayList<DWEvent>();
 	
 
 	public static void main(String[] args) throws ConfigurationException
@@ -87,7 +97,10 @@ public class DriveWireServer
     	
     		try
     		{
-    			Thread.sleep(1000);
+    			Thread.sleep(DriveWireServer.serverconfig.getInt("StatusInterval",1000));
+    			
+    			submitServerStatus();
+    			
     		} 
     		catch (InterruptedException e)
     		{
@@ -101,6 +114,105 @@ public class DriveWireServer
 		//System.exit(0);
 	}
 
+	
+
+
+	private static void submitServerStatus()
+	{
+		long ticktime = System.currentTimeMillis();
+	
+		if (uiObj != null)
+		{
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+			
+			// add everything
+			
+			evt.setParam(DWDefs.EVENT_ITEM_INTERVAL, DriveWireServer.serverconfig.getInt("StatusInterval",1000)+"");
+			evt.setParam(DWDefs.EVENT_ITEM_INSTANCES, DriveWireServer.getNumHandlers()+"");
+			evt.setParam(DWDefs.EVENT_ITEM_INSTANCESALIVE, DriveWireServer.getNumHandlersAlive()+"");
+			evt.setParam(DWDefs.EVENT_ITEM_THREADS, DWUtils.getRootThreadGroup().activeCount()+"");
+			evt.setParam(DWDefs.EVENT_ITEM_UICLIENTS, DriveWireServer.uiObj.getNumUIClients()+"");
+
+			// ops
+			evt.setParam(DWDefs.EVENT_ITEM_OPS, DriveWireServer.getTotalOps()+"");
+			evt.setParam(DWDefs.EVENT_ITEM_DISKOPS, DriveWireServer.getDiskOps()+"");
+			evt.setParam(DWDefs.EVENT_ITEM_VSERIALOPS, DriveWireServer.getVSerialOps()+"");
+			
+			// some things should not be updated every tick..
+			if (ticktime - lastMemoryUpdate > DWDefs.SERVER_MEM_UPDATE_INTERVAL)
+			{	
+				evt.setParam(DWDefs.EVENT_ITEM_MEMTOTAL, (Runtime.getRuntime().totalMemory() / 1024)+"");
+				evt.setParam(DWDefs.EVENT_ITEM_MEMFREE, (Runtime.getRuntime().freeMemory() / 1024)+"");
+				lastMemoryUpdate = ticktime; 
+			}
+			
+			// only send updated vals
+			DWEvent fevt = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+			
+			for (String key : evt.getParamKeys())
+			{
+				if (!statusEvent.hasParam(key) || (!statusEvent.getParam(key).equals(evt.getParam(key))))
+				{
+					fevt.setParam(key, evt.getParam(key));
+					statusEvent.setParam(key, evt.getParam(key));
+				}
+			}
+			
+			
+			if (fevt.getParamKeys().size() > 0)
+				uiObj.submitEvent(fevt);
+		}
+		
+	}
+
+
+
+	public static DWEvent getServerStatusEvent()
+	{
+		return DriveWireServer.statusEvent;
+	}
+	
+
+	private static long getTotalOps()
+	{
+		long res = 0;
+		
+		for (DWProtocol p : dwProtoHandlers)
+		{
+			if (p != null)
+				res += p.getNumOps();
+		}
+			
+		return res;
+	}
+
+
+	private static long getDiskOps()
+	{
+		long res = 0;
+		
+		for (DWProtocol p : dwProtoHandlers)
+		{
+			if (p != null)
+				res += p.getNumDiskOps();
+		}
+			
+		return res;
+	}
+	
+	
+	private static long getVSerialOps()
+	{
+		long res = 0;
+		
+		for (DWProtocol p : dwProtoHandlers)
+		{
+			if (p != null)
+				res += p.getNumVSerialOps();
+		}
+			
+		return res;
+	}
 	
 
 
@@ -186,8 +298,8 @@ public class DriveWireServer
 	   	@SuppressWarnings("unchecked")
 		List<HierarchicalConfiguration> handlerconfs = serverconfig.configurationsAt("instance");
     	
-    	dwProtoHandlers = new DWProtocol[handlerconfs.size()];
-    	dwProtoHandlerThreads = new Thread[handlerconfs.size()];
+    	dwProtoHandlers.ensureCapacity(handlerconfs.size());
+    	dwProtoHandlerThreads.ensureCapacity(handlerconfs.size());
     	
     	int hno = 0;
     	
@@ -197,29 +309,30 @@ public class DriveWireServer
 		    {
 		    	if (hconf.getString("Protocol").equals("DriveWire"))
 		    	{
-		    		dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+		    		dwProtoHandlers.add(new DWProtocolHandler(hno, hconf));
 		    	}
 		    	else if (hconf.getString("Protocol").equals("MCX"))
 		    	{
-		    		dwProtoHandlers[hno] = new MCXProtocolHandler(hno, hconf);
+		    		dwProtoHandlers.add(new MCXProtocolHandler(hno, hconf));
 		    	}
 		    	else
 		    	{
-		    		logger.error("Unknown protocol '" + hconf.getString("Protocol") + "' in handler #" + hno);
+		    		logger.error("Unknown protocol '" + hconf.getString("Protocol") + "' in handler.");
 		    	}
 		    }
 		    else
 		    {
-		    	dwProtoHandlers[hno] = new DWProtocolHandler(hno, hconf);
+		    	// default to drivewire
+		    	dwProtoHandlers.add(new DWProtocolHandler(hno, hconf));
 		    }
 		    
 		    
 		    
 		    if (hconf.getBoolean("AutoStart", true))
 		    {
-		    	logger.info("Starting #" + hno + ": " + hconf.getString("Name","unnamed") + " (" + dwProtoHandlers[hno].getClass().getSimpleName() + ")");
-		    	dwProtoHandlerThreads[hno] = new Thread(dwProtoHandlers[hno]);
-		    	dwProtoHandlerThreads[hno].start();	
+		    	logger.info("Starting #" + hno + ": " + hconf.getString("Name","unnamed") + " (" + dwProtoHandlers.get(hno).getClass().getSimpleName() + ")");
+		    	dwProtoHandlerThreads.add(new Thread(dwProtoHandlers.get(hno)) );
+		    	dwProtoHandlerThreads.get(dwProtoHandlerThreads.size()-1).start();	
     	    }
 		    
 		    hno++;
@@ -439,25 +552,25 @@ public class DriveWireServer
 		{
 			logger.debug("stopping protocol handler(s)...");
 		
-			for (int i = 0;i<dwProtoHandlerThreads.length;i++)
+			for (DWProtocol p : dwProtoHandlers)
 			{
-				if (dwProtoHandlers[i] != null)
+				if (p != null)
 				{
-					dwProtoHandlers[i].shutdown();
-				
-				
-					if (dwProtoHandlerThreads[i].isAlive())
-					{
-						try 
-						{
-							dwProtoHandlerThreads[i].join();
-						} 
-						catch (InterruptedException e) 
-						{
-							logger.warn(e.getMessage());
-						}
-					}
-				
+					p.shutdown();
+				}
+			}
+			
+			for (Thread t : dwProtoHandlerThreads)
+			{
+				if (t.isAlive())
+			
+				try 
+				{
+					t.join();
+				} 
+				catch (InterruptedException e) 
+				{
+					logger.warn(e.getMessage());
 				}
 			}
 		
@@ -590,7 +703,10 @@ public class DriveWireServer
 
 	public static DWProtocol getHandler(int handlerno)
 	{
-		return(dwProtoHandlers[handlerno]);
+		if ((handlerno < dwProtoHandlers.size()) && (handlerno > -1))
+			return(dwProtoHandlers.get(handlerno));
+		
+		return null;
 	}
 	
 	
@@ -611,17 +727,32 @@ public class DriveWireServer
 
 	public static int getNumHandlers()
 	{
-		return dwProtoHandlers.length;
+		return dwProtoHandlers.size();
 	}
 
 
+	public static int getNumHandlersAlive()
+	{
+		int res = 0;
+		
+		for (DWProtocol p : dwProtoHandlers)
+		{
+			if (p != null)
+			{
+				if (!p.isDying() && p.isReady())
+					res++;
+			}
+		}
+		
+		return res;
+	}
 
 
 	public static boolean isValidHandlerNo(int handler)
 	{
-		if ((handler < dwProtoHandlers.length) && (handler >= 0))
+		if ((handler < dwProtoHandlers.size()) && (handler >= 0))
 		{
-			if (dwProtoHandlers[handler] != null)
+			if (dwProtoHandlers.get(handler) != null)
 			{
 				return true;
 			}
@@ -664,14 +795,16 @@ public class DriveWireServer
 		
 	}
 
+	
+	
 
 
 
 	public static boolean handlerIsAlive(int h)
 	{
-		if (dwProtoHandlers[h] != null)
+		if (dwProtoHandlers.get(h) != null)
 		{
-			if ((!dwProtoHandlers[h].isDying()) && (dwProtoHandlerThreads[h] != null) && (dwProtoHandlerThreads[h].isAlive() ))
+			if ((!dwProtoHandlers.get(h).isDying()) && (dwProtoHandlerThreads.get(h) != null) && (dwProtoHandlerThreads.get(h).isAlive() ))
 			{
 				return(true);
 			}
@@ -687,7 +820,7 @@ public class DriveWireServer
 	{
 		if (isValidHandlerNo(handlerno))
 		{
-			return(dwProtoHandlers[handlerno].getConfig().getString("Name","unnamed instance " + handlerno));
+			return(dwProtoHandlers.get(handlerno).getConfig().getString("[@name]","unnamed instance " + handlerno));
 		}
 		
 		return("null handler " + handlerno);
@@ -707,17 +840,64 @@ public class DriveWireServer
 	        java.util.Enumeration<gnu.io.CommPortIdentifier> thePorts =  gnu.io.CommPortIdentifier.getPortIdentifiers();
 	        while (thePorts.hasMoreElements()) 
 	        {
-	            gnu.io.CommPortIdentifier com = thePorts.nextElement();
-	            if (com.getPortType() == gnu.io.CommPortIdentifier.PORT_SERIAL)
-	                 h.add(com.getName());
-	                
+	        	try
+	        	{
+		            gnu.io.CommPortIdentifier com = thePorts.nextElement();
+		            if (com.getPortType() == gnu.io.CommPortIdentifier.PORT_SERIAL)
+		                 h.add(com.getName());
+	        	}
+	        	catch (Exception e)
+	        	{
+	        		logger.error("While detecting serial devices: " + e.getMessage());
+	        	}
 	            
 	        }
+	
 	        return h;
-	    }
+
+	 }
 
 
 
+	public static String getSerialPortStatus(String port)
+	{
+		String res = "";
+		
+		try
+		{
+			CommPortIdentifier pi = CommPortIdentifier.getPortIdentifier(port);
+			
+			if (pi.isCurrentlyOwned())
+			{
+				res = "In use by " + pi.getCurrentOwner();
+			}
+			else
+			{
+				CommPort commPort = pi.open("DriveWireServer",2000);
+				
+				if ( commPort instanceof SerialPort )
+				{
+            		res = "Available";
+					
+				}
+				else
+				{
+					res = "Not a serial port";
+				}
+				
+				commPort.close();
+			}
+			
+		} 
+		catch (Exception e)
+		{
+			
+			res = e.getClass().getSimpleName() + ": " + e.getLocalizedMessage();
+		}
+		
+		return res;
+	}
+	 
 
 	public static void shutdown() 
 	{
@@ -789,10 +969,23 @@ public class DriveWireServer
 
 	public static void submitLogEvent(LoggingEvent event) 
 	{
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_LOG);
+		
+		evt.setParam(DWDefs.EVENT_ITEM_LOGLEVEL, event.getLevel().toString());
+		evt.setParam(DWDefs.EVENT_ITEM_TIMESTAMP, event.getTimeStamp()+"");
+		evt.setParam(DWDefs.EVENT_ITEM_LOGMSG, event.getMessage().toString());
+		evt.setParam(DWDefs.EVENT_ITEM_THREAD, event.getThreadName());
+		evt.setParam(DWDefs.EVENT_ITEM_LOGSRC, event.getLoggerName());
+		
+		synchronized(logcache)
+		{
+			logcache.add(evt);
+			if (logcache.size() > DWDefs.LOGGING_MAX_BUFFER_EVENTS)
+				logcache.remove(0);
+		}
+		
 		if (uiObj != null)
 		{
-			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_LOG);
-			evt.setParam(DWDefs.EVENT_ITEM_LOGLINE, logLayout.format(event));
 			uiObj.submitEvent(evt);
 		}
 	}
@@ -804,5 +997,111 @@ public class DriveWireServer
 	{
 		return DriveWireServer.ready ;
 	}
+
+
+
+
+	public static boolean testSerialPort_Open(String device) throws Exception
+	{
+		
+		try
+		{
+			CommPortIdentifier pi = CommPortIdentifier.getPortIdentifier(device);
+			
+			if (pi.isCurrentlyOwned())
+			{
+				throw (new Exception("In use by " + pi.getCurrentOwner()));
+			}
+			else
+			{
+				CommPort commPort = pi.open("DriveWireTest",2000);
+				
+				if ( commPort instanceof SerialPort )
+				{
+            	
+					testSerialPort = (SerialPort) commPort;
+					
+					testSerialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+					testSerialPort.enableReceiveThreshold(1);
+					testSerialPort.enableReceiveTimeout(3000);
+					
+					return true;
+					
+				}
+				else
+				{
+					throw (new Exception("Not a serial port"));
+				}
+				
+			}
+			
+		} 
+		catch (Exception e)
+		{
+			
+			throw (new Exception(e.getLocalizedMessage()));
+		}
+		
+		
+		
+	}
+
+	public static boolean testSerialPort_setParams(int rate) throws Exception
+	{
+		try
+		{
+			testSerialPort.setSerialPortParams(rate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+			return true;
+		}
+		catch (Exception e)
+		{
+			
+			throw (new Exception(e.getLocalizedMessage()));
+		}
+			
+	}
+
+
+	public static int testSerialPort_read() throws Exception
+	{
+		
+		try
+		{
+			return( testSerialPort.getInputStream().read());
+		}
+		catch (Exception e)
+		{
+			
+			throw (new Exception(e.getLocalizedMessage()));
+		}
+	}
+
+
+
+
+	public static void testSerialPort_close()
+	{
+		try
+		{
+			testSerialPort.close();
+		}
+		catch (Exception e)
+		{
+			
+		}
+	}
+
+
+
+
+	public static ArrayList<DWEvent> getLogCache()
+	{
+		return DriveWireServer.logcache;
+	}
+
+
+
+
+
 	
 }

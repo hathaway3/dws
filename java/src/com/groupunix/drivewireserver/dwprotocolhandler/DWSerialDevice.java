@@ -24,10 +24,12 @@ public class DWSerialDevice implements DWProtocolDevice
 	private byte[] prefix;
 	
 	
-	public DWSerialDevice(DWProtocol dwProto, String device, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
+	public DWSerialDevice(DWProtocol dwProto) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
-		this.device = device;
+		
 		this.dwProto = dwProto;
+		
+		this.device = dwProto.getConfig().getString("SerialDevice");
 		
 		prefix = new byte[1];
 		//prefix[0] = (byte) 0xFF;
@@ -39,7 +41,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 		logger.debug("init " + device + " for handler #" + dwProto.getHandlerNo() + " (logging bytes: " + bytelog + ")");
 		
-		connect(device, cocomodel);
+		connect(device);
 				
 	}
 	
@@ -68,24 +70,25 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 	public void shutdown()
 	{
-		logger.debug("serial device shutting down");
+		
 		this.wanttodie = true;
 		
 		try
 		{
-			logger.debug("1");
+			logger.debug("close serial input stream");
 			this.serialPort.getInputStream().close();
 		} 
 		catch (IOException e)
 		{
 			logger.warn(e.getMessage());
 		}
-		logger.debug("2");
+		
+		logger.debug("close serial port");
 		this.serialPort.close();
 		
 	}
 
-	private void connect(String portName, int cocomodel) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
+	private void connect(String portName) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
 	{
 		logger.debug("attempting to open device '" + portName + "'");
 		
@@ -99,7 +102,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		}
 		else
 		{
-			CommPort commPort = portIdentifier.open("DWProtocolHandler",2000);
+			CommPort commPort = portIdentifier.open("DriveWire",2000);
             
 				if ( commPort instanceof SerialPort )
 				{
@@ -107,11 +110,14 @@ public class DWSerialDevice implements DWProtocolDevice
 					serialPort = (SerialPort) commPort;
 
 					// these settings seem to solve the lost bytes problems on my usb adapter
+					// dedicating a thread to busy wait on the port works better than using the
+					// event driven model... ok i guess
 					serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 					serialPort.enableReceiveThreshold(1);
 					serialPort.enableReceiveTimeout(3000);
-                
-					setSerialParams(serialPort, cocomodel);               
+                	
+					
+					setSerialParams(serialPort);               
                 
 					logger.info("opened serial device " + portName);
 				}
@@ -126,32 +132,14 @@ public class DWSerialDevice implements DWProtocolDevice
 	}
 	
 	
-	private void setSerialParams(SerialPort sport, int cocomodel) throws UnsupportedCommOperationException 
+	private void setSerialParams(SerialPort sport) throws UnsupportedCommOperationException 
 	{
 		int rate;
 		int parity = 0;
 		int stopbits = 1;
 		int databits = 8;
 		
-		if (dwProto.getConfig().containsKey("SerialRate"))
-		{
-			rate = dwProto.getConfig().getInt("SerialRate");
-		}
-		else
-		{
-			switch(cocomodel)
-			{
-				case 1:
-					rate = 38400;
-					break;
-				case 2:
-					rate = 57600;
-					break;
-				default:
-					rate = 115200;
-			}
-		}
-		
+		rate = dwProto.getConfig().getInt("SerialRate", 115200);
 		
 		
 		if (dwProto.getConfig().containsKey("SerialStopbits"))
@@ -326,21 +314,21 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 	
 
-			while ((retdata == -1) && (!this.wanttodie) && (serialPort != null))
-			{
-				retdata = serialPort.getInputStream().read();
-			}
-			
-			if (bytelog)
-				logger.debug("READ1: " + retdata);
-			
-			if (wanttodie)
-			{
-				//logger.debug("died while in read1");
-				return(-1);
-			}
-			
-			return(retdata);
+		while ((retdata == -1) && (!this.wanttodie) && (serialPort != null))
+		{
+			retdata = serialPort.getInputStream().read();
+		}
+		
+		if (bytelog)
+			logger.debug("READ1: " + retdata);
+		
+		if (wanttodie)
+		{
+			//logger.debug("died while in read1");
+			return(-1);
+		}
+		
+		return(retdata);
 	
 
 	}

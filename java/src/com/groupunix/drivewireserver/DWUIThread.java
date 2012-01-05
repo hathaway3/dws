@@ -6,7 +6,6 @@ import java.net.Socket;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -53,7 +52,7 @@ public class DWUIThread implements Runnable {
 		}
 		catch (ConcurrentModificationException e)
 		{
-			// whatever
+			// TODO whatever, we are dying, but should do this right
 		}
 		
 	}
@@ -102,7 +101,7 @@ public class DWUIThread implements Runnable {
 			catch (IOException e1) 
 			{
 				if (wanttodie)
-					logger.debug("IO error while dying: " + e1.getMessage());
+					logger.debug("IO error (while dying): " + e1.getMessage());
 				else
 					logger.warn("IO error: " + e1.getMessage());
 				
@@ -132,6 +131,7 @@ public class DWUIThread implements Runnable {
 	{
 		
 		//System.out.println("Event " + evt.getEventType() + " " + evt.getParam("k") + " " + evt.getParam("v"));
+
 		
 		synchronized(this.clientThreads)
 		{
@@ -139,11 +139,12 @@ public class DWUIThread implements Runnable {
 			
 			while(itr.hasNext()) 
 			{	
-				LinkedBlockingQueue<DWEvent> queue = (LinkedBlockingQueue<DWEvent>) itr.next().getEventQueue(); 
-		    
+				DWUIClientThread client = itr.next();
+				LinkedBlockingQueue<DWEvent> queue = (LinkedBlockingQueue<DWEvent>) client.getEventQueue(); 
+				
 				synchronized(queue)
 				{
-					if (queue != null)
+					if ((queue != null) && !(client.isDropLog() && (evt.getEventType() == DWDefs.EVENT_TYPE_LOG)))
 					{
 						if (queue.size() < DWDefs.EVENT_QUEUE_LOGDROP_SIZE)
 						{
@@ -165,4 +166,12 @@ public class DWUIThread implements Runnable {
 		} 
 	}
 
+	
+	public int getNumUIClients()
+	{
+		return this.clientThreads.size();
+	}
+	
+
+	
 }

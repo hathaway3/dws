@@ -72,6 +72,17 @@ public class DWDiskSector
 		return dirty;
 	}
 
+	public void setDataByte(int i, byte nextgran)
+	{
+		this.data[i] = nextgran;
+	}
+
+	public void makeDirty()
+	{
+		this.dirty = true;
+		
+	}
+
 
 
 	

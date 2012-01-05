@@ -18,6 +18,7 @@ public class UICmdInstance extends DWCommand {
 		commands.addcommand(new UICmdInstanceReset(dwuiClientThread));
 		commands.addcommand(new UICmdInstanceStatus(dwuiClientThread));
 		commands.addcommand(new UICmdInstanceMIDIStatus(dwuiClientThread));
+		commands.addcommand(new UICmdInstancePrinterStatus(dwuiClientThread));
 	}
 
 	

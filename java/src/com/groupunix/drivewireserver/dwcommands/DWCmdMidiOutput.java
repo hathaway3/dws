@@ -75,6 +75,10 @@ public class DWCmdMidiOutput extends DWCommand {
 			{
 				return(new DWCommandResponse(false,DWDefs.RC_MIDI_UNAVAILABLE,e.getMessage()));
 			}
+			catch (IllegalArgumentException e)
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_MIDI_INVALID_DEVICE, e.getMessage()));
+			}
 		}
 		else
 		{

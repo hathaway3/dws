@@ -1,24 +1,26 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
-public class DWCmdServerHelp extends DWCommand
-{
-	
-	static final String command = "help";
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+
+public class DWCmdDiskDos extends DWCommand {
+
+	static final String command = "dos";
 	private DWCommandList commands;
-	private DWProtocol dwProto;	
+	private DWProtocolHandler dwProto;	
 	
-	
-	public DWCmdServerHelp(DWProtocol dwProtocol,DWCommand parent)
+	public DWCmdDiskDos(DWProtocolHandler dwProto,DWCommand parent)
 	{
 		setParentCmd(parent);
-		this.dwProto = dwProtocol;
-		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
-		commands.addcommand(new DWCmdServerHelpShow(dwProtocol,this));
-		commands.addcommand(new DWCmdServerHelpReload(dwProtocol,this));
+		this.dwProto = dwProto;
 		
-	} 
+		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
+		
+		commands.addcommand(new DWCmdDiskDosDir(dwProto,this));
+		commands.addcommand(new DWCmdDiskDosList(dwProto,this));
+		commands.addcommand(new DWCmdDiskDosFormat(dwProto,this));
+		commands.addcommand(new DWCmdDiskDosAdd(dwProto,this));
+	}
 
 	
 	public String getCommand() 
@@ -41,22 +43,21 @@ public class DWCmdServerHelp extends DWCommand
 	}
 
 
+
 	public String getShortHelp() 
 	{
-		return "Manage the help system";
+		return "Manage DOS disks";
 	}
 
 
 	public String getUsage() 
 	{
-		return "dw help [command]";
+		return "dw disk dos [command]";
 	}
-
-
+	
 	public boolean validate(String cmdline) 
 	{
 		return(commands.validate(cmdline));
 	}
-	
 	
 }

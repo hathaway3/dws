@@ -39,7 +39,7 @@ public class DWCmdDiskCreate extends DWCommand {
 
 	public String getUsage() 
 	{
-		return "dw disk create # path";
+		return "dw disk create # [path]";
 	}
 
 	public DWCommandResponse parse(String cmdline)  
@@ -47,7 +47,19 @@ public class DWCmdDiskCreate extends DWCommand {
 		
 		String[] args = cmdline.split(" ");
 
-		if (args.length == 2)
+		if (args.length == 1)
+		{
+			try
+			{
+				return(doDiskCreate(dwProto.getDiskDrives().getDriveNoFromString(args[0])));
+			} 
+			catch (DWDriveNotValidException e)
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
+			}
+
+		}
+		else if (args.length == 2)
 		{
 			// create disk
 		
@@ -92,7 +104,7 @@ public class DWCmdDiskCreate extends DWCommand {
 				
 			dwProto.getDiskDrives().LoadDiskFromFile(driveno, filepath);
 					
-			return(new DWCommandResponse("Disk #" + driveno + " created."));
+			return(new DWCommandResponse("New disk image created for drive " + driveno + "."));
 
 		}
 		catch (IOException e1)
@@ -119,6 +131,36 @@ public class DWCmdDiskCreate extends DWCommand {
 		
 	}
 
+	
+	private DWCommandResponse doDiskCreate(int driveno)
+	{
+		
+		try
+		{
+			
+			if (dwProto.getDiskDrives().isLoaded(driveno))
+				dwProto.getDiskDrives().EjectDisk(driveno);
+					
+			dwProto.getDiskDrives().createDisk(driveno);
+
+		}
+		catch (DWDriveNotValidException e) 
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
+		} 
+		catch (DWDriveNotLoadedException e) 
+		{
+			// dont care
+		} 
+		catch (DWDriveAlreadyLoadedException e)
+		{
+			return(new DWCommandResponse(false,DWDefs.RC_DRIVE_ALREADY_LOADED,e.getMessage()));
+		} 
+
+		return(new DWCommandResponse("New image created for drive " + driveno + "."));
+	}
+
+	
 	public boolean validate(String cmdline) 
 	{
 		return(true);

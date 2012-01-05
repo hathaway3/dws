@@ -641,6 +641,6 @@ public class DWVPrinterFX80 implements DWVPrinterDriver {
 	@Override
 	public String getPrinterName() 
 	{
-		return(this.config.getString("Name","?noname?"));
+		return(this.config.getString("[@name]","?noname?"));
 	}
 }

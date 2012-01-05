@@ -9,7 +9,6 @@ import javax.sound.midi.MidiUnavailableException;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 
-import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
@@ -80,7 +79,7 @@ public class UICmdInstanceMIDIStatus extends DWCommand {
 					{
 					    HierarchicalConfiguration mprof = it.next();
 					    
-					    res += "profile|" + mprof.getString("name") +"|" + mprof.getString("desc") + "\r\n";
+					    res += "profile|" + mprof.getString("[@name]") +"|" + mprof.getString("[@desc]") + "\r\n";
 					}
 				}
 				catch (MidiUnavailableException e)

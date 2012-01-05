@@ -3,6 +3,8 @@ package com.groupunix.drivewireserver.dwcommands;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
+
 public class DWCmdServerShowThreads extends DWCommand {
 
 	DWCmdServerShowThreads(DWCommand parent)
@@ -47,17 +49,10 @@ public class DWCmdServerShowThreads extends DWCommand {
 		return(new DWCommandResponse(text));
 	}
 
-	private ThreadGroup getRootThreadGroup( ) {
-
-	    ThreadGroup tg = Thread.currentThread( ).getThreadGroup( );
-	    ThreadGroup ptg;
-	    while ( (ptg = tg.getParent( )) != null )
-	        tg = ptg;
-	    return tg;
-	}
+	
 	
 	private Thread[] getAllThreads( ) {
-	    final ThreadGroup root = getRootThreadGroup( );
+	    final ThreadGroup root = DWUtils.getRootThreadGroup( );
 	    final ThreadMXBean thbean = ManagementFactory.getThreadMXBean( );
 	    int nAlloc = thbean.getThreadCount( );
 	    int n = 0;

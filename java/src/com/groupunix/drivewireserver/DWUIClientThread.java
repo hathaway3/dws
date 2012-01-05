@@ -29,12 +29,13 @@ public class DWUIClientThread implements Runnable {
 
 	private BufferedOutputStream bufferedout;
 	
+	private boolean droplog = true;
+
 	
 	public DWUIClientThread(Socket skt, LinkedList<DWUIClientThread> clientThreads) 
 	{
 		this.skt = skt;
 		this.clientThreads = clientThreads;
-		
 		
 		commands = new DWCommandList(null);
 		commands.addcommand(new UICmd(this));
@@ -290,5 +291,20 @@ public class DWUIClientThread implements Runnable {
 	{
 		return(this.eventQueue);
 	}
+
+
+
+	public boolean isDropLog()
+	{
+	
+		return this.droplog;
+	}
+	
+	public void setDropLog(boolean b)
+	{
+		this.droplog = b;
+	}
+	
+
 
 }

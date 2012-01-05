@@ -12,6 +12,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWDMKDisk extends DWDisk
 {
@@ -24,7 +25,6 @@ public class DWDMKDisk extends DWDisk
 	public DWDMKDisk(FileObject fileobj) throws IOException, DWImageFormatException
 	{
 		super(fileobj);
-		
 		this.setParam("_format", "dmk");
 		
 		load();
@@ -41,19 +41,13 @@ public class DWDMKDisk extends DWDisk
 
 
 
-
-
-
 	public void load() throws IOException, DWImageFormatException
 	{
 		// load file into sector array
 	    InputStream fis;
 	
-	    
 	    fis = this.fileobj.getContent().getInputStream();
-	    
-	    this.setLastModifiedTime(this.fileobj.getContent().getLastModifiedTime()); 
-	    
+	   
 	    // read disk header
 	    int readres = 0;
 	    byte[] hbuff = new byte[16];
@@ -71,8 +65,22 @@ public class DWDMKDisk extends DWDisk
 	    
 	    if (!header.isSingleSided() || header.isSingleDensity())
 	    {
+	    	String format = "";
+	    	
+	    	if (header.isSingleSided())
+	    		format += "SS";
+	    	else
+	    		format += "DS";
+	    	
+	    	
+	    	if (header.isSingleDensity())
+	    		format += "SD";
+	    	else
+	    		format += "DD";
+	    	
+	    	
 	    	fis.close();
-	    	throw new DWImageFormatException("Unsupported DMK format, only SSDD is supported at this time");
+	    	throw new DWImageFormatException("Unsupported DMK format " + format + ", only SSDD is supported at this time");
 	    }
 	    
 	    // read tracks
@@ -115,6 +123,9 @@ public class DWDMKDisk extends DWDisk
 		
 		// all tracks loaded ok, find sector data
 		loadSectors();
+		
+		this.setParam("_filesystem", DWUtils.prettyFileSystem(DWDiskDrives.getDiskFSType(this.sectors)));
+	 
 	}
 
 

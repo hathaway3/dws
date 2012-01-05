@@ -23,6 +23,7 @@ public class DWCmdDisk extends DWCommand {
 		commands.addcommand(new DWCmdDiskWrite(dwProto,this));
 		commands.addcommand(new DWCmdDiskCreate(dwProto,this));
 		commands.addcommand(new DWCmdDiskSet(dwProto,this));
+		commands.addcommand(new DWCmdDiskDos(dwProto,this));
 		// testing only, little point
 		//commands.addcommand(new DWCmdDiskDump(dwProto,this));
 	}
