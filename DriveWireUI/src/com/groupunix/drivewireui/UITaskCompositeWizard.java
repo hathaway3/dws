@@ -1,6 +1,6 @@
 package com.groupunix.drivewireui;
 
-import java.awt.Cursor;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,14 +11,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -53,6 +55,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 	private boolean usemidi = false;
 	private String printertype = "Text";
 	private String printerdir = "cocoprints";
+	private int fpgarate = 115200;
 	
 	private Table portlist = null;
 	
@@ -70,6 +73,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 	private Thread testT;
 	private Button doit;
 	private boolean intesting = false;
+	protected String cocodevname;
 	
 	
 	public UITaskCompositeWizard(final Composite master, int style, int tid)
@@ -190,7 +194,12 @@ public class UITaskCompositeWizard extends UITaskComposite
 		}
 		else if (state == 5)
 		{
-			drawCommTestChooseControls();
+			if (cocomodel == 4)
+			{
+				drawFPGABaudChooseControls();
+			}
+			else
+				drawCommTestChooseControls();
 		}
 		else if (state == 6)
 		{
@@ -210,6 +219,119 @@ public class UITaskCompositeWizard extends UITaskComposite
 	}
 	
 	
+	private void drawFPGABaudChooseControls()
+	{
+
+		int y = 20;
+		
+		Label cocoman3 = new Label(this, SWT.NONE);
+		cocoman3.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/wizard/cocoman3.png"));
+		cocoman3.setBounds(width/2 - 144, y, 288, 160);
+		
+		y += 180;
+		
+		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
+		
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
+		intro.setEditable(false);
+		intro.setEnabled(false);
+		
+		intro.setBounds(0, y, width, 130);
+		intro.setForeground(DiskWin.colorDiskBG);
+		intro.setFont(this.introFont);
+		intro.setText("We're almost finished!");
+		intro.append(intro.getLineDelimiter() + intro.getLineDelimiter());
+	
+		intro.append("An " + this.cocodevname + " running CoCo3FPGA can communicate at several different speeds.  Please select the rate you wish to use with the " + this.cocodevname +" (you must also configure this rate on the " + this.cocodevname + " itself):"); 
+		
+		intro.setBounds(0, y, width, intro.getTextBounds(0, intro.getCharCount()-1).height) ;
+		
+		y += 40 + intro.getBounds().height;
+		
+		final Combo fpgaspeed = new Combo(this, SWT.READ_ONLY);
+		fpgaspeed.setItems( new String[]{"115200", "230400", "460800", "921600"});
+		fpgaspeed.select(0);
+		
+		fpgaspeed.setBounds(width/2 - 50 , y, 100, 40);
+		
+		//fpgaspeed.setBounds(width/2 - fpgaspeed.getBounds().width/2 , y, fpgaspeed.getBounds().width, fpgaspeed.getBounds().height);
+		
+		fpgaspeed.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				if (fpgaspeed.getSelectionIndex() > -1)
+				{
+					fpgarate = Integer.parseInt(fpgaspeed.getItem(fpgaspeed.getSelectionIndex()));
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+			
+				
+			}
+			
+		});
+		
+		
+		
+		final Button doit = new Button(this, SWT.NONE);
+		doit.setText("Apply configuration..");
+		
+		doit.setBounds(0, height - 30, width/2 - 10, 24);
+		doit.setEnabled(true);
+		
+		
+		
+		
+		doit.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				applyConfig();
+				
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				
+			}
+			
+		});
+		
+		
+		Button nothanks = new Button(this, SWT.NONE);
+		nothanks.setText("Cancel wizard");
+		nothanks.setBounds(width/2+9, height - 30, width - (width/2+9), 24);
+		
+		nothanks.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+
+				state = -1;
+				drawControls();
+				MainWin.taskman.removeTask(tid);
+				
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				
+			}
+			
+		});
+		
+	}
+
+
 	private void startCommTest()
 	{
 		stat = UITaskMaster.TASK_STATUS_ACTIVE;
@@ -371,7 +493,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 			
 		StyledText done = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		done.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		done.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		done.setEditable(false);
 		done.setEnabled(false);
 		
@@ -472,7 +594,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText done = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		done.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		done.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		done.setEditable(false);
 		done.setEnabled(false);
 		
@@ -526,7 +648,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		
@@ -541,7 +663,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		testStatusText = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		testStatusText.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		testStatusText.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		testStatusText.setEditable(false);
 		testStatusText.setEnabled(false);
 		
@@ -616,14 +738,14 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(),SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		
 		intro.setBounds(0, y, width, 130);
 		intro.setForeground(DiskWin.colorDiskBG);
 		intro.setFont(this.introFont);
-		intro.setText("OK! Before we start the test, first please turn off your CoCo " + this.cocomodel +".");
+		intro.setText("OK! Before we start the test, first please turn off your " + this.cocodevname +".");
 		intro.append(intro.getLineDelimiter() + intro.getLineDelimiter());
 		intro.append("Next, connect a serial cable from the CoCo's bitbanger port (the port labeled \"SERIAL I/O\") to this computer's " + this.device + " port.");
 		intro.append(intro.getLineDelimiter() + intro.getLineDelimiter());
@@ -724,7 +846,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		
@@ -763,7 +885,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText more1 = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		more1.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		more1.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(),SWT.CURSOR_ARROW));
 		more1.setEditable(false);
 		more1.setEnabled(false);
 		
@@ -805,7 +927,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
-				// TODO Auto-generated method stub
+			
 				
 			}
 			
@@ -886,7 +1008,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		
@@ -983,7 +1105,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		intro.setAlignment(SWT.CENTER);
@@ -991,30 +1113,13 @@ public class UITaskCompositeWizard extends UITaskComposite
 		intro.setForeground(DiskWin.colorDiskBG);
 		intro.setFont(this.introFont);
 		
-		intro.setText("Congratulations, DriveWire is now ready to use with your CoCo " + this.cocomodel + "!");
+		intro.setText("Congratulations, DriveWire is now ready to use with your " + this.cocodevname + "!");
 		
 		MainWin.setSashformWeights(sashform_orig);
 		
 		MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE, "");
 		
-		/*
 		
-		MainWin.taskman.resizeTasks();
-		MainWin.taskman.getMaster().redraw();
-		MainWin.taskman.getMaster().update();
-		MainWin.table.redraw();
-		MainWin.table.update();
-			
-		try
-		{
-			Thread.sleep(50);
-		} catch (InterruptedException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-			
-		*/
 	}
 
 
@@ -1032,7 +1137,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		
@@ -1043,7 +1148,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		intro.append(intro.getLineDelimiter() + intro.getLineDelimiter());
 	
-		intro.append("In order to test the connection between your CoCo " + this.cocomodel + " and this computer, "); 
+		intro.append("In order to test the connection between your " + this.cocodevname + " and this computer, "); 
 		intro.append("you must have a serial cable connected between " + this.device + " and the CoCo's bitbanger port.  ");
 		intro.append("You do not need a DriveWire ROM or any special software on the CoCo to perform the test.");
 		
@@ -1171,7 +1276,14 @@ public class UITaskCompositeWizard extends UITaskComposite
 				
 				try
 				{
-					UIUtils.simpleConfigServer(cocomodel, device, usemidi, printertype, printerdir);
+					int rate = fpgarate;
+					
+					if (cocomodel == 1)
+						rate = 38400;
+					else if (cocomodel == 2)
+						rate = 57600;
+						
+					UIUtils.simpleConfigServer(rate, cocodevname, device, usemidi, printertype, printerdir);
 				}
 				catch (DWUIOperationFailedException e1)
 				{
@@ -1320,14 +1432,14 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		
 		intro.setBounds(0, y, width, 130);
 		intro.setForeground(DiskWin.colorDiskBG);
 		intro.setFont(this.introFont);
-		intro.setText("Next, we must choose which serial port to use when communicating with your CoCo " + this.cocomodel + ".  If you're not sure which is which, don't worry!  We will test things later and make any changes necessary." + intro.getLineDelimiter() + intro.getLineDelimiter());
+		intro.setText("Next, we must choose which serial port to use when communicating with your " + this.cocodevname + ".  If you're not sure which is which, don't worry!  We will test things later and make any changes necessary." + intro.getLineDelimiter() + intro.getLineDelimiter());
 		intro.append("If your computer does not have a serial port built in, you may want to acquire an inexpensive USB or Bluetooth serial adapter." + intro.getLineDelimiter() + intro.getLineDelimiter());
 		
 		intro.append("DriveWire has detected the following ports:");
@@ -1359,7 +1471,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 
 		StyledText more1 = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		more1.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		more1.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		more1.setEditable(false);
 		more1.setEnabled(false);
 		
@@ -1377,7 +1489,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText more2 = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		more2.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		more2.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(),SWT.CURSOR_ARROW));
 		more2.setEditable(false);
 		more2.setEnabled(false);
 		
@@ -1426,7 +1538,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		final StyledText more3 = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		more3.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		more3.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		more3.setEditable(false);
 		more3.setEnabled(false);
 		
@@ -1624,7 +1736,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(),SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		
@@ -1638,12 +1750,12 @@ public class UITaskCompositeWizard extends UITaskComposite
 		intro.append("First, we need to know what type of CoCo you would like to connect.  Please choose your model from the options below:");
 		intro.setBounds(0, y, width - 180, intro.getTextBounds(0, intro.getCharCount() - 1).height);
 		
-		y += 230;
+		y += 215;
 		
 		int bwidth = 105;
 		int bheight = 81;
-		int gap = 30;
-		int loff = (width/2) - (bwidth + (bwidth/2) + gap);
+		int gap = 15;
+		int loff = (width/2) - (bwidth + bwidth +gap + gap/2);
 		int toff = y;
 		int txtoff = toff + bheight + 5;
 		int bstyle = SWT.TOGGLE;
@@ -1659,7 +1771,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		final StyledText coco1txt = new StyledText(this,SWT.WRAP);
 		coco1txt.setAlignment(SWT.CENTER);
 		coco1txt.setBounds(loff, txtoff, bwidth, 20);
-		coco1txt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		coco1txt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		coco1txt.setEditable(false);
 		coco1txt.setEnabled(false);
 		coco1txt.setFont(this.introFont);
@@ -1677,7 +1789,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		final StyledText coco2txt = new StyledText(this,SWT.WRAP);
 		coco2txt.setAlignment(SWT.CENTER);
 		coco2txt.setBounds(loff + bwidth + gap, txtoff, bwidth, 20);
-		coco2txt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		coco2txt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		coco2txt.setEditable(false);
 		coco2txt.setEnabled(false);
 		coco2txt.setFont(this.introFont);
@@ -1687,11 +1799,12 @@ public class UITaskCompositeWizard extends UITaskComposite
 		final Button coco3 = new Button(this, bstyle);
 		coco3.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/wizard/coco3.png"));
 		coco3.setBounds(loff + bwidth + gap + bwidth + gap, toff, bwidth, bheight);
+		coco3.setSelection(true);
 		
 		final StyledText coco3txt = new StyledText(this,SWT.WRAP);
 		coco3txt.setAlignment(SWT.CENTER);
 		coco3txt.setBounds(loff + bwidth + gap + bwidth + gap, txtoff, bwidth, 20);
-		coco3txt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		coco3txt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		coco3txt.setEditable(false);
 		coco3txt.setEnabled(false);
 		coco3txt.setFont(this.introFont);
@@ -1699,9 +1812,24 @@ public class UITaskCompositeWizard extends UITaskComposite
 		coco3txt.setText("CoCo 3");
 		
 		
+		final Button fpga = new Button(this, bstyle);
+		fpga.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/wizard/fpga.png"));
+		fpga.setBounds(loff + bwidth + gap + bwidth + gap + bwidth + gap, toff, bwidth, bheight);
+		
+		final StyledText fpgatxt = new StyledText(this,SWT.WRAP);
+		fpgatxt.setAlignment(SWT.CENTER);
+		fpgatxt.setBounds(loff + bwidth + gap + bwidth + gap+ bwidth + gap, txtoff, bwidth, 20);
+		fpgatxt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
+		fpgatxt.setEditable(false);
+		fpgatxt.setEnabled(false);
+		fpgatxt.setFont(this.introFont);
+		fpgatxt.setForeground(tcolor);
+		fpgatxt.setText("CoCo3FPGA");
+		
 		
 		final Button doit = new Button(this, SWT.NONE);
 		doit.setText("Choose CoCo 3..");
+		this.cocodevname = "CoCo 3";
 		
 		doit.setBounds(0, height - 30, width/2 - 10, 24);
 		
@@ -1726,112 +1854,153 @@ public class UITaskCompositeWizard extends UITaskComposite
 		});
 		
 		
+		
 		// make it act like a radio group.. sort of.. bah
 		
+		coco1.setData("cocomodel", 1);
+		coco1.setData("cocodevname", "CoCo 1");
 		
-		coco1.addPaintListener(new PaintListener () {
+		coco2.setData("cocomodel", 2);
+		coco2.setData("cocodevname", "CoCo 2");
+		
+		coco3.setData("cocomodel", 3);
+		coco3.setData("cocodevname", "CoCo 3");
 
+		fpga.setData("cocomodel", 4);
+		fpga.setData("cocodevname", "FPGA board");
+		
+		
+		SelectionListener cocorg = new SelectionListener () {
+
+			
 			@Override
-			public void paintControl(PaintEvent e)
+			public void widgetSelected(SelectionEvent e)
 			{
 				synchronized(cocomodel)
 				{
-					if (coco1.getSelection())
+					coco1.setSelection(false);
+					coco2.setSelection(false);
+					coco3.setSelection(false);
+					fpga.setSelection(false);
+					coco1txt.setForeground(tcolor);
+					coco2txt.setForeground(tcolor);
+					coco3txt.setForeground(tcolor);
+					fpgatxt.setForeground(tcolor);
+				
+					cocomodel = Integer.parseInt(e.widget.getData("cocomodel").toString());
+					cocodevname = e.widget.getData("cocodevname").toString();
+					doit.setText("Choose " + cocodevname + "..");
+					
+					if (cocomodel == 1)
 					{
-						
-						coco2.setSelection(false);
-						coco3.setSelection(false);
+						coco1.setSelection(true);
 						coco1txt.setForeground(tacolor);
-						cocomodel = 1;
-						doit.setText("Choose CoCo 1..");
-						doit.setEnabled(true);
 					}
-					else
+					else if (cocomodel == 2)
 					{
-						coco1txt.setForeground(tcolor);
-						if (coco1.getSelection() || coco2.getSelection() || coco3.getSelection())
-							doit.setEnabled(true);
-						else
-						{
-							doit.setEnabled(false);
-							cocomodel = -1;
-						}
-					}
-				}
-			}
-			
-		});
-		
-		
-		coco2.addPaintListener(new PaintListener () {
-
-			@Override
-			public void paintControl(PaintEvent e)
-			{
-				synchronized(cocomodel)
-				{
-					if (coco2.getSelection())
-					{
+						coco2.setSelection(true);
 						coco2txt.setForeground(tacolor);
-						coco1.setSelection(false);
-						coco3.setSelection(false);
-						cocomodel = 2;
-						doit.setText("Choose CoCo 2..");
-						doit.setEnabled(true);
 					}
-					else
+					else if (cocomodel == 3)
 					{
-						coco2txt.setForeground(tcolor);
-						if (coco1.getSelection() || coco2.getSelection() || coco3.getSelection())
-							doit.setEnabled(true);
-						else
-						{
-							doit.setEnabled(false);
-							cocomodel = -1;
-						}
+						coco3.setSelection(true);
+						coco3txt.setForeground(tacolor);
+					}
+					else if (cocomodel == 4)
+					{
+						fpga.setSelection(true);
+						fpgatxt.setForeground(tacolor);
 					}
 				}
 			}
-		});
-		
-		coco3.addPaintListener(new PaintListener () {
 
 			@Override
-			public void paintControl(PaintEvent e)
+			public void widgetDefaultSelected(SelectionEvent e)
 			{
-				synchronized(cocomodel)
-				{
-					if (coco3.getSelection())
-					{
-						coco3txt.setForeground(tacolor);
-						coco1.setSelection(false);
-						coco2.setSelection(false);
-						cocomodel = 3;
-						doit.setText("Choose CoCo 3..");
-						doit.setEnabled(true);
-						
-					}
-					else
-					{
-						coco3txt.setForeground(tcolor);
-						
-						if (coco1.getSelection() || coco2.getSelection() || coco3.getSelection())
-							doit.setEnabled(true);
-						else
-						{
-							doit.setEnabled(false);
-							cocomodel = -1;
-						}
-						
-					}
-				}
+			
+				
 			}
 			
+		};
+		
+		
+		coco1.addMouseTrackListener(new MouseTrackAdapter() 
+		{
+			@Override
+			public void mouseEnter(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_HAND));
+				
+			}
+			
+			@Override
+			public void mouseExit(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_ARROW));
+				
+			}
+		});
+		
+		coco2.addMouseTrackListener(new MouseTrackAdapter() 
+		{
+			@Override
+			public void mouseEnter(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_HAND));
+				
+			}
+			
+			@Override
+			public void mouseExit(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_ARROW));
+				
+			}
+		});
+		
+		coco3.addMouseTrackListener(new MouseTrackAdapter() 
+		{
+			@Override
+			public void mouseEnter(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_HAND));
+				
+			}
+			
+			@Override
+			public void mouseExit(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_ARROW));
+				
+			}
+		});
+		
+		fpga.addMouseTrackListener(new MouseTrackAdapter() 
+		{
+			@Override
+			public void mouseEnter(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_HAND));
+				
+			}
+			
+			@Override
+			public void mouseExit(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_ARROW));
+				
+			}
 		});
 		
 		
-		coco3.setSelection(true);
+		coco1.addSelectionListener(cocorg);
+		coco2.addSelectionListener(cocorg);
+		coco3.addSelectionListener(cocorg);
+		fpga.addSelectionListener(cocorg);
 		
+		
+		
+	
 		
 		Button nothanks = new Button(this, SWT.NONE);
 		nothanks.setText("Cancel wizard");
@@ -1874,7 +2043,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		StyledText intro = new StyledText(this, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		
-		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), Cursor.DEFAULT_CURSOR));
+		intro.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		intro.setEditable(false);
 		intro.setEnabled(false);
 		
@@ -1943,16 +2112,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 	{
 		if (this.stat != UITaskMaster.TASK_STATUS_COMPLETE)
 		{
-			int h = MainWin.scrolledComposite.getBounds().height;
-			
-			if ((tid > 0) && (MainWin.taskman.getTask(tid-1).getTaskcomp() != null) && (MainWin.taskman.getTask(tid-1).getTaskcomp().getData("splash") != null))
-			{
-				// splash above
-				h = h - MainWin.taskman.getTask(tid-1).getTaskcomp().getHeight();
-			}
-			
-			
-			return(h);
+			return(500);
 		}
 		else
 		{

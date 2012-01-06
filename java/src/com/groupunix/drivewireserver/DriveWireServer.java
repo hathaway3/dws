@@ -44,8 +44,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "4.0.1";
-	public static final String DWServerVersionDate = "01/04/2012";
+	public static final String DWServerVersion = "4.0.2";
+	public static final String DWServerVersionDate = "01/05/2012";
 	
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
@@ -77,6 +77,7 @@ public class DriveWireServer
 	private static DWEvent statusEvent = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
 	private static long lastMemoryUpdate = 0;
 	private static ArrayList<DWEvent> logcache = new ArrayList<DWEvent>();
+	private static boolean useDebug = false;
 	
 
 	public static void main(String[] args) throws ConfigurationException
@@ -89,7 +90,7 @@ public class DriveWireServer
         //Runtime.getRuntime().addShutdownHook(new DWShutdownHandler());
 		
 	 	// hang around 
-		logger.debug("waiting...");	
+		logger.debug("ready...");	
 		
 		DriveWireServer.ready = true;
 		while (!wanttodie)
@@ -228,7 +229,7 @@ public class DriveWireServer
         initLogging();
         
         logger.info("DriveWire Server v" + DWServerVersion + " starting");
-
+        logger.debug("Heap max: " + Runtime.getRuntime().maxMemory() / 1024 / 1024 + "MB " + " cur: " + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "MB");
 		// load server settings
         try 
         {
@@ -428,31 +429,19 @@ public class DriveWireServer
 		    sysPathsField.set(null, null);
 			
 		} 
-		catch (SecurityException e) 
+		catch (Exception e) 
 		{
-			logger.fatal(e.getMessage());
+			logger.fatal(e.getClass().getSimpleName() + ": " + e.getLocalizedMessage());
+			
+			if (useDebug)
+			{
+				System.out.println("--------------------------------------------------------------------------------");
+				e.printStackTrace();
+				System.out.println("--------------------------------------------------------------------------------");
+			}
+				
 		} 
-		catch (NoSuchFieldException e) 
-		{
-			logger.fatal(e.getMessage());
-		} 
-		catch (IllegalArgumentException e) 
-		{
-			logger.fatal(e.getMessage());
-		} 
-		catch (IllegalAccessException e) 
-		{
-			logger.fatal(e.getMessage());
-		} 
-		catch (IOException e) 
-		{
-			logger.fatal(e.getMessage());
-		} 
-		catch (DWPlatformUnknownException e) 
-		{
-			logger.fatal(e.getMessage());
-		}
-		
+				
 	}
 
 
@@ -469,7 +458,13 @@ public class DriveWireServer
 		if (useLF5)
 			Logger.getRootLogger().addAppender(lf5appender);
 		
-		Logger.getRootLogger().setLevel(Level.INFO);
+		
+		if (useDebug)
+			Logger.getRootLogger().setLevel(Level.ALL);
+		else
+			Logger.getRootLogger().setLevel(Level.INFO);
+		
+		
 		
 	}
 
@@ -485,6 +480,7 @@ public class DriveWireServer
 		cmdoptions.addOption("backup", false, "make a backup of config at server start");
 		cmdoptions.addOption("help", false, "display command line argument help");
 		cmdoptions.addOption("logviewer", false, "open GUI log viewer at server start");
+		cmdoptions.addOption("debug", false, "log extra info to console");
 		
 		CommandLineParser parser = new GnuParser();
 		try 
@@ -507,6 +503,11 @@ public class DriveWireServer
 			if (line.hasOption( "backup"))
 			{
 				useBackup  = true;
+			}
+			
+			if (line.hasOption( "debug"))
+			{
+				useDebug  = true;
 			}
 			
 			if( line.hasOption( "logviewer" ) ) 
@@ -669,7 +670,7 @@ public class DriveWireServer
     	if (useLF5)
 			Logger.getRootLogger().addAppender(lf5appender);
     	
-    	if (serverconfig.getBoolean("LogToConsole", true))
+    	if (serverconfig.getBoolean("LogToConsole", true) || useDebug)
     	{
     		consoleAppender = new ConsoleAppender(logLayout);
     		Logger.getRootLogger().addAppender(consoleAppender);
@@ -691,7 +692,10 @@ public class DriveWireServer
     	 		
     	}
     	
-    	Logger.getRootLogger().setLevel(Level.toLevel(serverconfig.getString("LogLevel", "INFO")));
+    	if (useDebug)
+    		Logger.getRootLogger().setLevel(Level.ALL);
+    	else
+    		Logger.getRootLogger().setLevel(Level.toLevel(serverconfig.getString("LogLevel", "INFO")));
     	
     	
 		
@@ -849,6 +853,13 @@ public class DriveWireServer
 	        	catch (Exception e)
 	        	{
 	        		logger.error("While detecting serial devices: " + e.getMessage());
+	        		
+	        		if (useDebug)
+	    			{
+	    				System.out.println("--------------------------------------------------------------------------------");
+	    				e.printStackTrace();
+	    				System.out.println("--------------------------------------------------------------------------------");
+	    			}
 	        	}
 	            
 	        }
@@ -893,6 +904,14 @@ public class DriveWireServer
 		{
 			
 			res = e.getClass().getSimpleName() + ": " + e.getLocalizedMessage();
+			
+			if (useDebug)
+			{
+				System.out.println("--------------------------------------------------------------------------------");
+				e.printStackTrace();
+				System.out.println("--------------------------------------------------------------------------------");
+			}
+			
 		}
 		
 		return res;

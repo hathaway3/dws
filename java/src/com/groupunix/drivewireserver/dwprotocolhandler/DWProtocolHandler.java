@@ -746,80 +746,75 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		
 		try 
 		{
-			// read rest of packet
-			
+			// read rest of packet - drive # and 3 byte LSN
 			responsebuf = protodev.comRead(4);
 			
+			// store that..
 			lastDrive = responsebuf[0] & 0xff;
 			System.arraycopy( responsebuf, 1, lastLSN, 0, 3 );
 					
-			// seek to requested LSN
+			// attempt seek to requested LSN (will throw one of the many exceptions caught below if it cannot)
 			diskDrives.seekSector(lastDrive, DWUtils.int3(lastLSN));
 			
-			// load lastSector with bytes from file
+			// we didn't throw an exception in our seek, so load a buffer with the sector's data
 			sector = diskDrives.readSector(lastDrive);
-				
+		
+			
+		// deal with all kinds of things that could have gone wrong as we did the seek and read above...	
 		} 
 		catch (DWDriveNotLoadedException e1) 
 		{
-			// zero sector
-			sector = diskDrives.nullSector();
 			logger.warn("DoOP_READ: " + e1.getMessage());
 			result = DWDefs.DWERROR_NOTREADY;
 		} 
 		catch (DWDriveNotValidException e2) 
 		{
-			// zero sector
-			sector = diskDrives.nullSector();
 			logger.warn("DoOP_READ: " + e2.getMessage());
 			result = DWDefs.DWERROR_NOTREADY;
 		} 
 		catch (IOException e3) 
 		{
-			// zero sector
-			sector = diskDrives.nullSector();
 			logger.warn("DoOP_READ: " + e3.getMessage());
 			result = DWDefs.DWERROR_READ;
 		} 
 		catch (DWInvalidSectorException e5) 
 		{
-			sector = diskDrives.nullSector();
 			logger.error("DoOP_READ: " + e5.getMessage());
 			result = DWDefs.DWERROR_READ;
 		} 
 		catch (DWSeekPastEndOfDeviceException e6) 
 		{
-			sector = diskDrives.nullSector();
 			logger.error("DoOP_READ: " + e6.getMessage());
 			result = DWDefs.DWERROR_READ;
 		} 
 		catch (DWImageFormatException e7)
 		{
-			sector = diskDrives.nullSector();
 			logger.error("DoOP_READ: " + e7.getMessage());
 			result = DWDefs.DWERROR_READ;
 		} 
 
-		// send result to coco
+		// send ultimate result to coco in a response byte
 		
 		protodev.comWrite1(result, true);
 		
+		
 		if (result == DWDefs.DWOK)
 		{
-			// no error, send sector
+			// if our response was OK, next we send the sector data
 			
 			// write out response sector
 			protodev.comWrite(sector, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE), true);
 			
-			// calc checksum
+			// calc a checksum
 			lastChecksum = computeChecksum(sector, getConfig().getInt("DiskSectorSize", DWDefs.DISK_SECTORSIZE));
 
 			mysum[0] = (byte) ((lastChecksum >> 8) & 0xFF);
 			mysum[1] = (byte) ((lastChecksum << 0) & 0xFF);
 			
-			// send checksum
+			// send checksum to coco
 			protodev.comWrite(mysum, 2, true);
 			
+			// we're done.. do housekeeping stuff
 			sectorsRead++;
 	
 			if (opcode == DWDefs.OP_REREAD)

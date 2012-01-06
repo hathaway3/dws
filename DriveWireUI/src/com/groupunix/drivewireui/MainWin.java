@@ -77,8 +77,8 @@ public class MainWin {
 
 
 	
-	public static final String DWUIVersion = "4.0.1";
-	public static final String DWUIVersionDate = "01/04/2012";
+	public static final String DWUIVersion = "4.0.2";
+	public static final String DWUIVersionDate = "01/05/2012";
 	
 	
 	public static final String default_Host = "127.0.0.1";
@@ -803,13 +803,13 @@ public class MainWin {
 			{
 
 				
-				ConfigEditor ce = new ConfigEditor(display);
-				ce.open();
+				//ConfigEditor ce = new ConfigEditor(display);
+				//ce.open();
 			
 			}
 		});
 		mntmServer_1.setText("Configuration Editor...");
-		
+		mntmServer_1.setEnabled(false);
 
 		
 		mntmUserInterface = new MenuItem(menu_config, SWT.CASCADE);

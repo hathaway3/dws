@@ -12,7 +12,10 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Dialog;
@@ -29,32 +32,39 @@ public class AboutWin extends Dialog {
 	private int width = 582;
 	private int height = 472;
 
+	private int xborder = 32;
+	private int yborder = 32;
+	private int yfudge = 24;
+	private int xfudge = 6;
+	
 	private Image cocotext;
 	private Image cocotext2;
 	private Canvas coco;
+	private Image cocoimg;
+	private GC cocogc;
 	
 	private int[][] text = new int[16][32];
-
+	private int[][] dtext = new int[16][32];
+	
 	private int curx = 0;
 	private int cury = 3;
 	
-	private Color cursorColor;
+	private int cursorcolor = 0;
 	private Color[] curscols = new Color[8];
 	private int curpos = 1;
 	private int dpos = -256;
 	private boolean scrolltext = false;
-	private String scrolltxt = "";
 	private Color scrollColor;
 	private Color blendColor;
 	private Font scrollFont;
 	private Font thanksFont;
 	private HashMap<String,Integer> fontmap;
 	private boolean ssmode = false;
-	
+	private boolean precrash = true;
 	
 	ArrayList<String >folks = new ArrayList<String>(Arrays.asList( "Special thanks to:", "", "Cloud-9", "#coco_chat", "Malted Media", 
 			"The Glenside Color Computer Club", "Darren Atkinson", "Boisy Pitre", 
-			"John Linville", "RandomRodder", "lorddragon", "lostwizard", "Gary Becker", "Jim Hathaway",
+			"John Linville", "RandomRodder", "lorddragon", "lostwizard", "beretta",  "Gary Becker", "Jim Hathaway",
 			"Gene Heskett", "Wayne Campbell", "Stephen Fischer", "Christopher Hawks", "And apologies to any I forgot!"));
 	
 	
@@ -112,15 +122,10 @@ public class AboutWin extends Dialog {
 		curscols[6] = new Color(shell.getDisplay(), 255, 0, 255);
 		curscols[7] = new Color(shell.getDisplay(), 255, 128, 0);
 		
-		cursorColor = curscols[7];
+		
 		
 		scrollColor = new Color(shell.getDisplay(), 240,240,240);
 		blendColor = new Color(shell.getDisplay(), 50,50,50);
-		scrolltxt = "                                                     ";
-		for (String s : folks)
-		{
-			scrolltxt += " " + s;
-		}
 		
 		fontmap = new HashMap<String,Integer>();
 		fontmap.put("Roboto Cn", SWT.NORMAL);
@@ -156,45 +161,35 @@ public class AboutWin extends Dialog {
 		
 		coco.setBounds(0,0,width,height);
 		coco.setBackground(MainWin.colorBlack);
-		coco.addPaintListener(new PaintListener() {
-
+		cocoimg = new Image(null, width-(xborder*2)-xfudge, height-(yborder*2)-yfudge);
+		this.cocogc = new GC(cocoimg);
+		// ?
+		this.cocogc.setAdvanced(false);
+		
+		
+		coco.addPaintListener(new PaintListener() 
+		{
+			
 			private int namewid = 100;
 			private int namehi = 100;
 			@Override
+			
 			public void paintControl(PaintEvent e)
 			{
-			
-				//e.gc.setBackground(MainWin.colorBlack);
-				//e.gc.fillRectangle(0,0, width, height);
-				//e.gc.setBackground(MainWin.colorGreen);
-				//e.gc.fillRectangle(30,30, 514, 388);
 				
 				
-					for (int y = 0;y<16;y++)
-					{
-						for (int x = 0;x<32;x++)
-						{
-							if (text[y][x] < 128)
-							{
-								Point p = getCharPoint(text[y][x]);
-								e.gc.drawImage(cocotext, p.x, p.y , 16, 24, x*16 + 32, y*24 + 32, 16, 24);
-							}
-							else
-							{
-								Point p = getGfxPoint(text[y][x]);
-								e.gc.drawImage(cocotext2, p.x+1, p.y+1 , 14, 22, x*16 + 32, y*24 + 32, 16, 24);
-							}
-					
-						}
-						
-					
-				}
+				genCocoimg();
+				e.gc.drawImage(cocoimg, xborder, yborder);
+				
+				
 				
 				if (!ssmode)
 				{
-					e.gc.setBackground(cursorColor);
-					e.gc.fillRectangle(Math.min(31,curx) * 16 + 32, cury * 24 + 32, 15, 24);
-				
+					if (precrash)
+					{
+						e.gc.setBackground(curscols[cursorcolor]);
+						e.gc.fillRectangle(Math.min(31,curx) * 16 + xborder, cury * 24 + yborder, 15, 24);
+					}
 				
 				
 					if (scrolltext)
@@ -215,7 +210,7 @@ public class AboutWin extends Dialog {
 							{
 								e.gc.setFont(scrollFont);
 								
-								e.gc.setTextAntialias(SWT.ON);
+								//e.gc.setTextAntialias(SWT.ON);
 								
 								e.gc.setAlpha(Math.min(255, dpos));
 								
@@ -261,6 +256,7 @@ public class AboutWin extends Dialog {
 					}
 				}
 				
+				
 			}
 			
 		});
@@ -268,7 +264,7 @@ public class AboutWin extends Dialog {
 		
 		Runnable cursor = new Runnable()
 		{
-			int curcol = 0;
+		
 
 			Random r = new Random();
 			
@@ -277,16 +273,22 @@ public class AboutWin extends Dialog {
 			{
 				if (!shell.isDisposed())
 				{
-					cursorColor = curscols[curcol];
-					curcol++;
-					if (curcol==8)
-						curcol = 0;
+				
+					if (ssmode)
+						lockup1();
+					else
+					{
+						cursorcolor++;
+						if (cursorcolor==8)
+							cursorcolor = 0;
+					}
+					
+					
 					if (!coco.isDisposed())
 						coco.redraw();
 					
 					if (ssmode)
 					{
-						lockup1();
 						shell.getDisplay().timerExec(r.nextInt(10000), this);
 					}
 					else
@@ -347,23 +349,23 @@ public class AboutWin extends Dialog {
 						
 					// type it
 					
+					if (ssmode)
+						return;
 					
 					String  f = getNextName();
 					
 					for (int j = 0;j<32;j++)
 					{
+						if (ssmode)
+							return;
+						
 						if (j >= f.length())
 							text[curline][j] = 32;
 						else
 						{
-							
-							if (ssmode)
-								return;
-							
 							curx = j+1;
 							cury = curline;
 							text[curline][j] = f.toUpperCase().charAt(j);
-							
 							
 							
 							if (curname < 21)
@@ -382,20 +384,30 @@ public class AboutWin extends Dialog {
 								
 								try
 								{
-									Thread.sleep(2000);
+									Thread.sleep(1200);
 								} 
 								catch (InterruptedException e)
 								{
 									// TODO Auto-generated catch block
 									e.printStackTrace();
+								}
+								
+								Random r = new Random();
+								
+								int t = r.nextInt(100);
+								for (int i = 0;i < t;i++)
+								{
+									// favor the weird stuff
+									text[r.nextInt(16)][r.nextInt(32)] = r.nextInt(192) + 64;
 								}
 								
 								curx = 32;
 								cury = 24;
 								
+								
 								try
 								{
-									Thread.sleep(2000);
+									Thread.sleep(3000);
 								} 
 								catch (InterruptedException e)
 								{
@@ -403,7 +415,9 @@ public class AboutWin extends Dialog {
 									e.printStackTrace();
 								}
 								
+								
 								scrolltext = true;
+								precrash = false;
 								return;
 							}
 							
@@ -415,15 +429,6 @@ public class AboutWin extends Dialog {
 						curline++;
 						if (curline == 16)
 						{
-							shell.getDisplay().syncExec(
-									  new Runnable() {
-										  public void run()
-										  {
-											  if (!coco.isDisposed())
-												  coco.setRedraw(false);
-										  }
-									  });
-							
 							curline = 15;
 							
 							int k = 5;
@@ -440,16 +445,6 @@ public class AboutWin extends Dialog {
 							
 							for (int i = 0;i<32;i++)
 								text[15][i] = 32;
-							
-							if (!shell.isDisposed())
-							shell.getDisplay().asyncExec(
-									  new Runnable() {
-										  public void run()
-										  {
-											  if (!coco.isDisposed())
-											  coco.setRedraw(true);
-										  }
-									  });
 									 
 						
 						}
@@ -457,7 +452,9 @@ public class AboutWin extends Dialog {
 					
 					curx = 0;
 					cury = curline; 
-						
+					
+					
+					
 					if (!wanttodie && !ssmode)
 					try
 					{
@@ -486,12 +483,73 @@ public class AboutWin extends Dialog {
 		
 		Thread scrT = new Thread(scroller);
 		scrT.start();
-		
+	
 		
 	}
 	
 	
 
+	protected void genCocoimg()
+	{
+		//long start = System.currentTimeMillis();
+		
+		if (!shell.isDisposed())
+		
+		for (int y = 0;y<16;y++)
+		{
+			for (int x = 0;x<32;x++)
+			{
+				if (text[y][x] != dtext[y][x])
+				{
+					if (text[y][x] < 128)
+					{
+						Point p = getCharPoint(text[y][x]);
+						cocogc.drawImage(cocotext, p.x, p.y , 16, 24, x*16, y*24, 16, 24);
+						
+					}
+					else
+					{
+						genCoCoChar(text[y][x], x*16, y*24);
+						Point p = getGfxPoint(text[y][x]);
+						cocogc.drawImage(cocotext2, p.x, p.y , 16, 24, x*16, y*24, 16, 24);
+					}
+					dtext[y][x] = text[y][x];
+				}
+			}
+			
+		}
+	
+		//MainWin.debug("genimg took " + (System.currentTimeMillis() - start));
+	}
+
+	
+	
+	private void genCoCoChar(int chr, int x, int y)
+	{
+		cocogc.setBackground(MainWin.colorBlack);
+		cocogc.fillRectangle(x, y, 16, 24);
+		
+		cocogc.setBackground(curscols[(chr-128) / 16]);
+		
+		if ((chr & 1) == 1)
+			cocogc.fillRectangle(x+8, y+12, 8, 12);
+		
+		if ((chr & 2) == 2)
+			cocogc.fillRectangle(x, y+12, 8, 12);
+		
+		if ((chr & 4) == 4)
+			cocogc.fillRectangle(x+8, y, 8, 12);
+		
+		if ((chr & 8) == 8)
+			cocogc.fillRectangle(x, y, 8, 12);
+		
+		
+	}
+
+	
+	
+	
+	
 	private void lockup1()
 	{
 		Random r = new Random();
@@ -561,9 +619,7 @@ public class AboutWin extends Dialog {
 				text[r.nextInt(16)][r.nextInt(32)] = r.nextInt(192) + 64;
 			}
 		}
-		
-		
-		
+	
 	}
 	
 	

@@ -110,10 +110,10 @@ public class DWRawDisk extends DWDisk {
 	    if ((filesize > Integer.MAX_VALUE) || ((filesize / this.getSectorSize()) > DWDefs.DISK_MAXSECTORS))
 	    	throw new DWImageFormatException("Image file is too large");
 	    
-	     
-	    if (filesize > Runtime.getRuntime().freeMemory())
+	    long memfree =  Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
+	    if (filesize > memfree)
 	    {
-	    	throw new DWImageFormatException("Image file will not fit in memory (" + (Runtime.getRuntime().freeMemory() / 1024) + " Kbytes free)");
+	    	throw new DWImageFormatException("Image file will not fit in memory (" + (memfree / 1024) + " Kbytes free)");
 	    }
 	    
 	    BufferedInputStream fis = new BufferedInputStream(this.fileobj.getContent().getInputStream());

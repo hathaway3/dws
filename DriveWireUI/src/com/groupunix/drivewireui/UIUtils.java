@@ -559,6 +559,9 @@ public class UIUtils {
         
         while ((width < maxw) && (height < maxh))
         {
+        	if (font!=null)
+        		font.dispose();
+        	
         	font = new Font(MainWin.getDisplay(), fname, size, style);
         
         	gc.setFont(font);
@@ -567,6 +570,8 @@ public class UIUtils {
         	
         	size++;
         }
+        
+        gc.dispose();
         
         MainWin.debug("chose font " + fname + " @ " + size + " = " + width + " x " + height);
     	
@@ -618,7 +623,7 @@ public class UIUtils {
 	
 	
 	
-	public static void simpleConfigServer(Integer cocomodel, String device, boolean usemidi, String printertype, String printerdir) throws IOException, DWUIOperationFailedException 
+	public static void simpleConfigServer(int rate, String devname, String device, boolean usemidi, String printertype, String printerdir) throws IOException, DWUIOperationFailedException 
 	{
 		// configure device
 		
@@ -626,21 +631,8 @@ public class UIUtils {
 		
 		cmds.add("dw config set DeviceType serial");
 		cmds.add("dw config set SerialDevice " + device);
-		
-		switch(cocomodel)
-		{
-			case 1:
-				cmds.add("dw config set SerialRate 38400");
-				break;
-			case 2:
-				cmds.add("dw config set SerialRate 57600");
-				break;
-			case 3:
-				cmds.add("dw config set SerialRate 115200");
-				break;
-		}
-		
-		cmds.add("dw config set [@name] CoCo " + cocomodel + " on " + device);
+		cmds.add("dw config set SerialRate " + rate);
+		cmds.add("dw config set [@name] "+ devname + " on " + device);
 		cmds.add("dw config set [@desc] Autocreated " +  new java.sql.Timestamp(Calendar.getInstance().getTime().getTime()).toString() );
 		
 		cmds.add("dw config set UseMIDI " + usemidi);
@@ -659,7 +651,7 @@ public class UIUtils {
 		}
 	
 		
-		int tid = MainWin.taskman.addTask("Configure server for a CoCo " + cocomodel + " on " + device);
+		int tid = MainWin.taskman.addTask("Configure server for " + devname + " on " + device);
 		String res = "";
 		
 			

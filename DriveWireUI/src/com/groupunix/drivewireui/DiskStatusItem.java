@@ -203,7 +203,7 @@ public abstract class DiskStatusItem
 			@Override
 			public void mouseHover(MouseEvent e) 
 			{
-				MainWin.debug("hover " + e.count + " " + e.time);
+				//MainWin.debug("hover " + e.count + " " + e.time);
 			}
 			
 			

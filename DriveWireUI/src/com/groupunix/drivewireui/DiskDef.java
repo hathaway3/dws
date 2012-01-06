@@ -76,7 +76,7 @@ public class DiskDef implements Cloneable
 			this.gc.fillRectangle(0,0, DiskWin.DGRAPH_WIDTH, DiskWin.DGRAPH_HEIGHT);
 		
 			this.gc.setTextAntialias(SWT.ON);
-			this.gc.setAntialias(SWT.ON);
+			//this.gc.setAntialias(SWT.ON);
 			
 			this.sectors = new HashMap<Integer,Integer>();
 			this.lastclean = 0;
