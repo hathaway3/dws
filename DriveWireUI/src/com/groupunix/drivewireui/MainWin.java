@@ -1048,7 +1048,7 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				AboutWin window = new AboutWin(shell,SWT.DIALOG_TRIM);
+				AboutWin window = new AboutWin(shell,SWT.SHELL_TRIM);
 				window.open();
 			}
 		});
