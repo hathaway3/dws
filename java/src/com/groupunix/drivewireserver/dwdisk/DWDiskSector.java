@@ -15,6 +15,7 @@ public class DWDiskSector
 		this.LSN = lsn;
 		this.sectorsize = sectorsize;
 		this.data = new byte[sectorsize];
+		
 		this.disk = disk;
 		//this.dirtydata = new byte[sectorsize];
 	}

@@ -224,11 +224,14 @@ public class DWRawDisk extends DWDisk {
 		// we can read beyond the current size of the image
 		if (effLSN >= this.sectors.size())
 		{
-			logger.debug("request for undefined sector " + effLSN + " (" + this.getLSN() + ")");
+			logger.debug("request for undefined sector, effLSN: " + effLSN + "  rawLSN: " + this.getLSN() + "  curSize: " + (this.sectors.size()-1));
 			
 			// expand disk
+			int isize = this.sectors.size();
 			expandDisk(effLSN);
 			this.sectors.add(effLSN, new DWDiskSector(this, effLSN, this.getSectorSize()));
+			logger.debug("added " + (this.sectors.size() - isize) + " sector(s) to image in drive " + drive.getDriveNo() );
+			
 		}
 		
 		return(this.sectors.get(effLSN).getData());	
@@ -242,12 +245,13 @@ public class DWRawDisk extends DWDisk {
 
 	private void expandDisk(int target) 
 	{
-		this.sectors.setSize(target);
+		this.sectors.ensureCapacity(target);
 		
 		for (int i = this.sectors.size();i < target;i++)
 		{
-			this.sectors.add(i, new DWDiskSector(this, 0, this.getSectorSize()));
+			this.sectors.add(i, new DWDiskSector(this, i, this.getSectorSize()));
 		}
+		
 		this.setParam("_sectors", target+1);
 	}
 

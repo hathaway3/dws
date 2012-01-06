@@ -11,6 +11,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +87,10 @@ public class DriveWireServer
 	{
 		
 		wanttodie = false;
+		
+		// caught everything
+		Thread.setDefaultUncaughtExceptionHandler(new DWExceptionHandler());
+		
 		init(args);
 		
 		// install clean shutdown handler
@@ -99,6 +106,8 @@ public class DriveWireServer
     		try
     		{
     			Thread.sleep(DriveWireServer.serverconfig.getInt("StatusInterval",1000));
+    			
+    			checkHandlerHealth();
     			
     			submitServerStatus();
     			
@@ -116,6 +125,42 @@ public class DriveWireServer
 	}
 
 	
+
+
+	private static void checkHandlerHealth()
+	{
+		for (int i = 0;i < DriveWireServer.dwProtoHandlers.size() ;i++)
+		{
+			if ((dwProtoHandlers.get(i)!= null) && (dwProtoHandlers.get(i).isReady()) && (!dwProtoHandlers.get(i).isDying())) 
+			{
+				// check thread
+				if (dwProtoHandlerThreads.get(i) == null)
+				{
+					logger.error("Null thread for handler #" + i);
+				}
+				else 
+				{
+					if (!dwProtoHandlerThreads.get(i).isAlive() )
+					{
+						logger.error("Handler #" + i + " has died. RIP.");
+						
+						if (dwProtoHandlers.get(i).getConfig().getBoolean("ZombieResurrection", true))
+						{
+							logger.info("Arise chicken! Reanimating handler #" + i + ": " + dwProtoHandlers.get(i).getConfig().getString("[@name]","unnamed"));
+					    	dwProtoHandlerThreads.set(i, new Thread(dwProtoHandlers.get(i)));
+					    	dwProtoHandlerThreads.get(i).start();	
+						}
+						
+					}
+						
+					
+						
+				}
+			}
+		}
+	}
+
+
 
 
 	private static void submitServerStatus()
@@ -331,7 +376,7 @@ public class DriveWireServer
 		    
 		    if (hconf.getBoolean("AutoStart", true))
 		    {
-		    	logger.info("Starting #" + hno + ": " + hconf.getString("Name","unnamed") + " (" + dwProtoHandlers.get(hno).getClass().getSimpleName() + ")");
+		    	logger.info("Starting handler #" + hno + ": " + hconf.getString("[@name]","unnamed") + " (" + dwProtoHandlers.get(hno).getClass().getSimpleName() + ")");
 		    	dwProtoHandlerThreads.add(new Thread(dwProtoHandlers.get(hno)) );
 		    	dwProtoHandlerThreads.get(dwProtoHandlerThreads.size()-1).start();	
     	    }
@@ -1133,5 +1178,35 @@ public class DriveWireServer
 
 
 
+
+	public static void handleUncaughtException(Thread thread, Throwable thrw)
+	{
+		String msg = "Exception in thread " + thread.getName();
+		
+		if (thrw.getClass().getSimpleName() != null)
+			msg += ": " + thrw.getClass().getSimpleName();
+		
+		if (thrw.getMessage() != null)
+			msg += ": " + thrw.getMessage();
+		
+		if (DriveWireServer.logger != null)
+		{
+			logger.error(msg);
+			logger.info(getStackTrace(thrw));
+		}
+		
+		System.out.println("--------------------------------------------------------------------------------");
+		System.out.println(msg);
+		System.out.println("--------------------------------------------------------------------------------");
+		thrw.printStackTrace();
+	}
+
+
+	public static String getStackTrace(Throwable aThrowable) {
+	    final Writer result = new StringWriter();
+	    final PrintWriter printWriter = new PrintWriter(result);
+	    aThrowable.printStackTrace(printWriter);
+	    return result.toString();
+	  }
 	
 }

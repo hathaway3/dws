@@ -131,6 +131,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		int opcodeint = -1;
 		
 		Thread.currentThread().setName("dwproto-" + handlerno + "-" +  Thread.currentThread().getId());
+	
 		
 		// this thread should run a LOT or we might lose bytes on the serial port on slow computers
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);

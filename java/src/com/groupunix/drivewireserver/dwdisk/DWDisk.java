@@ -28,7 +28,7 @@ public abstract class DWDisk
 	protected Vector<DWDiskSector> sectors = new Vector<DWDiskSector>();	
 	protected FileObject fileobj = null;
 	protected DWDiskConfigListener configlistener;
-	private DWDiskDrive drive;
+	protected DWDiskDrive drive;
 	
 	
 	// required for format implementation:
