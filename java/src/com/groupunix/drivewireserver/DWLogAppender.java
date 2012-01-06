@@ -5,6 +5,7 @@ import java.util.LinkedList;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
+import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 
 // adds logging events to an internal list so they can be retrieved for web UI
@@ -40,9 +41,15 @@ public class DWLogAppender extends AppenderSkeleton
 
 	protected void append(LoggingEvent event) 
 	{
+		// fatal to console
+		if ((event.getLevel() == Level.FATAL) && (!DriveWireServer.isConsoleLogging()) && (!DriveWireServer.isDebug()) )
+		{
+			
+			System.out.println("FATAL: " + event.getRenderedMessage());
+		}
+		
 		// ignore those pesky XMLConfiguration debug messages and massive httpd client noise
-		if ((!event.getMessage().equals("ConfigurationUtils.locate(): base is null, name is null")) && (!event.getLocationInformation().getClassName().startsWith("org.apache.commons.httpclient"))) 
-				
+		if ((!event.getMessage().equals("ConfigurationUtils.locate(): base is null, name is null")) && (!event.getLocationInformation().getClassName().startsWith("org.apache.commons.httpclient"))) 		
 		{
 			// send it to UI listeners
 			DriveWireServer.submitLogEvent(event);

@@ -1121,6 +1121,17 @@ public class DriveWireServer
 
 
 
+	public static boolean isConsoleLogging()
+	{
+		return(DriveWireServer.serverconfig.getBoolean("LogToConsole", false));
+	}
+
+	public static boolean isDebug()
+	{
+		return(useDebug);
+	}
+
+
 
 	
 }
