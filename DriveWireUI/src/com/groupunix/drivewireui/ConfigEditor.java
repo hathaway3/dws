@@ -1,46 +1,42 @@
 package com.groupunix.drivewireui;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.HierarchicalConfiguration.Node;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.wb.swt.SWTResourceManager;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Text;
 
 public class ConfigEditor extends Shell
 {
@@ -53,7 +49,7 @@ public class ConfigEditor extends Shell
 	private Button btnToggle;
 	private Button btnApply;
 	
-	private HierarchicalConfiguration itemDefs;
+	private XMLConfiguration wc;
 	private ToolBar toolBar;
 	private ToolItem tltmMidi;
 	private ToolItem tltmLogging;
@@ -78,6 +74,11 @@ public class ConfigEditor extends Shell
 	private Button btnFileDir;
 
 	
+	@Override
+	protected void checkSubclass()
+	{
+		// Disable the check that prevents subclassing of SWT components
+	}
 	
 	
 	
@@ -118,6 +119,8 @@ public class ConfigEditor extends Shell
 	}
 	
 
+	
+	
 	/**
 	 * Create the shell.
 	 * @param display
@@ -125,6 +128,26 @@ public class ConfigEditor extends Shell
 	public ConfigEditor(Display display)
 	{
 		super(display, SWT.SHELL_TRIM);
+	
+		createContents();
+		
+		loadConfig();
+	}
+
+	
+	
+	
+
+	/**
+	 * Create contents of the shell.
+	 */
+	protected void createContents()
+	{
+		setText("Configuration Editor");
+		setSize(684, 634);
+	
+		
+		
 		addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(ControlEvent e) {
@@ -142,10 +165,11 @@ public class ConfigEditor extends Shell
 		
 		toolBar = new ToolBar(this, SWT.FLAT | SWT.RIGHT);
 		toolBar.addMouseListener(new MouseAdapter() {
+			@SuppressWarnings("unchecked")
 			@Override
 			public void mouseUp(MouseEvent e) {
 				tree.removeAll();
-				loadConfig(null, MainWin.dwconfig.getRootNode().getChildren());
+				loadConfig(null, wc.getRootNode().getChildren());
 			}
 		});
 		toolBar.setLayoutData(new RowData(664, SWT.DEFAULT));
@@ -175,6 +199,7 @@ public class ConfigEditor extends Shell
 		tltmLogging.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/documentation.png"));
 		tltmLogging.setText("Logging");
 		
+		@SuppressWarnings("unused")
 		ToolItem toolItem = new ToolItem(toolBar, SWT.SEPARATOR);
 		
 		tltmCheckAdvanced = new ToolItem(toolBar, SWT.CHECK);
@@ -219,7 +244,7 @@ public class ConfigEditor extends Shell
 		lblItemTitle = new Label(scrolledComposite, SWT.NONE);
 		lblItemTitle.setBounds(10, 10, 239, 24);
 		lblItemTitle.setText("");
-		lblItemTitle.setFont(SWTResourceManager.getBoldFont(display.getSystemFont()));
+		lblItemTitle.setFont(SWTResourceManager.getBoldFont(this.getDisplay().getSystemFont()));
 		
 		
 		textDescription = new Label(scrolledComposite, SWT.WRAP);
@@ -346,12 +371,7 @@ public class ConfigEditor extends Shell
 		lblString.setBounds(20, 98, 248, 18);
 		composite_1.setLayoutData(new RowData(this.getSize().x, 100));
 		
-	
-		createContents();
-	
 	}
-
-	
 	
 	
 	
@@ -825,15 +845,6 @@ public class ConfigEditor extends Shell
 
 
 
-	/**
-	 * Create contents of the shell.
-	 */
-	protected void createContents()
-	{
-		setText("Configuration Editor - WARNING - BUGGY - DOES NOT WORK");
-		setSize(684, 634);
-		loadConfig(null, MainWin.dwconfig.getRootNode().getChildren());
-	}
 
 	
 	private void loadConfig(TreeItem ti, List<Node> nodes)
@@ -1097,31 +1108,93 @@ public class ConfigEditor extends Shell
 
 
 
-
-	@Override
-	protected void checkSubclass()
+	private void loadConfig()
 	{
-		// Disable the check that prevents subclassing of SWT components
+		class Stupid
+		{
+			ConfigEditorTaskWin ctw;
+			
+			public ConfigEditorTaskWin getCtw()
+			{
+				return this.ctw;
+			}
+			
+			public void initCtw(Shell shell)
+			{
+				this.ctw = new ConfigEditorTaskWin(shell, SWT.DIALOG_TRIM, "Loading config from server..." , "Please wait while the server's configuration is loaded");
+			}
+		}
+		
+		
+		
+		final Shell shell = this;
+		final Stupid stupid = new Stupid();
+		
+		Runnable lc = new Runnable() 
+		{
+
+			@Override
+			public void run()
+			{
+				getDisplay().syncExec(new Runnable() {
+		
+					@Override
+					public void run()
+					{
+						
+						stupid.initCtw(shell);
+						stupid.getCtw().open();
+						
+					}
+					
+				});
+				
+			
+				try
+				{
+					Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
+					
+					stupid.getCtw().setStatus("Connecting to server...", 10);
+					conn.Connect();
+					
+					stupid.getCtw().setStatus("Sending command...", 30);
+					StringReader sr = conn.loadReader(-1,"ui server config write");
+					
+					stupid.getCtw().setStatus("Received response", 70);
+					conn.close();
+		
+					stupid.getCtw().setStatus("Processing config...", 80);
+					XMLConfiguration wc = new XMLConfiguration();
+					wc.load(sr);
+					
+					stupid.getCtw().setStatus("Complete", 100);
+					
+					stupid.getCtw().closeWin();
+				} 
+				catch (UnknownHostException e)
+				{
+					stupid.getCtw().setErrorStatus(e.getMessage());
+				} 
+				catch (ConfigurationException e)
+				{
+					stupid.getCtw().setErrorStatus(e.getMessage());
+				} 
+				catch (IOException e)
+				{
+					stupid.getCtw().setErrorStatus(e.getMessage());
+				} 
+				catch (DWUIOperationFailedException e)
+				{
+					stupid.getCtw().setErrorStatus(e.getMessage());
+				}
+			}
+			
+		};
+		
+		Thread tc = new Thread(lc);
+		tc.start();
+		
 	}
-	protected Label getLblIntText() {
-		return lblIntText;
-	}
-	protected Spinner getSpinnerInt() {
-		return spinnerInt;
-	}
-	protected Combo getComboList() {
-		return comboList;
-	}
-	protected Label getLblList() {
-		return lblList;
-	}
-	protected Label getLblString() {
-		return lblString;
-	}
-	protected Button getBtnFileDir() {
-		return btnFileDir;
-	}
-	protected Text getTextString() {
-		return textString;
-	}
+
+	
 }

@@ -5,6 +5,7 @@ package com.groupunix.drivewireui;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
-import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -28,6 +28,8 @@ import org.apache.log4j.PatternLayout;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ArmEvent;
+import org.eclipse.swt.events.ArmListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MenuAdapter;
@@ -65,8 +67,6 @@ import swing2swt.layout.BorderLayout;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.swtdesigner.SWTResourceManager;
-import org.eclipse.swt.events.ArmListener;
-import org.eclipse.swt.events.ArmEvent;
 
 
 
@@ -77,8 +77,8 @@ public class MainWin {
 
 
 	
-	public static final String DWUIVersion = "4.0.2";
-	public static final String DWUIVersionDate = "01/05/2012";
+	public static final String DWUIVersion = "4.0.3test1";
+	public static final String DWUIVersionDate = "01/06/2012";
 	
 	
 	public static final String default_Host = "127.0.0.1";
@@ -226,6 +226,8 @@ public class MainWin {
 	public static void main(String[] args) 
 	{
 		
+		
+		
 		Thread.currentThread().setName("dwuiMain-" + Thread.currentThread().getId());
 		Thread.currentThread().setContextClassLoader(MainWin.class.getClassLoader());
 		
@@ -235,6 +237,36 @@ public class MainWin {
 		Logger.getRootLogger().removeAllAppenders();
 		Logger.getRootLogger().addAppender(new ConsoleAppender(logLayout));
 		
+	
+		// attempt to maintain control in times of insanity
+		Thread.currentThread().setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+
+			@Override
+			public void uncaughtException(Thread t, final Throwable e)
+			{
+				if ((MainWin.shell != null) && (!MainWin.shell.isDisposed()))
+				{
+				
+					MainWin.shell.getDisplay().syncExec(new Runnable() 
+					{
+
+						@Override
+						public void run()
+						{
+							ErrorWin ew = new ErrorWin(MainWin.shell, SWT.DIALOG_TRIM, e.getClass().getSimpleName() + " in UI", "Well this is embarassing.. please submit a bug report with as much detail as possible.", "DriveWire will exit when this dialog is closed.  Please finish up anything important quickly (if the program is working well enough to allow that). " + "\r\n\r\n" + UIUtils.getStackTrace(e));
+							ew.open();
+							
+						}
+					});
+				}
+				
+				logger.fatal(e.getClass().getSimpleName() + " in UI thread " + t.getName() + " " + t.getId());
+				
+				MainWin.stopDWServer();
+				System.exit(1);
+			}
+		
+		});
 		
 		
 		// get our client config
@@ -245,8 +277,8 @@ public class MainWin {
 			startDWServer(args);
 
 		
-		try 
-		{
+		//try 
+		//{
 			
 			// make ourselves look pretty
 			Display.setAppName("DriveWire");
@@ -315,15 +347,16 @@ public class MainWin {
 			// get this party started
 			window.open(display, args);
 			
-			
+		/*	
 		} 
-		catch (Exception e) 
+		catch (IOException e) 
 		{
 			System.out.println("\nSomething's gone horribly wrong:\n");
 			e.printStackTrace();
 		
 		}
-		
+		*/
+			
 		// game over.  flag to let threads know.
 		host = null;
 				
@@ -493,10 +526,6 @@ public class MainWin {
 
 		
 		
-		
-	
-		
-		//if (firsttimer) TODO
 		
 		// drive light and other animations
 		
@@ -803,8 +832,8 @@ public class MainWin {
 			{
 
 				
-				//ConfigEditor ce = new ConfigEditor(display);
-				//ce.open();
+				ConfigEditor ce = new ConfigEditor(display);
+				ce.open();
 			
 			}
 		});
@@ -975,13 +1004,11 @@ public class MainWin {
 				} 
 				catch (IOException e1)
 				{
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					MainWin.showError("Error loading printer info", e1.getMessage(), UIUtils.getStackTrace(e1), false);
 				} 
 				catch (DWUIOperationFailedException e1)
 				{
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					MainWin.showError("Error loading printer info", e1.getMessage(), UIUtils.getStackTrace(e1), false);
 				}
 				
 			}
@@ -1715,7 +1742,7 @@ public class MainWin {
 
 	
 
-	public static void openURL(Class cl, String url) 
+	public static void openURL(@SuppressWarnings("rawtypes") Class cl, String url) 
 	{
 		// this odd bit of code tries to use the org.eclipse.swt.program.Program.launch method to open a native browser with a url in it.
 		// usually that is straighforward, but on some systems it can crash the whole works, so we use invoke to call it carefully and catch crashes.
@@ -2054,13 +2081,11 @@ public class MainWin {
 			} 
 			catch (InterruptedException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				MainWin.showError("Error in file browser", e.getMessage(), UIUtils.getStackTrace(e), true);
 			} 
 			catch (InvocationTargetException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				MainWin.showError("Error in file browser", e.getMessage(), UIUtils.getStackTrace(e), true);
 			}
 			
 		

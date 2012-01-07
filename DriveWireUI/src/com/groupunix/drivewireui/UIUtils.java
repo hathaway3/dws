@@ -250,24 +250,7 @@ public class UIUtils {
 		
 	}
 
-	public static void writeDiskDef(int instance, int diskno, DiskDef ddef) throws IOException, DWUIOperationFailedException
-	{
-		Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
-		
-		conn.Connect();
-		/*
-		conn.sendCommand("dw disk set " + diskno + " offset " + ddef.getOffset(), instance);
-		conn.sendCommand("dw disk set " + diskno + " sizelimit " + ddef.getSizelimit(), instance);
-		conn.sendCommand("dw disk set " + diskno + " syncto " + ddef.isSync(), instance);
-		conn.sendCommand("dw disk set " + diskno + " expand " + ddef.isExpand(), instance);
-		conn.sendCommand("dw disk set " + diskno + " writeprotect " + ddef.isWriteprotect(), instance);
-		conn.sendCommand("dw disk set " + diskno + " namedobject " + ddef.isNamedobject(), instance);
-		conn.sendCommand("dw disk set " + diskno + " syncfrom " + ddef.isSyncfromsource(), instance);
-		conn.sendCommand("dw disk set " + diskno + " padpartial " + ddef.isPadPartial(), instance);
-		*/
-		
-		conn.close();
-	}
+	
 	
 	public static DiskDef getDiskDef(int instance,int diskno) throws IOException, DWUIOperationFailedException
 	{
@@ -325,6 +308,8 @@ public class UIUtils {
 		res.load(sr);
 		return (HierarchicalConfiguration) res.clone();
 	}
+	
+	
 
 	public static MIDIStatus getServerMidiStatus() throws IOException, DWUIOperationFailedException 
 	{
