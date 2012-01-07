@@ -37,10 +37,10 @@ public class DWDiskDrives
 	private static final Logger logger = Logger.getLogger("DWServer.DWDiskDrives");
 
 	private DWProtocolHandler dwProto;
-	private int hdbdrive;
 	
 	private int diskDriveSerial = -1;
 	private FileSystemManager fsManager;
+	private int hdbdosdrive = 0;
 	
 	public DWDiskDrives(DWProtocolHandler dwProto)
 	{
@@ -83,20 +83,12 @@ public class DWDiskDrives
 
 	public DWDisk getDisk(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException 
 	{
-		// HDBDOSMode means ignore driveno, use LSN/630
-		if (dwProto.getConfig().getBoolean("HDBDOSMode",false))
-		{
-			driveno = this.hdbdrive;
-			logger.debug("HDBDOSMode write: mapped to drive " + driveno );
-			
-		}
 		
 		// validate drive number
 		if (!isDriveNo(driveno))
 		{
 			throw new DWDriveNotValidException("There is no drive " + driveno + ". Valid drives numbers are 0 - "  + (dwProto.getConfig().getInt("DiskMaxDrives", DWDefs.DISK_MAXDRIVES) - 1));
 		}
-		
 		
 		return(diskDrives[driveno].getDisk());
 	}
@@ -105,11 +97,21 @@ public class DWDiskDrives
 	
 	public void writeSector(int driveno, byte[] data) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDriveWriteProtectedException, IOException
 	{
+		if (dwProto.getConfig().getBoolean("HDBDOSMode",false))
+		{
+			driveno = this.hdbdosdrive;
+		}
+		
 		this.diskDrives[driveno].writeSector(data);
 	}
 	
 	public byte[] readSector(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException, DWImageFormatException
 	{
+		if (dwProto.getConfig().getBoolean("HDBDOSMode",false))
+		{
+			driveno = this.hdbdosdrive;
+		}
+		
 		return(this.diskDrives[driveno].readSector());
 	}
 	
@@ -120,13 +122,19 @@ public class DWDiskDrives
 		{
 			// every 630 sectors is drive, lsn to remainder
 			
-			driveno = lsn / 630;
+			int newdriveno = lsn / 630;
+			int newlsn = lsn % 630;
 			
-			lsn = lsn - (driveno * 630);
+			if ((lsn != newlsn) || (driveno != newdriveno))
+			{
+				logger.debug("HDBDOSMode maps seek from drv " + driveno + " sector " + lsn + " to drv " + newdriveno + " sector " + newlsn);
+			}
 			
-			logger.debug("HDBDOSMode seek: mapped to drive " + driveno + " sector " + lsn);
+			lsn = newlsn;
+			driveno = newdriveno;
 			
-			this.hdbdrive = driveno;
+			this.hdbdosdrive = newdriveno;
+			
 		}
 
 		this.diskDrives[driveno].seekSector(lsn);

@@ -92,10 +92,10 @@ public class DWDiskDrive
 	}
 
 
-	public void seekSector(int lsn) throws DWInvalidSectorException, DWSeekPastEndOfDeviceException
+	public void seekSector(int lsn) throws DWInvalidSectorException, DWSeekPastEndOfDeviceException, DWDriveNotLoadedException
 	{
 		if (this.disk == null)
-			throw new DWInvalidSectorException("Disk is null");
+			throw new DWDriveNotLoadedException("No disk in drive " + this.driveno);
 			
 		synchronized(this.disk)
 		{

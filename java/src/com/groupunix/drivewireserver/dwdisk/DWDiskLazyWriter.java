@@ -22,7 +22,7 @@ public class DWDiskLazyWriter implements Runnable {
 			try 
 			{
 				//logger.debug("sleeping for " + DriveWireServer.serverconfig.getLong("DiskLazyWriteInterval",15000) + " ms...");
-				Thread.sleep(DriveWireServer.serverconfig.getLong("DiskLazyWriteInterval",15000));
+				Thread.sleep(DriveWireServer.serverconfig.getLong("DiskLazyWriteInterval",5000));
 				syncDisks();
 			}	 
 			catch (InterruptedException e) 
@@ -47,7 +47,6 @@ public class DWDiskLazyWriter implements Runnable {
 			if (DriveWireServer.handlerIsAlive(h) )
 			{
 				DriveWireServer.getHandler(h).syncStorage();
-				
 			}
 			
 		}
