@@ -46,7 +46,7 @@ public class ConfigEditorTaskWin extends Dialog
 		
 		shell.open();
 		shell.layout();
-		Display display = getParent().getDisplay();
+		//Display display = getParent().getDisplay();
 		
 		/*
 		while (!shell.isDisposed())
@@ -92,14 +92,7 @@ public class ConfigEditorTaskWin extends Dialog
 					  }
 				  });
 		
-		try
-		{
-			Thread.sleep(1000);
-		} catch (InterruptedException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
 
 	

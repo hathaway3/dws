@@ -16,9 +16,9 @@ public class UITaskCompositeSplash extends UITaskComposite
 	private Canvas logoc;
 	private ImageData logodat;
 	
-	public UITaskCompositeSplash(Composite master, int style)
+	public UITaskCompositeSplash(Composite master, int style, int tid)
 	{
-		super(master, style);
+		super(master, style, tid);
 		
 		this.setData("splash","indeed");
 		

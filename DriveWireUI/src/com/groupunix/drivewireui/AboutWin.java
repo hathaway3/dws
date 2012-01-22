@@ -14,6 +14,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
@@ -65,7 +66,7 @@ public class AboutWin extends Dialog {
 	private int noscalex = -1;
 	private int noscaley = -1;
 	private boolean[] toggles;
-	
+
 	// i could not resist
 	private int[][] mem = { 
 			
@@ -301,7 +302,7 @@ public class AboutWin extends Dialog {
 	ArrayList<String >folks = new ArrayList<String>(Arrays.asList( "Special thanks to:", "", "Cloud-9", "#coco_chat", "Malted Media", 
 			"The Glenside Color Computer Club", "Darren Atkinson", "Boisy Pitre", 
 			"John Linville", "RandomRodder", "lorddragon", "lostwizard", "beretta",  "Gary Becker", "Jim Hathaway",
-			"Gene Heskett", "Wayne Campbell", "Stephen Fischer", "Christopher Hawks", "And apologies to any I forgot!"));
+			"Gene Heskett", "Wayne Campbell", "Stephen Fischer", "Christopher Hawks", "John Orwen", "And apologies to any I forgot!"));
 	
 	
 
@@ -381,6 +382,8 @@ public class AboutWin extends Dialog {
 			
 				if (e.character == 's')
 				{
+					curx = 31;
+					cury = 18;
 					ssmode = true;
 				}
 				else if (e.character == '=')
@@ -833,6 +836,7 @@ public class AboutWin extends Dialog {
 		
 		}
 		
+		
 	}
 
 	
@@ -886,15 +890,17 @@ public class AboutWin extends Dialog {
 			}
 		}
 		
+	
+		
 		// patterns
-		int a = r.nextInt(50);
+		int a = r.nextInt(500);
 		
 		if (!toggles[6])
 			a = 0;
 		
 		for (int q = 0;q<a;q++)
 		{
-			int patlen = r.nextInt(16)+1;
+			int patlen = r.nextInt(36)+1;
 			
 			int[] pat = new int[patlen];
 			
@@ -948,13 +954,26 @@ public class AboutWin extends Dialog {
 			
 			int ptr = 0;
 			
+			boolean z = true;
+			if (r.nextInt(3) == 0) 
+				z = false;
+			boolean u = r.nextBoolean();
+			
 			for (int i = 0;i<16;i++)
 			{
 				for (int j = 0;j<32;j++)
 				{
 					if (pat[ptr] > -1)
-						text[i][j] = pat[ptr];
-					ptr++;
+					{
+						if ((r.nextInt(500)<499) && !z)
+							text[i][j] = pat[ptr];
+						else
+							pat[ptr] = text[i][j];
+					}
+					
+					if ((r.nextInt(2000)<1999) || u)
+						ptr++;
+					
 					if (ptr == patlen)
 						ptr = 0;
 				}

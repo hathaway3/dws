@@ -131,25 +131,10 @@ public class CreateDiskWin extends Dialog {
 						
 						public void run() 
 						{
-							// create a file chooser
-							final DWServerFileChooser fileChooser = new DWServerFileChooser(curpath);
-							
-							// 	configure the file dialog
-							
-							fileChooser.setFileHidingEnabled(false);
-							fileChooser.setMultiSelectionEnabled(false);
-							fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-							fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-						
-							
-							// 	show the file dialog
-							int answer = fileChooser.showDialog(fileChooser, "Choose path for new file...");
-										
-							// 	check if a file was selected
-							if (answer == JFileChooser.APPROVE_OPTION)
+							final String filename = MainWin.getFile(true, false, curpath, "File for new disk image..", "Create");
+								// 	check if a file was selected
+							if (filename != null)
 							{
-								final File selected =  fileChooser.getSelectedFile();
-			
 								if (!textPath.isDisposed())
 								{
 									shlCreateANew.getDisplay().asyncExec(new Runnable() 
@@ -157,7 +142,7 @@ public class CreateDiskWin extends Dialog {
 										
 										public void run() 
 										{
-											textPath.setText(selected.getPath());
+											textPath.setText(filename);
 										}
 									});
 								}

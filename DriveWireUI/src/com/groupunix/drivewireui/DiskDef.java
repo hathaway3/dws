@@ -179,9 +179,9 @@ public class DiskDef implements Cloneable
 	{
 	//	synchronized(this.diskgraph)
 	//	{
-			this.lastclean = sector;
-			this.sectors.put(sector, 50);
-			this.graphchanged = true;
+			//this.lastclean = sector;
+			//this.sectors.put(sector, 100);
+			//this.graphchanged = true;
 	//	}
 	}
 
@@ -196,7 +196,7 @@ public class DiskDef implements Cloneable
 	//	synchronized(this.diskgraph)
 	//	{
 			this.lastwrite = lsn;
-			this.sectors.put(lsn,100);
+			this.sectors.put(lsn,255);
 			this.graphchanged = true;
 	//	}
 	}
@@ -208,7 +208,7 @@ public class DiskDef implements Cloneable
 	//	synchronized(this.diskgraph)
 	//	{
 			this.lastread = lsn;
-			this.sectors.put(lsn, -50);
+			this.sectors.put(lsn, -255);
 			this.graphchanged = true;
 	//	}
 	}
@@ -384,60 +384,10 @@ public class DiskDef implements Cloneable
 			this.gc.drawText("" + this.getSectors() , DiskWin.DGRAPH_WIDTH - gc.textExtent("" + this.getSectors()).x, 0, true);
 			
 			int p1 = DiskWin.DGRAPH_WIDTH / 4;
-			int p2 = DiskWin.DGRAPH_WIDTH / 2 + 10;
-			int p3 = p2 + p1 + 20;
+			int p2 = DiskWin.DGRAPH_WIDTH / 2 + 60;
 			
-			int cleanpos,writepos,readpos;
-			
-			// just for kicks..
-			
-			if (this.lastclean < this.lastread)
-			{
-				if (this.lastclean < this.lastwrite)
-				{
-					cleanpos = p1;
-					
-					if (this.lastread < this.lastwrite)
-					{
-						readpos = p2;
-						writepos = p3;
-					}
-					else
-					{
-						writepos = p2;
-						readpos = p3;
-					}
-					
-				}
-				else
-				{
-					writepos = p1;
-					cleanpos = p2;
-					readpos = p3;
-				}
-			}
-			else if (this.lastclean < this.lastwrite)
-			{
-				readpos = p1;
-				cleanpos = p2;
-				writepos = p3;
-			}
-			else
-			{
-				cleanpos = p3;
-				if (this.lastread < this.lastwrite)
-				{
-					readpos = p1;
-					writepos = p2;
-				}
-				else
-				{
-					writepos = p1;
-					readpos = p2;
-				}
-			}
-				
-			
+			int readpos = p1;
+			int writepos = p2;
 			
 				
 			String tmp = "LAST READ ";
@@ -458,7 +408,7 @@ public class DiskDef implements Cloneable
 			this.gc.fillPolygon(tri);
 			
 			
-			tmp = "LAST DIRTY ";
+			tmp = "LAST WRITE ";
 			this.gc.drawText(tmp, writepos - gc.textExtent(tmp).x , 0, true);
 			this.gc.drawText(this.lastwrite + "", writepos+10, 0, true);
 			
@@ -469,23 +419,7 @@ public class DiskDef implements Cloneable
 			this.gc.setBackground(DiskWin.colorDiskDirty);
 			this.gc.fillPolygon(tri);
 			
-			
-			tmp = "LAST CLEAN ";
-			this.gc.drawText(tmp, cleanpos - gc.textExtent(tmp).x , 0, true);
-			this.gc.drawText(this.lastclean + "", cleanpos+10, 0, true);
-			
-			tri[0] = cleanpos;
-			tri[2] = tri[0];
-			tri[4] = tri[0]+7;
-
-			
-			this.gc.setBackground(DiskWin.colorDiskClean);
-			this.gc.fillPolygon(tri);
-			
-			
-		
 			this.coin ++;
-			
 			
 			int lastchange = 0;
 			int changes = 0;
@@ -493,9 +427,11 @@ public class DiskDef implements Cloneable
 			this.gc.setBackground(DiskWin.colorBlack);
 			this.gc.setForeground(DiskWin.colorDiskBG);
 			
+			
 			for (int i = 0;i<DiskWin.DGRAPH_WIDTH;i++)
 			{
 				Color curcol = getGraphColorFor(i);
+				
 				if (!curcol.equals(gc.getBackground()))
 				{					
 					gc.fillGradientRectangle(lastchange, 20, lastchange + i, DiskWin.DGRAPH_HEIGHT-35, true);
@@ -507,10 +443,8 @@ public class DiskDef implements Cloneable
 			
 			gc.fillGradientRectangle(lastchange, 20, DiskWin.DGRAPH_WIDTH - lastchange, DiskWin.DGRAPH_HEIGHT-35, true);
 			
-			//System.out.println("-- changed: " + changes);
 			
-			
-			
+					
 			// footer
 			this.gc.setBackground(DiskWin.colorDiskBG);
 			this.gc.fillRectangle(0,DiskWin.DGRAPH_HEIGHT-15, DiskWin.DGRAPH_WIDTH, DiskWin.DGRAPH_HEIGHT);
@@ -535,12 +469,6 @@ public class DiskDef implements Cloneable
 			this.gc.setBackground(DiskWin.colorDiskDirty);
 			this.gc.fillPolygon(tri);
 			
-			tri[0] = (int) (this.graphscale * this.lastclean)+1;
-			tri[2] = tri[0]+7;
-			tri[4] = tri[0]-7;
-			
-			this.gc.setBackground(DiskWin.colorDiskClean);
-			this.gc.fillPolygon(tri);
 			
 			this.graphchanged = false;
 	 	}	
@@ -558,8 +486,8 @@ public class DiskDef implements Cloneable
 		int elsn = (int) Math.round(((double)x) / this.graphscale);
 		
 	
-		synchronized(sectors)
-		{
+		//synchronized(sectors)
+		//{
 			if (this.sectors.containsKey(elsn))
 			{
 		
@@ -569,15 +497,42 @@ public class DiskDef implements Cloneable
 				if (scache < 0)
 					return(MainWin.colorGreen);
 				
-				if (scache <= 50)
+				if (scache > 0)
 					return(DiskWin.colorDiskClean);
 				
-				return(DiskWin.colorDiskDirty);
-				
 			}
-		}
+		//}
 		
 		return DiskWin.colorDiskGraphBG;
+	}
+
+	
+	private int getGraphAlphaFor(int x)
+	{
+		
+		// figure out effective LSN
+		int elsn = (int) Math.round(((double)x) / this.graphscale);
+		
+	
+		if (this.sectors.containsKey(elsn))
+		{
+			int scache = this.sectors.get(elsn);
+			
+			if (scache < 0)
+			{
+				this.sectors.put(elsn, (this.sectors.get(elsn) + 1));
+				return(Math.abs(scache));
+			}
+			
+			if (scache > 0)
+			{
+				this.sectors.put(elsn, (this.sectors.get(elsn) - 1));
+				return(scache);
+			}
+				
+		}
+		
+		return 255;
 	}
 
 

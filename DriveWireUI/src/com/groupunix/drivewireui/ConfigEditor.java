@@ -2,15 +2,18 @@ package com.groupunix.drivewireui;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration.Node;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.tree.ConfigurationNode;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -49,7 +52,9 @@ public class ConfigEditor extends Shell
 	private Button btnToggle;
 	private Button btnApply;
 	
-	private XMLConfiguration wc;
+	private XMLConfiguration wc = new XMLConfiguration(); 
+	private XMLConfiguration masterc = new XMLConfiguration();
+	
 	private ToolBar toolBar;
 	private ToolItem tltmMidi;
 	private ToolItem tltmLogging;
@@ -72,6 +77,7 @@ public class ConfigEditor extends Shell
 	private Text textString;
 	private Label lblString;
 	private Button btnFileDir;
+	private ToolItem tltmDisk;
 
 	
 	@Override
@@ -130,8 +136,11 @@ public class ConfigEditor extends Shell
 		super(display, SWT.SHELL_TRIM);
 	
 		createContents();
-		
-		loadConfig();
+		loadMaster();
+		if (!this.isDisposed())
+		{
+			loadConfig();
+		}
 	}
 
 	
@@ -155,7 +164,7 @@ public class ConfigEditor extends Shell
 				toolBar.setLayoutData(new RowData(getSize().x - 26, -1));
 				scrolledComposite.setLayoutData(new RowData(getSize().x - 26, 150));
 				composite_1.setLayoutData(new RowData(getSize().x - 26, 36));
-				tree.setLayoutData(new RowData(-1, getSize().y-280));
+				tree.setLayoutData(new RowData(getSize().x - 46, getSize().y-280));
 				setRedraw(true);
 			}
 		});
@@ -168,6 +177,7 @@ public class ConfigEditor extends Shell
 			@SuppressWarnings("unchecked")
 			@Override
 			public void mouseUp(MouseEvent e) {
+				commitNodes();
 				tree.removeAll();
 				loadConfig(null, wc.getRootNode().getChildren());
 			}
@@ -182,6 +192,10 @@ public class ConfigEditor extends Shell
 		tltmDevice = new ToolItem(toolBar, SWT.RADIO);
 		tltmDevice.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/connect.png"));
 		tltmDevice.setText("Device");
+		
+		tltmDisk = new ToolItem(toolBar, SWT.RADIO);
+		tltmDisk.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/disk-insert.png"));
+		tltmDisk.setText("Disk");
 		
 		tltmPrinting = new ToolItem(toolBar, SWT.RADIO);
 		tltmPrinting.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/document-print.png"));
@@ -204,9 +218,11 @@ public class ConfigEditor extends Shell
 		
 		tltmCheckAdvanced = new ToolItem(toolBar, SWT.CHECK);
 		tltmCheckAdvanced.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/cog-edit.png"));
-		tltmCheckAdvanced.setText("Advanced");
+		tltmCheckAdvanced.setText("Show Advanced Items");
 		
 
+		
+		
 		
 		tree = new Tree(this, SWT.BORDER | SWT.FULL_SELECTION);
 		tree.setLayoutData(new RowData(663, SWT.DEFAULT));
@@ -214,32 +230,24 @@ public class ConfigEditor extends Shell
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				if (tree.getSelection()[0].getData("param") != null)
-				{
-					selected = (Node) tree.getSelection()[0].getData("param");
-					displayParam(tree.getSelection()[0]);
-				}
+				selected = (Node) tree.getSelection()[0].getData("param");
+				displayParam(tree.getSelection()[0]);
 			}
 		});
+		
+		
 		tree.setHeaderVisible(true);
 		
 		TreeColumn trclmnItem = new TreeColumn(tree, SWT.LEFT);
-		trclmnItem.setWidth(232);
+		trclmnItem.setWidth(250);
 		trclmnItem.setText("Item");
 		trclmnItem.addSelectionListener(new SortTreeListener());
 		
 		TreeColumn trclmnValue = new TreeColumn(tree, SWT.NONE);
-		trclmnValue.setWidth(289);
-		trclmnValue.setText("Current Value");
-		
-		trclmnNewColumn = new TreeColumn(tree, SWT.NONE);
-		trclmnNewColumn.setWidth(121);
-		trclmnNewColumn.setText("New Value");
-		
-		
+		trclmnValue.setWidth(380);
+		trclmnValue.setText("Value");
 		
 		scrolledComposite = new Composite(this, SWT.NONE);
-		
 		
 		lblItemTitle = new Label(scrolledComposite, SWT.NONE);
 		lblItemTitle.setBounds(10, 10, 239, 24);
@@ -268,12 +276,6 @@ public class ConfigEditor extends Shell
 		fl_composite_1.marginHeight = 5;
 		composite_1.setLayout(fl_composite_1);
 		
-		Button btnHelp = new Button(composite_1, SWT.NONE);
-		btnHelp.setText("Help");
-		
-		Label label = new Label(composite_1, SWT.NONE);
-		label.setText(" ");
-		
 		Button btnBackup = new Button(composite_1, SWT.NONE);
 		btnBackup.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -281,16 +283,32 @@ public class ConfigEditor extends Shell
 				doBackup();
 			}
 		});
-		btnBackup.setText("Backup");
+		btnBackup.setText("Save to file...");
 		
 		Button btnRestore = new Button(composite_1, SWT.NONE);
-		btnRestore.setText("Restore");
+		btnRestore.setText("Load from file...");
+		btnRestore.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				doRestore();
+			}
+		});
+		
 		
 		Label lblNewLabel = new Label(composite_1, SWT.NONE);
 		lblNewLabel.setText(" ");
 		
-		Button btnOk = new Button(composite_1, SWT.NONE);
-		btnOk.setText("Ok");
+		btnApply = new Button(composite_1, SWT.NONE);
+		btnApply.addSelectionListener(new SelectionAdapter() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				applyChanges();
+			}
+		});
+		btnApply.setText("Write to server");
+		btnApply.setEnabled(true);
+		
 		
 		Button btnCancel = new Button(composite_1, SWT.NONE);
 		btnCancel.addSelectionListener(new SelectionAdapter() {
@@ -299,17 +317,7 @@ public class ConfigEditor extends Shell
 				close();
 			}
 		});
-		btnCancel.setText("Cancel");
-		
-		btnApply = new Button(composite_1, SWT.NONE);
-		btnApply.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				applyChanges();
-			}
-		});
-		btnApply.setText("Apply");
-		btnApply.setEnabled(false);
+		btnCancel.setText("Close");
 		
 		scrolledComposite.setLayoutData(new RowData(667, 200));
 		
@@ -350,6 +358,7 @@ public class ConfigEditor extends Shell
 		
 		btnFileDir = new Button(scrolledComposite, SWT.NONE);
 		btnFileDir.addSelectionListener(new SelectionAdapter() {
+			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
@@ -381,42 +390,267 @@ public class ConfigEditor extends Shell
 
 	protected void doBackup()
 	{
-		String path = MainWin.getFile(true, false, "backup.xml", "Backup current config...", "Save");
+		String path = MainWin.getFile(true, false, "", "Save current config as...", "Save", new String[] { ".xml" , "*.*"});
 		
 		if (path != null)
 		{
-			XMLConfiguration xmlc = new XMLConfiguration(MainWin.dwconfig);
+			commitNodes();
 			
 			try
 			{
-				xmlc.save(path);
+				wc.save(path);
 			} 
 			catch (ConfigurationException e)
 			{
-				MainWin.showError("Error backing up configuration", "A configuration exception occured", e.getMessage(), true);
+				MainWin.showError("Error saving configuration", "A configuration exception occured", e.getMessage(), true);
 			}
 			
 		}
 	}
 
 
+	
+	
 
-
-
-
-
-
-
-	protected void applyChanges()
+	protected void doRestore()
 	{
 		
+		String path = MainWin.getFile(false, false, "", "Load config from file...", "Open", new String[] { ".xml" , "*.*"});
 		
+		if (path != null)
+		{
 			
+			loadConfig(path);
+			
+		}
 	}
 
 
+	
+	
+
+	protected void applyChanges()
+	{
+		commitNodes();
+		XMLConfiguration temp = new XMLConfiguration();
+		
+		try
+		{
+			StringWriter sw = new StringWriter();
+			
+			wc.save(sw);
+			
+			StringReader sr = new StringReader(sw.getBuffer().toString());
+			
+			
+			temp.load(sr);
+			
+		} catch (ConfigurationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+		final ArrayList<String> cmds = generateConfigCommands("", temp.getRootNode().getChildren());
+		
+		cmds.add(0, "ui server conf freeze true");
+		
+		for (int i = 0;i<256;i++)
+		{
+			cmds.add("ui server conf set Drive" + i + "Path");
+			cmds.add("ui server conf set Drive" + i + "Path[@category] disk,advanced");
+			cmds.add("ui server conf set Drive" + i + "Path[@type] file");
+		}
+		
+		
+		cmds.add("ui server conf freeze false");
+		
+		
+		
+		
+		class Stupid
+		{
+			ConfigEditorTaskWin ctw;
+			
+			public ConfigEditorTaskWin getCtw()
+			{
+				return this.ctw;
+			}
+			
+			public void initCtw(Shell shell)
+			{
+				this.ctw = new ConfigEditorTaskWin(shell, SWT.DIALOG_TRIM, "Writing config to server..." , "Please wait while the configuration is written");
+			}
+		}
+		
+		
+		
+		final Shell shell = this;
+		final Stupid stupid = new Stupid();
+		
+		Runnable lc = new Runnable() 
+		{
+
+			
+			@Override
+			public void run()
+			{
+				getDisplay().syncExec(new Runnable() {
+		
+					@Override
+					public void run()
+					{
+						
+						stupid.initCtw(shell);
+						stupid.getCtw().open();
+						
+					}
+					
+				});
+				
+			
+				try
+				{
+					stupid.getCtw().setStatus("Generate command list...", 10);
+					
+					stupid.getCtw().setStatus("Sending config commands...", 20);
+					
+					double slice = 80.0/Double.valueOf(cmds.size()); 
+					double i = 0.0;
+					for (String cmd : cmds)
+					{
+						
+						Connection conn = new Connection(MainWin.getHost(), MainWin.getPort(), MainWin.getInstance());
+						conn.Connect();
+						conn.loadList(-1,cmd);
+						conn.close();
+						
+						//MainWin.debug(cmd);
+						
+						stupid.getCtw().setStatus("Sending config commands...", (int) (20 + (i * slice)));
+						i++;
+					}		
+					
+					stupid.getCtw().setStatus("Complete", 100);
+					
+					stupid.getCtw().closeWin();
+				} 
+				catch (UnknownHostException e)
+				{
+					stupid.getCtw().setErrorStatus(e.getMessage());
+				} 
+					catch (IOException e)
+				{
+					stupid.getCtw().setErrorStatus(e.getMessage());
+				} 
+				catch (DWUIOperationFailedException e)
+				{
+					stupid.getCtw().setErrorStatus(e.getMessage());
+				}
+				
+			}
+			
+		};
+		
+		Thread tc = new Thread(lc);
+		tc.start();
+		
+		
+	}
+
+	
 
 
+
+
+
+
+
+
+
+	@SuppressWarnings("unchecked")
+	protected ArrayList<String> generateConfigCommands(String key, List<Node> nodes)
+	{
+		ArrayList<String> res = new ArrayList<String>();
+		
+		List<ConfigItem> items = new ArrayList<ConfigItem>();
+		
+		HashMap<String,Integer> count = new HashMap<String,Integer>();
+		
+		for (Node t : nodes)
+		{
+			
+			if (count.containsKey(t.getName()))
+				count.put(t.getName() , count.get(t.getName()) + 1);
+			else
+				count.put(t.getName(), 0);
+			
+			items.add(new ConfigItem(t,count.get(t.getName())));
+			
+		}
+			
+		
+		Collections.sort(items);
+		
+		for (ConfigItem item : items)
+		{
+			String cmd = "ui server conf set ";
+			
+			String thiskey = item.getNode().getName() + "(" + item.getIndex() + ")";
+			
+			if (key != "")
+				thiskey = key + "." + thiskey;
+			
+			cmd += thiskey;
+			
+			if (item.getNode().getValue() != null)
+			{
+				cmd += " " + item.getNode().getValue().toString();
+			}
+		
+			res.add(cmd);
+			
+			
+			HashMap<String,String> multi = new HashMap<String,String>();
+			
+			//	what a mess
+			for (Node atn : (List<Node>) item.getNode().getAttributes() )
+			{
+					if (item.getNode().getAttributeCount(atn.getName()) > 1)
+					{
+						
+						if (multi.containsKey(thiskey + "[@" + atn.getName() + "]"))
+							 multi.put(thiskey + "[@" + atn.getName() + "]" ,  multi.get(thiskey + "[@" + atn.getName() + "]") +"," + atn.getValue().toString());
+						else
+							multi.put(thiskey + "[@" + atn.getName() + "]" , atn.getValue().toString());
+							
+					}
+					else
+					{
+						res.add("ui server conf set " + thiskey + "[@" + atn.getName() + "] " + atn.getValue());
+					}
+				
+			}
+			
+			for (Entry<String,String> e : multi.entrySet())
+			{
+				res.add("ui server conf set " + e.getKey() + " " + e.getValue());
+			}
+			
+			
+			
+			if (item.getNode().hasChildren())
+			{
+				res.addAll(generateConfigCommands(thiskey, item.getNode().getChildren()));
+			
+			}
+				
+		}
+		
+		return res;
+	}
 
 
 
@@ -426,8 +660,7 @@ public class ConfigEditor extends Shell
 	{
 		String res = ((Node)ti.getData("param")).getName();
 		
-		if ((Integer) ti.getData("index") > 0)
-			res += "(" + ((Integer) ti.getData("index")) + ")";
+		res += "(" + ((Integer) ti.getData("index")) + ")";
 		
 		if (ti.getParentItem() != null)
 			res = getTreePath(ti.getParentItem()) + "." + res;
@@ -445,98 +678,33 @@ public class ConfigEditor extends Shell
 
 	protected void updateBoolean(Node node, boolean selection)
 	{
-		if (node.getValue().equals(selection+""))
-		{
-			tree.getSelection()[0].setText(2,"");
-		}
-		else
-		{
-			tree.getSelection()[0].setText(2,selection+"");
-		}
-		
-		updateApply();
+		node.setValue(selection);
+		tree.getSelection()[0].setText(1,selection+"");
 	}
 
 
 	protected void updateInt(Node node, int selection)
 	{
-		String cmp;
-		
-		if (node.getValue() != null)
-		{
-			cmp = node.getValue().toString();
-		}
-		else
-		{
-			cmp = "";
-		}
-		
-		if (cmp.equals(selection+""))
-		{
-			tree.getSelection()[0].setText(2,"");
-		}
-		else
-		{
-			tree.getSelection()[0].setText(2,selection+"");
-		}
-		
-		updateApply();
+		node.setValue(selection);
+		tree.getSelection()[0].setText(1,selection+"");
 	}
 
 	
 	protected void updateString(Node node, String selection)
 	{
-		String cmp;
+		node.setValue(selection);
 		
-		
-		if ((node !=null) && node.getValue() != null)
-		{
-			cmp = node.getValue().toString();
-		}
+		if (selection == null)
+			tree.getSelection()[0].setText(1,"");
 		else
-		{
-			cmp = "";
-		}
-
-		if (cmp.equals(selection))
-		{
-			tree.getSelection()[0].setText(2,"");
-		}
-		else
-		{
-			tree.getSelection()[0].setText(2,selection);
-		}
+			tree.getSelection()[0].setText(1,selection);
 		
-		updateApply();
 	}
 
 
 
 
-	private void updateApply()
-	{
-		if (hasChanges(tree.getItems()))
-			this.btnApply.setEnabled(true);
-		else
-			this.btnApply.setEnabled(false);
-	}
-
-
-
-	private boolean hasChanges(TreeItem[] items)
-	{
-		for (TreeItem ti : items)
-		{
-			
-			if (!ti.getText(2).equals(""))
-				return(true);
-			
-			if (ti.getItemCount() > 0)
-				if (hasChanges(ti.getItems()))
-					return(true);
-		}
-		return false;
-	}
+	
 
 
 	private String getKeyPath(Node node)
@@ -558,6 +726,7 @@ public class ConfigEditor extends Shell
 	
 
 
+	@SuppressWarnings("unchecked")
 	protected void displayParam(TreeItem ti)
 	{
 		Node node = (Node) ti.getData("param");
@@ -587,6 +756,7 @@ public class ConfigEditor extends Shell
 	
 	
 	
+	@SuppressWarnings("unchecked")
 	private void setDisplayFor(TreeItem ti, String type)
 	{
 		
@@ -818,7 +988,7 @@ public class ConfigEditor extends Shell
 							} 
 							catch (DWUIOperationFailedException e)
 							{
-								txt = "No help found for " + node.getName(); 
+								txt += "No help found for " + node.getName(); 
 							}
 							
 							final String ftxt = txt;
@@ -849,9 +1019,11 @@ public class ConfigEditor extends Shell
 	
 	private void loadConfig(TreeItem ti, List<Node> nodes)
 	{
+		tree.removeAll();
 		setDisplayFor(null,"none");
 		this.setRedraw(false);
 		loadAllConfig(ti,nodes);
+		commitNodes();
 		filterConfig(null);
 		this.setRedraw(true);
 		
@@ -913,7 +1085,62 @@ public class ConfigEditor extends Shell
 		
 	}
 	
+	private void commitNodes()
+	{
+		commitNodes(tree.getItems());
+	}
 	
+	@SuppressWarnings("unchecked")
+	private void commitNodes(TreeItem[] treeitems)
+	{
+		for (TreeItem ti : treeitems)
+		{
+			if (ti.getItemCount() > 0)
+			{
+				commitNodes(ti.getItems());
+			}
+			
+			Node node = (Node) ti.getData("param");
+			
+			String key = getTreePath(ti);
+			
+			wc.setProperty(key, node.getValue());
+			
+			HashMap<String,String> multi = new HashMap<String,String>();
+			
+			//	what a mess
+			for (Node atn : (List<Node>) node.getAttributes() )
+			{
+					if (node.getAttributeCount(atn.getName()) > 1)
+					{
+						
+						if (multi.containsKey(key + "[@" + atn.getName() + "]"))
+							 multi.put(key + "[@" + atn.getName() + "]" ,  multi.get(key + "[@" + atn.getName() + "]") +"," + atn.getValue().toString());
+						else
+							multi.put(key + "[@" + atn.getName() + "]" , atn.getValue().toString());
+							
+					}
+					else
+					{
+						wc.setProperty(key + "[@" + atn.getName() + "]",  atn.getValue());
+					}
+				
+			}
+			
+			for (Entry<String,String> e : multi.entrySet())
+			{
+				wc.setProperty(e.getKey(), e.getValue());
+			}
+			
+			
+			
+		}
+	}
+	
+	
+	
+	
+	@SuppressWarnings("unchecked")
 	private void loadAllConfig(TreeItem ti, List<Node> nodes)
 	{
 	
@@ -947,6 +1174,9 @@ public class ConfigEditor extends Shell
 			{
 				tmp = new TreeItem(ti, SWT.NONE);
 			}
+			
+			// apply master
+			applyMaster(item.node);
 			
 			if (getAttributeVal(item.getNode().getAttributes(),"name") == null)
 				tmp.setText(0,item.getNode().getName());
@@ -989,6 +1219,7 @@ public class ConfigEditor extends Shell
 	
 	
 	
+	@SuppressWarnings("unchecked")
 	private boolean filterItem(Node t)
 	{
 		List<Node> attributes = t.getAttributes();
@@ -1018,6 +1249,12 @@ public class ConfigEditor extends Shell
 		if (this.tltmLogging.getSelection() && !matchCategory(t,"logging"))
 			return false;
 		
+		if (this.tltmDisk.getSelection() && !matchCategory(t,"disk"))
+			return false;
+		
+		if (this.tltmNetworking.getSelection() && !matchCategory(t,"networking"))
+			return false;
+		
 		//if (this.tltmNetworking.getSelection() && !matchAttributeVal(attributes,"category","networking"))
 		//	return false;
 		
@@ -1030,6 +1267,7 @@ public class ConfigEditor extends Shell
 
 
 
+	@SuppressWarnings("unchecked")
 	private boolean matchCategory(Node node, String category)
 	{
 	
@@ -1133,6 +1371,7 @@ public class ConfigEditor extends Shell
 		Runnable lc = new Runnable() 
 		{
 
+			@SuppressWarnings("unchecked")
 			@Override
 			public void run()
 			{
@@ -1157,15 +1396,29 @@ public class ConfigEditor extends Shell
 					stupid.getCtw().setStatus("Connecting to server...", 10);
 					conn.Connect();
 					
-					stupid.getCtw().setStatus("Sending command...", 30);
+					stupid.getCtw().setStatus("Sending command...", 20);
 					StringReader sr = conn.loadReader(-1,"ui server config write");
 					
-					stupid.getCtw().setStatus("Received response", 70);
+					stupid.getCtw().setStatus("Received response", 30);
 					conn.close();
 		
-					stupid.getCtw().setStatus("Processing config...", 80);
-					XMLConfiguration wc = new XMLConfiguration();
+					stupid.getCtw().setStatus("Processing config...", 60);
+					wc.clear();
 					wc.load(sr);
+					
+					
+					stupid.getCtw().setStatus("Processing config...", 85);
+					
+					getDisplay().syncExec(new Runnable() {
+
+						@Override
+						public void run()
+						{
+							loadConfig(null, (List<Node>) wc.getRoot().getChildren());
+						}
+						
+					});
+					
 					
 					stupid.getCtw().setStatus("Complete", 100);
 					
@@ -1191,9 +1444,146 @@ public class ConfigEditor extends Shell
 			
 		};
 		
+		if (!this.isDisposed())
+		{
+			Thread tc = new Thread(lc);
+			tc.start();
+		}
+		
+	}
+
+
+	
+	private void loadConfig(final String filepath)
+	{
+		class Stupid
+		{
+			ConfigEditorTaskWin ctw;
+			
+			public ConfigEditorTaskWin getCtw()
+			{
+				return this.ctw;
+			}
+			
+			public void initCtw(Shell shell)
+			{
+				this.ctw = new ConfigEditorTaskWin(shell, SWT.DIALOG_TRIM, "Loading config from file..." , "Please wait while the configuration is loaded");
+			}
+		}
+		
+		
+		
+		final Shell shell = this;
+		final Stupid stupid = new Stupid();
+		
+		Runnable lc = new Runnable() 
+		{
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public void run()
+			{
+				getDisplay().syncExec(new Runnable() {
+		
+					@Override
+					public void run()
+					{
+						
+						stupid.initCtw(shell);
+						stupid.getCtw().open();
+						
+					}
+					
+				});
+				
+			
+				try
+				{
+					
+					stupid.getCtw().setStatus("Reading config...", 30);
+					wc.clear();
+					wc.load(filepath);
+					
+					stupid.getCtw().setStatus("Processing config...", 60);
+					
+					getDisplay().syncExec(new Runnable() {
+
+						@Override
+						public void run()
+						{
+							loadConfig(null, (List<Node>) wc.getRoot().getChildren());
+						}
+						
+					});
+					
+					
+					stupid.getCtw().setStatus("Complete", 100);
+					
+					stupid.getCtw().closeWin();
+				} 
+				catch (Exception e)
+				{
+					stupid.getCtw().setErrorStatus(e.getMessage());
+				} 
+				
+			}
+			
+		};
+		
 		Thread tc = new Thread(lc);
 		tc.start();
 		
+	}
+	
+	
+	private void loadMaster()
+	{
+		masterc.clear();
+		try
+		{
+			masterc.load("master.xml");
+		} 
+		catch (ConfigurationException e)
+		{
+			MainWin.showError("Error loading master config", e.getClass().getSimpleName() + ": " + e.getMessage(), UIUtils.getStackTrace(e), false);
+			this.dispose();
+		}
+	}
+
+	protected void applyMaster(Node node)
+	{
+		
+		String key = getKeyPath(node);
+		if (key.startsWith("drivewire-config."))
+		{
+			key = key.substring(17);
+		}
+		
+		if (masterc.getMaxIndex(key) > -1)
+		{
+			Node mnode = masterc.configurationAt(key).getRoot();
+			
+			//node.removeAttributes();
+			
+			for (int i = 0;i<mnode.getAttributeCount();i++)
+			{
+				if (node.getAttributeCount(mnode.getAttribute(i).getName()) > 0)
+					node.removeAttribute(mnode.getAttribute(i).getName());
+				
+			}
+			
+			for (int i = 0;i<mnode.getAttributeCount();i++)
+			{
+				node.addAttribute((ConfigurationNode) mnode.getAttribute(i).clone());
+			}
+			
+			
+		}
+		else
+		{
+			//MainWin.debug("No master config for: " + key);
+			
+		}
 	}
 
 	

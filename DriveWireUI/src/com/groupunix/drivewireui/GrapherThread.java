@@ -38,6 +38,8 @@ public class GrapherThread implements Runnable
 	@Override
 	public void run()
 	{
+		Thread.currentThread().setName("dwuiGrapher-" + Thread.currentThread().getId());
+		
 		// setup colors
 		colorGraphBGH = new Color(MainWin.getDisplay(), 0x90,0x90,0x90);
 		colorGraphBGL = new Color(MainWin.getDisplay(), 0x30,0x30,0x30);

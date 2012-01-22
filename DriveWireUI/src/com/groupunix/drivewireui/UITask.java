@@ -6,10 +6,12 @@ public class UITask
 	private int status = 0;
 	private UITaskComposite taskcomp;
 	private String text = "";
-
+	private int taskid = -1;
 	
-	public UITask(UITaskComposite tc)
+	
+	public UITask(int tid, UITaskComposite tc)
 	{
+		this.taskid = tid;
 		this.taskcomp = tc;
 	}
 	
@@ -63,7 +65,67 @@ public class UITask
 	public void rotateActive()
 	{
 		if ((this.taskcomp != null) && (!this.taskcomp.isDisposed()))
-				this.taskcomp.rotateActive();
+		{
+			this.taskcomp.rotateActive();
+			
+			if (this.taskcomp.getData("refreshinterval") != null)
+			{
+				if (this.taskcomp.getData("refreshcount") == null)
+					this.taskcomp.setData("refreshcount", 0);
+				
+				int rint = Integer.parseInt(this.taskcomp.getData("refreshinterval").toString());
+				int rc = Integer.parseInt(this.taskcomp.getData("refreshcount").toString());
+				
+				if (rc < rint)
+				{
+					this.taskcomp.setData("refreshcount", rc + 1);
+				}
+				else
+				{
+					String cmd = getCommand();
+					
+					if (cmd != null)
+					{
+						this.taskcomp.setRedraw(false);
+						
+						if (cmd.startsWith("/") || cmd.startsWith("dw") || cmd.startsWith("ui"))
+						{
+							MainWin.sendCommand(cmd, this.taskid, false);
+						}
+							
+						this.taskcomp.setRedraw(true);
+						
+					}
+					
+					this.taskcomp.setData("refreshcount", 0);
+				}
+				
+			}
+		}
+		
+	}
+	
+	public void setCommand(String cmd)
+	{
+		if ((this.taskcomp != null) && (!this.taskcomp.isDisposed()))
+		{
+			this.taskcomp.setCommand(cmd);
+		}
+	}
+	
+	public String getCommand()
+	{
+		if ((this.taskcomp != null) && (!this.taskcomp.isDisposed()))
+		{
+			return(this.taskcomp.getCommand());
+		}
+		
+		return null;
+	}
+
+	public int getTaskID()
+	{
+		return this.taskid;
 	}
 	
 }

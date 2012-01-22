@@ -26,16 +26,16 @@ public class UITaskComposite extends Composite
 	protected String cmd = "";
 	protected String det = "";
 	private int activeframe = 0;
-
+	private int taskid = -1;
+	
 	protected int stat;
 	
-	//public static BufferedImage activeFrames = new BufferedImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/status/process-working-2.png").getImageData());
 	public static Image activeFrames = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/status/process-working-2.png");
 	
-	public UITaskComposite(Composite master, int style)
+	public UITaskComposite(Composite master, int style, int tid)
 	{
 		super(master, style | SWT.DOUBLE_BUFFERED );
-		
+		this.taskid = tid;
 		this.createContents(master);
 	}
 
@@ -89,40 +89,8 @@ public class UITaskComposite extends Composite
 		
 		this.details.setBackground(MainWin.colorWhite);
 		
-		Menu menu = new Menu(this.getShell(), SWT.POP_UP);
+		final Menu menu = new Menu(this.getShell(), SWT.POP_UP);
 		this.details.setMenu(menu);
-		
-		
-		final MenuItem miCopy = new MenuItem(menu, SWT.PUSH);
-		miCopy.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				Clipboard clipboard = new Clipboard(MainWin.getDisplay());
-				
-				TextTransfer textTransfer = TextTransfer.getInstance();
-			
-				Transfer[] transfers = new Transfer[]{textTransfer};
-				Object[] data = new Object[]{ details.getSelectionText() };
-				clipboard.setContents(data, transfers);
-				clipboard.dispose();
-
-			}
-		});
-		
-		miCopy.setText ("Copy");
-		
-		
-		final MenuItem miRecall = new MenuItem(menu, SWT.PUSH);
-		miRecall.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				MainWin.setDWCmdText(cmd);
-			}
-		});
-		
-		miRecall.setText ("Recall command");
 		
 		
 		
@@ -130,15 +98,133 @@ public class UITaskComposite extends Composite
 			@Override
 			public void menuShown(MenuEvent e) 
 			{
+				for (MenuItem m : menu.getItems() )
+				{
+					m.dispose();
+				}
+				
+				
 				if (details.getSelectionCount() > 0)
-					miCopy.setEnabled(true);
-				else
-					miCopy.setEnabled(false);
+				{
+					MenuItem miCopy = new MenuItem(menu, SWT.PUSH);
+					miCopy.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) 
+						{
+							if (details.getSelectionCount() > 0)
+							{
+								String txt = details.getSelectionText();
+								
+								if (txt != null)
+								{
+									Clipboard clipboard = new Clipboard(MainWin.getDisplay());
+									TextTransfer textTransfer = TextTransfer.getInstance();
+							
+									Transfer[] transfers = new Transfer[]{textTransfer};
+									Object[] data = new Object[]{ txt };
+									clipboard.setContents(data, transfers);
+									clipboard.dispose();
+								}
+							}
+						}
+					});
+					
+					miCopy.setText ("Copy");
+				}
+				
+				
 				
 				if ((cmd != null) && (cmd.startsWith("dw")))
-					miRecall.setEnabled(true);
-				else
-					miRecall.setEnabled(false);
+				{
+					MenuItem miRecall = new MenuItem(menu, SWT.PUSH);
+					miRecall.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) 
+						{
+							MainWin.setDWCmdText(cmd);
+						}
+					});
+					
+					miRecall.setText ("Recall command");
+					
+					
+					MenuItem miSend = new MenuItem(menu, SWT.PUSH);
+					miSend.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) 
+						{
+							MainWin.sendCommand(cmd, true);
+						}
+					});
+					
+					miSend.setText ("Resend command");
+					
+				}
+				
+				if (getData("refreshinterval") != null)
+				{
+					if (stat == UITaskMaster.TASK_STATUS_ACTIVE)
+					{
+						MenuItem miStop = new MenuItem(menu, SWT.PUSH);
+						miStop.setText("Stop auto refresh");
+						miStop.addSelectionListener(new SelectionAdapter() {
+							@Override
+							public void widgetSelected(SelectionEvent e) 
+							{
+								MainWin.taskman.updateTask(taskid, UITaskMaster.TASK_STATUS_COMPLETE, null);
+							}
+						});
+						
+						
+					}
+				}
+				
+				if (cmd.startsWith("/") || cmd.startsWith("dw") || cmd.startsWith("ui"))
+				{
+					if (stat != UITaskMaster.TASK_STATUS_ACTIVE)
+					{
+						MenuItem miRefresh = new MenuItem(menu, SWT.PUSH);
+						miRefresh.setText("Refresh");
+						miRefresh.addSelectionListener(new SelectionAdapter() {
+							@Override
+							public void widgetSelected(SelectionEvent e) 
+							{
+								MainWin.sendCommand(cmd, taskid, true);
+							}
+						});
+						
+						
+						MenuItem miStart = new MenuItem(menu, SWT.PUSH);
+						miStart.setText("Start auto refresh");
+						miStart.addSelectionListener(new SelectionAdapter() {
+							@Override
+							public void widgetSelected(SelectionEvent e) 
+							{
+								if (getData("refreshinterval") == null)
+								{
+									setData("refreshinterval",30);
+								}
+								
+								MainWin.taskman.updateTask(taskid, UITaskMaster.TASK_STATUS_ACTIVE, null);
+							}
+						});
+					}
+				}
+				
+				
+				if (stat != UITaskMaster.TASK_STATUS_ACTIVE)
+				{
+					MenuItem miRemove = new MenuItem(menu, SWT.PUSH);
+					miRemove.setText("Remove");
+					miRemove.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) 
+						{
+							MainWin.taskman.removeTask(taskid);
+						}
+					});
+				}
+				
 			}
 		});
 		

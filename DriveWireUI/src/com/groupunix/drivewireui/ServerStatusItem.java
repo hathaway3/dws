@@ -12,6 +12,7 @@ public class ServerStatusItem
 	private int instancesalive = 0;
 	private int threads = 0;
 	private int uiclients = 0;
+	private long magic = 0;
 	
 	
 	public void setInterval(int interval)
@@ -105,7 +106,15 @@ public class ServerStatusItem
 	{
 		return uiclients;
 	}
+	public void setMagic(long l)
+	{
+		this.magic = l;
+	}
 	
+	public long getMagic()
+	{
+		return this.magic;
+	}
 
 
 }

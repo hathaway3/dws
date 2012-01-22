@@ -167,7 +167,7 @@ public class SendCommandWin extends Dialog
 					setStatus("Send: " + command, 50 / commands.size());
 					tid = MainWin.taskman.addTask(command);
 					MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE,"Connecting to server...");
-					connection.sendCommand(tid, command,MainWin.getInstance(),false);
+					connection.sendCommand(tid, command,MainWin.getInstance(),true);
 				  
 					setStatus("Closing..", 40 / commands.size());
 					connection.close();

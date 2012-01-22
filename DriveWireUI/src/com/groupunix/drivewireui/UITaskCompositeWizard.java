@@ -78,7 +78,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 	
 	public UITaskCompositeWizard(final Composite master, int style, int tid)
 	{
-		super(master, style);
+		super(master, style, tid);
 		this.tid = tid;
 		this.master = master;
 		

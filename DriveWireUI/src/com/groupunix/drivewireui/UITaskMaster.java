@@ -15,6 +15,7 @@ public class UITaskMaster
 	public static final int TASK_STATUS_FAILED = 2;
 	static Font taskFont;
 	static Font versionFont;
+	private int nexttaskno = 0;
 	
 	private Composite master;
 	private List<UITask> tasks = new ArrayList<UITask>();
@@ -41,106 +42,142 @@ public class UITaskMaster
 	
 	public int addTask(final String cmd)
 	{
+	
 		
 		master.getDisplay().syncExec(new Runnable() {
-			  public void run()
+		  public void run()
+		  {
+			  
+			  UITaskComposite tc;
+			  UITask task;
+			  
+			  if (tasks.size() > MainWin.config.getInt("DWOpsHistorySize", 20))
 			  {
-				  
-				  UITaskComposite tc;
-				  UITask task;
-				  
-				  if (tasks.size() > MainWin.config.getInt("DWOpsHistorySize", 20))
-				  {
 					  tasks.remove(0);
-				  }
+			  }
+				
+			  
+			  synchronized(tasks)
+			  {
+				  nexttaskno++;
 				  
 				  if (cmd.equals("/splash"))
 				  {
-					  tc = new UITaskCompositeSplash(master, SWT.DOUBLE_BUFFERED);
+					  tc = new UITaskCompositeSplash(master, SWT.DOUBLE_BUFFERED, nexttaskno);
 					
 				  }
 				  else if (cmd.equals("/wizard"))
 				  {
-					  tc = new UITaskCompositeWizard(master, SWT.DOUBLE_BUFFERED, tasks.size());
+					  tc = new UITaskCompositeWizard(master, SWT.DOUBLE_BUFFERED, nexttaskno);
 				  }
 				  else
 				  {
 					  master.setRedraw(false);
-					  tc =  new UITaskComposite(master, SWT.DOUBLE_BUFFERED);
+					  tc =  new UITaskComposite(master, SWT.DOUBLE_BUFFERED, nexttaskno);
 					  // get some initial dimensions, maybe not needed..
 					  tc.setBounds(0,tasks.size() * 40, master.getClientArea().width, 40);
 					  
 				  }
 					
 				  tc.setCommand(cmd);
-				  
-				  task = new UITask(tc);
-				  
-				  tasks.add(task);
-				  master.setRedraw(true);
-				  
-				  
-				  if (MainWin.tabFolderOutput.getSelectionIndex() != 0)
-				  {
-					  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/active.png"));
-				  }
+				
+			  	  task = new UITask(nexttaskno, tc);
+			  	  tasks.add(task);
 			  }
+			  
+			  master.setRedraw(true);
+			  
+			  
+			  if (MainWin.tabFolderOutput.getSelectionIndex() != 0)
+			  {
+				  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/active.png"));
+			  }
+		   }
 		});
-		
-		
-		
-		return(tasks.size()-1);
+	
+	
+	
+		return(nexttaskno);
 		
 	}
 	
 	protected void resizeTasks()
 	{
 		int y = 0;
-		
+			
 		for (UITask t : this.tasks)
 		{
-			t.setTop(y);
-			y += t.getHeight();
+			if ((t.getTaskcomp() != null) && (!t.getTaskcomp().isDisposed()))
+			{
+				t.getTaskcomp().setRedraw(false);
+				t.setTop(y);
+				y += t.getHeight();
 
-			t.setBottom(y);
+				t.setBottom(y);
+			}
 		}
 		
 		master.setBounds(0,0, master.getBounds().width, y);
 		
 		MainWin.scrolledComposite.setOrigin(0, y);
 		
+		for (UITask t : this.tasks)
+		{
+			if ((t.getTaskcomp() != null) && (!t.getTaskcomp().isDisposed()))
+			{
+				t.getTaskcomp().setRedraw(true);
+			}
+		}
 	}
 
-	public UITask getTask(int tid)
+	public UITask getTask(int tid) throws DWUINoSuchTaskException
 	{
-		if (tid < this.tasks.size())
-			return(this.tasks.get(tid));
-		else
+		for (UITask t : this.tasks)
 		{
-			MainWin.debug("invalid task id : " + tid);
-			return(null);
+			if (t.getTaskID() == tid)
+			{
+				return(t);
+			}
 		}
+		
+		throw new DWUINoSuchTaskException("No task id " + tid);
 	}
 	
 	public void updateTask(final int tid, final int status, final String txt)
 	{
 		master.getDisplay().syncExec(new Runnable() {
-			  public void run()
-			  {
-				  if (tid > -0)
-					  master.setRedraw(false);
-				  tasks.get(tid).setText(txt);
-				  tasks.get(tid).setStatus(status);
-				  
-				  resizeTasks(); 
-				  master.setRedraw(true);
+		  public void run()
+		  {
+			  MainWin.scrolledComposite.setRedraw(false);
+			
+			  
+			try
+			{
+				UITask t = getTask(tid);
+				
+				t.getTaskcomp().setRedraw(false);
+				
+				if (txt != null)
+					t.setText(txt);
+				
+				 t.setStatus(status);
 				 
-				  if (MainWin.tabFolderOutput.getSelectionIndex() != 0)
-				  {
-					  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/active.png"));
-				  }
+				 t.getTaskcomp().setRedraw(true);
+			} 
+			catch (DWUINoSuchTaskException e)
+			{
+				
+			}
+			  
+			  resizeTasks(); 
+			  MainWin.scrolledComposite.setRedraw(true);
+			 
+			  if (MainWin.tabFolderOutput.getSelectionIndex() != 0)
+			  {
+				  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/active.png"));
 			  }
-		});
+		  }
+	  });
 	}
 
 	public int getNumTasks()
@@ -160,20 +197,45 @@ public class UITaskMaster
 	{
 		MainWin.shell.setRedraw(false);
 		
-		if ((tid < this.tasks.size()) && (this.tasks.get(tid) != null))
+		int deltid = -1;
+		int curtid = 0;
+		
+		for (UITask t : this.tasks)
 		{
-			if (this.tasks.get(tid).getTaskcomp() != null)
+			
+			if (t.getTaskID() == tid)
 			{
-				this.tasks.get(tid).getTaskcomp().dispose();
+				deltid = curtid;
+				if ((t.getTaskcomp() != null) && (!t.getTaskcomp().isDisposed()))
+				{
+					t.getTaskcomp().dispose();
+				}
+						
 			}
 			
-			this.tasks.remove(tid);
-			
+			curtid++;
+		}
+		
+		if (deltid > -1)
+		{
+			this.tasks.remove(deltid);
 			this.resizeTasks();
 		}
 		
 		MainWin.shell.setRedraw(true);
-		
+	}
+
+
+	public boolean hasTask(int tid)
+	{
+		for (UITask t : this.tasks)
+		{
+			if (t.getTaskID() == tid)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 
@@ -189,9 +251,22 @@ public class UITaskMaster
 	}
 	
 	
+	
 	public Composite getMaster()
 	{
 		return this.master;
 	}
+
+
+	public List<UITask> getTasks()
+	{
+		return(this.tasks);
+	}
+
+
+	
+
+
+	
 	
 }

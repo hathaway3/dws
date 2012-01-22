@@ -32,6 +32,8 @@ public class SyncThread implements Runnable
 	@Override
 	public void run() 
 	{
+		Thread.currentThread().setName("dwuiSync-" + Thread.currentThread().getId());
+		
 		char[] cbuf = new char[READ_BUFFER_SIZE];
 		
 		// initial sleep
@@ -276,6 +278,11 @@ public class SyncThread implements Runnable
 				if (this.params.containsKey("9"))
 				{
 					this.ssbuf.setUIClients(Integer.parseInt(params.get("9")));
+				}
+				
+				if (this.params.containsKey("!"))
+				{
+					this.ssbuf.setMagic(Long.parseLong(params.get("!")));
 				}
 				
 				MainWin.submitServerStatusEvent(ssbuf);

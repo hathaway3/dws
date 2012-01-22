@@ -14,6 +14,9 @@ public class DiskTableUpdateThread implements Runnable
 	@Override
 	public void run()
 	{
+		Thread.currentThread().setName("dwuiDTUpdater-" + Thread.currentThread().getId());
+		
+		
 		DiskTableUpdate dtu;
 		
 		while (!MainWin.shell.isDisposed())

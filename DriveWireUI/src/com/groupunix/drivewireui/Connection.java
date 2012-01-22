@@ -74,11 +74,11 @@ public class Connection
 	
 	public void sendCommand(int tid, String cmd, int instance) throws IOException, DWUIOperationFailedException
 	{
-		sendCommand(tid, cmd, instance, false);
+		sendCommand(tid, cmd, instance, true);
 	}
 	
 
-	public void sendCommand(int tid, String cmd, int instance, boolean disp) throws IOException, DWUIOperationFailedException 
+	public void sendCommand(int tid, String cmd, int instance, boolean markComplete) throws IOException, DWUIOperationFailedException 
 	{
 		
 		// send command
@@ -96,7 +96,11 @@ public class Connection
 				{
 					txt += resp.get(i) + "\n";
 				}
-				MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE, txt);
+				
+				if (markComplete)
+					MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE, txt);
+				else
+					MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE, txt);
 			
 		}
 		
@@ -178,6 +182,9 @@ public class Connection
 		
 		return res;
 	}
+
+
+
 
 	
 

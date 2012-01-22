@@ -1,8 +1,10 @@
 package com.groupunix.drivewireui;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,11 +14,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.UnknownHostException;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -696,7 +696,59 @@ public class UIUtils {
 	}
 
 	
+	public static void saveLogItemsToFile()
+	{
+		Runnable doit = new Runnable() {
 
+			@Override
+			public void run()
+			{
+				String fn = MainWin.getFile(true, false, "", "Save log to...", "Save");
+				
+				if (fn != null)
+				{
+					try
+					{
+						FileWriter fstream = new FileWriter(fn);
+					
+						BufferedWriter out = new BufferedWriter(fstream);
+						
+						synchronized(MainWin.logItems)
+						{
+							for (LogItem li : MainWin.logItems)
+							{
+								out.write(li.toString() + System.getProperty("line.separator"));
+							}
+						}
+						
+						out.close();
+					  
+					}
+					catch (Exception e)
+					{
+						MainWin.showError("Error saving log items", e.getClass().getSimpleName() + ": " + e.getMessage(), UIUtils.getStackTrace(e), false);
+					}
+					  
+				}
+			}
+		
+		};
+		
+		Thread t = new Thread(doit);
+		t.start();
+	}
+
+
+	public static boolean hasArg(String[] args, String arg)
+	{
+		for (String a:args)
+		{
+			if (a.endsWith("-" + arg))
+				return true;
+		}
+		
+		return false;
+	}
 	
 	
 	

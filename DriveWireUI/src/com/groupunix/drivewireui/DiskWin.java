@@ -464,7 +464,8 @@ public class DiskWin {
 				  new Runnable() {
 					  public void run()
 					  {
-						  shlDwDrive.setText(title);
+						  if (!shlDwDrive.isDisposed())
+							  shlDwDrive.setText(title);
 					  }
 				  });
 	}

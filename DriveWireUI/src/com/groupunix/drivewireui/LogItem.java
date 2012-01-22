@@ -5,7 +5,8 @@ import java.util.Date;
 
 public class LogItem
 {
-	private final static SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss.SS");
+	private final static SimpleDateFormat shortFormat = new SimpleDateFormat("HH:mm:ss.SSS");
+	private final static SimpleDateFormat longFormat = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss.SSS");
 	
 	private String message;
 	private long timestamp;
@@ -69,8 +70,13 @@ public class LogItem
 	}
 	public String getShortTimestamp()
 	{
-		return format.format(new Date(this.timestamp));
+		return shortFormat.format(new Date(this.timestamp));
 	}
+	public String getLongTimestamp()
+	{
+		return longFormat.format(new Date(this.timestamp));
+	}
+	
 	
 	public String getShortSource()
 	{
@@ -79,4 +85,20 @@ public class LogItem
 		return(this.source);
 	}
 
+	public String toString()
+	{
+		String res;
+		
+		res = this.getLongTimestamp() + "  " + String.format("%-5s  %-18s  %-18s  ", this.getLevel(), this.getShortSource(), this.getThread()); 
+		res += this.getMessage();
+		
+		return(res);
+	}
+	public boolean isImportant()
+	{
+		if (getLevel().equals("WARN") || getLevel().equals("ERROR") || getLevel().equals("FATAL"))
+			return true;
+		
+		return false;
+	}
 }

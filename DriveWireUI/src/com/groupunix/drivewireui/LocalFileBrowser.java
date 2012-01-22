@@ -12,16 +12,18 @@ public class LocalFileBrowser implements Runnable
 	boolean save;
 	String title;
 	String buttontext;
+	String[] fileext;
 	
 	String selected = null;
 	
-	public LocalFileBrowser(final boolean save, final boolean dir, final String startpath, final String title, final String buttontext)
+	public LocalFileBrowser(final boolean save, final boolean dir, final String startpath, final String title, final String buttontext, String[] fileext)
 	{
 		this.startpath = startpath;
 		this.dir = dir;
 		this.save = save;
 		this.title = title;
 		this.buttontext = buttontext;
+		this.fileext = fileext;
 	}
 	
 	
@@ -39,8 +41,12 @@ public class LocalFileBrowser implements Runnable
 			
 	        fd.setText(title);
 	        fd.setFilterPath(startpath);
-	        //String[] filterExt = { "*.txt", "*.doc", ".rtf", "*.*" };
-	        //fd.setFilterExtensions(filterExt);
+	        
+	        if (fileext != null)
+	        	fd.setFilterExtensions(fileext);
+	        else
+	        	fd.setFilterExtensions(new String[] {"*.*"});
+	        
 	        selected = fd.open();
 		}
 		else
