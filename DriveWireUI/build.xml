@@ -11,26 +11,24 @@
 
 	  <target name="javac" description="Compile java source">
 	    <mkdir dir="classes"/>
-	    <javac srcdir="src" includes="**" encoding="utf-8"
-	        destdir="classes"
-	        source="1.5" target="1.5" nowarn="true"
-	        debug="true" debuglevel="lines,vars,source">
-	      <classpath refid="project.class.path"/>
-	    </javac>
-	    <javac srcdir="../java/src" includes="**" encoding="utf-8"
+	  	
+
+	    
+	  	<javac srcdir="../java/src" includes="**" encoding="utf-8"
             destdir="classes"
             source="1.5" target="1.5" nowarn="true"
             debug="true" debuglevel="lines,vars,source">
           <classpath refid="project.class.path"/>
         </javac>
         
+        <javac srcdir="src" includes="**" encoding="utf-8"
+            destdir="classes"
+            source="1.5" target="1.5" nowarn="true"
+            debug="true" debuglevel="lines,vars,source">
+          <classpath refid="project.class.path"/>
+        </javac>
 	    
-	    <copy todir="classes">
-	      <fileset dir="src" excludes="**/*.java"/>
-	     </copy>
-	     <copy todir="classes">
-	      <fileset dir="../java/src" excludes="**/*.java"/>
-	    </copy>
+	   
 	  </target>
 	
 	 <target name="create_run_jar" depends="javac">
@@ -42,6 +40,7 @@
 	            	<attribute name="Rsrc-Class-Path" value=" ./ commons-configuration-1.6.jar swing2swt.jar commons-lang-2.4.jar swt.jar commons-collections-3.2.1.jar commons-configuration-1.6-sources.jar commons-logging-1.1.1.jar commons-configuration-1.6-javadoc.jar dwimages.jar"/>
 	            </manifest>
 	        	<fileset dir="${basedir}/classes"/>
+	        	
 	            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-collections-3.2.1.jar"/>
 	            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-configuration-1.6.jar"/>
 	            <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-lang-2.4.jar"/>
@@ -79,8 +78,14 @@
 	<swtjar jarfile="./DW4UI.jar"
 			targetmainclass="com.groupunix.drivewireui.MainWin"
 			swtversion="3.8M2">
+		
+		
+		
+	
+		
+		
 	  <!-- Application Classes -->
-	  <fileset dir="./classes" includes="**/*.class" />
+	  <fileset dir="${basedir}/classes/" includes="**/*.class" />
 	  
 	  <!-- Library Classes
 	  <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
