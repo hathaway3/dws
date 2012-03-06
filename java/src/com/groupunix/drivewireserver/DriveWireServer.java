@@ -47,7 +47,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "4.0.6b";
+	public static final String DWServerVersion = "4.0.6c";
 	public static final String DWServerVersionDate = "03/06/2012";
 	
 	
