@@ -51,29 +51,47 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		catch (UnknownHostException e) 
 		{
 			logger.debug("unknown host " + tcphost );
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_UNKNOWN_HOST,"Unknown host '" + this.tcphost + "'");
+			try
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_UNKNOWN_HOST,"Unknown host '" + this.tcphost + "'");
+			} 
+			catch (DWPortNotValidException e1)
+			{
+				logger.warn(e1.getMessage());
+			}
 			this.wanttodie = true;
 		} 
 		catch (IOException e1) 
 		{
 			logger.debug("IO error: " + e1.getMessage());
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_IO_ERROR, e1.getMessage());
+			try
+			{
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_IO_ERROR, e1.getMessage());
+			} 
+			catch (DWPortNotValidException e)
+			{
+				logger.warn(e1.getMessage());
+			}
 			this.wanttodie = true;
 		}
 		
 		if (wanttodie == false)
 		{
-			logger.debug("Connected to " + this.tcphost + ":" + this.tcpport);
-			dwVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
 			
-			dwVSerialPorts.markConnected(vport);
-			dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPOUT);
-			
-			
-			try 
+			try
 			{
+				dwVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
+				dwVSerialPorts.markConnected(vport);
+				dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPOUT);
+				logger.debug("Connected to " + this.tcphost + ":" + this.tcpport);
 				dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
+				
 			} 
+			catch (DWPortNotValidException e2)
+			{
+				logger.warn(e2.getMessage());
+				this.wanttodie = true;
+			}
 			catch (IOException e1) 
 			{
 				logger.error("IO Error setting output: " + e1.getMessage());

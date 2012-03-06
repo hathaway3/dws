@@ -18,6 +18,7 @@ public class UICmdServerConfig extends DWCommand {
 		commands.addcommand(new UICmdServerConfigSet());
 		commands.addcommand(new UICmdServerConfigSerial());
 		commands.addcommand(new UICmdServerConfigWrite());
+		commands.addcommand(new UICmdServerConfigFreeze());
 	}
 
 	

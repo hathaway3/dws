@@ -8,6 +8,7 @@ public class DWDiskLazyWriter implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWProtoReader");
 	private boolean wanttodie = false;
+	private boolean inSync = false;
 	
 	public void run() 
 	{
@@ -41,6 +42,7 @@ public class DWDiskLazyWriter implements Runnable {
 	{ 
 
 		// scan all handlers
+		this.inSync = true;
 		for (int h = 0;h<DriveWireServer.getNumHandlers();h++)
 		{
 			
@@ -50,9 +52,14 @@ public class DWDiskLazyWriter implements Runnable {
 			}
 			
 		}
+		this.inSync = false;
 		
 	}
 
 
+	public boolean isInSync()
+	{
+		return this.inSync;
+	}
 	
 }

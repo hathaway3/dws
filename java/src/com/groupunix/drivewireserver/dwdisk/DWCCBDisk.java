@@ -44,7 +44,7 @@ public class DWCCBDisk extends DWDisk
 	    InputStream fis;
 		    
 	    fis = this.fileobj.getContent().getInputStream();
-	    
+	  
 	    long fobjsize = fileobj.getContent().getSize();
 	    
 	    if (fobjsize > Integer.MAX_VALUE)
@@ -59,13 +59,14 @@ public class DWCCBDisk extends DWDisk
 	    
 	    while (readres > -1)
 	    {
+	    	int sz = (int) Math.min(DWDefs.DISK_SECTORSIZE - secres, fobjsize - (sec * DWDefs.DISK_SECTORSIZE));
 	    	
-	    	readres = fis.read(buf, readres, DWDefs.DISK_SECTORSIZE - secres);
+	    	readres = fis.read(buf, readres, sz);
 	    	
 	    	// ccb scripts may not be /256
 	    	if (readres == -1)
 	    	{
-	    		this.sectors.set(sec, new DWDiskSector(this, sec, DWDefs.DISK_SECTORSIZE));
+	    		this.sectors.set(sec, new DWDiskSector(this, sec, DWDefs.DISK_SECTORSIZE, false));
 	    		for (int i = secres;i < DWDefs.DISK_SECTORSIZE;i++)
 	    			buf[i] = 0;
 	    		this.sectors.get(sec).setData(buf, false);
@@ -74,12 +75,14 @@ public class DWCCBDisk extends DWDisk
 	    	else
 	    	{
 	    		secres += readres;
+	    		readres = 0;
 	    		
 	    		if (secres == DWDefs.DISK_SECTORSIZE)
 	    		{
-	    			this.sectors.set(sec, new DWDiskSector(this, sec, DWDefs.DISK_SECTORSIZE));
+	    			this.sectors.set(sec, new DWDiskSector(this, sec, DWDefs.DISK_SECTORSIZE, false));
 		    		this.sectors.get(sec).setData(buf, false);
 	    			secres = 0;
+	    			
 	    			sec++;
 	    		}
 	    			

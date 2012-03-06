@@ -1,7 +1,6 @@
 package com.groupunix.drivewireserver.uicommands;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
@@ -10,6 +9,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 
 public class UICmdServerShowLog extends DWCommand {
 
+	@SuppressWarnings("unused")
 	private DWUIClientThread dwuiref;
 
 	public UICmdServerShowLog(DWUIClientThread dwuiClientThread) 

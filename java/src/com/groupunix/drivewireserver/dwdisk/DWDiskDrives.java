@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.Map.Entry;
@@ -52,7 +53,7 @@ public class DWDiskDrives
 		{
 			this.diskDrives[i] = new DWDiskDrive(this,i);
 			
-			if (dwProto.getConfig().getBoolean("RestoreDrivePaths", true) && (dwProto.getConfig().getString("Drive"+i+"Path",null) != null))
+			if (!DriveWireServer.getNoMount() && dwProto.getConfig().getBoolean("RestoreDrivePaths", true) && (dwProto.getConfig().getString("Drive"+i+"Path",null) != null))
 			{
 				try
 				{
@@ -314,7 +315,7 @@ public class DWDiskDrives
 						
 						
 					default:
-						// this.LoadDisk(driveno, new DWRawDisk(this.dwProto, fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
+						//this.LoadDisk(driveno, new DWRawDisk( fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
 						
 						throw new DWImageFormatException("Unsupported image format");
 						
@@ -572,71 +573,156 @@ public class DWDiskDrives
 
 	public static int getDiskFSType(Vector<DWDiskSector> sectors)
 	{
-		
-		if (!sectors.isEmpty())
+		try
 		{
-			// OS9 ?
-			if ((sectors.get(0).getData()[3] == 18) && (sectors.get(0).getData()[73] == 18) && (sectors.get(0).getData()[75] == 18))
+			if (!sectors.isEmpty())
 			{
-				return(DWDefs.DISK_FILESYSTEM_OS9);
-			}
-			
-			// LWFS
-			byte[] lwfs = new byte[4];
-			System.arraycopy( sectors.get(0).getData(), 0, lwfs, 0, 4 );
-			
-			if (new String(lwfs).equals("LWFS") || new String(lwfs).equals("LW16"))
-			{
-				return(DWDefs.DISK_FILESYSTEM_LWFS);
-			}
-			
-			// TODO - outdated? cocoboot isave
-			if (sectors.get(0).getData()[0] == (byte) 'f' && sectors.get(0).getData()[1] == (byte) 'c')
-			{
-				return(DWDefs.DISK_FILESYSTEM_CCB);
-			}
-			
-			
-			// DECB? no 100% sure way that i know of
-			if (sectors.size() == 630)
-			{
-				DWDECBFileSystem fs = new DWDECBFileSystem(sectors);
-				
-				List<DWDECBFileSystemDirEntry> dir = fs.getDirectory();
-				
-				// look for wacky directory entries?
-				boolean wacky = false;
-				for (DWDECBFileSystemDirEntry e : dir)
+				// OS9 ?
+				if ((sectors.get(0).getData()[3] == 18) && (sectors.get(0).getData()[73] == 18) && (sectors.get(0).getData()[75] == 18))
 				{
+					return(DWDefs.DISK_FILESYSTEM_OS9);
+				}
+				
+				// LWFS
+				byte[] lwfs = new byte[4];
+				System.arraycopy( sectors.get(0).getData(), 0, lwfs, 0, 4 );
+				
+				if (new String(lwfs).equals("LWFS") || new String(lwfs).equals("LW16"))
+				{
+					return(DWDefs.DISK_FILESYSTEM_LWFS);
+				}
+				
+				// TODO - outdated? cocoboot isave
+				if (sectors.get(0).getData()[0] == (byte) 'f' && sectors.get(0).getData()[1] == (byte) 'c')
+				{
+					return(DWDefs.DISK_FILESYSTEM_CCB);
+				}
+				
+				
+				// DECB? no 100% sure way that i know of
+				if (sectors.size() == 630)
+				{
+					DWDECBFileSystem fs = new DWDECBFileSystem(sectors);
 					
-					if ((e.getFirstGranule() > DECBDefs.FAT_SIZE) || (e.getFileType() > 3) || ((e.getFileFlag() != 0) && (e.getFileFlag() != (byte)255)) )
+					List<DWDECBFileSystemDirEntry> dir = fs.getDirectory();
+					
+					// look for wacky directory entries?
+					boolean wacky = false;
+					for (DWDECBFileSystemDirEntry e : dir)
 					{
-						wacky = true;
+						
+						if ((e.getFirstGranule() > DECBDefs.FAT_SIZE) || (e.getFileType() > 3) || ((e.getFileFlag() != 0) && (e.getFileFlag() != (byte)255)) )
+						{
+							wacky = true;
+						}
 					}
+					
+					// look for wacky fat
+					for (int i = 0; i < 256;i++)
+					{
+						int val = (0xFF & sectors.get(0).getData()[i]);
+						
+						if ((val > DECBDefs.FAT_SIZE) && (val < 0xC0))
+							wacky = true;
+						
+						if ((val > 0xC9) && (val < 0xFF))
+							wacky = true;
+						
+					}
+					
+					
+					if (!wacky)
+						return(DWDefs.DISK_FILESYSTEM_DECB);
 				}
 				
-				// look for wacky fat
-				for (int i = 0; i < 256;i++)
-				{
-					int val = (0xFF & sectors.get(0).getData()[i]);
-					
-					if ((val > DECBDefs.FAT_SIZE) && (val < 0xC0))
-						wacky = true;
-					
-					if ((val > 0xC9) && (val < 0xFF))
-						wacky = true;
-					
-				}
-				
-				
-				if (!wacky)
-					return(DWDefs.DISK_FILESYSTEM_DECB);
 			}
-			
+		}
+		catch (IOException e)
+		{
+			logger.debug("While checking FS type: " + e.getMessage());
 		}
 		
 		return(DWDefs.DISK_FILESYSTEM_UNKNOWN);
 	}
+	
+	
+	public DWProtocolHandler getDWProtocolHandler()
+	{
+		return this.dwProto;
+	}
+
+
+	public int nameObjMount(String objname)
+	{
+		
+		// turn objname into path
+		String fn = getObjPath(objname);
+		
+		// look for already mounted
+		for (int i = 0;i<getMaxDrives();i++)
+		{
+			try
+			{
+				if ((this.diskDrives[i] != null) && this.diskDrives[i].isLoaded() && ((this.diskDrives[i].getDisk().getFilePath().equals(fn)) || this.diskDrives[i].getDisk().getFilePath().equals("file:///" + fn)))
+				{
+					return(i);
+				}
+				
+			} 
+			catch (DWDriveNotLoadedException e)
+			{
+			}
+		}
+
+		// not already mounted, give it a shot
+		try
+		{
+			int drv = this.getFreeDriveNo();
+			this.LoadDiskFromFile(drv, fn);
+			return drv;
+		} 
+		catch (DWDriveNotValidException e)
+		{
+			logger.debug("namedobjmount of '" + fn +"' failed with: " + e.getMessage());
+		} 
+		catch (DWDriveAlreadyLoadedException e)
+		{
+			logger.debug("namedobjmount of '" + fn +"' failed with: " + e.getMessage());
+		} 
+		catch (IOException e)
+		{
+			logger.debug("namedobjmount of '" + fn +"' failed with: " + e.getMessage());
+		} 
+		catch (DWImageFormatException e)
+		{
+			logger.debug("namedobjmount of '" + fn +"' failed with: " + e.getMessage());
+		}
+		
+		return 0;
+	}
+
+
+	public String getObjPath(String objname)
+	{
+		
+		@SuppressWarnings("unchecked")
+		List<HierarchicalConfiguration> objs =  this.dwProto.getConfig().configurationsAt("NamedObject");
+    	
+		for(Iterator<HierarchicalConfiguration> it = objs.iterator(); it.hasNext();)
+		{
+		    HierarchicalConfiguration obj = it.next();
+		    
+		    if (obj.containsKey("[@name]") && obj.containsKey("[@path]") && obj.getString("[@name]").equals(objname) )
+		    {
+		    	return(obj.getString("[@path]"));
+		    }
+		}
+		
+		// namedobjdir
+		return(dwProto.getConfig().getString("NamedObjectDir", System.getProperty("user.dir")) + "/" + objname);
+			
+	}
+	
 	
 	
 	

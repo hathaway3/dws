@@ -41,7 +41,7 @@ public class DWCmdServerShowThreads extends DWCommand {
 		{
 			if (threads[i] != null)
 			{
-				text += String.format("%40s %3d %-8s %-14s",threads[i].getName(),threads[i].getPriority(),threads[i].getThreadGroup().getName(), threads[i].getState().toString()) + "\r\n";
+				text += String.format("%40s %3d %-8s %-14s",shortenname(threads[i].getName()),threads[i].getPriority(),threads[i].getThreadGroup().getName(), threads[i].getState().toString()) + "\r\n";
 
 			}
 		}
@@ -51,6 +51,15 @@ public class DWCmdServerShowThreads extends DWCommand {
 
 	
 	
+	private Object shortenname(String name)
+	{
+		String res = name;
+		
+		
+		
+		return res;
+	}
+
 	private Thread[] getAllThreads( ) {
 	    final ThreadGroup root = DWUtils.getRootThreadGroup( );
 	    final ThreadMXBean thbean = ManagementFactory.getThreadMXBean( );

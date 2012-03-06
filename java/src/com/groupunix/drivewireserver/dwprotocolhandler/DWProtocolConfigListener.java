@@ -3,8 +3,6 @@ package com.groupunix.drivewireserver.dwprotocolhandler;
 import org.apache.commons.configuration.event.ConfigurationEvent;
 import org.apache.commons.configuration.event.ConfigurationListener;
 
-import com.groupunix.drivewireserver.DriveWireServer;
-
 public class DWProtocolConfigListener implements ConfigurationListener 
 {
 

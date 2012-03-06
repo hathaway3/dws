@@ -47,8 +47,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "4.0.3test1";
-	public static final String DWServerVersionDate = "01/06/2012";
+	public static final String DWServerVersion = "4.0.6b";
+	public static final String DWServerVersionDate = "03/06/2012";
 	
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
@@ -81,14 +81,21 @@ public class DriveWireServer
 	private static long lastMemoryUpdate = 0;
 	private static ArrayList<DWEvent> logcache = new ArrayList<DWEvent>();
 	private static boolean useDebug = false;
+	private static long magic = System.currentTimeMillis();
+	private static DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+	private static DWEvent fevt;
+	private static boolean noMIDI = false;
+	private static boolean noMount = false;
+	private static boolean noUI = false;
+	private static boolean noServer = false;
+	private static boolean configFreeze = false;
+	private static boolean restart_logging = false;
+	private static boolean restart_ui = false;
 	
-
 	public static void main(String[] args) throws ConfigurationException
 	{
 		
-		wanttodie = false;
-		
-		// caught everything
+		// catch everything
 		Thread.setDefaultUncaughtExceptionHandler(new DWExceptionHandler());
 		
 		init(args);
@@ -133,6 +140,7 @@ public class DriveWireServer
 		{
 			if ((dwProtoHandlers.get(i)!= null) && (dwProtoHandlers.get(i).isReady()) && (!dwProtoHandlers.get(i).isDying())) 
 			{
+				
 				// check thread
 				if (dwProtoHandlerThreads.get(i) == null)
 				{
@@ -147,14 +155,16 @@ public class DriveWireServer
 						if (dwProtoHandlers.get(i).getConfig().getBoolean("ZombieResurrection", true))
 						{
 							logger.info("Arise chicken! Reanimating handler #" + i + ": " + dwProtoHandlers.get(i).getConfig().getString("[@name]","unnamed"));
+							dwProtoHandlers.get(i).shutdown();
+							List<HierarchicalConfiguration> handlerconfs = serverconfig.configurationsAt("instance");
+					    	
+							dwProtoHandlers.set(i, new DWProtocolHandler(i, handlerconfs.get(i)));
 					    	dwProtoHandlerThreads.set(i, new Thread(dwProtoHandlers.get(i)));
 					    	dwProtoHandlerThreads.get(i).start();	
 						}
 						
 					}
-						
-					
-						
+	
 				}
 			}
 		}
@@ -169,10 +179,11 @@ public class DriveWireServer
 	
 		if (uiObj != null)
 		{
-			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+			
 			
 			// add everything
 			
+			evt.setParam(DWDefs.EVENT_ITEM_MAGIC, DriveWireServer.getMagic()+"");
 			evt.setParam(DWDefs.EVENT_ITEM_INTERVAL, DriveWireServer.serverconfig.getInt("StatusInterval",1000)+"");
 			evt.setParam(DWDefs.EVENT_ITEM_INSTANCES, DriveWireServer.getNumHandlers()+"");
 			evt.setParam(DWDefs.EVENT_ITEM_INSTANCESALIVE, DriveWireServer.getNumHandlersAlive()+"");
@@ -187,13 +198,14 @@ public class DriveWireServer
 			// some things should not be updated every tick..
 			if (ticktime - lastMemoryUpdate > DWDefs.SERVER_MEM_UPDATE_INTERVAL)
 			{	
+				//System.gc();
 				evt.setParam(DWDefs.EVENT_ITEM_MEMTOTAL, (Runtime.getRuntime().totalMemory() / 1024)+"");
 				evt.setParam(DWDefs.EVENT_ITEM_MEMFREE, (Runtime.getRuntime().freeMemory() / 1024)+"");
 				lastMemoryUpdate = ticktime; 
 			}
 			
 			// only send updated vals
-			DWEvent fevt = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+			fevt = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
 			
 			for (String key : evt.getParamKeys())
 			{
@@ -526,6 +538,13 @@ public class DriveWireServer
 		cmdoptions.addOption("help", false, "display command line argument help");
 		cmdoptions.addOption("logviewer", false, "open GUI log viewer at server start");
 		cmdoptions.addOption("debug", false, "log extra info to console");
+		cmdoptions.addOption("nomidi", false, "disable MIDI");
+		cmdoptions.addOption("nomount", false, "do not remount disks from last run");
+		cmdoptions.addOption("noui", false, "do not start user interface");
+		cmdoptions.addOption("noserver", false, "do not start server");
+		
+		
+		
 		
 		CommandLineParser parser = new GnuParser();
 		try 
@@ -562,6 +581,28 @@ public class DriveWireServer
 				lf5appender.setName("DriveWire 4 Server Log");
 			
 			}
+			
+			if (line.hasOption( "nomidi"))
+			{
+				noMIDI  = true;
+			}
+			
+			if (line.hasOption( "nomount"))
+			{
+				noMount  = true;
+			}
+			
+			if (line.hasOption( "noui"))
+			{
+				noUI  = true;
+			}
+			
+			if (line.hasOption( "noserver"))
+			{
+				noServer  = true;
+			}
+			
+			
 			
 		}
 		catch( ParseException exp ) 
@@ -609,9 +650,10 @@ public class DriveWireServer
 			for (Thread t : dwProtoHandlerThreads)
 			{
 				if (t.isAlive())
-			
+					
 				try 
-				{
+				{	
+					t.interrupt();
 					t.join();
 				} 
 				catch (InterruptedException e) 
@@ -1208,5 +1250,49 @@ public class DriveWireServer
 	    aThrowable.printStackTrace(printWriter);
 	    return result.toString();
 	  }
+	
+	
+	
+	public static long getMagic()
+	{
+		return(magic);
+	}
+
+	public static boolean getNoMIDI()
+	{
+		return noMIDI;
+	}
+	
+	public static boolean getNoMount()
+	{
+		return noMount;
+	}
+
+
+
+
+	public static void setConfigFreeze(boolean b)
+	{
+		DriveWireServer.configFreeze  = b;
+		
+	}
+	
+	public static boolean isConfigFreeze()
+	{
+		return DriveWireServer.configFreeze;
+	}
+
+
+
+
+	public static void setLoggingRestart()
+	{
+		DriveWireServer.restart_logging = true;
+	}
+	
+	public static void setUIRestart()
+	{
+		DriveWireServer.restart_ui = true;
+	}
 	
 }

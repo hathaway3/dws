@@ -6,6 +6,7 @@ import org.apache.commons.vfs.FileSystemException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.OS9Defs;
+import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWRFMHandler
 {
@@ -112,6 +113,10 @@ public class DWRFMHandler
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} 
 	}
 
@@ -140,6 +145,10 @@ public class DWRFMHandler
 			
 		}
 		catch (IOException  e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -173,6 +182,10 @@ public class DWRFMHandler
 			
 		}
 		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -210,6 +223,10 @@ public class DWRFMHandler
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		
@@ -240,6 +257,10 @@ public class DWRFMHandler
 			logger.debug("read " + size +" bytes of FD for path " + pathno);
 		} 
 		catch (IOException  e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -277,6 +298,10 @@ public class DWRFMHandler
 			logger.debug("writln on path " + pathno + " bytes: " + maxbytes);
 		} 
 		catch (IOException  e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -337,6 +362,10 @@ public class DWRFMHandler
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} 
 		
 		
@@ -394,6 +423,10 @@ public class DWRFMHandler
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} 
 		
 		
@@ -421,6 +454,10 @@ public class DWRFMHandler
 			
 		}
 		catch (IOException  e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -486,6 +523,10 @@ public class DWRFMHandler
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -526,6 +567,10 @@ public class DWRFMHandler
 			
 		} 
 		catch (IOException  e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DWCommTimeOutException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();

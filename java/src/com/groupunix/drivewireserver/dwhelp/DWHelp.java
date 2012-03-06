@@ -72,6 +72,7 @@ public class DWHelp
 	}
 
 	
+	@SuppressWarnings("unused")
 	private void loadWikiTopics(String sourceUrlString) throws IOException 
 	{
 		Source source=new Source(new URL(sourceUrlString));

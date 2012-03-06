@@ -135,6 +135,9 @@ public class DWDiskDrive
 			this.drives.submitEvent(this.driveno, key, val);
 	}
 	
-	
+	public DWDiskDrives getDiskDrives()
+	{
+		return this.drives;
+	}
 	
 }

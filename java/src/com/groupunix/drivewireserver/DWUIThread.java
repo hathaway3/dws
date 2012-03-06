@@ -22,6 +22,8 @@ public class DWUIThread implements Runnable {
 	private LinkedList<DWUIClientThread> clientThreads = new LinkedList<DWUIClientThread>();
 
 	private int dropppedevents = 0;
+
+	private int lastQueueSize;
 	
 	public DWUIThread(int port) 
 	{
@@ -71,14 +73,18 @@ public class DWUIThread implements Runnable {
 			
 			srvr = new ServerSocket(this.tcpport);
 			logger.info("UI listening on port " + srvr.getLocalPort());
-			
-			
-			
+
 		} 
 		catch (IOException e2) 
 		{
-			logger.error("Error opening UI socket on port " + this.tcpport +": " + e2.getMessage());
+			logger.error("Error opening UI socket: " + e2.getClass().getSimpleName() + " " + e2.getMessage());
 			wanttodie = true;
+			
+			// hrmmmm
+			if (DriveWireServer.serverconfig.getBoolean("UIorBust",true))
+			{
+				DriveWireServer.shutdown();
+			}
 		}
 				
 		while ((wanttodie == false) && (srvr.isClosed() == false))
@@ -146,6 +152,7 @@ public class DWUIThread implements Runnable {
 				{
 					if ((queue != null) && !(client.isDropLog() && (evt.getEventType() == DWDefs.EVENT_TYPE_LOG)))
 					{
+						this.lastQueueSize = queue.size();
 						if (queue.size() < DWDefs.EVENT_QUEUE_LOGDROP_SIZE)
 						{
 							queue.add(evt);
@@ -156,8 +163,8 @@ public class DWUIThread implements Runnable {
 						}
 						else
 						{
-							this.dropppedevents++;
-							System.out.println("queue drop: " + queue.size() + "/" + this.dropppedevents);
+							this.dropppedevents++; 
+							System.out.println("queue drop: " + queue.size() + "/" + this.dropppedevents + "  " + evt.getEventType() + " thr " + client.getThreadName() + " cmd " + client.getCurCmd() + " state " + client.getState() );
 						}
 					}
 				}
@@ -170,6 +177,14 @@ public class DWUIThread implements Runnable {
 	public int getNumUIClients()
 	{
 		return this.clientThreads.size();
+	}
+
+
+	public int getQueueSize()
+	{
+	
+		
+		return lastQueueSize;
 	}
 	
 

@@ -1,8 +1,5 @@
 package com.groupunix.drivewireserver.uicommands;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;

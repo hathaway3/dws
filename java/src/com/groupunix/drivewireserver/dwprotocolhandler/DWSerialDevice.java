@@ -8,8 +8,14 @@ import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.TooManyListenersException;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+
+import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWSerialDevice implements DWProtocolDevice
 {
@@ -22,9 +28,11 @@ public class DWSerialDevice implements DWProtocolDevice
 	private DWProtocol dwProto;
 	private boolean DATurboMode = false; 
 	private byte[] prefix;
+	private long readtime;
+
+	private ArrayBlockingQueue<Byte> queue;
 	
-	
-	public DWSerialDevice(DWProtocol dwProto) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
+	public DWSerialDevice(DWProtocol dwProto) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException, IOException, TooManyListenersException
 	{
 		
 		this.dwProto = dwProto;
@@ -63,6 +71,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	public void close()
 	{
 		logger.debug("closing serial device " +  this.device + " in handler #" + dwProto.getHandlerNo());
+		this.serialPort.removeEventListener();
 		this.serialPort.close();
 	
 	}
@@ -88,7 +97,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 	}
 
-	private void connect(String portName) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException
+	private void connect(String portName) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException, IOException, TooManyListenersException
 	{
 		logger.debug("attempting to open device '" + portName + "'");
 		
@@ -114,11 +123,17 @@ public class DWSerialDevice implements DWProtocolDevice
 					// event driven model... ok i guess
 					serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 					serialPort.enableReceiveThreshold(1);
-					serialPort.enableReceiveTimeout(3000);
+					//serialPort.enableReceiveTimeout(1000);
                 	
 					
 					setSerialParams(serialPort);               
                 
+					InputStream in = serialPort.getInputStream();
+					this.queue = new ArrayBlockingQueue<Byte>(512);
+					
+					serialPort.addEventListener(new DWSerialReader(in, queue));
+	                serialPort.notifyOnDataAvailable(true);
+					
 					logger.info("opened serial device " + portName);
 				}
 				else
@@ -195,35 +210,44 @@ public class DWSerialDevice implements DWProtocolDevice
 				data = DWUtils.reverseByteArray(data);
 				
 			
-			if (pfix && (dwProto.getConfig().getBoolean("ProtocolResponsePrefix", false)  || this.DATurboMode))
+			if (this.dwProto.getConfig().containsKey("WriteByteDelay"))
 			{
-				byte[] out = new byte[this.prefix.length + len];
-				System.arraycopy(this.prefix, 0, out, 0, this.prefix.length);
-				System.arraycopy(data, 0, out, this.prefix.length, len);
-				
-				serialPort.getOutputStream().write(out);
+				for (int i = 0;i< len;i++)
+				{
+					comWrite1(data[i],pfix);
+				}
 			}
 			else
 			{
-				serialPort.getOutputStream().write(data, 0, len);
-			}
-			
-			
-			// extreme cases only
-			
-			if (bytelog)
-			{
-				String tmps = new String();
-				
-				for (int i = 0;i< data.length;i++)
+				if (pfix && (dwProto.getConfig().getBoolean("ProtocolResponsePrefix", false)  || this.DATurboMode))
 				{
-					tmps += " " + (int)(data[i] & 0xFF);
+					byte[] out = new byte[this.prefix.length + len];
+					System.arraycopy(this.prefix, 0, out, 0, this.prefix.length);
+					System.arraycopy(data, 0, out, this.prefix.length, len);
+					
+					serialPort.getOutputStream().write(out);
+				}
+				else
+				{
+					serialPort.getOutputStream().write(data, 0, len);
 				}
 				
-				logger.debug("WRITE " + data.length + ":" + tmps);
 				
+				// extreme cases only
+				
+				if (bytelog)
+				{
+					String tmps = new String();
+					
+					for (int i = 0;i< data.length;i++)
+					{
+						tmps += " " + (int)(data[i] & 0xFF);
+					}
+					
+					logger.debug("WRITE " + data.length + ":" + tmps);
+					
+				}
 			}
-			
 		} 
 		catch (IOException e) 
 		{
@@ -245,6 +269,17 @@ public class DWSerialDevice implements DWProtocolDevice
 			if (dwProto.getConfig().getBoolean("ProtocolFlipOutputBits", false) || this.DATurboMode) 
 				data = DWUtils.reverseByte(data);
 				
+			if (this.dwProto.getConfig().containsKey("WriteByteDelay"))
+			{
+				try
+				{
+					Thread.sleep(this.dwProto.getConfig().getLong("WriteByteDelay"));
+				} 
+				catch (InterruptedException e)
+				{
+					logger.warn("interrupted during writebytedelay");
+				}
+			}
 			
 			if (pfix && (dwProto.getConfig().getBoolean("ProtocolResponsePrefix", false)  || this.DATurboMode))
 			{
@@ -260,7 +295,7 @@ public class DWSerialDevice implements DWProtocolDevice
 			}
 			
 			if (bytelog)
-				logger.debug("WRITE1: " + data);
+				logger.debug("WRITE1: " + (0xFF & data));
 			
 		} 
 		catch (IOException e) 
@@ -273,33 +308,27 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 	
 	
-	public byte[] comRead(int len) throws IOException 
+	public byte[] comRead(int len) throws IOException, DWCommTimeOutException 
 	{
 	
 		byte[] buf = new byte[len];
 		
-		//int sofar = 0;
-
-		
-		// we never got more than 1 byte at a time even at 230k, so
-		// went back to 1 by one method
-		
-		/*
-		while (sofar < len)
-		{
-			sofar += serialPort.getInputStream().read(buf, sofar, (len-sofar));
-			
-			if (bytelog)
-				logger.debug("READ " + len + ": " + " got " + sofar);
-		
-			
-		}
-		*/
-		
 		
 		for (int i = 0;i<len;i++)
 		{
-			buf[i] = (byte) comRead1(true);
+			buf[i] = (byte) comRead1(true, false);
+		}
+		
+		if (this.bytelog)
+		{
+			String tmps = new String();
+			
+			for (int i = 0;i< buf.length;i++)
+			{
+				tmps += " " + (int)(buf[i] & 0xFF);
+			}
+		
+			logger.debug("READ " + len + ": " + tmps);
 		}
 		
 		
@@ -307,18 +336,31 @@ public class DWSerialDevice implements DWProtocolDevice
 	}
 	
 	
-	
-	public int comRead1(boolean timeout) throws IOException 
+	public int comRead1(boolean timeout) throws IOException, DWCommTimeOutException 
 	{
+		return comRead1(timeout, true);
+	}
+	
+	public int comRead1(boolean timeout, boolean blog) throws IOException, DWCommTimeOutException 
+	{
+		/*
 		int retdata = -1;
 		
-	
-
-		while ((retdata == -1) && (!this.wanttodie) && (serialPort != null))
+		if (timeout)
 		{
+			long starttime = System.currentTimeMillis();
 			retdata = serialPort.getInputStream().read();
+			this.readtime += System.currentTimeMillis() - starttime;
+			if (retdata == -1)
+				throw (new DWCommTimeOutException("Timed out waiting for serial data"));
 		}
-		
+		else
+		{
+			while ((retdata == -1) && (!this.wanttodie) && (serialPort != null))
+			{
+				retdata = serialPort.getInputStream().read();
+			}
+		}
 		if (bytelog)
 			logger.debug("READ1: " + retdata);
 		
@@ -330,7 +372,35 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 		return(retdata);
 	
-
+		*/
+		int res = -1;
+		
+		try
+		{
+			while (res == -1) 
+			{
+				long starttime = System.currentTimeMillis();
+				Byte read = queue.poll(500, TimeUnit.MILLISECONDS);
+				this.readtime += System.currentTimeMillis() - starttime;
+				
+				if (read != null)
+					res = 0xFF & read;
+				else if (timeout)
+				{
+					throw (new DWCommTimeOutException("No data in 500 ms"));
+				}
+				
+			}
+		} 
+		catch (InterruptedException e)
+		{
+			logger.debug("interrupted in serial read");
+		}
+		
+		if (blog && this.bytelog)
+			logger.debug("READ1: " + res);
+		
+		return res;
 	}
 
 
@@ -354,4 +424,13 @@ public class DWSerialDevice implements DWProtocolDevice
 		this.DATurboMode = true;
 	}
 	
+	public long getReadtime()
+	{
+		return this.readtime;
+	}
+	
+	public void resetReadtime()
+	{
+		this.readtime = 0;
+	}
 }

@@ -11,7 +11,8 @@ public class DWDefs
 	public static final byte OP_NOP 			= (byte) 0;		// 0x00
 	public static final byte OP_NAMEOBJ_MOUNT 	= (byte) 1;		// 0x01
 	public static final byte OP_NAMEOBJ_CREATE 	= (byte) 2;		// 0x02
-																// 0x03 - 0x0F reserved for named object future use
+	public static final byte OP_NAMEOBJ_TYPE 	= (byte) 3;		// 0x03
+																// 0x04 - 0x0F reserved for named object future use
 	public static final byte OP_TIME 			= (byte) 35;	// 0x23 #
 	public static final byte OP_AARON			= (byte) 65;	// 0x41 A
 	public static final byte OP_WIREBUG_MODE	= (byte) 66;	// 0x42 B	
@@ -135,7 +136,10 @@ public class DWDefs
 	public static final int DISK_MAXDRIVES = 256;
 	public static final int DISK_MAXSECTORS = 16777215;
 	public static final int DISK_SECTORSIZE = 256;
-
+	public static final int DISK_MAX_SYNC_SKIPS = 1;
+	public static final long DISK_SYNC_INOP_PAUSE = 40;
+	public static final int DISK_HDBDOS_DISKSIZE = 630;
+	
 	public static final int DISK_FORMAT_NONE = 0;
 	public static final int DISK_FORMAT_RAW = 1;
 	public static final int DISK_FORMAT_DMK = 2;
@@ -201,18 +205,28 @@ public class DWDefs
 	public static final String EVENT_ITEM_INSTANCESALIVE = "7";
 	public static final String EVENT_ITEM_THREADS = "8";
 	public static final String EVENT_ITEM_UICLIENTS = "9";
+	public static final String EVENT_ITEM_MAGIC = "!";
 	
 	
-	
-	public static final int EVENT_MAX_QUEUE_SIZE = 20000;
-	public static final int EVENT_QUEUE_LOGDROP_SIZE = 800;
+	public static final int EVENT_MAX_QUEUE_SIZE = 800;
+	public static final int EVENT_QUEUE_LOGDROP_SIZE = 500;
 	public static final int LOGGING_MAX_BUFFER_EVENTS = 500;
 
 	public static final long UITHREAD_WAIT_TICK = 200;
 	public static final long UITHREAD_SERVER_WAIT_TIME = 3000;
 	public static final long UITHREAD_INSTANCE_WAIT_TIME = 3000;
 
-	public static final long SERVER_MEM_UPDATE_INTERVAL = 30000;
+	public static final long SERVER_MEM_UPDATE_INTERVAL = 5000;
+
+	public static final long SERVER_SLOW_OP = 200;
+
+	
+
+	
+
+	
+
+	
 
 	
 

@@ -6,6 +6,7 @@ import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
 import java.util.GregorianCalendar;
+import java.util.TooManyListenersException;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
@@ -13,6 +14,7 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.MCXDefs;
 import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
+import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
@@ -199,6 +201,10 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 					// this should not actually ever get thrown, since we call comRead1 with timeout = false..
 					logger.error(e.getMessage());
 					opcodeint = -1;
+				} catch (DWCommTimeOutException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 			else
@@ -339,6 +345,10 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 		catch (IOException  e) 
 		{
 			logger.warn(e.getMessage());
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		
@@ -369,6 +379,10 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 		catch (IOException e) 
 		{
 			logger.warn(e.getMessage());
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 	}
@@ -454,6 +468,10 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 			
 			// reset, abort
 			return;
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} 
 		
 		
@@ -571,6 +589,10 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 		catch (IOException e) 
 		{
 			logger.error("IO exception reading print byte: " + e.getMessage());
+		} catch (DWCommTimeOutException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		
@@ -723,6 +745,14 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 				{
 					//wanttodie = true;
 					logger.error("handler #"+handlerno+": Unsupported comm operation while opening serial port '"+config.getString("SerialDevice")+"'");
+				} catch (IOException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (TooManyListenersException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}	
 			else

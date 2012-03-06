@@ -131,7 +131,7 @@ public class DWCmdDiskDosAdd extends DWCommand
 
 	public String getUsage() 
 	{
-		return "dw disk dos add path";
+		return "dw disk dos add # path";
 	}
 	
 	public boolean validate(String cmdline) 

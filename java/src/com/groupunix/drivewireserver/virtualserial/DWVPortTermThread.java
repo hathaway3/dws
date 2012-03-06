@@ -49,7 +49,14 @@ public class DWVPortTermThread implements Runnable
 		logger.debug("run");
 		
 		// setup port
-		dwVSerialPorts.resetPort(TERM_PORT);
+		try
+		{
+			dwVSerialPorts.resetPort(TERM_PORT);
+		} 
+		catch (DWPortNotValidException e3)
+		{
+			logger.warn("while resetting term port: " + e3.getMessage());
+		}
 		
 		// startup server 
 		srvr = null;

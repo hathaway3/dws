@@ -1,5 +1,6 @@
 package com.groupunix.drivewireserver;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -31,6 +32,12 @@ public class DWUIClientThread implements Runnable {
 	
 	private boolean droplog = true;
 
+	private String tname = "not set";
+
+	private String curcmd = "not set";
+
+	private String state = "not set";
+
 	
 	public DWUIClientThread(Socket skt, LinkedList<DWUIClientThread> clientThreads) 
 	{
@@ -45,21 +52,25 @@ public class DWUIClientThread implements Runnable {
 	
 	public void run() 
 	{
+		this.state  = "add to client threads";
 		synchronized(this.clientThreads)
 		{
 			this.clientThreads.add(this);
 		}
 		
-		Thread.currentThread().setName("dwUIcliIn-" + Thread.currentThread().getId());
+
+		this.tname = "dwUIcliIn-" + Thread.currentThread().getId();
+	
+		Thread.currentThread().setName(tname);
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
-	
 		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
 			logger.debug("run for client at " + skt.getInetAddress().getHostAddress());
 		
 		
 		try 
 		{
+			this.state  = "get output stream";
 			this.bufferedout = new BufferedOutputStream(skt.getOutputStream());
 			
 			// cmd loop
@@ -68,7 +79,7 @@ public class DWUIClientThread implements Runnable {
 			
 			while ((!skt.isClosed()) && (!wanttodie))
 			{
-
+				this.state  = "read from output stream";
 				int databyte = skt.getInputStream().read();
 			
 				if (databyte == -1)
@@ -82,6 +93,7 @@ public class DWUIClientThread implements Runnable {
 					{
 						if (cmd.length() > 0)
 						{
+							this.state  = "do cmd";
 							doCmd(cmd.trim());
 							wanttodie = true;
 							cmd = "";
@@ -98,6 +110,7 @@ public class DWUIClientThread implements Runnable {
 			this.bufferedout.close();
 			skt.close();
 			
+			this.state  = "close socket";
 			
 		} 
 		catch (IOException e) 
@@ -105,6 +118,7 @@ public class DWUIClientThread implements Runnable {
 			logger.debug("IO Exception: " + e.getMessage());
 		}
 		
+		this.state  = "remove from client threads";
 		synchronized(this.clientThreads)
 		{
 			this.clientThreads.remove(this);
@@ -113,13 +127,14 @@ public class DWUIClientThread implements Runnable {
 		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
 			logger.debug("exit");
 		
-		
+		this.state  = "exit";
 	}
 
 	
 	
 	private void doCmd(String cmd) throws IOException 
 	{
+		this.curcmd = cmd;
 		
 		// grab instance
 		int div = cmd.indexOf(0);
@@ -264,6 +279,12 @@ public class DWUIClientThread implements Runnable {
 	{
 		return this.bufferedout;
 	}
+	
+	public BufferedInputStream getInputStream() throws IOException
+	{
+		return new BufferedInputStream(skt.getInputStream());
+	}
+	
 
 	public Socket getSocket() {
 		
@@ -304,6 +325,24 @@ public class DWUIClientThread implements Runnable {
 	{
 		this.droplog = b;
 	}
+
+
+
+	public String getThreadName()
+	{
+		return this.tname;
+	}
+
+	public String getCurCmd()
+	{
+		return this.curcmd;
+	}
+
+	public String getState()
+	{
+		return this.state;
+	}
+	
 	
 
 

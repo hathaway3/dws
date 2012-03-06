@@ -49,30 +49,30 @@ public class DWUtilDWThread implements Runnable
 		
 		logger.debug("run for port " + vport);
 		
-		this.dwVSerialPorts.markConnected(vport);
-		this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_DWCMD);
-		
-		DWCommandResponse resp = commands.parse(this.strargs);
-		
-		if (resp.getSuccess())
+		try
 		{
-			if (resp.isUsebytes())
+			this.dwVSerialPorts.markConnected(vport);
+			this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_DWCMD);
+			
+			DWCommandResponse resp = commands.parse(this.strargs);
+			
+			if (resp.getSuccess())
 			{
-				dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseBytes());
+				if (resp.isUsebytes())
+				{
+					dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseBytes());
+				}
+				else
+				{
+					dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseText());
+				}
 			}
 			else
 			{
-				dwVSerialPorts.sendUtilityOKResponse(this.vport, resp.getResponseText());
+				dwVSerialPorts.sendUtilityFailResponse(this.vport, resp.getResponseCode(), resp.getResponseText());
 			}
-		}
-		else
-		{
-			dwVSerialPorts.sendUtilityFailResponse(this.vport, resp.getResponseCode(), resp.getResponseText());
-		}
-		
+			
 		// wait for output to flush
-		try 
-		{
 			while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
 			{
 				logger.debug("pause for the cause: " + dwVSerialPorts.bytesWaiting(this.vport) + " bytes left" );

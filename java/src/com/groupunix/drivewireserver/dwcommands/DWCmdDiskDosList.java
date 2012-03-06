@@ -1,10 +1,9 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import java.util.ArrayList;
+import java.io.IOException;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwdisk.DWDECBFileSystem;
-import com.groupunix.drivewireserver.dwdisk.DWDiskSector;
 import com.groupunix.drivewireserver.dwexceptions.DWDECBFileSystemFileNotFoundException;
 import com.groupunix.drivewireserver.dwexceptions.DWDECBFileSystemInvalidFATException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
@@ -53,6 +52,10 @@ public class DWCmdDiskDosList extends DWCommand
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
 				}
+				catch (IOException e)
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
+				}
 			
 		}
 	
@@ -60,7 +63,7 @@ public class DWCmdDiskDosList extends DWCommand
 	}
 		
 		
-	private DWCommandResponse doDiskDosList(int driveno, String filename) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException
+	private DWCommandResponse doDiskDosList(int driveno, String filename) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException, IOException
 	{
 		String res = "";
 		

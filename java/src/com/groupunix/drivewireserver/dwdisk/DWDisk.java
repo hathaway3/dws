@@ -152,7 +152,7 @@ public abstract class DWDisk
 	
 	
 	
-	public synchronized int getDiskSectors()
+	public int getDiskSectors()
 	{
 		return(this.sectors.size());
 	}
@@ -182,6 +182,9 @@ public abstract class DWDisk
 	public void eject() throws IOException
 	{
 		sync();
+		this.sectors = null;
+		this.fileobj.close();
+		this.fileobj = null;
 	}
 
 	
@@ -197,7 +200,7 @@ public abstract class DWDisk
 	}
 
 	
-	public synchronized void writeTo(String path) throws IOException
+	public void writeTo(String path) throws IOException
 	{
 		// write in memory image to specified path (raw format)
 		// using most efficient method available
@@ -256,7 +259,7 @@ public abstract class DWDisk
 	 
 	 
 	 
-	public synchronized int getDirtySectors() 
+	public int getDirtySectors() 
 	{
 		int drt = 0;
 			
@@ -275,13 +278,13 @@ public abstract class DWDisk
 	}
 	 
 	 
-	public synchronized DWDiskSector getSector(int no)
+	public DWDiskSector getSector(int no)
 	{
 		return(this.sectors.get(no));
 	}
 	 
 	 
-	public synchronized boolean getWriteProtect()
+	public boolean getWriteProtect()
 	{
 		return(this.params.getBoolean("writeprotect",DWDefs.DISK_DEFAULT_WRITEPROTECT));
 	}

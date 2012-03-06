@@ -170,7 +170,7 @@ public class DWDMKDisk extends DWDisk
 		
 		if ((lsn > -1) && (lsn < this.sectors.size()))
 		{
-			this.sectors.set(lsn, new DWDiskSector(this, lsn, idam.getSectorSize()));
+			this.sectors.set(lsn, new DWDiskSector(this, lsn, idam.getSectorSize(), false));
 			this.sectors.get(lsn).setData(getSectorDataFrom(idam, track), false);
 		}
 		else

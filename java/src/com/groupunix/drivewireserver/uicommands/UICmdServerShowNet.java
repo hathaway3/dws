@@ -6,12 +6,7 @@ import java.net.SocketException;
 import java.util.Collections;
 import java.util.Enumeration;
 
-import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
-
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 

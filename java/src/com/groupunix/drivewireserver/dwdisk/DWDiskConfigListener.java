@@ -20,10 +20,12 @@ public class DWDiskConfigListener implements ConfigurationListener
         {
             if (event.getPropertyName() != null)
             {
+            	
             	if (event.getPropertyValue() != null)
             		this.disk.submitEvent( event.getPropertyName(), event.getPropertyValue().toString());
             	else
             		this.disk.submitEvent( event.getPropertyName(), "");
+            	
             }
         }
             

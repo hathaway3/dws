@@ -40,13 +40,27 @@ public class DWVPortHandler
 		// echo character if modem echo is on
 		if (this.vModem.isEcho())
 		{
-			dwVSerialPorts.write1(this.vport, (byte) databyte);
-					
-			// send extra lf on cr, not sure if this is right
-			if (databyte == this.vModem.getCR())
+			try
 			{
-				dwVSerialPorts.write1(this.vport,(byte) this.vModem.getLF());
+				dwVSerialPorts.write1(this.vport, (byte) databyte);
+				
+				// send extra lf on cr, not sure if this is right
+				if (databyte == this.vModem.getCR())
+				{
+					dwVSerialPorts.write1(this.vport,(byte) this.vModem.getLF());
+				} 
+				
 			} 
+			catch (IOException e)
+			{
+				logger.warn("in takeinput: " + e.getMessage());
+			} 
+			catch (DWPortNotValidException e)
+			{
+				logger.warn("in takeinput: " + e.getMessage());
+			}
+					
+			
 
 		}
 			

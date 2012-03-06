@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVModemConnThread implements Runnable {
@@ -231,6 +232,10 @@ public class DWVModemConnThread implements Runnable {
 		catch (IOException e) 
 		{
 			logger.warn("IO error in connection to " + this.clientHost + ":" + this.clientPort + " = " + e.getMessage());
+		}
+		catch (DWPortNotValidException e)
+		{
+			logger.warn(e.getMessage());
 		} 
 		finally
 		{
@@ -243,6 +248,10 @@ public class DWVModemConnThread implements Runnable {
 					dwVSerialPorts.getPortInput(vport).write("\r\n\r\nNO CARRIER\r\n".getBytes());
 				} 
 				catch (IOException e) 
+				{
+					logger.warn(e.getMessage());
+				} 
+				catch (DWPortNotValidException e)
 				{
 					logger.warn(e.getMessage());
 				}

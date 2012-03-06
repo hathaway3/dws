@@ -33,7 +33,7 @@ public class DWDECBFileSystem
 	}
 
 
-	public List<DWDECBFileSystemDirEntry> getDirectory()
+	public List<DWDECBFileSystemDirEntry> getDirectory() throws IOException
 	{
 		List<DWDECBFileSystemDirEntry> dir = new ArrayList<DWDECBFileSystemDirEntry>();
 		
@@ -52,7 +52,7 @@ public class DWDECBFileSystem
 	}
 
 
-	public boolean hasFile(String filename)
+	public boolean hasFile(String filename) throws IOException
 	{
 		
 		for (DWDECBFileSystemDirEntry e : this.getDirectory())
@@ -67,13 +67,13 @@ public class DWDECBFileSystem
 	}
 	
 	
-	public ArrayList<DWDiskSector> getFileSectors(String filename) throws DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException
+	public ArrayList<DWDiskSector> getFileSectors(String filename) throws DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException, IOException
 	{
 		return(new DWDECBFileSystemFAT(sectors.get(DECBDefs.FAT_OFFSET)).getFileSectors(this.sectors, getDirEntry(filename).getFirstGranule()));
 	}
 
 
-	public DWDECBFileSystemDirEntry getDirEntry(String filename) throws DWDECBFileSystemFileNotFoundException
+	public DWDECBFileSystemDirEntry getDirEntry(String filename) throws DWDECBFileSystemFileNotFoundException, IOException
 	{
 		
 		for (DWDECBFileSystemDirEntry e : this.getDirectory())
@@ -88,7 +88,7 @@ public class DWDECBFileSystem
 	}
 
 
-	public String getFileContents(String filename) throws DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException
+	public String getFileContents(String filename) throws DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException, IOException
 	{
 		String res = "";
 		
@@ -114,7 +114,7 @@ public class DWDECBFileSystem
 	}
 	
 	
-	public void addFile(String filename, byte[] filecontents) throws DWDECBFileSystemFullException, DWDECBFileSystemBadFilenameException, DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException
+	public void addFile(String filename, byte[] filecontents) throws DWDECBFileSystemFullException, DWDECBFileSystemBadFilenameException, DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException, IOException
 	{
 		DWDECBFileSystemFAT fat = new DWDECBFileSystemFAT(sectors.get(DECBDefs.FAT_OFFSET));
 		// make fat entries
@@ -154,7 +154,7 @@ public class DWDECBFileSystem
 	}
 
 
-	private void addDirectoryEntry(String filename, byte firstgran, byte leftovers) throws DWDECBFileSystemFullException, DWDECBFileSystemBadFilenameException
+	private void addDirectoryEntry(String filename, byte firstgran, byte leftovers) throws DWDECBFileSystemFullException, DWDECBFileSystemBadFilenameException, IOException
 	{
 		List<DWDECBFileSystemDirEntry> dr = this.getDirectory();
 		
@@ -206,13 +206,13 @@ public class DWDECBFileSystem
 			{
 				String kp = "DECBExtensionMapping(" + i + ")";
 				// validate entry first
-				if (DriveWireServer.serverconfig.containsKey(kp + "[@extension]") && DriveWireServer.serverconfig.containsKey(kp + "[@ascii]") && DriveWireServer.serverconfig.containsKey(kp + "[@type]"))
+				if (DriveWireServer.serverconfig.containsKey(kp + "[@extension]") && DriveWireServer.serverconfig.containsKey(kp + "[@ascii]") && DriveWireServer.serverconfig.containsKey(kp + "[@filetype]"))
 				{
 					if (DriveWireServer.serverconfig.getString(kp + "[@extension]").equalsIgnoreCase(ext))
 					{
 						// we have a winner
 						
-						mapping.setType(DriveWireServer.serverconfig.getByte(kp + "[@type]"));
+						mapping.setType(DriveWireServer.serverconfig.getByte(kp + "[@filetype]"));
 						
 						if (DriveWireServer.serverconfig.getBoolean(kp + "[@ascii]"))
 							mapping.setFlag(DECBDefs.FLAG_ASCII);
@@ -264,7 +264,7 @@ public class DWDECBFileSystem
 	}
 
 
-	public String dumpFat()
+	public String dumpFat() throws IOException
 	{
 		DWDECBFileSystemFAT fat = new DWDECBFileSystemFAT(sectors.get(DECBDefs.FAT_OFFSET));
 		

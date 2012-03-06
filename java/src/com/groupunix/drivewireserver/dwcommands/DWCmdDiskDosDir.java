@@ -1,5 +1,6 @@
 package com.groupunix.drivewireserver.dwcommands;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -43,6 +44,10 @@ public class DWCmdDiskDosDir extends DWCommand
 				catch (DWDriveNotLoadedException e)
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
+				} 
+				catch (IOException e)
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
 				}
 			
 		}
@@ -51,7 +56,7 @@ public class DWCmdDiskDosDir extends DWCommand
 	}
 		
 		
-	private DWCommandResponse doDiskDosDir(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException
+	private DWCommandResponse doDiskDosDir(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException
 	{
 		String res = "Directory of drive " + driveno + "\r\n\r\n";
 		

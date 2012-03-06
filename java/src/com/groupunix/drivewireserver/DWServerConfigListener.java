@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 public class DWServerConfigListener implements ConfigurationListener
 {
+	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger("DWServer.DWServerConfigListener");
 
 	
@@ -28,15 +29,20 @@ public class DWServerConfigListener implements ConfigurationListener
             	// logging changes
             	if (event.getPropertyName().startsWith("Log"))
             	{
-            		logger.info("Restarting logging due to config changes");
-            		DriveWireServer.applyLoggingSettings();
+            		DriveWireServer.setLoggingRestart();
             	}
             	
             	// UI thread
             	if (event.getPropertyName().startsWith("UI"))
             	{
-            		logger.info("Restarting UI thread due to config changes");
-            		DriveWireServer.applyUISettings();
+            		if (DriveWireServer.isConfigFreeze())
+            		{
+            			
+            		}
+            		else
+            		{
+            			DriveWireServer.setUIRestart();
+            		}
             	}
             	
             	

@@ -1,5 +1,6 @@
 package com.groupunix.drivewireserver.dwdisk;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -66,7 +67,7 @@ public class DWDECBFileSystemFAT
 		this.sector = sector;
 	}
 
-	public ArrayList<DWDiskSector> getFileSectors(Vector<DWDiskSector> sectors, byte granule) throws DWDECBFileSystemInvalidFATException
+	public ArrayList<DWDiskSector> getFileSectors(Vector<DWDiskSector> sectors, byte granule) throws DWDECBFileSystemInvalidFATException, IOException
 	{
 		ArrayList<DWDiskSector> res = new ArrayList<DWDiskSector>();
 		
@@ -113,7 +114,7 @@ public class DWDECBFileSystemFAT
 		
 	}
 
-	public byte getEntry(byte granule) throws DWDECBFileSystemInvalidFATException
+	public byte getEntry(byte granule) throws DWDECBFileSystemInvalidFATException, IOException
 	{
 	
 		if (((granule & 0xFF) ) <= DECBDefs.FAT_SIZE)
@@ -134,7 +135,7 @@ public class DWDECBFileSystemFAT
 		
 	}
 
-	public int getFreeGanules()
+	public int getFreeGanules() throws IOException
 	{
 		int free =0;
 		
@@ -145,7 +146,7 @@ public class DWDECBFileSystemFAT
 		return free;
 	}
 
-	public byte allocate(int bytes) throws DWDECBFileSystemFullException
+	public byte allocate(int bytes) throws DWDECBFileSystemFullException, IOException
 	{
 		int allocated = 0;
 	
@@ -182,13 +183,13 @@ public class DWDECBFileSystemFAT
 	}
 
 	
-	private void setEntry(byte gran, byte nextgran)
+	private void setEntry(byte gran, byte nextgran) throws IOException
 	{
 		this.sector.setDataByte((0xFF & gran), nextgran);
 		this.sector.makeDirty();
 	}
 
-	private byte getFreeGranule()
+	private byte getFreeGranule() throws IOException
 	{
 		for (byte i = 0;i< (DECBDefs.FAT_SIZE);i++)
 		{
@@ -198,7 +199,7 @@ public class DWDECBFileSystemFAT
 		return -1;
 	}
 
-	public String dumpFat()
+	public String dumpFat() throws IOException
 	{
 		String res = "";
 			

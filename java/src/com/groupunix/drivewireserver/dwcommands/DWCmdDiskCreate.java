@@ -59,7 +59,7 @@ public class DWCmdDiskCreate extends DWCommand {
 			}
 
 		}
-		else if (args.length == 2)
+		else if (args.length > 1)
 		{
 			// create disk
 		

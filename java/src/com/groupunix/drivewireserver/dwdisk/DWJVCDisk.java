@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -91,7 +90,7 @@ public class DWJVCDisk extends DWDisk
 	    	while (readres < header.getSectorSize())
 		    	readres += fis.read(buf, readres, header.getSectorSize() - readres);
 	    	
-	    	this.sectors.set(i, new DWDiskSector(this, i, header.getSectorSize()));
+	    	this.sectors.set(i, new DWDiskSector(this, i, header.getSectorSize(), false));
 	    	this.sectors.get(i).setData(buf, false);
 	    	
 	    	

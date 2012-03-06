@@ -180,7 +180,7 @@ follow the disk name.
 	    	while (readres < DWVDKDisk.VDK_SECTOR_SIZE)
 		    	readres += fis.read(buf, readres, DWVDKDisk.VDK_SECTOR_SIZE - readres);
 	    	
-	    	this.sectors.set(i, new DWDiskSector(this, i, DWVDKDisk.VDK_SECTOR_SIZE));
+	    	this.sectors.set(i, new DWDiskSector(this, i, DWVDKDisk.VDK_SECTOR_SIZE, false));
 	    	this.sectors.get(i).setData(buf, false);
 	    	
 	    	

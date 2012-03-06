@@ -62,15 +62,12 @@ public class UICmdServerConfigSet extends DWCommand {
 		{
 			synchronized(DriveWireServer.serverconfig)
 			{
-				DriveWireServer.serverconfig.clearProperty(item);
+				DriveWireServer.serverconfig.setProperty(item, null);
 			}
-			return(new DWCommandResponse("Item '" + item + "' removed from config."));
-		}
-		else
-		{
-			return(new DWCommandResponse("Item '" + item + "' is not set."));
+			
 		}
 		
+		return(new DWCommandResponse(item + " unset."));
 		
 	}
 	
@@ -79,9 +76,17 @@ public class UICmdServerConfigSet extends DWCommand {
 	{
 		synchronized(DriveWireServer.serverconfig)
 		{
-			DriveWireServer.serverconfig.setProperty(item, value);
+			if (DriveWireServer.serverconfig.containsKey(item))
+			{
+				if (!DriveWireServer.serverconfig.getProperty(item).equals(value))
+					DriveWireServer.serverconfig.setProperty(item, value);
+			}
+			else
+			{
+				DriveWireServer.serverconfig.setProperty(item, value);
+			}
 		}
-		return(new DWCommandResponse("Item '" + item + "' set to '" + value + "'."));
+		return(new DWCommandResponse(item + " set."));
 	}
 	
 	
