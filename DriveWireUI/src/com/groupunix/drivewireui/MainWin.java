@@ -78,8 +78,8 @@ public class MainWin {
 	static Logger logger = Logger.getLogger(MainWin.class);
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
 
-	public static final String DWUIVersion = "4.0.4test3";
-	public static final String DWUIVersionDate = "01/18/2012";
+	public static final String DWUIVersion = "4.0.5";
+	public static final String DWUIVersionDate = "03/16/2012";
 	
 	public static final double LOWMEM_START = 4096 * 1024;
 	public static final double LOWMEM_STOP = LOWMEM_START * 2;
@@ -101,6 +101,7 @@ public class MainWin {
 	
 	
 	public static XMLConfiguration config;
+	public static XMLConfiguration master;
 	public static HierarchicalConfiguration dwconfig;
 	public static final String configfile = "drivewireUI.xml";
 
@@ -182,6 +183,7 @@ public class MainWin {
 	
 
 	private static MenuItem mitemInsert;
+	private static MenuItem mntmInsertFromUrl;
 	private static MenuItem mitemEject;
 	private static MenuItem mitemExport;
 	private static MenuItem mitemCreate;
@@ -235,6 +237,7 @@ public class MainWin {
 	private static LogItem lowMemLogItem;
 	private static int lowMemWarningTid = -1;
 	private static boolean noServer = false;
+	private static boolean debugging = false;
 	
 	
 	public static void main(String[] args) 
@@ -253,7 +256,7 @@ public class MainWin {
 		Logger.getRootLogger().removeAllAppenders();
 		Logger.getRootLogger().addAppender(new ConsoleAppender(logLayout));
 		
-		// create lowmem entry now so we don't have to create it when we're low on memory..
+		// create lowmem entry now so we don't have to create it when we're actually low on memory..
 		lowMemLogItem = new LogItem();
 		lowMemLogItem.setLevel("WARN");
 		lowMemLogItem.setSource("UI");
@@ -481,6 +484,18 @@ public class MainWin {
 			MainWin.port = config.getInt("LastPort",default_Port);
 			MainWin.instance = config.getInt("LastInstance",default_Instance);
 			
+			// master file
+			try
+			{
+				master = new XMLConfiguration(config.getString("MasterPath","master.xml"));
+				master.setAutoSave(false);
+			}
+			catch (ConfigurationException e1) 
+		    {
+				logger.error("Could not load master config, some functions will not work correctly:  " + e1.getMessage());	
+				
+		    }
+			
 			
 			// server
 			
@@ -682,6 +697,7 @@ public class MainWin {
 
 	/**
 	 * Create contents of the window.
+	 * @wbp.parser.entryPoint
 	 */
 	protected void createContents() {
 		shell = new Shell();
@@ -1223,6 +1239,7 @@ public class MainWin {
 					if (lowMem)
 					{
 						mitemInsert.setText ("Insert disabled due to low mem");
+						mntmInsertFromUrl.setText ("Insert from URL disabled due to low mem");
 						mitemCreate.setText ("Create disabled due to low mem");
 						mitemParameters.setText ("Parameters disabled due to low mem");
 						mitemController.setText ("Controller disabled due to low mem");
@@ -1231,6 +1248,7 @@ public class MainWin {
 					else
 					{
 						mitemInsert.setText ("Insert disk for drive " + sdisk + "...");
+						mntmInsertFromUrl.setText ("Insert disk from URL for drive " + sdisk + "...");
 						mitemCreate.setText ("Create new disk for drive " + sdisk + "...");
 						mitemParameters.setText ("Drive " + sdisk + " parameters...");
 						mitemController.setText ("Open controller for drive " + sdisk + "...");
@@ -1242,6 +1260,7 @@ public class MainWin {
 					mitemEject.setText ("Eject disk in drive " + sdisk);
 					
 					mitemInsert.setEnabled(false);
+					mntmInsertFromUrl.setEnabled(false);
 					mitemCreate.setEnabled(false);
 					mitemExport.setEnabled(false);	
 					mitemEject.setEnabled(false);
@@ -1254,6 +1273,7 @@ public class MainWin {
 						if (!lowMem)
 						{
 							mitemInsert.setEnabled(true);
+							mntmInsertFromUrl.setEnabled(true);
 							mitemCreate.setEnabled(true);
 							mitemController.setEnabled(true);
 							mitemParameters.setEnabled(true);
@@ -1283,6 +1303,20 @@ public class MainWin {
 		});
 		mitemInsert.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/disk-insert.png"));
 		mitemInsert.setText ("Insert...");
+		
+		mntmInsertFromUrl = new MenuItem(diskPopup, SWT.NONE);
+		mntmInsertFromUrl.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				quickURLInDisk(table.getSelectionIndex());
+			}
+		});
+		
+		mntmInsertFromUrl.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/world-link.png"));
+		mntmInsertFromUrl.setText("Insert from URL...");
+		
+		new MenuItem(diskPopup, SWT.SEPARATOR);
 		
 		mitemReload = new MenuItem(diskPopup, SWT.NONE);
 		mitemReload.addSelectionListener(new SelectionAdapter() {
@@ -1319,9 +1353,6 @@ public class MainWin {
 		});
 		mitemCreate.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/new-disk-16.png"));
 		mitemCreate.setText ("Create...");
-		
-		
-	
 		
 		
 		new MenuItem(diskPopup, SWT.SEPARATOR);
@@ -1909,8 +1940,8 @@ public class MainWin {
 	
 	static void debug(String string)
 	{
-		//System.out.println(string);
-		
+		if (MainWin.debugging == true)
+			System.out.println("debug: thread " + Thread.currentThread().getName() + ": " + string);
 	}
 
 
@@ -2171,6 +2202,35 @@ public class MainWin {
 			table.getItem(disk).setText(col,val);
 	}
 
+	
+	private static void quickURLInDisk(final int diskno)
+	{
+		MainWin.quickURLInDisk(shell, diskno);
+	}
+	
+	public static void quickURLInDisk(final Shell theshell, final int diskno)
+	{ 
+		String res = null;
+		
+		URLInputWin urlwin = new URLInputWin(theshell, diskno);
+		res = urlwin.open();
+		
+		
+		if ((res != null) && (!res.equals("")))
+		{
+			final List<String> cmds = new ArrayList<String>();
+			cmds.add("dw disk insert "+ diskno + " " + res);
+			display.asyncExec(
+					  new Runnable() {
+						  public void run()
+						  {
+							  SendCommandWin win = new SendCommandWin(theshell, SWT.DIALOG_TRIM, cmds, "Inserting disk image...", "Please wait while the image is inserted into drive " + diskno + ".");
+							  win.open();
+						  }
+					  });
+		}
+	}
+	
 
 	private static void quickInDisk(final int diskno)
 	{
@@ -2186,27 +2246,38 @@ public class MainWin {
 		else
 			curpath = "";
 		
+	
 		Thread t = new Thread(new Runnable() {
 			  public void run()
 			  {
-				  String res = getFile(false,false,curpath,"Choose an image for drive " + diskno, "Open", new String[] { "*.dsk" , "*.*" });
-					
+				  
+				  final String res = getFile(false,false,curpath,"Choose an image for drive " + diskno, "Open", new String[] { MainWin.config.getString("FileSelectionMask","*.dsk;*.os9;*.vhd") , "*.*" });
+				  
 					if (res != null)
 					{
-						final List<String> cmds = new ArrayList<String>();
-						cmds.add("dw disk insert "+ diskno + " " + res);
-						display.asyncExec(
+						
+						display.syncExec(
 								  new Runnable() {
 									  public void run()
 									  {
+								
+										  List<String> cmds = new ArrayList<String>();
+										  cmds.add("dw disk insert "+ diskno + " " + res);
+										  
 										  SendCommandWin win = new SendCommandWin(theshell, SWT.DIALOG_TRIM, cmds, "Inserting disk image...", "Please wait while the image is inserted into drive " + diskno + ".");
+										  
 										  win.open();
+								  
 									  }
 								  });
+								
 					}
+					
+				
 			  }
 			});
-
+		
+	
 		t.start();
 		
 	}
@@ -2224,7 +2295,7 @@ public class MainWin {
 		Thread t = new Thread(new Runnable() {
 					  public void run()
 					  {
-						  String res = getFile(true,false,curpath,"Write image in drive " + diskno + " to...", "Save",  new String[] { "*.dsk" , "*.*" });
+						  String res = getFile(true,false,curpath,"Write image in drive " + diskno + " to...", "Save",  new String[] { MainWin.config.getString("FileSelectionMask","*.dsk;*.os9;*.vhd") , "*.*" });
 							
 							if (res != null)
 								MainWin.sendCommand("dw disk write "+ diskno + " " + res);

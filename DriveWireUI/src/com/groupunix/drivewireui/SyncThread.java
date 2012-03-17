@@ -79,10 +79,7 @@ public class SyncThread implements Runnable
 					MainWin.setConStatusTrying();
 					// TODO MainWin.addToDisplay("Sync: Connecting to server..");
 					MainWin.debug("Sync: Connecting...");
-					sock = new Socket(host, port);
 					
-					this.out = sock.getOutputStream();
-				    this.in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 				    
 				    // get initial state
 				    
@@ -102,22 +99,25 @@ public class SyncThread implements Runnable
 				    MainWin.setMidiStatus(UIUtils.getServerMidiStatus());
 				    MainWin.applyMIDIStatus();
 				    
-				    MainWin.setConStatusConnect();
-				    			
 				    
-				   
+				    sock = new Socket(host, port);
+					
+					this.out = sock.getOutputStream();
+				    this.in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+				    
+				    MainWin.setConStatusConnect();
 				    
 				    MainWin.debug("Sync: Connected.");
 				    
 				    // start sync feed
 				    
-				    out.write(( MainWin.getInstance()+"").getBytes());
-				    out.write((byte) 0);
-				    out.write("ui sync\n".getBytes());
+				    this.out.write(( MainWin.getInstance()+"").getBytes());
+				    this.out.write((byte) 0);
+				    this.out.write("ui sync\n".getBytes());
 				} 
 				catch (Exception e) 
 				{
-					e.printStackTrace();
+					//e.printStackTrace();
 					
 					MainWin.setConStatusError();
 					// TODO MainWin.addToDisplay("Sync: " + e.getMessage());

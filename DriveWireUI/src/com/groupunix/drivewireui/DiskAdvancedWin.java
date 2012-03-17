@@ -1,6 +1,5 @@
 package com.groupunix.drivewireui;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -9,13 +8,10 @@ import org.eclipse.swt.events.MenuAdapter;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
@@ -29,6 +25,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.widgets.Spinner;
 
 public class DiskAdvancedWin extends Dialog {
 
@@ -55,6 +52,14 @@ public class DiskAdvancedWin extends Dialog {
 	
 	private MenuItem mntmAddToTable;
 	private MenuItem mntmRemoveFromTable;
+	private MenuItem mntmSetToDefault;
+	private MenuItem mntmWikiHelp;
+	
+	private Spinner spinner;
+	private Text textIntHex;
+	private Label lblD;
+	private Label lblH;
+	private boolean whoa = false;
 	
 	/**
 	 * Create the dialog.
@@ -73,18 +78,16 @@ public class DiskAdvancedWin extends Dialog {
 	 */
 	public Object open() 
 	{
-		if (MainWin.config.configurationAt("DiskParams") != null)
-		{
-			this.paramDefs = MainWin.config.configurationAt("DiskParams");
-		}
-		else
+		if (MainWin.master == null || MainWin.master.getMaxIndex("diskparams") < 0)
 			this.paramDefs = new HierarchicalConfiguration();
+		else
+			this.paramDefs = MainWin.master.configurationAt("diskparams");
 		
 
 		
 		createContents();
 		
-		//applyFont();
+		
 		
 		
 		display = getParent().getDisplay();
@@ -129,19 +132,78 @@ public class DiskAdvancedWin extends Dialog {
 			@Override
 			public void menuShown(MenuEvent e) {
 				
+				mntmAddToTable.setEnabled(false);
+				mntmRemoveFromTable.setEnabled(false);
+				mntmSetToDefault.setEnabled(false);
+				mntmWikiHelp.setEnabled(false);
+				mntmWikiHelp.setText("Wiki help...");
+				mntmAddToTable.setText("Add item to main display");
+				
 				if (MainWin.getTPIndex(tableParams.getItem(tableParams.getSelectionIndex()).getText(0)) > -1)
 				{
-					mntmAddToTable.setEnabled(false);
 					mntmRemoveFromTable.setEnabled(true);
 				}
 				else
 				{
 					mntmAddToTable.setEnabled(true);
-					mntmRemoveFromTable.setEnabled(false);
 				}
+				
+				if (tableParams.getItem(tableParams.getSelectionIndex()).getText(0) != null)
+				{
+					mntmAddToTable.setText("Add " + tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + " to main display");
+					if (!tableParams.getItem(tableParams.getSelectionIndex()).getText(0).startsWith("_") && paramDefs.containsKey(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]"))
+					{
+						if ((! tableParams.getItem(tableParams.getSelectionIndex()).getText(1).equals(paramDefs.getString(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]") )) || !(tableParams.getItem(tableParams.getSelectionIndex()).getText(2).equals("") ))   
+						{
+							mntmSetToDefault.setEnabled(true);
+						}
+					}
+				}
+				
+				if (tableParams.getItem(tableParams.getSelectionIndex()).getText(0) != null)
+				{
+					if (paramDefs.containsKey(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@wikiurl]"))
+					{
+						mntmWikiHelp.setText("Wiki help for " + tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "...");
+						mntmWikiHelp.setEnabled(true);
+					}
+				}
+				
 			}
 		});
 		tableParams.setMenu(menu);
+		
+		
+		
+		
+		mntmSetToDefault = new MenuItem(menu, SWT.NONE);
+		mntmSetToDefault.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				doToggle(tableParams.getSelectionIndex(), paramDefs.getString(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]" , ""));
+				displayItem(tableParams.getItem(tableParams.getSelectionIndex()).getText(0),tableParams.getSelectionIndex());
+			}
+		});
+		mntmSetToDefault.setText("Set to default value");
+		
+		@SuppressWarnings("unused")
+		MenuItem spacer = new MenuItem(menu, SWT.SEPARATOR);
+				
+		mntmWikiHelp = new MenuItem(menu, SWT.NONE);
+		mntmWikiHelp.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				MainWin.openURL(this.getClass(), paramDefs.getString( tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@wikiurl]" , "")  );
+				
+			}
+		});
+		mntmWikiHelp.setText("Wiki help...");
+		
+		
+		@SuppressWarnings("unused")
+		MenuItem spacer2 = new MenuItem(menu, SWT.SEPARATOR);
 		
 		mntmAddToTable = new MenuItem(menu, SWT.NONE);
 		mntmAddToTable.addSelectionListener(new SelectionAdapter() {
@@ -152,7 +214,7 @@ public class DiskAdvancedWin extends Dialog {
 				
 			}
 		});
-		mntmAddToTable.setText("Add to main display");
+		mntmAddToTable.setText("Add item to main display");
 		
 		mntmRemoveFromTable = new MenuItem(menu, SWT.NONE);
 		mntmRemoveFromTable.setText("Remove from main display");
@@ -165,6 +227,7 @@ public class DiskAdvancedWin extends Dialog {
 			}
 		});
 		
+		
 		textItemTitle = new Text(shell, SWT.READ_ONLY);
 		textItemTitle.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 		textItemTitle.setFont(SWTResourceManager.getBoldFont(display.getSystemFont()));
@@ -173,7 +236,7 @@ public class DiskAdvancedWin extends Dialog {
 		textDescription = new Text(shell, SWT.READ_ONLY | SWT.WRAP | SWT.MULTI);
 		textDescription.setText("Select an option above to view details or make changes.");
 		textDescription.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		textDescription.setBounds(10, 338, 496, 43);
+		textDescription.setBounds(10, 332, 496, 60);
 		
 		linkWiki = new Link(shell, SWT.NONE);
 		linkWiki.addSelectionListener(new SelectionAdapter() {
@@ -192,7 +255,7 @@ public class DiskAdvancedWin extends Dialog {
 				});
 			}
 		});
-		linkWiki.setBounds(14, 420, 70, 15);
+		linkWiki.setBounds(14, 430, 70, 15);
 		linkWiki.setText("<a>Wiki Help..</a>");
 		linkWiki.setVisible(false);
 		
@@ -204,7 +267,7 @@ public class DiskAdvancedWin extends Dialog {
 				doToggle(tableParams.getSelectionIndex(), btnToggle.getSelection()+"");
 			}
 		});
-		btnToggle.setBounds(14, 383, 297, 16);
+		btnToggle.setBounds(14, 395, 297, 18);
 		btnToggle.setText("toggle");
 		btnToggle.setVisible(false);
 		
@@ -216,14 +279,15 @@ public class DiskAdvancedWin extends Dialog {
 			}
 		});
 		btnApply.setEnabled(false);
-		btnApply.setBounds(431, 420, 75, 25);
+		btnApply.setBounds(431, 425, 75, 25);
 		btnApply.setText("Apply");
 		
 		textInt = new Text(shell, SWT.BORDER);
 		textInt.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				doToggle(tableParams.getSelectionIndex(), textInt.getText());
-		        	
+				if (!whoa)
+					setHexFromInt(((Text) e.getSource()).getText());
 			}
 		});
 		textInt.addVerifyListener(new VerifyListener() {
@@ -232,9 +296,10 @@ public class DiskAdvancedWin extends Dialog {
 			        char[] chars = new char[string.length()];
 			        string.getChars(0, chars.length, chars, 0);
 			        for (int i = 0; i < chars.length; i++) {
-			          if (!('0' <= chars[i] && chars[i] <= '9')) 
+			          if (!(chars[i] >= '0' && chars[i] <= '9')) 
 			          {
-			        	if (! ((i == 0) && (chars[0] == '-') ))
+			         	
+			        	if (! ( (i == 0) && (chars[0] == '-') && (e.start == 0) ) )
 			        	{
 			        		e.doit = false;
 			            	return;
@@ -242,15 +307,68 @@ public class DiskAdvancedWin extends Dialog {
 			          }
 			        }
 			        
+			        
+			        
 			}
 		});
-		textInt.setBounds(10, 383, 76, 21);
+		textInt.setBounds(10, 395, 76, 21);
 		textInt.setVisible(false);
 		
 		lblInt = new Label(shell, SWT.NONE);
-		lblInt.setBounds(92, 384, 354, 15);
+		lblInt.setBounds(217, 397, 289, 18);
 		lblInt.setText("Value");
 		lblInt.setVisible(false);
+		
+		spinner = new Spinner(shell, SWT.BORDER);
+		spinner.setBounds(119, 393, 76, 22);
+		spinner.setVisible(false);
+		
+		textIntHex = new Text(shell, SWT.BORDER);
+		textIntHex.setBounds(112, 395, 76, 21);
+		textIntHex.setVisible(false);
+		
+		textIntHex.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				if (!whoa)
+					setIntFromHex(((Text) e.getSource()).getText());
+			}
+		});
+		textIntHex.addVerifyListener(new VerifyListener() {
+			public void verifyText(VerifyEvent e) {
+					e.text = e.text.toLowerCase();
+				    char[] chars = new char[e.text.length()];
+			        e.text.getChars(0, chars.length, chars, 0);
+			        for (int i = 0; i < chars.length; i++) {
+			          if (!(chars[i] >= '0' && chars[i] <= '9') && !(chars[i] >= 'a' && chars[i] <= 'f')) 
+			          {
+			        	  if (! ( (i == 0) && (chars[0] == '-') && (e.start == 0) ) )
+			        	  {
+			        		  e.doit = false;
+			        		  return;
+			        	  }
+			        	
+			          }
+			        }
+			}
+		});
+		
+		
+		lblD = new Label(shell, SWT.NONE);
+		lblD.setBounds(89, 397, 17, 18);
+		lblD.setText("d");
+		lblD.setVisible(false);
+		
+		lblH = new Label(shell, SWT.NONE);
+		lblH.setBounds(192, 397, 18, 21);
+		lblH.setText("h");
+		lblH.setVisible(false);
+		
+		spinner.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				doToggle(tableParams.getSelectionIndex(), spinner.getSelection() + "");
+		        	
+			}
+		});
 		
 		applySettings();
 		applyToggle();
@@ -266,6 +384,52 @@ public class DiskAdvancedWin extends Dialog {
 	}
 
 	
+	protected void setIntFromHex(String text)
+	{
+		this.whoa  = true;
+		try
+		{
+			if ((text != null) && (text != ""))
+			{
+				
+				this.textInt.setText( Integer.parseInt(text.toLowerCase(), 16) +"" );
+			}
+			else
+			{
+				this.textInt.setText("");
+			}
+		}
+		catch (NumberFormatException e)
+		{
+			// dont care
+		}
+		this.whoa = false;
+	}
+
+	protected void setHexFromInt(String text)
+	{
+		this.whoa  = true;
+		try
+		{
+			if ((text != null) && (text != ""))
+			{
+				
+				this.textIntHex.setText(Integer.toString(Integer.parseInt(text) , 16));
+				
+				
+			}
+			else
+			{
+				this.textIntHex.setText("");
+			}
+		}
+		catch (NumberFormatException e)
+		{
+			// dont care
+		}
+		this.whoa  = false;
+	}
+
 	protected void doToggle(int sel, String newval)
 	{ 
 		if (this.tableParams.getItem(sel).getText(1).equals(newval))
@@ -306,10 +470,14 @@ public class DiskAdvancedWin extends Dialog {
 		
 		this.shell.setRedraw(false);
 		
-		this.btnToggle.setVisible(false);
-		this.linkWiki.setVisible(false);
-		this.lblInt.setVisible(false);
-		this.textInt.setVisible(false);
+		btnToggle.setVisible(false);
+		linkWiki.setVisible(false);
+		lblInt.setVisible(false);
+		textInt.setVisible(false);
+		spinner.setVisible(false);
+		textIntHex.setVisible(false);
+		lblD.setVisible(false);
+		lblH.setVisible(false);
 		
 		if (key == null)
 		{
@@ -359,6 +527,41 @@ public class DiskAdvancedWin extends Dialog {
 				
 				this.lblInt.setVisible(true);
 				this.textInt.setVisible(true);
+				this.textIntHex.setVisible(true);
+				this.lblD.setVisible(true);
+				this.lblH.setVisible(true);
+			}
+			else if (type.equals("spinner"))
+			{
+				this.lblInt.setText(this.paramDefs.getString(key + "[@inputtext]", "Value"));
+				
+				try
+				{
+					if (this.paramDefs.containsKey(key + "[@min]"))
+					{
+						this.spinner.setMinimum(this.paramDefs.getInt(key + "[@min]"));
+					}
+					
+					if (this.paramDefs.containsKey(key + "[@max]"))
+					{
+						this.spinner.setMaximum(this.paramDefs.getInt(key + "[@max]"));
+					}
+					
+					if (this.tableParams.getItem(index).getText(2).equals(""))
+						this.spinner.setSelection(Integer.parseInt(this.disk.getParam(key).toString()));
+					else
+						this.spinner.setSelection(Integer.parseInt(this.tableParams.getItem(index).getText(2)));
+					
+					
+					
+				}
+				catch (NumberFormatException e)
+				{
+					MainWin.showError("Non numeric value?", "Somehow, we've managed to get a non numeric value into the config in a place where only numbers are allowed.", "This is not normal..  why don't you submit a bug report and let me know how this happened.");
+				}
+				
+				this.lblInt.setVisible(true);
+				this.spinner.setVisible(true);
 			}
 		}
 		
@@ -411,7 +614,7 @@ public class DiskAdvancedWin extends Dialog {
 	 */
 	private void createContents() {
 		shell = new Shell(getParent(), getStyle());
-		shell.setSize(522, 483);
+		shell.setSize(522, 487);
 		shell.setText(getText());
 		
 		Button btnOk = new Button(shell, SWT.NONE);
@@ -423,7 +626,7 @@ public class DiskAdvancedWin extends Dialog {
 				e.display.getActiveShell().close();
 			}
 		});
-		btnOk.setBounds(270, 420, 75, 25);
+		btnOk.setBounds(270, 425, 75, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shell, SWT.NONE);
@@ -434,7 +637,7 @@ public class DiskAdvancedWin extends Dialog {
 				e.display.getActiveShell().close();
 			}
 		});
-		btnCancel.setBounds(350, 420, 75, 25);
+		btnCancel.setBounds(350, 425, 75, 25);
 		btnCancel.setText("Cancel");
 
 	}
@@ -447,6 +650,7 @@ public class DiskAdvancedWin extends Dialog {
 		this.applyToggle();
 	}
 	
+	/*
 	private void setLayout()
 	{
 		this.tableParams.removeAll();
@@ -456,7 +660,7 @@ public class DiskAdvancedWin extends Dialog {
   		tableParams.setLinesVisible(true);
   		tableParams.setHeaderVisible(true);
 	}
-	
+	*/
 	
 	private void addOrUpdate(String key, String val)
 	{
@@ -527,13 +731,16 @@ public class DiskAdvancedWin extends Dialog {
 			}
 		}
 	}
-
-	
-	
-	
-
-
-	
-	
-
+	protected Spinner getSpinner() {
+		return spinner;
+	}
+	protected Text getTextIntHex() {
+		return textIntHex;
+	}
+	protected Label getLblD() {
+		return lblD;
+	}
+	protected Label getLblH() {
+		return lblH;
+	}
 }

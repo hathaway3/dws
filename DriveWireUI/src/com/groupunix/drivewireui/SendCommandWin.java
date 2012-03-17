@@ -26,6 +26,7 @@ public class SendCommandWin extends Dialog
 	private String title;
 	private String message;
 	private Button btnOk;
+	private Shell parshell;
 	
 	/**
 	 * Create the dialog.
@@ -35,6 +36,7 @@ public class SendCommandWin extends Dialog
 	public SendCommandWin(Shell parent, int style, List<String> commands, String title, String message)
 	{
 		super(parent, style);
+		this.parshell = parent;
 		this.commands = commands;
 		this.title = title;
 		this.message = message;
@@ -46,21 +48,22 @@ public class SendCommandWin extends Dialog
 	 */
 	public Object open()
 	{
+		  
 		createContents();
+		
 		this.btnOk.setVisible(false);
 		
-		Rectangle pos = Display.getCurrent().getActiveShell().getBounds();
+		Rectangle pos = this.parshell.getBounds();
 		
 		shlSendingCommandTo.setBounds(pos.x + (pos.width/2) - 204, pos.y + (pos.height/2) - 76, 408, 152);
 		
 		shlSendingCommandTo.open();
 		shlSendingCommandTo.layout();
 		Display display = getParent().getDisplay();
-		
-		Thread cmdT = new Thread(new cmdThread());
+						
+		Thread cmdT = new Thread(new cmdThread(this.commands));
 		cmdT.start();
-		
-		
+				
 		while (!shlSendingCommandTo.isDisposed())
 		{
 			if (!display.readAndDispatch())
@@ -68,34 +71,42 @@ public class SendCommandWin extends Dialog
 				display.sleep();
 			}
 		}
+		
 		return result;
 	}
 
 	private void setErrorStatus(final String err)
 	{
+		
 		shlSendingCommandTo.getDisplay().asyncExec(
 				  new Runnable() {
 					  public void run()
 					  {
+						  
 						  labelStatus.setVisible(false);
 						  progressBar.setVisible(false);
 						  lblMessage.setText(err);
 						  shlSendingCommandTo.setText("Error while sending commands");
 						  btnOk.setVisible(true);
+						  
 					  }
 				  });
 	}
 
 	private void setStatus(final String msg, final int progress)
 	{
-		shlSendingCommandTo.getDisplay().syncExec(
+		  
+		shlSendingCommandTo.getDisplay().asyncExec(
 				  new Runnable() {
 					  public void run()
 					  {
+						  
 						  progressBar.setSelection(progressBar.getSelection() + progress);
 						  labelStatus.setText(msg);
 		
 						  shlSendingCommandTo.redraw();
+						  
+						  
 					  }
 				  });
 	}
@@ -149,6 +160,14 @@ public class SendCommandWin extends Dialog
 	
 	class cmdThread implements Runnable 
 	{
+		
+		
+		private List<String> cmds;
+
+		public cmdThread(List<String> cmds)
+		{
+			this.cmds = cmds;
+		}
 
 		@Override
 		public void run()
@@ -159,19 +178,26 @@ public class SendCommandWin extends Dialog
 			
 			try
 			{
-				for (String command: commands)
+				
+				for (String command: this.cmds)
 				{
-					setStatus("Connecting to server..", 10 / commands.size());
+					setStatus("Connecting to server..", 10 / this.cmds.size());
 					connection.Connect();
 			  
-					setStatus("Send: " + command, 50 / commands.size());
+					setStatus("Send: " + command, 50 / this.cmds.size());
+					
+					
 					tid = MainWin.taskman.addTask(command);
+				
 					MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE,"Connecting to server...");
+					
 					connection.sendCommand(tid, command,MainWin.getInstance(),true);
-				  
-					setStatus("Closing..", 40 / commands.size());
+				  	
+					setStatus("Closing..", 40 / this.cmds.size());
+					
+					
 					connection.close();
-			
+					
 					
 				}
 				setStatus("Finished.", 100);
@@ -180,6 +206,7 @@ public class SendCommandWin extends Dialog
 			} 
 			catch (Exception e)
 			{
+				
 				setErrorStatus(e.getMessage());
 				MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_FAILED,e.getMessage());
 			}
@@ -194,6 +221,7 @@ public class SendCommandWin extends Dialog
 				  new Runnable() {
 					  public void run()
 					  {
+							
 						  shlSendingCommandTo.dispose();
 					  }
 				  });

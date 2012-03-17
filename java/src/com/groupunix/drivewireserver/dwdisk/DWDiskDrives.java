@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.vfs.FileContent;
 import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
@@ -658,25 +659,27 @@ public class DWDiskDrives
 		// turn objname into path
 		String fn = getObjPath(objname);
 		
-		// look for already mounted
-		for (int i = 0;i<getMaxDrives();i++)
-		{
-			try
-			{
-				if ((this.diskDrives[i] != null) && this.diskDrives[i].isLoaded() && ((this.diskDrives[i].getDisk().getFilePath().equals(fn)) || this.diskDrives[i].getDisk().getFilePath().equals("file:///" + fn)))
-				{
-					return(i);
-				}
-				
-			} 
-			catch (DWDriveNotLoadedException e)
-			{
-			}
-		}
-
-		// not already mounted, give it a shot
 		try
 		{
+			FileObject fileobj = fsManager.resolveFile(fn);
+			
+			// look for already mounted
+			for (int i = 0;i<getMaxDrives();i++)
+			{
+				try
+				{
+					if ((this.diskDrives[i] != null) && this.diskDrives[i].isLoaded() && ((this.diskDrives[i].getDisk().getFilePath().equals(fn)) ||  this.diskDrives[i].getDisk().getFilePath().equals(fileobj.getName().getFriendlyURI()) || this.diskDrives[i].getDisk().getFilePath().equals(fileobj.getName().getURI())))
+					{
+						return(i);
+					}
+					
+				} 
+				catch (DWDriveNotLoadedException e)
+				{
+				}
+			}
+
+		
 			int drv = this.getFreeDriveNo();
 			this.LoadDiskFromFile(drv, fn);
 			return drv;
