@@ -183,8 +183,12 @@ public abstract class DWDisk
 	{
 		sync();
 		this.sectors = null;
-		this.fileobj.close();
-		this.fileobj = null;
+		
+		if (this.fileobj != null)
+		{
+			this.fileobj.close();
+			this.fileobj = null;
+		}
 	}
 
 	
@@ -239,16 +243,39 @@ public abstract class DWDisk
 		 
 		 fos = fobj.getContent().getOutputStream();
 
-		 int sector = 0;
-	       
-		 while (sector < this.sectors.size()) 
+		   
+		 for (int i = 0;i < this.sectors.size();i++)
 		 {
-		    
-			   fos.write(this.sectors.get(sector).getData(), 0, this.sectors.get(sector).getData().length);
-			   this.sectors.get(sector).makeClean();
-			   sector++;
+		 	 // we do have a sector obj
+		 	 if (this.sectors.get(i) != null)
+		 	 {
+			 	 fos.write(this.sectors.get(i).getData(), 0, this.sectors.get(i).getData().length);
+		 		 this.sectors.get(i).makeClean();
+		 	 }
+		 	 // we dont, write 0 filled
+		 	 else
+		 	 {
+		 		 int ss = DWDefs.DISK_SECTORSIZE;
+		 		 
+		 		 if (this.getParams().containsKey("_sectorsize"))
+		 		 {
+		 			 try
+		 			 {
+		 				ss = (Integer) this.getParam("_sectorsize");
+		 			 }
+		 			 catch (NumberFormatException e)
+		 			 {
+		 				 // how did they get a non int value in there.. whatever
+		 			 }
+		 			 
+		 		 }
+		 		 
+		 		fos.write(new byte[ss], 0, ss);
+		 		 
+		 	 }
 		 }
-			   
+			
+		 
 		 fos.close();
 		   
 		 if (this.fileobj != null)
@@ -280,7 +307,10 @@ public abstract class DWDisk
 	 
 	public DWDiskSector getSector(int no)
 	{
-		return(this.sectors.get(no));
+		if (this.sectors.get(no) != null)
+			return(this.sectors.get(no));
+		
+		return(null);
 	}
 	 
 	 
@@ -296,6 +326,7 @@ public abstract class DWDisk
 		
 		return(null);
 	}
+
 
 	
 	public void insert(DWDiskDrive drive)

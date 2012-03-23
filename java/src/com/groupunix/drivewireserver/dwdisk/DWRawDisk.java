@@ -240,12 +240,12 @@ public class DWRawDisk extends DWDisk {
 		int effLSN = this.getLSN() + this.getOffset();
 		
 		// we can read beyond the current size of the image
-		if (effLSN >= this.sectors.size())
+		if ((effLSN >= this.sectors.size()) || (this.sectors.get(effLSN) == null))
 		{
 			logger.debug("request for undefined sector, effLSN: " + effLSN + "  rawLSN: " + this.getLSN() + "  curSize: " + (this.sectors.size()-1));
 			
 			// no need to expand disk on read, give a blank sector
-			return(new byte[256]);
+			return(new byte[this.getSectorSize()]);
 			
 		}
 		

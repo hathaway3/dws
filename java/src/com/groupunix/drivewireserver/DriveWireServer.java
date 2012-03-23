@@ -6,6 +6,7 @@ package com.groupunix.drivewireserver;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
+import gnu.io.UnsupportedCommOperationException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -17,6 +18,7 @@ import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TooManyListenersException;
 import java.util.Vector;
 
 import org.apache.commons.cli.CommandLine;
@@ -39,7 +41,9 @@ import org.apache.log4j.spi.LoggingEvent;
 import com.groupunix.drivewireserver.dwdisk.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwexceptions.DWPlatformUnknownException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolDevice;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWSerialDevice;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
@@ -47,8 +51,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "4.0.6";
-	public static final String DWServerVersionDate = "03/16/2012";
+	public static final String DWServerVersion = "4.0.7a";
+	public static final String DWServerVersionDate = "03/22/2012";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;
@@ -154,10 +158,13 @@ public class DriveWireServer
 						if (dwProtoHandlers.get(i).getConfig().getBoolean("ZombieResurrection", true))
 						{
 							logger.info("Arise chicken! Reanimating handler #" + i + ": " + dwProtoHandlers.get(i).getConfig().getString("[@name]","unnamed"));
-							dwProtoHandlers.get(i).shutdown();
+							
+							
+							@SuppressWarnings("unchecked")
 							List<HierarchicalConfiguration> handlerconfs = serverconfig.configurationsAt("instance");
-					    	
+
 							dwProtoHandlers.set(i, new DWProtocolHandler(i, handlerconfs.get(i)));
+							
 					    	dwProtoHandlerThreads.set(i, new Thread(dwProtoHandlers.get(i)));
 					    	dwProtoHandlerThreads.get(i).start();	
 						}

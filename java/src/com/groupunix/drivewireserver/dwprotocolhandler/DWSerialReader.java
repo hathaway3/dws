@@ -10,8 +10,9 @@ import gnu.io.SerialPortEventListener;
 
 public class DWSerialReader implements SerialPortEventListener
 {
-	private final ArrayBlockingQueue<Byte> queue;
-	private final InputStream in;
+	private ArrayBlockingQueue<Byte> queue;
+	private InputStream in;
+	private boolean wanttodie = false;
 	
 	public DWSerialReader(InputStream in, ArrayBlockingQueue<Byte> q)
 	{
@@ -26,7 +27,7 @@ public class DWSerialReader implements SerialPortEventListener
          
          try
          {
-             while ( ( data = in.read()) > -1 )
+             while (!wanttodie && ( data = in.read()) > -1 )
              {
                  queue.add((byte) data);
              }
@@ -34,8 +35,16 @@ public class DWSerialReader implements SerialPortEventListener
          }
          catch ( IOException e )
          {
-             e.printStackTrace();
+             e.printStackTrace(); 
          }     
 	}
+
+	public void shutdown()
+	{
+		this.wanttodie = true;
+		
+	}
+
+	
 
 }

@@ -11,18 +11,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.TooManyListenersException;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWSerialDevice implements DWProtocolDevice
 {
 	private static final Logger logger = Logger.getLogger("DWServer.DWSerialDevice");
 	
-	private SerialPort serialPort;
-	private boolean wanttodie = false;
+	private SerialPort serialPort = null;
+
 	private boolean bytelog = false;
 	private String device;
 	private DWProtocol dwProto;
@@ -31,6 +34,8 @@ public class DWSerialDevice implements DWProtocolDevice
 	private long readtime;
 
 	private ArrayBlockingQueue<Byte> queue;
+
+	private DWSerialReader evtlistener;
 	
 	public DWSerialDevice(DWProtocol dwProto) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException, IOException, TooManyListenersException
 	{
@@ -70,33 +75,119 @@ public class DWSerialDevice implements DWProtocolDevice
 
 	public void close()
 	{
-		logger.debug("closing serial device " +  this.device + " in handler #" + dwProto.getHandlerNo());
-		this.serialPort.removeEventListener();
-		this.serialPort.close();
+		logger.debug("closing serial device " +  device + " in handler #" + dwProto.getHandlerNo());
+		
+		if (this.evtlistener != null)
+		{
+			serialPort.removeEventListener();
+			this.evtlistener.shutdown();
+		}
+		
+		
+		try
+		{
+			serialPort.getInputStream().close();
+		} catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		  
+		  //serialPort.notifyOnDataAvailable(false);
+		  //serialPort.removeEventListener();
+		  
+		  //evtlistener = null;
+		  
+		  serialPort.close();
+		  
+		  serialPort = null;
+		
+		  /*
+		
+		TimeLimiter service = new SimpleTimeLimiter();
+		
 	
+		try
+		{
+			service.callWithTimeout(
+			        new Callable<Boolean>() 
+			        {
+			          @Override
+			          public Boolean call() throws InterruptedException, IOException 
+			          {
+			        	  if (serialPort != null)
+			        	  {
+			        		  logger.debug("closing serial device " +  device + " in handler #" + dwProto.getHandlerNo());
+			        		  
+			        		  //serialPort.getOutputStream().close();
+			        		  serialPort.getInputStream().close();
+			        		  
+			        		  //serialPort.notifyOnDataAvailable(false);
+			        		  //serialPort.removeEventListener();
+			        		  
+			        		  //evtlistener = null;
+			        		  
+			        		  serialPort.close();
+			        		  
+			        		  serialPort = null;
+			        		  
+			        		  return true;
+			        	  }
+			        	  return false;
+			          }
+			          
+			        }, 4000, TimeUnit.MILLISECONDS, true);
+			
+		
+		}
+		
+		catch (Exception e)
+		{
+			//System.out.println("Serial port trouble: " + e.getMessage());
+			logger.warn("While closing serial port: " + e.getMessage());
+		}
+		
+		
+		*/
+		  
 	}
 
 	
 	public void shutdown()
 	{
-		
-		this.wanttodie = true;
-		
-		try
-		{
-			logger.debug("close serial input stream");
-			this.serialPort.getInputStream().close();
-		} 
-		catch (IOException e)
-		{
-			logger.warn(e.getMessage());
-		}
-		
-		logger.debug("close serial port");
-		this.serialPort.close();
-		
+		this.close();
+				
 	}
 
+	
+	public void reconnect() throws UnsupportedCommOperationException, IOException, TooManyListenersException
+	{
+		if (this.serialPort != null)
+		{
+			// these settings seem to solve the lost bytes problems on my usb adapter
+			// dedicating a thread to busy wait on the port works better than using the
+			// event driven model... ok i guess
+			serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+			serialPort.enableReceiveThreshold(1);
+			//serialPort.enableReceiveTimeout(1000);
+        	
+			
+			setSerialParams(serialPort);               
+        	
+			if (this.evtlistener != null)
+			{
+				this.serialPort.removeEventListener();
+			}
+			
+			this.queue = new ArrayBlockingQueue<Byte>(512);
+			
+			this.evtlistener = new DWSerialReader(serialPort.getInputStream(), queue);
+			
+			serialPort.addEventListener(this.evtlistener);
+            serialPort.notifyOnDataAvailable(true);
+		}
+	}
+	
 	private void connect(String portName) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException, IOException, TooManyListenersException
 	{
 		logger.debug("attempting to open device '" + portName + "'");
@@ -105,11 +196,11 @@ public class DWSerialDevice implements DWProtocolDevice
 		CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
         
         
-		if ( portIdentifier.isCurrentlyOwned() )
-		{
-			throw new PortInUseException();
-		}
-		else
+		//if ( portIdentifier.isCurrentlyOwned() )
+	//	{
+	//		throw new PortInUseException();
+	//	}
+	//	else
 		{
 			CommPort commPort = portIdentifier.open("DriveWire",2000);
             
@@ -118,21 +209,7 @@ public class DWSerialDevice implements DWProtocolDevice
             	
 					serialPort = (SerialPort) commPort;
 
-					// these settings seem to solve the lost bytes problems on my usb adapter
-					// dedicating a thread to busy wait on the port works better than using the
-					// event driven model... ok i guess
-					serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
-					serialPort.enableReceiveThreshold(1);
-					//serialPort.enableReceiveTimeout(1000);
-                	
-					
-					setSerialParams(serialPort);               
-                
-					InputStream in = serialPort.getInputStream();
-					this.queue = new ArrayBlockingQueue<Byte>(512);
-					
-					serialPort.addEventListener(new DWSerialReader(in, queue));
-	                serialPort.notifyOnDataAvailable(true);
+					reconnect();
 					
 					logger.info("opened serial device " + portName);
 				}
@@ -380,14 +457,14 @@ public class DWSerialDevice implements DWProtocolDevice
 			while (res == -1) 
 			{
 				long starttime = System.currentTimeMillis();
-				Byte read = queue.poll(500, TimeUnit.MILLISECONDS);
+				Byte read = queue.poll(200, TimeUnit.MILLISECONDS);
 				this.readtime += System.currentTimeMillis() - starttime;
 				
 				if (read != null)
 					res = 0xFF & read;
 				else if (timeout)
 				{
-					throw (new DWCommTimeOutException("No data in 500 ms"));
+					throw (new DWCommTimeOutException("No data in 200 ms"));
 				}
 				
 			}
@@ -432,5 +509,11 @@ public class DWSerialDevice implements DWProtocolDevice
 	public void resetReadtime()
 	{
 		this.readtime = 0;
+	}
+
+
+	public SerialPort getSerialPort()
+	{
+		return this.serialPort;
 	}
 }

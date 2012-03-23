@@ -59,7 +59,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	
 	// serial port instance
 	
-	private DWProtocolDevice protodev;
+	private DWProtocolDevice protodev = null;
 	
 	// printer
 	private DWVPrinter vprinter;
@@ -114,9 +114,10 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	
 	public boolean connected()
 	{
-		return(protodev.connected());
+		if (protodev != null)
+			return(protodev.connected());
+		return false;
 	}
-	
 	
 	
 	public void shutdown()
@@ -124,9 +125,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		logger.debug("handler #" + handlerno + ": shutdown requested");
 		
 		this.wanttodie = true;
-		
-		if (this.protodev != null)
-			this.protodev.shutdown();
+		this.protodev.shutdown();
 	}
 	
 	
@@ -140,7 +139,9 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		// this thread should run a LOT or we might lose bytes on the serial port on slow computers
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		
-		setupProtocolDevice();
+		// don't setup device if it was passed to us
+		if (this.protodev == null)
+			setupProtocolDevice();
 		
 		// setup environment and get started
 		if (!wanttodie)
@@ -188,242 +189,270 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		logger.info("handler #" + handlerno + " is ready");
 		
 		// protocol loop
-		while(!wanttodie)
-		{ 
-			opcodeint = -1;
-			
-			// try to get an opcode
-			if (!(protodev == null) && !resetPending)
-			{
-				try 
-				{
-					opcodeint = protodev.comRead1(false);
-					
-				} 
-				catch (IOException e) 
-				{
-					logger.error("Strange result in proto read loop: "  + e.getMessage());
-				} catch (DWCommTimeOutException e)
-				{
-					// this should not actually ever get thrown, since we call comRead1 with timeout = false..
-					logger.error("Timeout in proto read loop: "  + e.getMessage());
-				}
-			}
+		
+		try
+		{
+		
+			while(!wanttodie)
+			{ 
+				opcodeint = -1;
 				
-			if (opcodeint > -1)
-			{
-				((DWSerialDevice) this.protodev).resetReadtime();
-				optime = System.currentTimeMillis();
-				this.inOp = true;
-				lastOpcode = (byte) opcodeint;
-				total_ops++;
-				
-				try
+				// try to get an opcode
+				if (!(protodev == null) && !resetPending)
 				{
-					
-					
-					// fast writes
-					if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_COCO_PORTS - 1)))
-					{
-						DoOP_FASTSERWRITE(lastOpcode);
-						vserial_ops++;
-					}
-					else
-					{
-						// regular OP decode
-		
-						
-						switch(lastOpcode)
-						{
-							case DWDefs.OP_RESET1:
-							case DWDefs.OP_RESET2:
-							case DWDefs.OP_RESET3:
-								DoOP_RESET();
-								break;
-		
-							case DWDefs.OP_DWINIT:
-								DoOP_DWINIT();
-								break;
-										
-							case DWDefs.OP_INIT:
-								DoOP_INIT();
-								break;
-		
-							case DWDefs.OP_TERM:
-								DoOP_TERM();	
-								break;
-		
-							case DWDefs.OP_REREAD:
-							case DWDefs.OP_READ:
-								DoOP_READ(lastOpcode);
-								disk_ops++;
-								break;
-		
-							case DWDefs.OP_REREADEX:
-							case DWDefs.OP_READEX:
-								DoOP_READEX(lastOpcode);
-								disk_ops++;
-								break;
-		
-							case DWDefs.OP_WRITE:
-							case DWDefs.OP_REWRITE:
-								DoOP_WRITE(lastOpcode);
-								disk_ops++;
-								break;
-		
-							case DWDefs.OP_GETSTAT:
-							case DWDefs.OP_SETSTAT:
-								DoOP_STAT(lastOpcode);
-								disk_ops++;
-								break;
-		
-							case DWDefs.OP_TIME:
-								DoOP_TIME();
-								break;
-		
-							case DWDefs.OP_PRINT:
-								DoOP_PRINT();
-								break;
-		
-							case DWDefs.OP_PRINTFLUSH:
-								DoOP_PRINTFLUSH();
-								break;
-								
-							case DWDefs.OP_SERREADM:
-								DoOP_SERREADM();
-								vserial_ops++;
-								break;
-		
-							case DWDefs.OP_SERREAD:
-								DoOP_SERREAD();
-								vserial_ops++;
-								break;
-		
-							case DWDefs.OP_SERWRITE:
-								DoOP_SERWRITE();
-								vserial_ops++;
-								break;
-								
-							case DWDefs.OP_SERWRITEM:
-								DoOP_SERWRITEM();
-								vserial_ops++;
-								break;
-		
-							case DWDefs.OP_SERSETSTAT:
-								DoOP_SERSETSTAT();
-								vserial_ops++;
-								break;
-								      
-							case DWDefs.OP_SERGETSTAT:
-								DoOP_SERGETSTAT();
-								vserial_ops++;
-								break;
-				    
-							case DWDefs.OP_SERINIT:
-								DoOP_SERINIT();
-								vserial_ops++;
-								break;
-								      
-							case DWDefs.OP_SERTERM:
-								DoOP_SERTERM();
-								vserial_ops++;
-								break;	
-										
-							case DWDefs.OP_NOP:
-							case DWDefs.OP_230K230K:
-								DoOP_NOP();
-								break;
-									
-							case DWDefs.OP_RFM:
-								DoOP_RFM();
-								break;
-									
-							case DWDefs.OP_230K115K:
-								DoOP_230K115K();
-								break;
-							
-							case DWDefs.OP_NAMEOBJ_MOUNT:
-								DoOP_NAMEOBJ_MOUNT();
-								break;
-								
-								
-							default:
-								logger.warn("UNKNOWN OPCODE: " + opcodeint);
-								break;
-						}	
-					}
-				}
-				catch (IOException e)
-				{
-					logger.error("IOError in proto op: " + e.getMessage());
-				} 
-				catch (DWCommTimeOutException e)
-				{
-					logger.warn("Timed out reading from CoCo in " + DWUtils.prettyOP(lastOpcode));
-				} 
-				catch (DWPortNotValidException e)
-				{
-					logger.warn("Invalid port # from CoCo in " + DWUtils.prettyOP(lastOpcode) + ": " + e.getMessage());
-				}
-	
-				this.inOp = false;
-				
-				if (System.currentTimeMillis() - optime > DWDefs.SERVER_SLOW_OP)
-					logger.warn(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms.  Server loaded or low on ram?");
-				else if (config.getBoolean("LogTiming",false))
-					logger.debug(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms, serial read delay was " + ((DWSerialDevice) this.protodev).getReadtime());
-			}
-			else
-			{
-				if (!this.wanttodie)
-				{
-					if (this.resetPending)
-						logger.debug("device is resetting...");
-					else if (!config.getString("DeviceType","").equals("dummy"))
-						logger.debug("device unavailable, will retry in " + config.getInt("DeviceFailRetryTime",6000) + "ms");
-				
-					// take a break, reset, hope things work themselves out
 					try 
 					{
-						
-						Thread.sleep(config.getInt("DeviceFailRetryTime",6000));
-						
-						setupProtocolDevice();
+						opcodeint = protodev.comRead1(false);
 						
 					} 
-					catch (InterruptedException e) 
-					{	
-						logger.error("Interrupted during failed port delay.. giving up on this crazy situation");
-						wanttodie = true;
+					catch (IOException e) 
+					{
+						logger.error("Strange result in proto read loop: "  + e.getMessage());
+					} catch (DWCommTimeOutException e)
+					{
+						// this should not actually ever get thrown, since we call comRead1 with timeout = false..
+						logger.error("Timeout in proto read loop: "  + e.getMessage());
 					}
 				}
-			}
-
-		}
- 
+					
+				if ((opcodeint > -1) && (this.protodev != null))
+				{
+					((DWSerialDevice) this.protodev).resetReadtime();
+					optime = System.currentTimeMillis();
+					this.inOp = true;
+					lastOpcode = (byte) opcodeint;
+					total_ops++;
+					
+					try
+					{
+						
+						
+						// fast writes
+						if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_COCO_PORTS - 1)))
+						{
+							DoOP_FASTSERWRITE(lastOpcode);
+							vserial_ops++;
+						}
+						else
+						{
+							// regular OP decode
 			
-		logger.debug("handler #"+ handlerno+ ": exiting");
+							
+							switch(lastOpcode)
+							{
+								case DWDefs.OP_RESET1:
+								case DWDefs.OP_RESET2:
+								case DWDefs.OP_RESET3:
+									DoOP_RESET();
+									break;
+			
+								case DWDefs.OP_DWINIT:
+									DoOP_DWINIT();
+									break;
+											
+								case DWDefs.OP_INIT:
+									DoOP_INIT();
+									break;
+			
+								case DWDefs.OP_TERM:
+									DoOP_TERM();	
+									break;
+			
+								case DWDefs.OP_REREAD:
+								case DWDefs.OP_READ:
+									DoOP_READ(lastOpcode);
+									disk_ops++;
+									break;
+			
+								case DWDefs.OP_REREADEX:
+								case DWDefs.OP_READEX:
+									DoOP_READEX(lastOpcode);
+									disk_ops++;
+									break;
+			
+								case DWDefs.OP_WRITE:
+								case DWDefs.OP_REWRITE:
+									DoOP_WRITE(lastOpcode);
+									disk_ops++;
+									break;
+			
+								case DWDefs.OP_GETSTAT:
+								case DWDefs.OP_SETSTAT:
+									DoOP_STAT(lastOpcode);
+									disk_ops++;
+									break;
+			
+								case DWDefs.OP_TIME:
+									DoOP_TIME();
+									break;
+			
+								case DWDefs.OP_PRINT:
+									DoOP_PRINT();
+									break;
+			
+								case DWDefs.OP_PRINTFLUSH:
+									DoOP_PRINTFLUSH();
+									break;
+									
+								case DWDefs.OP_SERREADM:
+									DoOP_SERREADM();
+									vserial_ops++;
+									break;
+			
+								case DWDefs.OP_SERREAD:
+									DoOP_SERREAD();
+									vserial_ops++;
+									break;
+			
+								case DWDefs.OP_SERWRITE:
+									DoOP_SERWRITE();
+									vserial_ops++;
+									break;
+									
+								case DWDefs.OP_SERWRITEM:
+									DoOP_SERWRITEM();
+									vserial_ops++;
+									break;
+			
+								case DWDefs.OP_SERSETSTAT:
+									DoOP_SERSETSTAT();
+									vserial_ops++;
+									break;
+									      
+								case DWDefs.OP_SERGETSTAT:
+									DoOP_SERGETSTAT();
+									vserial_ops++;
+									break;
+					    
+								case DWDefs.OP_SERINIT:
+									DoOP_SERINIT();
+									vserial_ops++;
+									break;
+									      
+								case DWDefs.OP_SERTERM:
+									DoOP_SERTERM();
+									vserial_ops++;
+									break;	
+											
+								case DWDefs.OP_NOP:
+								case DWDefs.OP_230K230K:
+									DoOP_NOP();
+									break;
+										
+								case DWDefs.OP_RFM:
+									DoOP_RFM();
+									break;
+										
+								case DWDefs.OP_230K115K:
+									DoOP_230K115K();
+									break;
+								
+								case DWDefs.OP_NAMEOBJ_MOUNT:
+									DoOP_NAMEOBJ_MOUNT();
+									break;
+									
+									
+								default:
+									logger.warn("UNKNOWN OPCODE: " + opcodeint);
+									break;
+							}	
+						}
+					}
+					catch (IOException e)
+					{
+						logger.error("IOError in proto op: " + e.getMessage());
+					} 
+					catch (DWCommTimeOutException e)
+					{
+						logger.warn("Timed out reading from CoCo in " + DWUtils.prettyOP(lastOpcode));
+					} 
+					catch (DWPortNotValidException e)
+					{
+						logger.warn("Invalid port # from CoCo in " + DWUtils.prettyOP(lastOpcode) + ": " + e.getMessage());
+					}
 		
-		
-		if (this.dwVSerialPorts != null)
-		{
-			this.dwVSerialPorts.shutdown();
+					this.inOp = false;
+					
+					if (System.currentTimeMillis() - optime > DWDefs.SERVER_SLOW_OP)
+						logger.warn(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms.  Server loaded or low on ram?");
+					else if (config.getBoolean("LogTiming",false))
+						logger.debug(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms, serial read delay was " + ((DWSerialDevice) this.protodev).getReadtime());
+				}
+				else
+				{
+					if (!this.wanttodie)
+					{
+						if (this.resetPending)
+						{
+							logger.debug("device is resetting...");
+							
+							// kill device
+							if (protodev != null)
+								this.protodev.shutdown();							
+						}
+						else if (!config.getString("DeviceType","").equals("dummy"))
+							logger.debug("device unavailable, will retry in " + config.getInt("DeviceFailRetryTime",6000) + "ms");
+					
+						// take a break, reset, hope things work themselves out
+						try 
+						{
+							
+							Thread.sleep(config.getInt("DeviceFailRetryTime",6000));
+							
+							setupProtocolDevice();
+							
+						} 
+						catch (InterruptedException e) 
+						{	
+							logger.error("Interrupted during failed port delay.. giving up on this crazy situation");
+							wanttodie = true;
+						}
+					}
+				}
+	
+			}
+	 
+				
+			logger.debug("handler #"+ handlerno+ ": exiting");
+			
+			
+			if (this.dwVSerialPorts != null)
+			{
+				this.dwVSerialPorts.shutdown();
+			}
+			
+			if (this.diskDrives != null)
+			{
+				this.diskDrives.shutdown();
+			}
+			
+			if (this.termT != null)
+			{
+				termHandler.shutdown();
+				termT.interrupt();
+			}
+			
+			
+			
+			
 		}
-		
-		if (this.diskDrives != null)
+		catch (Exception e)
 		{
-			this.diskDrives.shutdown();
+			
+			System.out.println("\n\n");
+			
+			e.printStackTrace();
+			
+			System.out.println("\n\n");
+			
+			logger.error(e.getMessage());
 		}
-		
-		if (this.termT != null)
+		finally
 		{
-			termHandler.shutdown();
-			termT.interrupt();
-		}
-		
-		if (protodev != null)
-		{
-			protodev.shutdown();
+			if (protodev != null)
+			{
+				protodev.shutdown();
+			}
 		}
 			
 	}
@@ -1454,9 +1483,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			// flag that we want a reset
 			this.resetPending = true;
 			
-			// kill device
-			if (protodev != null)
-				this.protodev.shutdown();
+			
 			
 		}
 	}
@@ -1467,7 +1494,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		
 		if ((protodev != null) && (!resetPending))
 			protodev.shutdown();
-		
 		
 		
 		
