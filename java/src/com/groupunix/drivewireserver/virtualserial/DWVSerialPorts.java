@@ -72,6 +72,9 @@ public class DWVSerialPorts {
 		
 			try 
 			{
+				midiSynth = MidiSystem.getSynthesizer();
+				setMIDIDevice(midiSynth);
+				
 				// set default output
 				if (dwProto.getConfig().containsKey("MIDIDefaultOutput"))
 				{
@@ -82,20 +85,12 @@ public class DWVSerialPorts {
 					if ((devno < 0) || (devno > infos.length))
 					{
 						logger.warn("Invalid MIDI output device # " + devno + " specified in MIDIDefaultOutput setting");
-						midiSynth = MidiSystem.getSynthesizer();
-						setMIDIDevice(midiSynth);
 					}
 					else
 					{
 						logger.debug("Setting MIDI output to device # " + devno );
 						setMIDIDevice(MidiSystem.getMidiDevice(infos[devno]));
 					}
-				
-				}
-				else
-				{
-					midiSynth = MidiSystem.getSynthesizer();
-					setMIDIDevice(midiSynth);
 				
 				}
 				
@@ -917,15 +912,18 @@ public class DWVSerialPorts {
 	{
 		// translate current GM voices to current profile
 		
-		MidiChannel[] chans = this.midiSynth.getChannels();
-		
-		for (int i = 0;i < chans.length;i++)
+		if (this.midiSynth != null)
 		{
-			if (chans[i] != null)
+			MidiChannel[] chans = this.midiSynth.getChannels();
+			
+			for (int i = 0;i < chans.length;i++)
 			{
-				chans[i].programChange(getGMInstrument(this.GMInstrumentCache[i]));
+				if (chans[i] != null)
+				{
+					chans[i].programChange(getGMInstrument(this.GMInstrumentCache[i]));
+				}
+					
 			}
-				
 		}
 	}
 
