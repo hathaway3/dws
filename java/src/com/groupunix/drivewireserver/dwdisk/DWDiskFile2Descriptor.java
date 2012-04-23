@@ -4,12 +4,12 @@ import java.nio.ByteBuffer;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
-public class DWDiskFileDescriptor {
+public class DWDiskFile2Descriptor {
 
 	private ByteBuffer FD;
 	private byte[] fdBytes;
 	
-	public DWDiskFileDescriptor(byte[] sector)
+	public DWDiskFile2Descriptor(byte[] sector)
 	{
 		this.fdBytes = sector;
 		this.FD = ByteBuffer.wrap(fdBytes);

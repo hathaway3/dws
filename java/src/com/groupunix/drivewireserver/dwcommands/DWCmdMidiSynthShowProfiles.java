@@ -45,7 +45,7 @@ public class DWCmdMidiSynthShowProfiles extends DWCommand {
 		{
 		    HierarchicalConfiguration mprof = it.next();
 		    
-		    text += String.format("%-10s: %s", mprof.getString("[@name]"), mprof.getString("[@desc]") );
+		    text += String.format("%-10s: %-35s dev_adjust: %2d  gm_adjust: %2d", mprof.getString("[@name]", "n/a"), mprof.getString("[@desc]","n/a") , mprof.getInt("[@dev_adjust]",0) ,mprof.getInt("[@gm_adjust]", 0) );
 		    text += "\r\n";
 		}
 	

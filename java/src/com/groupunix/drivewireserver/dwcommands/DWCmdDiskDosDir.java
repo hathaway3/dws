@@ -5,10 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwdisk.DWDECBFileSystem;
-import com.groupunix.drivewireserver.dwdisk.DWDECBFileSystemDirEntry;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystem;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidDirectoryException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdDiskDosDir extends DWCommand 
@@ -48,6 +49,10 @@ public class DWCmdDiskDosDir extends DWCommand
 				catch (IOException e)
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
+				} 
+				catch (DWFileSystemInvalidDirectoryException e)
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
 				}
 			
 		}
@@ -56,7 +61,7 @@ public class DWCmdDiskDosDir extends DWCommand
 	}
 		
 		
-	private DWCommandResponse doDiskDosDir(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException
+	private DWCommandResponse doDiskDosDir(int driveno) throws DWDriveNotLoadedException, DWDriveNotValidException, IOException, DWFileSystemInvalidDirectoryException
 	{
 		String res = "Directory of drive " + driveno + "\r\n\r\n";
 		

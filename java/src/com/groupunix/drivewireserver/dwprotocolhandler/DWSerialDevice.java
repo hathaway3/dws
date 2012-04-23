@@ -79,29 +79,33 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 		if (this.evtlistener != null)
 		{
-			serialPort.removeEventListener();
+			if (this.serialPort != null)
+				serialPort.removeEventListener();
 			this.evtlistener.shutdown();
 		}
 		
-		
-		try
+		if (serialPort != null)
 		{
-			serialPort.getInputStream().close();
-		} catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			try
+			{
+				serialPort.getInputStream().close();
+			} catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			serialPort.close();
+			serialPort = null;
+			
 		}
-		  
+		
 		  //serialPort.notifyOnDataAvailable(false);
 		  //serialPort.removeEventListener();
 		  
 		  //evtlistener = null;
 		  
-		  serialPort.close();
 		  
-		  serialPort = null;
-		
 		  /*
 		
 		TimeLimiter service = new SimpleTimeLimiter();
@@ -316,12 +320,12 @@ public class DWSerialDevice implements DWProtocolDevice
 				{
 					String tmps = new String();
 					
-					for (int i = 0;i< data.length;i++)
+					for (int i = 0;i< len;i++)
 					{
 						tmps += " " + (int)(data[i] & 0xFF);
 					}
 					
-					logger.debug("WRITE " + data.length + ":" + tmps);
+					logger.debug("WRITE " + len + ":" + tmps);
 					
 				}
 			}

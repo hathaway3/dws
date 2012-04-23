@@ -20,7 +20,9 @@ import javax.sound.midi.Synthesizer;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
@@ -72,18 +74,41 @@ public class DWVSerialPorts {
 		
 			try 
 			{
+				// set default output
+				if (dwProto.getConfig().containsKey("MIDIDefaultOutput"))
+				{
+					int devno = dwProto.getConfig().getInt("MIDIDefaultOutput", -1);
+					
+					MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+					
+					if ((devno < 0) || (devno > infos.length))
+					{
+						logger.warn("Invalid MIDI output device # " + devno + " specified in MIDIDefaultOutput setting");
+						midiSynth = MidiSystem.getSynthesizer();
+						setMIDIDevice(midiSynth);
+					}
+					else
+					{
+						logger.debug("Setting MIDI output to device # " + devno );
+						setMIDIDevice(MidiSystem.getMidiDevice(infos[devno]));
+					}
 				
+				}
+				else
+				{
+					midiSynth = MidiSystem.getSynthesizer();
+					setMIDIDevice(midiSynth);
 				
+				}
 				
-				midiSynth = MidiSystem.getSynthesizer();
-				
-				setMIDIDevice(midiSynth);
-			
+				// soundbank
 				if (dwProto.getConfig().containsKey("MIDISynthDefaultSoundbank"))
 				{
 					loadSoundbank(dwProto.getConfig().getString("MIDISynthDefaultSoundbank"));
 				}
+								
 				
+				// default translation profile
 				if (dwProto.getConfig().containsKey("MIDISynthDefaultProfile"))
 				{
 					if (!setMidiProfile(dwProto.getConfig().getString("MIDISynthDefaultProfile")))
@@ -925,9 +950,9 @@ public class DWVSerialPorts {
 		{
 			HierarchicalConfiguration sub = it.next();
 			
-			if (sub.getInt("[@dev]") == voice)
+			if ((sub.getInt("[@dev]") + this.midiProfConf.getInt("[@dev_adjust]", 0))  == voice)
 			{
-				xvoice = sub.getInt("[@gm]");
+				xvoice = sub.getInt("[@gm]") + this.midiProfConf.getInt("[@gm_adjust]", 0);
 				logger.debug("MIDI: profile '" + this.midiProfConf.getString("[@name]") + "' translates device inst " + voice + " to GM instr " + xvoice);
 				return(xvoice);
 			}

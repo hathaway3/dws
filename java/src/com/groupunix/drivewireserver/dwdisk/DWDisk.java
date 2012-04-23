@@ -14,6 +14,7 @@ import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWImageHasNoSourceException;
@@ -25,7 +26,7 @@ public abstract class DWDisk
 	private static final Logger logger = Logger.getLogger("DWServer.DWDisk");
 	
 	protected HierarchicalConfiguration params;
-	protected Vector<DWDiskSector> sectors = new Vector<DWDiskSector>();	
+	public Vector<DWDiskSector> sectors = new Vector<DWDiskSector>();	
 	protected FileObject fileobj = null;
 	protected DWDiskConfigListener configlistener;
 	protected DWDiskDrive drive;
@@ -305,12 +306,20 @@ public abstract class DWDisk
 	}
 	 
 	 
-	public DWDiskSector getSector(int no)
+	public DWDiskSector getSector(int no) throws DWDiskInvalidSectorNumber
 	{
+		if ((no < 0) || (no >= this.sectors.size()))
+		{
+			throw new DWDiskInvalidSectorNumber("Invalid sector number: " + no);
+		}
+		
 		if (this.sectors.get(no) != null)
+		{
 			return(this.sectors.get(no));
+		}
 		
 		return(null);
+			
 	}
 	 
 	 
@@ -361,6 +370,15 @@ public abstract class DWDisk
 		{
 			this.drive.submitEvent(key, val);
 		}
+	}
+	public boolean getDirect()
+	{
+		
+		return false;
+	}
+	public Vector<DWDiskSector> getSectors()
+	{
+		return this.sectors;
 	}
 
 

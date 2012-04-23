@@ -1,11 +1,11 @@
 package com.groupunix.drivewireserver.dwexceptions;
 
-public class DWDECBFileSystemFileNotFoundException extends Exception 
+public class DWFileSystemFileNotFoundException extends Exception 
 {
 
 	private static final long serialVersionUID = 1L;
 
-	public DWDECBFileSystemFileNotFoundException(String msg)
+	public DWFileSystemFileNotFoundException(String msg)
 	{
 		super(msg);
 	}

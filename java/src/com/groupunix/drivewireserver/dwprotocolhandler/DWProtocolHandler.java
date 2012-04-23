@@ -125,7 +125,9 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		logger.debug("handler #" + handlerno + ": shutdown requested");
 		
 		this.wanttodie = true;
-		this.protodev.shutdown();
+		
+		if (this.protodev != null)
+			this.protodev.shutdown();
 	}
 	
 	

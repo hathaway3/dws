@@ -1,4 +1,4 @@
-package com.groupunix.drivewireserver.dwdisk;
+package com.groupunix.drivewireserver.dwdisk.filesystem;
 
 public class DWDECBFileSystemDirExtensionMapping
 {

@@ -6,7 +6,6 @@ package com.groupunix.drivewireserver;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
-import gnu.io.UnsupportedCommOperationException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -18,7 +17,6 @@ import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TooManyListenersException;
 import java.util.Vector;
 
 import org.apache.commons.cli.CommandLine;
@@ -41,9 +39,7 @@ import org.apache.log4j.spi.LoggingEvent;
 import com.groupunix.drivewireserver.dwdisk.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwexceptions.DWPlatformUnknownException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolDevice;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWSerialDevice;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
@@ -51,8 +47,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 
 public class DriveWireServer 
 {
-	public static final String DWServerVersion = "4.0.7a";
-	public static final String DWServerVersionDate = "03/22/2012";
+	public static final String DWServerVersion = "4.0.9a";
+	public static final String DWServerVersionDate = "04/22/2012";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;
@@ -89,9 +85,11 @@ public class DriveWireServer
 	private static DWEvent fevt;
 	private static boolean noMIDI = false;
 	private static boolean noMount = false;
+	private static boolean configFreeze = false;
+	
 	private static boolean noUI = false;
 	private static boolean noServer = false;
-	private static boolean configFreeze = false;
+	
 	private static boolean restart_logging = false;
 	private static boolean restart_ui = false;
 	

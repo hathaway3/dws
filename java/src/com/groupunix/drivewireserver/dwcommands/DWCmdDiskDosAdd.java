@@ -8,11 +8,13 @@ import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.VFS;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwdisk.DWDECBFileSystem;
-import com.groupunix.drivewireserver.dwexceptions.DWDECBFileSystemBadFilenameException;
-import com.groupunix.drivewireserver.dwexceptions.DWDECBFileSystemFileNotFoundException;
-import com.groupunix.drivewireserver.dwexceptions.DWDECBFileSystemFullException;
-import com.groupunix.drivewireserver.dwexceptions.DWDECBFileSystemInvalidFATException;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystem;
+import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidDirectoryException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFileNotFoundException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFullException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
@@ -52,11 +54,11 @@ public class DWCmdDiskDosAdd extends DWCommand
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_DRIVE_NOT_LOADED,e.getMessage()));
 				} 
-				catch (DWDECBFileSystemFullException e)
+				catch (DWFileSystemFullException e)
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
 				} 
-				catch (DWDECBFileSystemBadFilenameException e)
+				catch (DWFileSystemInvalidFilenameException e)
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
 				} 
@@ -64,11 +66,20 @@ public class DWCmdDiskDosAdd extends DWCommand
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
 				} 
-				catch (DWDECBFileSystemFileNotFoundException e)
+				catch (DWFileSystemFileNotFoundException e)
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILE_NOT_FOUND,e.getMessage()));
 				} 
-				catch (DWDECBFileSystemInvalidFATException e)
+				catch (DWFileSystemInvalidFATException e)
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
+				} 
+				catch (DWDiskInvalidSectorNumber e)
+				{
+					return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
+					
+				} 
+				catch (DWFileSystemInvalidDirectoryException e)
 				{
 					return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
 				} 
@@ -80,7 +91,7 @@ public class DWCmdDiskDosAdd extends DWCommand
 	}
 		
 		
-	private DWCommandResponse doDiskDosAdd(int driveno, String path) throws DWDriveNotLoadedException, DWDriveNotValidException, DWDECBFileSystemFullException, DWDECBFileSystemBadFilenameException, IOException, DWDECBFileSystemFileNotFoundException, DWDECBFileSystemInvalidFATException
+	private DWCommandResponse doDiskDosAdd(int driveno, String path) throws DWDriveNotLoadedException, DWDriveNotValidException, DWFileSystemFullException, DWFileSystemInvalidFilenameException, IOException, DWFileSystemFileNotFoundException, DWFileSystemInvalidFATException, DWDiskInvalidSectorNumber, DWFileSystemInvalidDirectoryException
 	{
 		DWDECBFileSystem decbfs = new DWDECBFileSystem(dwProto.getDiskDrives().getDisk(driveno));
 		
@@ -94,7 +105,7 @@ public class DWCmdDiskDosAdd extends DWCommand
 			
 			// size check
 			if (fobjsize > Integer.MAX_VALUE)
-				throw new DWDECBFileSystemFullException("File too big, maximum size is " + Integer.MAX_VALUE + " bytes.");
+				throw new DWFileSystemFullException("File too big, maximum size is " + Integer.MAX_VALUE + " bytes.");
 			
 			// get header
 			

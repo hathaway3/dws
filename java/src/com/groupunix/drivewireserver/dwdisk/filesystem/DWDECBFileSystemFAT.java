@@ -1,4 +1,4 @@
-package com.groupunix.drivewireserver.dwdisk;
+package com.groupunix.drivewireserver.dwdisk.filesystem;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Vector;
 
 import com.groupunix.drivewireserver.DECBDefs;
-import com.groupunix.drivewireserver.dwexceptions.DWDECBFileSystemFullException;
-import com.groupunix.drivewireserver.dwexceptions.DWDECBFileSystemInvalidFATException;
+import com.groupunix.drivewireserver.dwdisk.DWDiskSector;
+
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFullException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATException;
 
 public class DWDECBFileSystemFAT
 {
@@ -67,7 +69,7 @@ public class DWDECBFileSystemFAT
 		this.sector = sector;
 	}
 
-	public ArrayList<DWDiskSector> getFileSectors(Vector<DWDiskSector> sectors, byte granule) throws DWDECBFileSystemInvalidFATException, IOException
+	public ArrayList<DWDiskSector> getFileSectors(Vector<DWDiskSector> sectors, byte granule) throws DWFileSystemInvalidFATException, IOException
 	{
 		ArrayList<DWDiskSector> res = new ArrayList<DWDiskSector>();
 		
@@ -114,16 +116,16 @@ public class DWDECBFileSystemFAT
 		
 	}
 
-	public byte getEntry(byte granule) throws DWDECBFileSystemInvalidFATException, IOException
+	public byte getEntry(byte granule) throws DWFileSystemInvalidFATException, IOException
 	{
 	
 		if (((granule & 0xFF) ) <= DECBDefs.FAT_SIZE)
 			if ((this.sector.getData()[(granule & 0xFF) ] & 0xFF) == 0xFF)
-				throw (new DWDECBFileSystemInvalidFATException("Chain links to unused FAT entry #" + granule));
+				throw (new DWFileSystemInvalidFATException("Chain links to unused FAT entry #" + granule));
 			else
 				return(this.sector.getData()[(granule & 0xFF)]);
 		else
-			throw (new DWDECBFileSystemInvalidFATException("Invalid granule #" + granule));
+			throw (new DWFileSystemInvalidFATException("Invalid granule #" + granule));
 	}
 	
 	public boolean isLastEntry(byte entry)
@@ -146,7 +148,7 @@ public class DWDECBFileSystemFAT
 		return free;
 	}
 
-	public byte allocate(int bytes) throws DWDECBFileSystemFullException, IOException
+	public byte allocate(int bytes) throws DWFileSystemFullException, IOException
 	{
 		int allocated = 0;
 	
@@ -160,7 +162,7 @@ public class DWDECBFileSystemFAT
 		// check for free space
 		
 		if (this.getFreeGanules() < granulesneeded)
-			throw (new DWDECBFileSystemFullException("Need " + granulesneeded + " granules, have only " + this.getFreeGanules() + " free."));
+			throw (new DWFileSystemFullException("Need " + granulesneeded + " granules, have only " + this.getFreeGanules() + " free."));
 		
 		
 		byte lastgran = this.getFreeGranule();

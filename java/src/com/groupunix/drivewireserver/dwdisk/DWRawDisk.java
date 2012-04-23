@@ -1,6 +1,7 @@
 package com.groupunix.drivewireserver.dwdisk;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.util.Vector;
 
 import org.apache.commons.vfs.Capability;
 import org.apache.commons.vfs.FileObject;
@@ -10,6 +11,7 @@ import org.apache.commons.vfs.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWImageHasNoSourceException;
@@ -23,6 +25,7 @@ public class DWRawDisk extends DWDisk {
 
 	
 	private static final Logger logger = Logger.getLogger("DWServer.DWRawDisk");
+	private boolean direct = false;
 	
 	
 	public DWRawDisk(FileObject fileobj, int sectorsize, int maxsectors) throws IOException, DWImageFormatException
@@ -53,6 +56,16 @@ public class DWRawDisk extends DWDisk {
 	}
 	
 	
+	public DWRawDisk(Vector<DWDiskSector> sectors)
+	{
+		// used only for temp objs..
+		
+		super();
+		
+		this.sectors = sectors;
+	}
+
+
 	private void setDefaultOptions(int sectorsize, int maxsectors)
 	{
 		// set internal info
@@ -104,7 +117,7 @@ public class DWRawDisk extends DWDisk {
 	public void load() throws IOException, DWImageFormatException 
 	{
 		// load file into sector array
-		boolean local = false;
+
 		int sector = 0;
 	    int sectorsize = this.getSectorSize();
 	    
@@ -115,9 +128,11 @@ public class DWRawDisk extends DWDisk {
 	    
 	   
 	    if ((this.fileobj.getName().toString()).startsWith("file://")) // && !(this.drive.getDiskDrives().getDWProtocolHandler().getConfig().getBoolean("CacheLocalImages",false)))
-	    	local = true;
+	    {
+	    	this.direct = true;
+	    }
 	    
-	    if (!local)
+	    if (!direct)
 	    {
 	    	logger.debug("Caching " + this.fileobj.getName() + " in memory");
 		    long memfree =  Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
@@ -421,6 +436,10 @@ public class DWRawDisk extends DWDisk {
 		catch (IOException e) 
 		{
 			logger.error("Error writing sectors in " + this.getFilePath() + ": " + e.getMessage() );
+		} 
+		catch (DWDiskInvalidSectorNumber e)
+		{
+			logger.error("Error writing sectors in " + this.getFilePath() + ": " + e.getMessage() );
 		}
 		
 		if (sectorswritten > 0)
@@ -509,6 +528,12 @@ public class DWRawDisk extends DWDisk {
 		
 		// not /256
 		return(DWDefs.DISK_CONSIDER_NO);
+	}
+	
+	@Override
+	public boolean getDirect()
+	{
+		return this.direct;
 	}
 	
 }

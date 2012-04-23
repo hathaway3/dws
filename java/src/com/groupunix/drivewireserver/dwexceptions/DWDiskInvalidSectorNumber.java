@@ -1,11 +1,11 @@
 package com.groupunix.drivewireserver.dwexceptions;
 
-public class DWDECBFileSystemInvalidFATException extends Exception 
+public class DWDiskInvalidSectorNumber extends Exception 
 {
 
 	private static final long serialVersionUID = 1L;
 
-	public DWDECBFileSystemInvalidFATException(String msg)
+	public DWDiskInvalidSectorNumber(String msg)
 	{
 		super(msg);
 	}

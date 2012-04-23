@@ -1,5 +1,7 @@
 package com.groupunix.drivewireserver;
 
+
+
 public class DWDefs
 {
 
@@ -220,7 +222,8 @@ public class DWDefs
 
 	public static final long SERVER_SLOW_OP = 200;
 
-	
+	public static final String[] LOG_LEVELS = {"ALL", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+
 
 	
 

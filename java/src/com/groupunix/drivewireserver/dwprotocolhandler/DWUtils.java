@@ -8,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.apache.commons.vfs.FileObject;
+
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
@@ -800,5 +802,7 @@ public class DWUtils
 	        tg = ptg;
 	    return tg;
 	}
+
+		
 		
 }

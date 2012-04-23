@@ -1,11 +1,11 @@
 package com.groupunix.drivewireserver.dwexceptions;
 
-public class DWDECBFileSystemBadFilenameException extends Exception 
+public class DWFileSystemInvalidDirectoryException extends Exception
 {
 
 	private static final long serialVersionUID = 1L;
 
-	public DWDECBFileSystemBadFilenameException(String msg)
+	public DWFileSystemInvalidDirectoryException(String msg)
 	{
 		super(msg);
 	}

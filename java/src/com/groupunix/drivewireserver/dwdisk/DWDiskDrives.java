@@ -6,13 +6,12 @@ import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 import java.util.Map.Entry;
+import java.util.Vector;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.vfs.FileContent;
 import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
@@ -20,6 +19,8 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.DECBDefs;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystem;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
@@ -238,7 +239,69 @@ public class DWDiskDrives
 	
 	
 	
-
+	public static DWDisk DiskFromFile(FileObject fileobj) throws DWImageFormatException, IOException
+	{
+		FileContent fc = fileobj.getContent();
+		long fobjsize = fc.getSize();
+		
+		// size check
+		if (fobjsize > Integer.MAX_VALUE)
+			throw new DWImageFormatException("Image too big, maximum size is " + Integer.MAX_VALUE + " bytes.");
+		
+		// get header
+		int hdrsize = (int) Math.min(DWDefs.DISK_IMAGE_HEADER_SIZE, fobjsize);
+		
+		byte[] header = new byte[hdrsize];
+		
+		if (hdrsize > 0)
+		{
+			int readres = 0;
+			InputStream fis = fc.getInputStream();
+			
+			while (readres < hdrsize)
+		    	readres += fis.read(header, readres, hdrsize - readres);
+			
+			fis.close();
+		}
+		
+		
+		// collect votes
+		Hashtable<Integer,Integer> votes = new Hashtable<Integer, Integer>();
+		
+		votes.put(DWDefs.DISK_FORMAT_DMK, DWDMKDisk.considerImage(header, fobjsize));
+		votes.put(DWDefs.DISK_FORMAT_RAW, DWRawDisk.considerImage(header, fobjsize));
+		votes.put(DWDefs.DISK_FORMAT_VDK, DWVDKDisk.considerImage(header, fobjsize));
+		votes.put(DWDefs.DISK_FORMAT_JVC, DWJVCDisk.considerImage(header, fobjsize));
+		votes.put(DWDefs.DISK_FORMAT_CCB, DWCCBDisk.considerImage(header, fobjsize));
+		
+		int format = getBestFormat(votes);
+		
+		switch(format)
+		{
+			case DWDefs.DISK_FORMAT_DMK:
+				return(new DWDMKDisk(fileobj));
+			
+			case DWDefs.DISK_FORMAT_VDK:
+				return(new DWVDKDisk(fileobj));
+				
+			case DWDefs.DISK_FORMAT_JVC:
+				return(new DWJVCDisk(fileobj));
+				
+			case DWDefs.DISK_FORMAT_CCB:
+				return(new DWCCBDisk(fileobj));
+				
+			case DWDefs.DISK_FORMAT_RAW:
+				return(new DWRawDisk(fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
+				
+				
+			default:
+				//this.LoadDisk(driveno, new DWRawDisk( fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
+				
+				throw new DWImageFormatException("Unsupported image format");
+				
+		}
+	}
+	
 
 	public void LoadDiskFromFile(int driveno, String path) throws DWDriveNotValidException, DWDriveAlreadyLoadedException, IOException, DWImageFormatException
 	{
@@ -252,75 +315,7 @@ public class DWDiskDrives
 			
 			if (fileobj.exists() && fileobj.isReadable())
 			{
-				
-				FileContent fc = fileobj.getContent();
-				long fobjsize = fc.getSize();
-				
-				// size check
-				if (fobjsize > Integer.MAX_VALUE)
-					throw new DWImageFormatException("Image too big, maximum size is " + Integer.MAX_VALUE + " bytes.");
-				
-				// get header
-				int hdrsize = (int) Math.min(DWDefs.DISK_IMAGE_HEADER_SIZE, fobjsize);
-				
-				byte[] header = new byte[hdrsize];
-				
-				if (hdrsize > 0)
-				{
-					int readres = 0;
-					InputStream fis = fc.getInputStream();
-					
-					while (readres < hdrsize)
-				    	readres += fis.read(header, readres, hdrsize - readres);
-					
-					fis.close();
-				}
-				
-				
-				// collect votes
-				Hashtable<Integer,Integer> votes = new Hashtable<Integer, Integer>();
-				
-				votes.put(DWDefs.DISK_FORMAT_DMK, DWDMKDisk.considerImage(header, fobjsize));
-				votes.put(DWDefs.DISK_FORMAT_RAW, DWRawDisk.considerImage(header, fobjsize));
-				votes.put(DWDefs.DISK_FORMAT_VDK, DWVDKDisk.considerImage(header, fobjsize));
-				votes.put(DWDefs.DISK_FORMAT_JVC, DWJVCDisk.considerImage(header, fobjsize));
-				votes.put(DWDefs.DISK_FORMAT_CCB, DWCCBDisk.considerImage(header, fobjsize));
-				
-				int format = getBestFormat(votes);
-				
-				switch(format)
-				{
-					case DWDefs.DISK_FORMAT_DMK:
-						logger.debug("trying dmk image load");
-						this.LoadDisk(driveno, new DWDMKDisk(fileobj));
-						break;
-						
-					case DWDefs.DISK_FORMAT_VDK:
-						logger.debug("trying vdk image load");
-						this.LoadDisk(driveno, new DWVDKDisk(fileobj));
-						break;
-						
-					case DWDefs.DISK_FORMAT_JVC:
-						logger.debug("trying jvc image load");
-						this.LoadDisk(driveno, new DWJVCDisk(fileobj));
-						break;
-						
-					case DWDefs.DISK_FORMAT_CCB:
-						logger.debug("trying ccb image load");
-						this.LoadDisk(driveno, new DWCCBDisk(fileobj));
-						break;
-					
-					case DWDefs.DISK_FORMAT_RAW:
-						this.LoadDisk(driveno, new DWRawDisk(fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
-						break;
-						
-						
-					default:
-						//this.LoadDisk(driveno, new DWRawDisk( fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
-						
-						throw new DWImageFormatException("Unsupported image format");
-						
-				}
+				this.LoadDisk(driveno, DWDiskDrives.DiskFromFile(fileobj));
 								
 			}
 			else
@@ -339,7 +334,7 @@ public class DWDiskDrives
 	}
 	
 	
-	private int getBestFormat(Hashtable<Integer, Integer> votes) throws DWImageFormatException
+	private static int getBestFormat(Hashtable<Integer, Integer> votes) throws DWImageFormatException
 	{
 		// who wants it.. lets get silly playing with java collections
 		
@@ -566,7 +561,7 @@ public class DWDiskDrives
 		if (!this.isLoaded(driveno))
 			throw (new DWDriveNotLoadedException("No disk in drive " + driveno));
 		
-		DWDECBFileSystem.format(this.getDisk(driveno));
+		new DWDECBFileSystem(this.getDisk(driveno)).format();
 		
 	}
 	
@@ -601,40 +596,10 @@ public class DWDiskDrives
 				
 				
 				// DECB? no 100% sure way that i know of
-				if (sectors.size() == 630)
-				{
-					DWDECBFileSystem fs = new DWDECBFileSystem(sectors);
+				DWDECBFileSystem fs = new DWDECBFileSystem(new DWRawDisk(sectors));
 					
-					List<DWDECBFileSystemDirEntry> dir = fs.getDirectory();
-					
-					// look for wacky directory entries?
-					boolean wacky = false;
-					for (DWDECBFileSystemDirEntry e : dir)
-					{
-						
-						if ((e.getFirstGranule() > DECBDefs.FAT_SIZE) || (e.getFileType() > 3) || ((e.getFileFlag() != 0) && (e.getFileFlag() != (byte)255)) )
-						{
-							wacky = true;
-						}
-					}
-					
-					// look for wacky fat
-					for (int i = 0; i < 256;i++)
-					{
-						int val = (0xFF & sectors.get(0).getData()[i]);
-						
-						if ((val > DECBDefs.FAT_SIZE) && (val < 0xC0))
-							wacky = true;
-						
-						if ((val > 0xC9) && (val < 0xFF))
-							wacky = true;
-						
-					}
-					
-					
-					if (!wacky)
-						return(DWDefs.DISK_FILESYSTEM_DECB);
-				}
+				if (fs.isValidFS())
+					return(DWDefs.DISK_FILESYSTEM_DECB);
 				
 			}
 		}
