@@ -16,11 +16,9 @@ import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DECBDefs;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystem;
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;

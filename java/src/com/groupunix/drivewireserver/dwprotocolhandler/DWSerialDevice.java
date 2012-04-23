@@ -8,16 +8,12 @@ import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.TooManyListenersException;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWSerialDevice implements DWProtocolDevice

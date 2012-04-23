@@ -3,17 +3,16 @@ package com.groupunix.drivewireserver.dwdisk.filesystem;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import com.groupunix.drivewireserver.dwdisk.DWDisk;
 import com.groupunix.drivewireserver.dwdisk.DWDiskSector;
-import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
-import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFileNotFoundException;
-import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFullException;
-import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATException;
 import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveWriteProtectedException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFileNotFoundException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFullException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidDirectoryException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATException;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
 

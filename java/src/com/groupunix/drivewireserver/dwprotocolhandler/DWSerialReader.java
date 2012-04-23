@@ -1,12 +1,11 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
+import gnu.io.SerialPortEvent;
+import gnu.io.SerialPortEventListener;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
-import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
 
 public class DWSerialReader implements SerialPortEventListener
 {

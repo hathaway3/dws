@@ -20,9 +20,7 @@ import javax.sound.midi.Synthesizer;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
