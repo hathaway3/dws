@@ -16,6 +16,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFullException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidDirectoryException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
+import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
 
@@ -31,9 +32,9 @@ public class DWDECBFileSystem extends DWFileSystem
 		super(disk);
 	}
 	
-	public List<DWDECBFileSystemDirEntry> getDirectory() throws IOException, DWFileSystemInvalidDirectoryException	
+	public List<DWFileSystemDirEntry> getDirectory(String path) throws IOException, DWFileSystemInvalidDirectoryException	
 	{
-		List<DWDECBFileSystemDirEntry> dir = new ArrayList<DWDECBFileSystemDirEntry>();
+		List<DWFileSystemDirEntry> dir = new ArrayList<DWFileSystemDirEntry>();
 		
 		try
 		{
@@ -65,7 +66,7 @@ public class DWDECBFileSystem extends DWFileSystem
 		
 		try
 		{
-			for (DWDECBFileSystemDirEntry e : this.getDirectory())
+			for (DWFileSystemDirEntry e : this.getDirectory(null))
 			{
 				if ((e.getFileName().trim() + "." + e.getFileExt()).equalsIgnoreCase(filename))
 				{
@@ -85,15 +86,15 @@ public class DWDECBFileSystem extends DWFileSystem
 	{
 		
 			
-		return(getFAT().getFileSectors(disk.getSectors(), getDirEntry(filename).getFirstGranule()));
+		return(getFAT().getFileSectors(disk.getSectors(), ((DWDECBFileSystemDirEntry) getDirEntry(filename)).getFirstGranule()));
 		
 	}
 
 
-	public DWDECBFileSystemDirEntry getDirEntry(String filename) throws DWFileSystemFileNotFoundException, IOException, DWFileSystemInvalidDirectoryException
+	public DWFileSystemDirEntry getDirEntry(String filename) throws DWFileSystemFileNotFoundException, IOException, DWFileSystemInvalidDirectoryException
 	{
 		
-		for (DWDECBFileSystemDirEntry e : this.getDirectory())
+		for (DWFileSystemDirEntry e : this.getDirectory(null))
 		{
 			if ((e.getFileName().trim() + "." + e.getFileExt()).equalsIgnoreCase(filename))
 			{
@@ -107,12 +108,13 @@ public class DWDECBFileSystem extends DWFileSystem
 
 	public byte[] getFileContents(String filename) throws DWFileSystemFileNotFoundException, DWFileSystemInvalidFATException, IOException, DWDiskInvalidSectorNumber, DWFileSystemInvalidDirectoryException
 	{
-				
+			
+		
 		byte[] res = new byte[0];
 		
 		ArrayList<DWDiskSector> sectors = this.getFileSectors(filename);
 		
-		int bl = getDirEntry(filename).getBytesInLastSector();
+		int bl = ((DWDECBFileSystemDirEntry) getDirEntry(filename)).getBytesInLastSector();
 		
 		if ((sectors != null) && (sectors.size() > 0))
 		{
@@ -133,7 +135,6 @@ public class DWDECBFileSystem extends DWFileSystem
 			
 		}
 		
-	
 		return res;
 	}
 	
@@ -178,7 +179,7 @@ public class DWDECBFileSystem extends DWFileSystem
 	}
 
 
-	private DWDECBFileSystemFAT getFAT() throws DWFileSystemInvalidFATException, DWDiskInvalidSectorNumber
+	public DWDECBFileSystemFAT getFAT() throws DWFileSystemInvalidFATException, DWDiskInvalidSectorNumber
 	{
 		if (disk.getDiskSectors() < DECBDefs.FAT_OFFSET)
 		{
@@ -190,13 +191,13 @@ public class DWDECBFileSystem extends DWFileSystem
 
 	private void addDirectoryEntry(String filename, byte firstgran, byte leftovers) throws DWFileSystemFullException, DWFileSystemInvalidFilenameException, IOException, DWDiskInvalidSectorNumber, DWFileSystemInvalidDirectoryException
 	{
-		List<DWDECBFileSystemDirEntry> dr = this.getDirectory();
+		List<DWFileSystemDirEntry> dr = this.getDirectory(null);
 		
 		int dirsize = 0;
 		
-		for (DWDECBFileSystemDirEntry d : dr)
+		for (DWFileSystemDirEntry d : dr)
 		{
-			if (d.isUsed())
+			if (((DWDECBFileSystemDirEntry) d).isUsed())
 				dirsize++;
 		}
 		
@@ -310,7 +311,7 @@ public class DWDECBFileSystem extends DWFileSystem
 		return FSNAME;
 	}
 
-
+	/*
 	@Override
 	public boolean isValidFS()
 	{
@@ -387,6 +388,95 @@ public class DWDECBFileSystem extends DWFileSystem
 		else
 		{
 			this.fserrors.add("Disk size of " + this.disk.getDiskSectors() + " doesn't match known DECB image size");
+		}
+		
+		return false;
+	}
+
+	*/
+	
+	
+	@Override
+	public boolean isValidFS()
+	{
+		if (this.disk.getSectors().size() == 630)
+		{
+			boolean wacky = false;
+			
+			try
+			{
+				List<DWFileSystemDirEntry> dir = this.getDirectory(null);
+				
+				// look for wacky directory entries
+				
+				for (DWFileSystemDirEntry e : dir)
+				{
+					
+					if (((DWDECBFileSystemDirEntry) e).getFirstGranule() > DECBDefs.FAT_SIZE)
+					{
+						this.fserrors.add(e.getFileName() + "." + e.getFileExt() + ": First granule of " + ((DWDECBFileSystemDirEntry) e).getFirstGranule() +  " is > FAT size");
+						wacky = true;
+					}
+					// Some applications use their own filetypes, so remove this.. found .MUS = type 4
+					//else if (e.getFileType() > 3)
+					//{
+					//	System.out.println(e.getFileName() + "." + e.getFileExt() + ": FileType of " + e.getFileType() + " is > 3..?");
+					//	wacky = true;
+					//}
+					else if ( (((DWDECBFileSystemDirEntry) e).getFileFlag() != 0) && (((DWDECBFileSystemDirEntry) e).getFileFlag() != 255) ) 
+					{
+						this.fserrors.add(e.getFileName() + "." + e.getFileExt() + ": FileFlag of " + ((DWDECBFileSystemDirEntry) e).getFileFlag() + " is not defined..?");
+						wacky = true;
+					}
+				}
+				
+				// look for wacky fat
+				for (int i = 0; i < DECBDefs.FAT_SIZE;i++)
+				{
+					int val;
+					
+					try
+					{
+						val = (0xFF & this.disk.getSector(DECBDefs.FAT_OFFSET).getData()[i]);
+						
+						if (((val > DECBDefs.FAT_SIZE) && (val < 0xC0)) || ((val > 0xCF) && (val < 0xFF)))
+						{
+							this.fserrors.add("FAT entry #"+ i + " is " + val + ", which points beyond FAT");
+							wacky = true;
+						}
+						
+					} 
+					catch (IOException e1)
+					{
+						this.fserrors.add(e1.getMessage());
+						wacky = true;
+					} 
+					catch (DWDiskInvalidSectorNumber e)
+					{
+						wacky = true;
+						this.fserrors.add(e.getMessage());
+					}
+					
+				}
+			}
+			catch (IOException e)
+			{
+				wacky = true;
+				this.fserrors.add(e.getMessage());
+			} 
+			catch (DWFileSystemInvalidDirectoryException e)
+			{
+				wacky = true;
+				this.fserrors.add(e.getMessage());
+			} 
+			
+			
+			if (!wacky)
+				return(true);
+		}
+		else
+		{
+			this.fserrors.add("Disk size doesn't match known DECB image size");
 		}
 		
 		return false;

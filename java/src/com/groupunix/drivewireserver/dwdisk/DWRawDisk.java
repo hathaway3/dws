@@ -32,19 +32,34 @@ public class DWRawDisk extends DWDisk {
 	{
 		super(fileobj);
 		
+		commonConstructor(false, sectorsize, maxsectors);
+	}
+	
+	
+	public DWRawDisk(FileObject fileobj, int sectorsize, int maxsectors, boolean forcecache) throws IOException, DWImageFormatException
+	{
+		super(fileobj);
+		
+		commonConstructor(forcecache, sectorsize, maxsectors);
+	}
+	
+	
+	private void commonConstructor(boolean forcecache, int sectorsize, int maxsectors) throws IOException, DWImageFormatException
+	{
 		// expose user options
 		this.setParam("syncfrom",DWDefs.DISK_DEFAULT_SYNCFROM);
 		this.setParam("syncto",DWDefs.DISK_DEFAULT_SYNCTO);
 		
 		setDefaultOptions(sectorsize, maxsectors);
 		
-		load();
+		load(forcecache);
 		
 		logger.debug("New DWRawDisk for '" + this.getFilePath() + "'");
-		
 	}
-	
-	
+
+
+
+
 	public DWRawDisk(int sectorsize, int maxsectors)
 	{
 		super();
@@ -112,9 +127,12 @@ public class DWRawDisk extends DWDisk {
 	}
 
 	
-	
+	public void load() throws IOException, DWImageFormatException
+	{
+		this.load(false);
+	}
 
-	public void load() throws IOException, DWImageFormatException 
+	public void load(boolean forcecache) throws IOException, DWImageFormatException 
 	{
 		// load file into sector array
 
@@ -126,12 +144,14 @@ public class DWRawDisk extends DWDisk {
 	    if ((filesize > Integer.MAX_VALUE) || ((filesize / this.getSectorSize()) > DWDefs.DISK_MAXSECTORS))
 	    	throw new DWImageFormatException("Image file is too large");
 	    
-	   
-	    if ((this.fileobj.getName().toString()).startsWith("file://")) // && !(this.drive.getDiskDrives().getDWProtocolHandler().getConfig().getBoolean("CacheLocalImages",false)))
+	    if (!forcecache)
 	    {
-	    	this.direct = true;
+		    if (  (this.fileobj.getName().toString()).startsWith("file://")) // && !(this.drive.getDiskDrives().getDWProtocolHandler().getConfig().getBoolean("CacheLocalImages",false)))
+		    {
+		    	this.direct = true;
+		    }
 	    }
-	    
+		    
 	    if (!direct)
 	    {
 	    	logger.debug("Caching " + this.fileobj.getName() + " in memory");

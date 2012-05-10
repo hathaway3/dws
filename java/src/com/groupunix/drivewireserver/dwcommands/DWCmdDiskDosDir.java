@@ -7,6 +7,7 @@ import java.util.Collections;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystemDirEntry;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidDirectoryException;
@@ -72,9 +73,9 @@ public class DWCmdDiskDosDir extends DWCommand
 		
 		ArrayList<String> dir = new ArrayList<String>();
 		
-		for (DWDECBFileSystemDirEntry e : tmp.getDirectory())
+		for (DWFileSystemDirEntry e : tmp.getDirectory(null))
 		{
-			if (e.isUsed())
+			if (((DWDECBFileSystemDirEntry) e).isUsed())
 				dir.add(e.getFileName() + "." + e.getFileExt());  //  + " " + e.getFirstGranule() + " " + e.getBytesInLastSector() + " " + e.getFileFlag() + " " + e.getFileType()
 		}
 		

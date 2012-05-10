@@ -8,8 +8,11 @@ public abstract class DWFileSystemDirEntry
 	
 	public DWFileSystemDirEntry(byte[] buf)
 	{
-		this.data = new byte[buf.length];
-		System.arraycopy(buf, 0, this.data, 0, buf.length);
+		if (buf != null)
+		{
+			this.data = new byte[buf.length];
+			System.arraycopy(buf, 0, this.data, 0, buf.length);
+		}
 	}
 
 	public abstract String getFileName();

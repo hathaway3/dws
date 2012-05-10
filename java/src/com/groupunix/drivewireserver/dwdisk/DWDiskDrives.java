@@ -13,6 +13,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.vfs.FileContent;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
@@ -236,9 +237,18 @@ public class DWDiskDrives
 	}
 	
 	
-	
 	public static DWDisk DiskFromFile(FileObject fileobj) throws DWImageFormatException, IOException
 	{
+		return(DiskFromFile(fileobj, false));
+	}
+	
+	public static DWDisk DiskFromFile(FileObject fileobj, boolean forcecache) throws DWImageFormatException, IOException
+	{
+		if (fileobj.getType() != FileType.FILE)
+		{
+			throw(new DWImageFormatException("Attempt to load image from non file"));
+		}
+		
 		FileContent fc = fileobj.getContent();
 		long fobjsize = fc.getSize();
 		
@@ -289,7 +299,7 @@ public class DWDiskDrives
 				return(new DWCCBDisk(fileobj));
 				
 			case DWDefs.DISK_FORMAT_RAW:
-				return(new DWRawDisk(fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS));
+				return(new DWRawDisk(fileobj, DWDefs.DISK_SECTORSIZE , DWDefs.DISK_MAXSECTORS, forcecache));
 				
 				
 			default:

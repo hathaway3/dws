@@ -371,11 +371,13 @@ public abstract class DWDisk
 			this.drive.submitEvent(key, val);
 		}
 	}
+	
 	public boolean getDirect()
 	{
 		
 		return false;
 	}
+	
 	public Vector<DWDiskSector> getSectors()
 	{
 		return this.sectors;

@@ -70,9 +70,9 @@ public class DWDECBFileSystemDirEntry extends DWFileSystemDirEntry
 			case 0:
 				return("BASIC");
 			case 1:
-				return("BASIC data");
+				return("Data");
 			case 2:
-				return("Machine language");
+				return("ML");
 			case 3:
 				return("Text");
 		}

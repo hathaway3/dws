@@ -168,6 +168,7 @@ public class DWDefs
 	public static final int DISK_FILESYSTEM_LWFS = 2;
 	public static final int DISK_FILESYSTEM_CCB = 3;
 	public static final int DISK_FILESYSTEM_UNKNOWN = -1;
+	public static final int DISK_FORMAT_SIDE = 4;
 	
 	// help
 	
@@ -223,6 +224,8 @@ public class DWDefs
 	public static final long SERVER_SLOW_OP = 200;
 
 	public static final String[] LOG_LEVELS = {"ALL", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+
+	
 
 
 	

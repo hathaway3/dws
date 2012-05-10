@@ -173,10 +173,10 @@ public class DWJVCDisk extends DWDisk
 	    	if (header.getSectorAttributes() == 0)
 	    	{
 	    		// not sure what the smallest actual sector is, but this helps prevent FPs..
-	    		if ((header.getSectorSize() > 127) && fobjsize >= header.getSectorSize())
-	    		// is filesize right..
-	    		if ((fobjsize - headerlen) % header.getSectorSize() == 0)
-	    			return DWDefs.DISK_CONSIDER_MAYBE;
+	    		if ((header.getSectorSize() == 256) && fobjsize >= header.getSectorSize())
+	    			// is filesize right..
+	    			if ((fobjsize - headerlen) % header.getSectorSize() == 0)
+	    				return DWDefs.DISK_CONSIDER_MAYBE;
 	    	}
 	    	
 	    }

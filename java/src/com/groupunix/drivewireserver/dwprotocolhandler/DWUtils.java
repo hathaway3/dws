@@ -752,7 +752,7 @@ public class DWUtils
 					res = "JVC";
 					break;
 				case DWDefs.DISK_FORMAT_RAW:
-					res = "Raw sectors";
+					res = "DSK (raw)";
 					break;
 				case DWDefs.DISK_FORMAT_VDK:
 					res = "VDK";
@@ -801,6 +801,37 @@ public class DWUtils
 	    return tg;
 	}
 
+		public static String OS9String(byte[] buf)
+		{
+			String res = "";
+			
+			int pos = 0;
+			
+			while( (pos < buf.length) && ((buf[pos] & 0xFF) < 128))
+			{
+				res += (char) (buf[pos] & 0xff);
+				pos++;
+			}
+			
+			if (pos < buf.length)
+				res += (char) ((buf[pos] & 0xff) - 128);
+			
+			return res;
+		}
+
+		public static String pretty5ByteDateTime(byte[] data)
+		{
+			String res = String.format("%02d:%02d %02d/%02d/%04d", (data[3] & 0xff), (data[4] & 0xff), (data[1] & 0xff), (data[2] & 0xff), (1900 + (data[0] & 0xff)));
+			
+			return res;
+		}
+
 		
+		public static String pretty3ByteDate(byte[] data)
+		{
+			String res = String.format("%02d/%02d/%04d", (data[1] & 0xff), (data[2] & 0xff), (1900 + (data[0] & 0xff)));
+			
+			return res;
+		}
 		
 }

@@ -93,6 +93,22 @@ public class DWDECBFileSystemFAT
 		return(res);
 	}
 	
+	
+	public ArrayList<Byte> getFileGranules(byte granule) throws DWFileSystemInvalidFATException, IOException
+	{
+		ArrayList<Byte> res = new ArrayList<Byte>();
+		
+		while (!this.isLastEntry(granule))
+		{
+			res.add(granule);
+			granule = getEntry(granule);
+		}
+		
+		return(res);
+	}
+	
+	
+	
 	private List<DWDiskSector> getGranuleSectors(Vector<DWDiskSector> sectors, byte granule)
 	{
 		List<DWDiskSector> res = new ArrayList<DWDiskSector>();
@@ -126,6 +142,11 @@ public class DWDECBFileSystemFAT
 				return(this.sector.getData()[(granule & 0xFF)]);
 		else
 			throw (new DWFileSystemInvalidFATException("Invalid granule #" + granule));
+	}
+	
+	public byte getGranuleByte(byte granule) throws IOException
+	{
+		return this.sector.getData()[(granule & 0xFF)];
 	}
 	
 	public boolean isLastEntry(byte entry)

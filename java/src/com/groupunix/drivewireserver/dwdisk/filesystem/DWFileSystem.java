@@ -26,13 +26,13 @@ public abstract class DWFileSystem
 	}
 	
 
-	public abstract List<DWDECBFileSystemDirEntry> getDirectory() throws IOException, DWFileSystemInvalidDirectoryException;
+	public abstract List<DWFileSystemDirEntry> getDirectory(String path) throws IOException, DWFileSystemInvalidDirectoryException;
 	
 	public abstract boolean hasFile(String filename) throws IOException;
 		
 	public abstract ArrayList<DWDiskSector> getFileSectors(String filename) throws DWFileSystemFileNotFoundException, DWFileSystemInvalidFATException, IOException, DWDiskInvalidSectorNumber, DWFileSystemInvalidDirectoryException;
 	
-	public abstract DWDECBFileSystemDirEntry getDirEntry(String filename) throws DWFileSystemFileNotFoundException, IOException, DWFileSystemInvalidDirectoryException;
+	public abstract DWFileSystemDirEntry getDirEntry(String filename) throws DWFileSystemFileNotFoundException, IOException, DWFileSystemInvalidDirectoryException;
 	
 	public abstract byte[] getFileContents(String filename) throws DWFileSystemFileNotFoundException, DWFileSystemInvalidFATException, IOException, DWDiskInvalidSectorNumber, DWFileSystemInvalidDirectoryException;
 	

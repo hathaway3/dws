@@ -4,14 +4,12 @@
   <property environment="env"/>
 
   <path id="project.class.path">
-    <pathelement location="war/WEB-INF/classes"/>
     <fileset dir="lib" includes="*.jar"/>
   </path>
 
 
   <target name="javac" description="Compile java source">
-    <mkdir dir="war/WEB-INF/classes"/>
-    <javac srcdir="src" includes="**" encoding="utf-8"
+   <javac srcdir="src" includes="**" encoding="utf-8"
         destdir="war/WEB-INF/classes"
         source="1.5" target="1.5" nowarn="true"
         debug="true" debuglevel="lines,vars,source">
@@ -22,36 +20,9 @@
     </copy>
   </target>
 
-  <target name="gwtc" depends="javac" description="GWT compile to JavaScript">
-    <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
-      <classpath>
-        <pathelement location="src"/>
-        <path refid="project.class.path"/>
-      </classpath>
-      <!-- add jvmarg -Xss16M or similar if you see a StackOverflowError -->
-      <jvmarg value="-Xmx256M"/>
-      <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
-  	  <arg value="-localWorkers"/>
-  	  <arg value="2"/>
-      <arg value="com.mynumnum.drivewire.DriveWireGWT"/>
-    </java>
-  </target>
+  
 
-	<target name="devmode" depends="javac" description="Run development mode">
-		<java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
-	  		<classpath>
-				<pathelement location="src"/>
-				<path refid="project.class.path"/>
-	  		</classpath>
-	  		<jvmarg value="-Xmx256M"/>
-	  		<arg value="-startupUrl"/>
-	  		<arg value="test.html"/>
-	  		<!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
-	  		<arg value="com.mynumnum.drivewire"/>
-		</java>
-	</target>
 
-	<target name="hosted" depends="devmode" description="Run development mode (NOTE: the 'hosted' target is deprecated)" />
 
 	<target name="build" depends="javac" description="Build this project" />
 
@@ -68,10 +39,6 @@
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="${basedir}/war/WEB-INF/classes"/>
-            <fileset dir="${basedir}/war/" includes="*.html" />
-            <fileset dir="${basedir}/war/" includes="*.css" />
-            <fileset dir="${basedir}/war/" includes="*.gif" />
-            <fileset dir="${basedir}/war/" includes="drivewiregwt/**" />
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-collections-3.2.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-configuration-1.6.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/commons-lang-2.4.jar"/>
@@ -85,10 +52,7 @@
         	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jsch-0.1.42.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jasypt-1.6.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/log4j-1.2.15.jar"/>
-			<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jetty-6.1H.22.jar"/>
-			<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/jetty-util-6.1H.22.jar"/>
-			<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/servlet-api-2.5-20081211.jar"/>
-        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/gwt-servlet.jar"/>
+
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/ostermillerutils_1_07_00.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/RXTXcomm.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/slf4j-api-1.5.10.jar"/>

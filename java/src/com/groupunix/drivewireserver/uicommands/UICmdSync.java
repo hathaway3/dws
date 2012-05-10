@@ -44,10 +44,12 @@ public class UICmdSync extends DWCommand {
 			
 			sendEvent(DriveWireServer.getServerStatusEvent());
 			
+			/*
 			for (DWEvent e : DriveWireServer.getLogCache())
 			{
 				sendEvent(e);
 			}
+			*/
 			
 			// ready for new log events
 			this.dwuiref.setDropLog(false);
