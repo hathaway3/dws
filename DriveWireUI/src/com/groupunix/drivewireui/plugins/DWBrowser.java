@@ -1,4 +1,4 @@
-package com.groupunix.drivewireui;
+package com.groupunix.drivewireui.plugins;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,20 +12,20 @@ import org.eclipse.swt.browser.LocationAdapter;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.TitleEvent;
 import org.eclipse.swt.browser.TitleListener;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.ShellAdapter;
-import org.eclipse.swt.events.ShellEvent;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
@@ -35,66 +35,155 @@ import org.eclipse.wb.swt.SWTResourceManager;
 
 import swing2swt.layout.BorderLayout;
 
-public class DWBrowser extends Shell
+import com.groupunix.drivewireui.GradientHelper;
+import com.groupunix.drivewireui.MainWin;
+import com.groupunix.drivewireui.SendCommandWin;
+
+public class DWBrowser extends Composite
 {
+	public final static int LTYPE_LOCAL_ROOT = 0;
+	public final static int LTYPE_LOCAL_FOLDER = 1;
+	public final static int LTYPE_LOCAL_ENTRY = 2;
+	public final static int LTYPE_NET_ROOT = 10;
+	public final static int LTYPE_NET_FOLDER = 11;
+	public final static int LTYPE_NET_ENTRY = 12;
+	public final static int LTYPE_CLOUD_ROOT = 20;
+	public final static int LTYPE_CLOUD_FOLDER = 21;
+	public final static int LTYPE_CLOUD_ENTRY = 22;
+	
 	private Browser browser;
 	private Composite header;
-	private Composite footer;
+
 
 	private ToolItem tltmBack;
 	private ToolItem tltmForward;
 	private ToolItem tltmReload;
 	private Combo comboURL;
 	private Spinner spinnerDrive;
-	private Label lblWorkingDrive;
-	private ToolItem tltmAppend;
 	
-	/**
-	 * Create the shell.
-	 * @param display
-	 */
-	public DWBrowser(Display display)
+	private Canvas canvas;
+
+	private CTabItem ourtab;
+	
+	
+	
+	public DWBrowser(final Composite parent, String url, final CTabItem ourtab)
 	{
-		super(display, SWT.SHELL_TRIM);
-		
-		setText("DW Browser");
-		setSize(800, 600);
+		super(parent, SWT.BORDER);
+		this.ourtab = ourtab;
 		
 		setLayout(new BorderLayout(0, 0));
 		
+		//setBounds(comp.getBounds());
 		
-		addShellListener(new ShellAdapter() {
-			
+		header = new Composite(this, SWT.NONE);
+		header.setLayoutData(BorderLayout.NORTH);
+		header.setLayout(new FormLayout());
+		
+		GradientHelper.applyVerticalGradientBG(header, MainWin.getDisplay().getSystemColor(SWT.COLOR_TITLE_BACKGROUND_GRADIENT),MainWin.getDisplay().getSystemColor(SWT.COLOR_TITLE_BACKGROUND));
+		
+		header.addListener(SWT.Resize, new Listener() {
 
 			@Override
-			public void shellClosed(ShellEvent e) 
+			public void handleEvent(Event event)
 			{
-			
-				MainWin.config.setProperty("Browser_Width", getSize().x);
-				MainWin.config.setProperty("Browser_Height", getSize().y);
-					
-				MainWin.config.setProperty("Browser_x", getLocation().x);
-				MainWin.config.setProperty("Browser_y", getLocation().y);
+				GradientHelper.applyVerticalGradientBG(header, MainWin.getDisplay().getSystemColor(SWT.COLOR_TITLE_BACKGROUND_GRADIENT),MainWin.getDisplay().getSystemColor(SWT.COLOR_TITLE_BACKGROUND));
 				
+				
+			} } );
+		
+		header.setBackgroundMode(SWT.INHERIT_FORCE);
+		
+		ToolBar toolBar = new ToolBar(header, SWT.FLAT | SWT.RIGHT);
+		
+		FormData fd_toolBar = new FormData();
+		fd_toolBar.top = new FormAttachment(0, 5);
+		fd_toolBar.left = new FormAttachment(1, 5);
+		toolBar.setLayoutData(fd_toolBar);
+		
+		tltmBack = new ToolItem(toolBar, SWT.NONE);
+		tltmBack.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				browser.back();
 			}
 		});
+		tltmBack.setWidth(30);
+		tltmBack.setImage(SWTResourceManager.getImage(DWBrowser.class, "/toolbar/arrow-left-3.png"));
+		
+		tltmForward = new ToolItem(toolBar, SWT.NONE);
+		tltmForward.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				browser.forward();
+			}
+		});
+		tltmForward.setWidth(30);
+		tltmForward.setImage(SWTResourceManager.getImage(DWBrowser.class, "/toolbar/arrow-right-3.png"));
+		
+		tltmReload = new ToolItem(toolBar, SWT.NONE);
+		tltmReload.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				browser.refresh();
+			}
+		});
+		tltmReload.setWidth(30);
+		tltmReload.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/view-refresh-7.png"));
+		
+		comboURL = new Combo(header, SWT.NONE);
+		comboURL.setBackground(new Color(MainWin.getDisplay(), 255,255,255));
+		comboURL.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == 13)
+				{
+					browser.setUrl(comboURL.getText());
+				}
+				else if ((e.keyCode == 16777217) || (e.keyCode == 16777218))
+				{
+					e.doit = false;
+				}
+			}
+		});
+		comboURL.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				browser.setUrl(comboURL.getText());
+			}
+		});
+		fd_toolBar.right = new FormAttachment(comboURL, -6);
+		
+		FormData fd_comboURL = new FormData();
+		fd_comboURL.left = new FormAttachment(0, 90);
+		fd_comboURL.right = new FormAttachment(100, -90);
+		fd_comboURL.bottom = new FormAttachment(100, -5);
+		fd_comboURL.top = new FormAttachment(2, 5);
+		comboURL.setLayoutData(fd_comboURL);
+		
+		canvas = new Canvas(header, SWT.NONE);
+		FormData fd_canvas = new FormData();
+		fd_canvas.left = new FormAttachment(100, -75);
+		fd_canvas.right = new FormAttachment(100, -55);
+		fd_canvas.top = new FormAttachment(2, 6);
+		fd_canvas.bottom = new FormAttachment(2, 28);
+		canvas.setLayoutData(fd_canvas);
+		
+		spinnerDrive = new Spinner(header, SWT.BORDER);
+		spinnerDrive.setBackground(new Color(MainWin.getDisplay(), 255,255,255));
+		spinnerDrive.setToolTipText("Working drive");
+		FormData fd_spinnerDrive = new FormData();
+		fd_spinnerDrive.bottom = new FormAttachment(100, -5);
+		fd_spinnerDrive.right = new FormAttachment(100, -5);
+		fd_spinnerDrive.left = new FormAttachment(100, -50);
+		spinnerDrive.setLayoutData(fd_spinnerDrive);
+		spinnerDrive.setMaximum(255);
+		
+		//DWBrowserUtils.GenerateHTMLDir("E:/cocodisks");
 		
 		
-		if (MainWin.config.containsKey("Browser_Width") && MainWin.config.containsKey("Browser_Height"))
-		{
-			setSize(MainWin.config.getInt("Browser_Width"), MainWin.config.getInt("Browser_Height"));
-		}
-		
-		if (MainWin.config.containsKey("Browser_x") && MainWin.config.containsKey("Browser_y"))
-		{
-			Point p = new Point(MainWin.config.getInt("Browser_x",0), MainWin.config.getInt("Browser_y",0));
-			
-			if (MainWin.isValidDisplayPos(p))
-				setLocation(p);
-		}
-		
-		
-		browser = new Browser(this, SWT.BORDER);
+		browser = new Browser(this, SWT.NONE);
 		
 		
 		browser.addLocationListener(new LocationAdapter() {
@@ -129,135 +218,43 @@ public class DWBrowser extends Shell
 				}
 			}
 		});
-		browser.setLayoutData(BorderLayout.CENTER);
 		
 		browser.addTitleListener( new TitleListener() {
 	         public void changed(TitleEvent event) {
-	        	 setText("DW Browser - " + event.title);
+	        	 ourtab.setText(event.title);
+	        	 ourtab.setImage(SWTResourceManager.getImage(MainWin.class, "/menu/www.png"));
 	          }
 	       });
 		
-		header = new Composite(this, SWT.NONE);
-		header.setLayoutData(BorderLayout.NORTH);
-		header.setLayout(new FormLayout());
 		
-		ToolBar toolBar = new ToolBar(header, SWT.FLAT | SWT.RIGHT);
-		FormData fd_toolBar = new FormData();
-		fd_toolBar.top = new FormAttachment(0, 5);
-		fd_toolBar.left = new FormAttachment(1, 5);
-		toolBar.setLayoutData(fd_toolBar);
 		
-		tltmBack = new ToolItem(toolBar, SWT.NONE);
-		tltmBack.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				browser.back();
-			}
-		});
-		tltmBack.setWidth(30);
-		tltmBack.setImage(SWTResourceManager.getImage(DWBrowser.class, "/toolbar/arrow-left-3.png"));
-		
-		tltmForward = new ToolItem(toolBar, SWT.NONE);
-		tltmForward.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				browser.forward();
-			}
-		});
-		tltmForward.setWidth(30);
-		tltmForward.setImage(SWTResourceManager.getImage(DWBrowser.class, "/toolbar/arrow-right-3.png"));
-		
-		tltmReload = new ToolItem(toolBar, SWT.NONE);
-		tltmReload.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				browser.refresh();
-			}
-		});
-		tltmReload.setWidth(30);
-		tltmReload.setImage(SWTResourceManager.getImage(DWBrowser.class, "/toolbar/arrow-refresh.png"));
-		
-		comboURL = new Combo(header, SWT.NONE);
-		
-		comboURL.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == 13)
-				{
-					browser.setUrl(comboURL.getText());
-				}
-				else if ((e.keyCode == 16777217) || (e.keyCode == 16777218))
-				{
-					e.doit = false;
-				}
-			}
-		});
-		comboURL.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				
-				browser.setUrl(comboURL.getText());
-			}
-		});
-		fd_toolBar.right = new FormAttachment(comboURL, -6);
-		
-		FormData fd_comboURL = new FormData();
-		fd_comboURL.left = new FormAttachment(0, 90);
-		fd_comboURL.right = new FormAttachment(100, -50);
-		fd_comboURL.bottom = new FormAttachment(100, -5);
-		fd_comboURL.top = new FormAttachment(2, 5);
-		comboURL.setLayoutData(fd_comboURL);
-		
-		loadURLs();
-		
-		Label lblDW4 = new Label(header, SWT.NONE);
-		lblDW4.setImage(SWTResourceManager.getImage(DWBrowser.class, "/dw/tiny4.png"));
-		FormData fd_progressBar = new FormData();
-		fd_progressBar.top = new FormAttachment(toolBar, 0, SWT.TOP);
-		fd_progressBar.bottom = new FormAttachment(toolBar, 0, SWT.BOTTOM);
-		fd_progressBar.height = 20;
-		fd_progressBar.left = new FormAttachment(100, -40);
-		fd_progressBar.right = new FormAttachment(100, -5);
-		lblDW4.setLayoutData(fd_progressBar);
-		
-		footer = new Composite(this, SWT.NONE);
-		footer.setLayoutData(BorderLayout.SOUTH);
-		
-		spinnerDrive = new Spinner(footer, SWT.BORDER);
-		spinnerDrive.setMaximum(255);
-		spinnerDrive.setBounds(10, 10, 47, 22);
-		
-		lblWorkingDrive = new Label(footer, SWT.NONE);
-		lblWorkingDrive.setBounds(65, 12, 92, 15);
-		lblWorkingDrive.setText("Working drive");
-		
-		ToolBar toolBar_1 = new ToolBar(footer, SWT.FLAT | SWT.RIGHT);
-		toolBar_1.setBounds(175, 4, 169, 33);
-		
-		tltmAppend = new ToolItem(toolBar_1, SWT.CHECK);
-		tltmAppend.setText("Append");
-		
-		ToolItem tltmDos = new ToolItem(toolBar_1, SWT.DROP_DOWN);
-		tltmDos.setText("DOS");
-		
-		browser.setUrl("http://www.lcurtisboyle.com/nitros9/coco_game_list.html");
-	}
-
-
-	
-	
-	
-	private void loadURLs()
-	{
-		int urls = MainWin.config.getMaxIndex("BrowserURL");
-		
-		for (int i = 0;i<=urls;i++)
+		if (url != null)
 		{
-			this.comboURL.add(MainWin.config.getString("BrowserURL(" + i + ")"));
+			browser.setUrl(url);
 		}
+		else
+		{
+			// browser.setUrl(MainWin.config.getString("Browser_homepage", "http://cococoding.com/cloud") );
+		}
+		
+	
+		
+		
 	}
 
+	
+	
 
+
+	public void openURL(String url)
+	{
+		browser.setUrl(url);
+		
+	}
+
+	
+	
+	
 
 
 
@@ -310,7 +307,7 @@ public class DWBrowser extends Shell
 								if (disk > 1)
 								{
 									// more than one dsk.. prompt
-									MessageBox messageBox = new MessageBox(this, SWT.ICON_QUESTION | SWT.YES | SWT.NO );
+									MessageBox messageBox = new MessageBox(MainWin.getDisplay().getActiveShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO );
 								    messageBox.setMessage("There are " + disk + " images in this archive.  Would you like to load them into drives " + this.spinnerDrive.getSelection() + " through " + (this.spinnerDrive.getSelection() + disk - 1) + "?");
 								    messageBox.setText("Multiple disk images found");
 								    int rc = messageBox.open();
@@ -364,6 +361,7 @@ public class DWBrowser extends Shell
 								String msg = "Please wait while the server appends to the image in drive " + this.spinnerDrive.getSelection() + ".";
 								List<String> cmds = new ArrayList<String>();
 								
+								/*
 								if (!this.tltmAppend.getSelection())
 								{
 									title = "Creating disk image...";
@@ -371,7 +369,7 @@ public class DWBrowser extends Shell
 									cmds.add("dw disk create " + this.spinnerDrive.getSelection());
 									cmds.add("dw disk dos format " + this.spinnerDrive.getSelection());
 								}
-								
+								*/
 								
 								for (FileObject f : fileobj.getChildren())
 								{
@@ -416,6 +414,7 @@ public class DWBrowser extends Shell
 					String msg = "Please wait while the server appends the file to the image in drive " + this.spinnerDrive.getSelection() + ".";
 					List<String> cmds = new ArrayList<String>();
 					
+					/*
 					if (!this.tltmAppend.getSelection())
 					{
 						title = "Creating disk image...";
@@ -423,6 +422,7 @@ public class DWBrowser extends Shell
 						cmds.add("dw disk create " + this.spinnerDrive.getSelection());
 						cmds.add("dw disk dos format " + this.spinnerDrive.getSelection());
 					}
+					*/
 					
 					cmds.add("dw disk dos add " + this.spinnerDrive.getSelection() + " " + url);
 					
@@ -439,7 +439,7 @@ public class DWBrowser extends Shell
 
 	private void showError(String title, String msg)
 	{
-		MessageBox messageBox = new MessageBox(this, SWT.ICON_ERROR | SWT.OK);
+		MessageBox messageBox = new MessageBox(MainWin.getDisplay().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
 	    messageBox.setMessage(msg);
 	    messageBox.setText(title);
 	    messageBox.open();
@@ -545,7 +545,7 @@ public class DWBrowser extends Shell
 	
 	protected void sendCommandDialog(final List<String> cmd, final String title, final String message) 
 	{
-		final Shell shell = this;
+		final Shell shell = MainWin.getDisplay().getActiveShell();
 		
 		this.getDisplay().asyncExec(
 				  new Runnable() {
@@ -557,7 +557,5 @@ public class DWBrowser extends Shell
 					  }
 				  });
 	}
-	
-	
 	
 }

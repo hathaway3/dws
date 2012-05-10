@@ -126,9 +126,20 @@ public class GrapherThread implements Runnable
 					@Override
 					public void run()
 					{
-						MainWin.canvasMemUse.redraw();
-						MainWin.canvasDiskOps.redraw();
-						MainWin.canvasVSerialOps.redraw();
+						if (! MainWin.getDisplay().isDisposed() && (MainWin.canvasMemUse != null) && (!MainWin.canvasMemUse.isDisposed()))
+						{
+							MainWin.canvasMemUse.redraw();
+						}
+						
+						if (! MainWin.getDisplay().isDisposed() && (MainWin.canvasDiskOps != null) && (!MainWin.canvasDiskOps.isDisposed()))
+						{
+							MainWin.canvasDiskOps.redraw();
+						}
+						
+						if (! MainWin.getDisplay().isDisposed() && (MainWin.canvasVSerialOps != null) && (!MainWin.canvasVSerialOps.isDisposed()))
+						{
+							MainWin.canvasVSerialOps.redraw();
+						}
 					}
 					
 				});

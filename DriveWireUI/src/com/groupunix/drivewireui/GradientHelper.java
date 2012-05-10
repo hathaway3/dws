@@ -8,7 +8,7 @@ import org.eclipse.swt.widgets.Composite;
 
 public class GradientHelper{
 
-	private static Image oldImage = null;
+	//private static Image oldImage = null;
 
 	public static void applyVerticalGradientBG(Composite composite, Color scol, Color ecol) 
 	{
@@ -24,9 +24,9 @@ public class GradientHelper{
 		gc.dispose();
 		composite.setBackgroundImage(newImage);
 
-		if (oldImage != null)
-			oldImage.dispose();
-		oldImage = newImage;
+		//if (oldImage != null)
+		//	oldImage.dispose();
+		//oldImage = newImage;
 	}
 	
 
@@ -44,9 +44,9 @@ public class GradientHelper{
 		gc.dispose();
 		composite.setBackgroundImage(newImage);
 
-		if (oldImage != null)
-			oldImage.dispose();
-		oldImage = newImage;
+		//if (oldImage != null)
+		//	oldImage.dispose();
+		//oldImage = newImage;
 	}
 
 }

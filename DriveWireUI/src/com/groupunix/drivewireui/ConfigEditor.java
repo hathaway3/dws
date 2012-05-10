@@ -68,7 +68,7 @@ public class ConfigEditor extends Shell
 	private Node selected;
 	private Label lblIntText;
 	private Spinner spinnerInt;
-	private TreeColumn trclmnNewColumn;
+	//private TreeColumn trclmnNewColumn;
 	
 	private ModifyListener spinnerModifyListener;
 	private Combo comboList;
@@ -88,41 +88,6 @@ public class ConfigEditor extends Shell
 	
 	
 	
-	class ConfigItem implements Comparable<ConfigItem>
-	{
-		private Node node;
-		private int index;
-		
-		public ConfigItem(Node node, int index)
-		{
-			this.index = index;
-			this.node = node;
-		}
-		
-		public Node getNode()
-		{
-			return this.node;
-		}
-		
-		public int getIndex()
-		{
-			return this.index;
-		}
-		
-		@Override
-		public int compareTo(ConfigItem o)
-		{
-			if (o.getNode().hasChildren() && !this.getNode().hasChildren())
-				return(-1);
-			
-			if (!o.getNode().hasChildren() && this.getNode().hasChildren())
-				return(1);
-			
-			return(-1 * o.getNode().getName().compareTo(this.getNode().getName()));
-
-		}
-		
-	}
 	
 
 	
@@ -300,7 +265,7 @@ public class ConfigEditor extends Shell
 		
 		btnApply = new Button(composite_1, SWT.NONE);
 		btnApply.addSelectionListener(new SelectionAdapter() {
-			@SuppressWarnings("unchecked")
+
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				applyChanges();
@@ -453,6 +418,7 @@ public class ConfigEditor extends Shell
 		
 		
 		
+		@SuppressWarnings("unchecked")
 		final ArrayList<String> cmds = generateConfigCommands("", temp.getRootNode().getChildren());
 		
 		cmds.add(0, "ui server conf freeze true");

@@ -161,6 +161,9 @@ public class UITaskComposite extends Composite
 					
 				}
 				
+				@SuppressWarnings("unused")
+				MenuItem div = new MenuItem(menu, SWT.SEPARATOR);
+				
 				if (getData("refreshinterval") != null)
 				{
 					if (stat == UITaskMaster.TASK_STATUS_ACTIVE)
@@ -181,6 +184,8 @@ public class UITaskComposite extends Composite
 				
 				if (cmd.startsWith("/") || cmd.startsWith("dw") || cmd.startsWith("ui"))
 				{
+					div = new MenuItem(menu, SWT.SEPARATOR);
+					
 					if (stat != UITaskMaster.TASK_STATUS_ACTIVE)
 					{
 						MenuItem miRefresh = new MenuItem(menu, SWT.PUSH);
@@ -211,6 +216,7 @@ public class UITaskComposite extends Composite
 					}
 				}
 				
+				div = new MenuItem(menu, SWT.SEPARATOR);
 				
 				if (stat != UITaskMaster.TASK_STATUS_ACTIVE)
 				{
@@ -224,6 +230,16 @@ public class UITaskComposite extends Composite
 						}
 					});
 				}
+				
+				MenuItem miRemoveAll = new MenuItem(menu, SWT.PUSH);
+				miRemoveAll.setText("Remove all items");
+				miRemoveAll.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) 
+					{
+						MainWin.taskman.removeAllTasks();
+					}
+				});
 				
 			}
 		});

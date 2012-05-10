@@ -13,7 +13,10 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.net.UnknownHostException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -27,11 +30,15 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.HierarchicalConfiguration.Node;
+import org.apache.commons.vfs.FileObject;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+
+import com.groupunix.drivewireserver.DWDefs;
 
 public class UIUtils {
 
@@ -749,7 +756,150 @@ public class UIUtils {
 		
 		return false;
 	}
+
+
+	public static int getLogLevelVal(String level)
+	{
+		int res = 0;
+		
+		for (int i = 0; i<DWDefs.LOG_LEVELS.length;i++)
+		{
+			if (DWDefs.LOG_LEVELS[i].equals(level))
+			{
+				res = i;
+			}
+		}
+			
+		return res;
+	}
 	
 	
 	
+	static boolean matchAttributeVal(List<Node> attributes, String key, String val)
+	{
+		for (Node n : attributes)
+		{
+			if (n.getName().equals(key) && n.getValue().equals(val))
+				return(true);
+		}
+		
+		return false;
+	}
+
+
+
+
+
+	static Object getAttributeVal(List<Node> attributes, String key)
+	{
+		for (Node n : attributes)
+		{
+			if (n.getName().equals(key))
+			{
+				return(n.getValue());
+			}
+		}
+		
+		return null;
+	}
+
+	static List<String> getAttributeVals(List<Node> attributes, String key)
+	{
+		List<String> res = new ArrayList<String>();
+		
+		for (Node n : attributes)
+		{
+			if (n.getName().equals(key))
+			{
+				res.add(n.getValue().toString());
+			}
+		}
+		
+		return res;
+	}
+
+
+
+	static boolean hasAttribute(List<Node> attributes, String key)
+	{
+		for (Node n : attributes)
+		{
+			if (n.getName().equals(key))
+				return(true);
+		}
+		
+		return false;
+	}
+
+
+	public static String prettyRBFAttribs(int att)
+	{
+		String res = "";
+		
+		if ((att & 0x80) == 0x80)
+			res += "D";
+		else
+			res += "-";
+		
+		if ((att & 0x40) == 0x40)
+			res += "S";
+		else
+			res += "-";
+		
+		if ((att & 0x20) == 0x20)
+			res += "X";
+		else
+			res += "-";
+		
+		if ((att & 0x10) == 0x10)
+			res += "W";
+		else
+			res += "-";
+		
+		if ((att & 0x08) == 0x08)
+			res += "R";
+		else
+			res += "-";
+		
+		if ((att & 0x04) == 0x04)
+			res += "x";
+		else
+			res += "-";
+		
+		if ((att & 0x02) == 0x02)
+			res += "w";
+		else
+			res += "-";
+		
+		if ((att & 0x01) == 0x01)
+			res += "r";
+		else
+			res += "-";
+		
+		
+		return res;
+	}
+	
+	/*
+	public static String getMD5sum(FileObject fileObject)
+	{
+		String res = "";
+		
+		try
+		{
+			MessageDigest digest = MessageDigest.getInstance("MD5");
+			
+			byte[] md5sum = digest.digest(fileObject);
+			BigInteger bigInt = new BigInteger(1, md5sum);
+			
+			res =  bigInt.toString(16);
+			
+		} 
+		catch (NoSuchAlgorithmException e)
+		{
+		}
+		
+		return res;
+	}
+	*/
 }

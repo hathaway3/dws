@@ -3,6 +3,7 @@ package com.groupunix.drivewireui;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
@@ -90,7 +91,7 @@ public class UITaskMaster
 			  
 			  if (MainWin.tabFolderOutput.getSelectionIndex() != 0)
 			  {
-				  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/active.png"));
+				  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/logging/info.png"));
 			  }
 		   }
 		});
@@ -174,7 +175,23 @@ public class UITaskMaster
 			 
 			  if (MainWin.tabFolderOutput.getSelectionIndex() != 0)
 			  {
-				  MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/active.png"));
+				  
+				  switch(status)
+				  {
+			  			case UITaskMaster.TASK_STATUS_ACTIVE:
+			  				MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/status/active_16.png"));
+							break;
+			  			case UITaskMaster.TASK_STATUS_FAILED:
+			  				MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/status/failed_16.png"));
+			  				break;
+			  			case UITaskMaster.TASK_STATUS_COMPLETE:
+			  				MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/status/completed_16.png"));
+			  				break;
+			  			default:
+			  				MainWin.tabFolderOutput.getItems()[0].setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/status/unknown_16.png"));
+			  				break;
+			  		}
+				  
 			  }
 		  }
 	  });
@@ -261,6 +278,26 @@ public class UITaskMaster
 	public List<UITask> getTasks()
 	{
 		return(this.tasks);
+	}
+
+
+	public void removeAllTasks()
+	{
+		Vector<Integer> tids = new Vector<Integer>();
+		
+		for (UITask t : this.tasks)
+		{
+			if (t.getStatus() != UITaskMaster.TASK_STATUS_ACTIVE)
+			{
+				tids.add(t.getTaskID());
+			}
+		}
+		
+		for (Integer tid : tids)
+		{
+			this.removeTask(tid);
+		}
+		
 	}
 
 
