@@ -43,11 +43,13 @@ import com.groupunix.drivewireserver.dwdisk.DWDisk;
 import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystemDirEntry;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWLW16FileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystem;
 import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireui.library.DECBFileLibraryItem;
+import com.groupunix.drivewireui.library.FolderLibraryItem;
 import com.groupunix.drivewireui.library.LibraryItem;
 import com.groupunix.drivewireui.library.PathLibraryItem;
 import com.groupunix.drivewireui.library.RBFFileLibraryItem;
@@ -89,6 +91,7 @@ public class DWLibrary extends Composite
 	public static final int FSTYPE_UNKNOWN = 0;
 	public static final int FSTYPE_RBF = 1;
 	public static final int FSTYPE_DECB = 2;
+	public static final int FSTYPE_LW16 = 3;
 	
 	
 	public static final int FILETYPE_UNKNOWN = 0;
@@ -125,6 +128,8 @@ public class DWLibrary extends Composite
 	public static final int FILETYPE_OS9_MODULE_FLMGR = 31;
 	public static final int FILETYPE_OS9_MODULE_DRIVR = 32;
 	public static final int FILETYPE_OS9_MODULE_DEVIC = 33;
+
+	
 
 	
 	
@@ -324,7 +329,7 @@ public class DWLibrary extends Composite
 				
 				if (tree.getSelection()[0].getData()  != null)
 				{
-					LibraryItem libitem = (LibraryItem) tree.getSelection()[0].getData();
+					final LibraryItem libitem = (LibraryItem) tree.getSelection()[0].getData();
 					
 					
 					MenuItem mi;
@@ -337,6 +342,19 @@ public class DWLibrary extends Composite
 							mi = new MenuItem(treemenu, SWT.PUSH);
 							mi.setText("Add New Path...");
 							mi.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/database-add.png"));
+							
+							mi.addSelectionListener(new SelectionAdapter() {
+
+								@Override
+								public void widgetSelected(SelectionEvent e)
+								{
+									System.out.println("add path to " + ((FolderLibraryItem) libitem).getNode().getName());
+							
+									
+									
+								}
+
+								} );
 							
 							mi = new MenuItem(treemenu, SWT.PUSH);
 							mi.setText("Add New URL...");
@@ -689,6 +707,8 @@ public class DWLibrary extends Composite
 	*/
 	
 	
+	/*
+	
 	private void buildFSTree(TreeItem ti, String path, boolean recurse)
 	{
 		try
@@ -707,6 +727,8 @@ public class DWLibrary extends Composite
 	private void buildFSTree(TreeItem ti, FileObject fo, boolean recurse)
 	{
 	
+		System.out.println("buildfs" + " / " + fo.getName());
+		
 		try
 		{
 			
@@ -745,24 +767,37 @@ public class DWLibrary extends Composite
 									fi.setText(0, files[i].getName().getBaseName());
 									
 									DWRBFFileSystem rbffs = new DWRBFFileSystem(disk);
+									System.out.println("2");
 									
 									if (rbffs.isValidFS())
 									{
 										fi.setImage(0, SWTResourceManager.getImage(DWBrowser.class, "/fs/rbf.png"));
 										// TODO
+										System.out.println("3");
 									}
 									else
 									{
-										DWDECBFileSystem decbfs = new DWDECBFileSystem(disk);
+										System.out.println("4");
+										DWLW16FileSystem lw16ffs = new DWLW16FileSystem(disk);
 									
-										if (decbfs.isValidFS())
+										if (lw16ffs.isValidFS())
 										{
-											//buildDECBTree(fi, disk);
-											fi.setImage(0, SWTResourceManager.getImage(DWBrowser.class, "/fs/decb.png"));
+											fi.setImage(0, SWTResourceManager.getImage(DWBrowser.class, "/fs/lw16.png"));
+											// 	TODO
 										}
 										else
 										{
-											fi.setImage(0, SWTResourceManager.getImage(DWBrowser.class, "/fs/unknown.png"));
+											DWDECBFileSystem decbfs = new DWDECBFileSystem(disk);
+										
+											if (decbfs.isValidFS())
+											{
+												//buildDECBTree(fi, disk);
+												fi.setImage(0, SWTResourceManager.getImage(DWBrowser.class, "/fs/decb.png"));
+											}
+											else
+											{
+												fi.setImage(0, SWTResourceManager.getImage(DWBrowser.class, "/fs/unknown.png"));
+											}
 										}
 									}
 									
@@ -812,6 +847,8 @@ public class DWLibrary extends Composite
 	}
 
 
+*/
+
 
 
 	public static String prettyFSType(int fsType)
@@ -822,6 +859,8 @@ public class DWLibrary extends Composite
 			res = "DECB";
 		else if (fsType == DWLibrary.FSTYPE_RBF)
 			res = "OS9/RBF";
+		else if (fsType == DWLibrary.FSTYPE_LW16)
+			res = "LW16";
 		return res;
 	}
 

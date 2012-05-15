@@ -303,6 +303,8 @@ public class AboutWin extends Dialog {
 			"John Linville", "RandomRodder", "lorddragon", "lostwizard", "beretta",  "Gary Becker", "Jim Hathaway",
 			"Gene Heskett", "Wayne Campbell", "Stephen Fischer", "Christopher Hawks", "John Orwen", "And apologies to any I forgot!"));
 	
+	protected boolean fullscreen = false;
+	
 	
 
 	public AboutWin(Shell parent, int style) {
@@ -396,6 +398,19 @@ public class AboutWin extends Dialog {
 				else if ((e.character >= '0') && (e.character <= '9'))
 				{
 					toggles[Integer.parseInt(e.character+"")] = !toggles[Integer.parseInt(e.character+"")];
+				}
+				else if (e.character == 'f')
+				{
+					if (fullscreen)
+					{
+						fullscreen = false;
+						shell.setSize(width + xfudge + xborder*2, height + yfudge + yborder*2);
+					}
+					else
+					{
+						fullscreen = true;
+						shell.setFullScreen(true);
+					}
 				}
 			}
 

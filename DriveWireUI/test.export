@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration exportpath="null.instance">
+<instance category="instance" name="Default Instance">
+<UseMIDI category="midi">true</UseMIDI>
+<CurrentPrinter category="printing">text</CurrentPrinter>
+<Printer category="printing" name="FX80">
+<Driver>FX80</Driver>
+<OutputDir>cocoprints</OutputDir>
+<CharacterFile>default.chars</CharacterFile>
+<Columns>80</Columns>
+<Lines>66</Lines>
+<DPI>300</DPI>
+<ImageFormat>PNG</ImageFormat>
+</Printer>
+<Printer category="printing" name="Text">
+<Driver category="printing">TEXT</Driver>
+<OutputDir category="printing">cocoprints</OutputDir>
+</Printer>
+<MIDISynthDefaultSoundbank category="midi">soundbank-deluxe.gm</MIDISynthDefaultSoundbank>
+<MIDISynthDefaultProfile category="midi">gm</MIDISynthDefaultProfile>
+<DetectDATurbo>false</DetectDATurbo>
+<LogOpCodePolls category="logging,advanced">false</LogOpCodePolls>
+<DeviceType category="device">tcp</DeviceType>
+<TCPDevicePort category="device">65504</TCPDevicePort>
+<HDBDOSMode>false</HDBDOSMode>
+<LogVPortBytes category="logging,advanced">false</LogVPortBytes>
+<Drive0Path>file:///C:/Users/Aaron/workspace/drivewireserver/DriveWireUI/test.dsk</Drive0Path>
+<Drive255Path>file:///C:/Users/Aaron/workspace/drivewireserver/DriveWireUI/test.dsk</Drive255Path>
+</instance>
+</configuration>

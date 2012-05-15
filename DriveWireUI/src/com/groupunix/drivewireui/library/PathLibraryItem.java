@@ -15,6 +15,8 @@ import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWFileSystemDirEntry;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWLW16FileSystem;
+import com.groupunix.drivewireserver.dwdisk.filesystem.DWLW16FileSystemDirEntry;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
@@ -24,6 +26,8 @@ import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATExceptio
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireui.DWLibrary;
 import com.groupunix.drivewireui.MainWin;
+import com.groupunix.drivewireui.plugins.DWBrowser;
+import com.swtdesigner.SWTResourceManager;
 
 public class PathLibraryItem extends LibraryItem
 {
@@ -98,12 +102,32 @@ public class PathLibraryItem extends LibraryItem
 							this.iconpath = "/fs/rbf.png";
 							this.validdisk  = true;
 							this.validfs  = DWLibrary.FSTYPE_RBF;
+							return;
 						}
 						else
 						{
 							
-							DWDECBFileSystem tmpdecbfs = new DWDECBFileSystem(disk);
+							try
+							{
+								DWLW16FileSystem lw16ffs = new DWLW16FileSystem(disk);
+								
+
+								if (lw16ffs.isValidFS())
+								{
+									this.iconpath = "/fs/lw16.png";
+									this.validdisk  = true;
+									this.validfs  = DWLibrary.FSTYPE_LW16;
+									return;
+								}
+								
+							} catch (DWDiskInvalidSectorNumber e)
+							{
+						
+							}
 							
+							
+							DWDECBFileSystem tmpdecbfs = new DWDECBFileSystem(disk);
+								
 							if (tmpdecbfs.isValidFS())
 							{
 								this.iconpath = "/fs/decb.png";
@@ -146,6 +170,8 @@ public class PathLibraryItem extends LibraryItem
 			this.iconpath = "/status/failed_16.png";
 		} 
 	}
+	
+	
 	
 	public Vector<LibraryItem> getChildren()
 	{
@@ -198,6 +224,19 @@ public class PathLibraryItem extends LibraryItem
 							if ((!entry.getFileName().equals(".")) && (!entry.getFileName().equals("..")))
 							{
 								this.children.add(new RBFFileLibraryItem((DWRBFFileSystemDirEntry) entry, rbffs ));
+							}
+						}
+					
+					}
+					else if (this.validfs == DWLibrary.FSTYPE_LW16)
+					{
+						DWLW16FileSystem lwfs = new DWLW16FileSystem(DWDiskDrives.DiskFromFile(fobj, true));
+						
+						for (DWFileSystemDirEntry entry : lwfs.getDirectory(null))
+						{
+							if ((!entry.getFileName().equals(".")) && (!entry.getFileName().equals("..")))
+							{
+								this.children.add(new LW16FileLibraryItem((DWLW16FileSystemDirEntry) entry, lwfs ));
 							}
 						}
 					

@@ -10,17 +10,17 @@
 <text/>
 <text>Manage disks and disksets</text>
 <show>
-<text>dw disk show [{# | all | dset [#]}]</text>
+<text>dw disk show [#]</text>
 <text/>
-<text>Show current disk/set details</text>
+<text>Show current disk details</text>
 </show>
 <eject>
-<text>dw disk eject [dset] {# | all}</text>
+<text>dw disk eject {# | all}</text>
 <text/>
 <text>Eject disk from drive #</text>
 </eject>
 <insert>
-<text>dw disk insert [dset] # path</text>
+<text>dw disk insert # path</text>
 <text/>
 <text>Load disk into drive #</text>
 </insert>
@@ -30,19 +30,19 @@
 <text>Reload disk in drive #</text>
 </reload>
 <write>
-<text>dw disk write {# [path] | dset [dset]}</text>
+<text>dw disk write # [path]</text>
 <text/>
 <text>Write disk image in drive #</text>
 </write>
 <create>
-<text>dw disk create {# path | dset}</text>
+<text>dw disk create # path</text>
 <text/>
-<text>Create new disk image or set</text>
+<text>Create new disk image</text>
 </create>
 <set>
-<text>dw disk set [dset] # param [val]</text>
+<text>dw disk set # param val</text>
 <text/>
-<text>Set disk/diskset parameters</text>
+<text>Set disk parameters</text>
 </set>
 </disk>
 <server>
@@ -237,5 +237,63 @@
 </synth>
 </midi>
 </dw>
+
+<drivewire-config>
+<ConfigAutosave>
+<text>When this setting is enabled\, the server commits any changes made in the configuration automatically to the persistent configuration.  The DW User Interface requires this setting to be enabled.  Unpredictable behavior may result if the UI is used with a server that does not have this option turned on.</text>
+</ConfigAutosave>
+</drivewire-config>
+
+<resultcode>
+<b0><text>The operation was a success</text></b0>
+
+<b10><text>?SN</text></b10>
+
+<b100><text>General drive error</text></b100>
+<b101><text>Invalid drive number</text></b101>
+<b102><text>Drive is not loaded</text></b102>
+<b103><text>Drive is already loaded</text></b103>
+<b104><text>Image format error</text></b104>
+    
+<b110><text>No such diskset (deprecated)</text></b110>
+<b111><text>Invalid disk definition (deprecated)</text></b111>
+ 
+    
+<b120><text>General network error</text></b120>
+<b121><text>Network I/O error</text></b121>
+<b122><text>DNS lookup failed</text></b122>
+<b123><text>Invalid connection ID</text></b123>
+
+<b140><text>Invalid port number</text></b140>
+<b141><text>Invalid handler ID</text></b141>
+<b142><text>Config key not set</text></b142>
+    
+<b150><text>General MIDI error</text></b150>
+<b151><text>MIDI is not available</text></b151>
+<b152><text>Invalid MIDI device ID</text></b152>
+<b153><text>Invalid MIDI data</text></b153>
+<b154><text>MIDI soundbank failure</text></b154>
+<b155><text>MIDI soundbank not supported</text></b155>
+<b156><text>Invalid MIDI profile</text></b156>
+
+<b200><text>General server error</text></b200>
+<b201><text>Server filesystem error</text></b201>
+<b202><text>Server I/O error</text></b202>
+<b203><text>File not found</text></b203>
+<b204><text>Not implemented (yet?)</text></b204>
+<b205><text>Server is not ready</text></b205>
+<b206><text>Instance is not ready</text></b206>
+
+<b220><text>General UI error</text></b220>
+<b221><text>Malformed UI request</text></b221>
+<b222><text>Malformed UI response</text></b222>
+<b230><text>Help topic not found</text></b230>
+<b255><text>Failure.  You lose.  Good day\, sir.</text></b255>
+
+</resultcode>
+
 </topics>
+
+
+
 </configuration>
