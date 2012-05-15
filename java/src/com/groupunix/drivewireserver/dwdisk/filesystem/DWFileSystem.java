@@ -26,7 +26,7 @@ public abstract class DWFileSystem
 	}
 	
 
-	public abstract List<DWFileSystemDirEntry> getDirectory(String path) throws IOException, DWFileSystemInvalidDirectoryException;
+	public abstract List<DWFileSystemDirEntry> getDirectory(String path) throws IOException, DWFileSystemInvalidDirectoryException, DWDiskInvalidSectorNumber;
 	
 	public abstract boolean hasFile(String filename) throws IOException;
 		
