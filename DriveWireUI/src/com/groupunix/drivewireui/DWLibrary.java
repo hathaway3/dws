@@ -1,18 +1,9 @@
 package com.groupunix.drivewireui;
 
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.HierarchicalConfiguration.Node;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileType;
-import org.apache.commons.vfs.VFS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
@@ -22,10 +13,6 @@ import org.eclipse.swt.events.MenuAdapter;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Cursor;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -39,15 +26,8 @@ import org.eclipse.swt.widgets.TreeItem;
 
 import swing2swt.layout.BorderLayout;
 
-import com.groupunix.drivewireserver.dwdisk.DWDisk;
-import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystemDirEntry;
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWLW16FileSystem;
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystem;
 import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
-import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireui.library.DECBFileLibraryItem;
 import com.groupunix.drivewireui.library.FolderLibraryItem;
 import com.groupunix.drivewireui.library.LibraryItem;
@@ -56,14 +36,10 @@ import com.groupunix.drivewireui.library.RBFFileLibraryItem;
 import com.groupunix.drivewireui.library.URLLibraryItem;
 import com.groupunix.drivewireui.plugins.ASCIIViewer;
 import com.groupunix.drivewireui.plugins.BASICViewer;
-import com.groupunix.drivewireui.plugins.CoCoMaxImageViewer;
 import com.groupunix.drivewireui.plugins.DWBrowser;
-import com.groupunix.drivewireui.plugins.DisAssViewer;
-import com.groupunix.drivewireui.plugins.HSCREENImageViewer;
-import com.groupunix.drivewireui.plugins.NIBImageViewer;
-
 import com.groupunix.drivewireui.plugins.FileViewer;
 import com.groupunix.drivewireui.plugins.HexViewer;
+import com.groupunix.drivewireui.plugins.NIBImageViewer;
 import com.groupunix.drivewireui.plugins.PMODEImageViewer;
 import com.groupunix.drivewireui.plugins.PathInfoViewer;
 import com.swtdesigner.SWTResourceManager;

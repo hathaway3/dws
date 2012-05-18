@@ -554,13 +554,15 @@ public class MainWin {
 
 	private static void doMacStuff() 
 	{
-		Menu systemMenu = display.getSystemMenu();
-		if (systemMenu != null) 
-		{
+		// used to work.. swt doesnt do this now?
+		
+		//Menu systemMenu = display.getSystemMenu();
+		//if (systemMenu != null) 
+		//{
 			// we've got a mac
 			
 			
-		}
+		//}
 		
 	}
 
