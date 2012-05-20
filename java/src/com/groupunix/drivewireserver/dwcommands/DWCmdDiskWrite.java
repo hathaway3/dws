@@ -56,12 +56,12 @@ public class DWCmdDiskWrite extends DWCommand {
 				return(new DWCommandResponse(false,DWDefs.RC_INVALID_DRIVE,e.getMessage()));
 			}
 		}
-		else if (args.length == 2)
+		else 
 		{
 			
 			try
 			{
-				return(doDiskWrite(dwProto.getDiskDrives().getDriveNoFromString(args[0]), args[1] ));
+				return(doDiskWrite(dwProto.getDiskDrives().getDriveNoFromString(args[0]), DWUtils.dropFirstToken(cmdline) ));
 			}
 			catch (DWDriveNotValidException e)
 			{
@@ -70,8 +70,6 @@ public class DWCmdDiskWrite extends DWCommand {
 			}
 			
 		}
-			
-		return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"Syntax error"));
 		
 	}
 
