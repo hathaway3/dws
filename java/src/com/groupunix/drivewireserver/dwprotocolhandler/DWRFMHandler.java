@@ -28,6 +28,8 @@ public class DWRFMHandler
 	public static final byte RFM_OP_CLOSE = (byte) 13;
 	
 	
+	
+	
 	private DWRFMPath[] paths = new DWRFMPath[256];
 	
 	private int handlerno;
@@ -141,6 +143,7 @@ public class DWRFMHandler
 					setSTT_FD(protodev, pathno);
 					break;
 					
+					
 			}
 			
 		}
@@ -176,6 +179,11 @@ public class DWRFMHandler
 				case OS9Defs.SS_FD:
 					getSTT_FD(protodev, pathno);
 					break;
+				
+				case OS9Defs.SS_DirEnt:
+					setSTT_FD(protodev, pathno);
+					break;
+				
 					
 			}
 			

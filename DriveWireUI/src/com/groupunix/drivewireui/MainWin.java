@@ -88,8 +88,8 @@ public class MainWin {
 	static Logger logger = Logger.getLogger(MainWin.class);
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
 
-	public static final String DWUIVersion = "4.0.9c";
-	public static final String DWUIVersionDate = "04/22/2012";
+	public static final String DWUIVersion = "4.0.9fest1";
+	public static final String DWUIVersionDate = "05/20/2012";
 	
 	public static final double LOWMEM_START = 4096 * 1024;
 	public static final double LOWMEM_STOP = LOWMEM_START * 2;
@@ -393,6 +393,8 @@ public class MainWin {
 			
 			// setup library roots
 			
+			//TODO - temp disable for 4.0.9.b
+			/*
 			MainWin.libraryroot = new LibraryItem[3];
 			
 			libraryroot[0] = new MountedLibraryItem("Mounted");
@@ -401,7 +403,7 @@ public class MainWin {
 			loadLocalLibrary(libraryroot[1]);
 			
 			libraryroot[2] = new CloudLibraryItem("CoCoCloud");
-			
+			*/
 			
 			
 			MainWin window = new MainWin();

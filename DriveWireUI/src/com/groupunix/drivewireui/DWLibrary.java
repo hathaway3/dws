@@ -324,7 +324,9 @@ public class DWLibrary extends Composite
 								@Override
 								public void widgetSelected(SelectionEvent e)
 								{
-									System.out.println("add path to " + ((FolderLibraryItem) libitem).getNode().getName());
+									
+									
+									System.out.println("add path to " + ((FolderLibraryItem) tree.getSelection()[0].getData()).getNode().getName());
 							
 									
 									
@@ -458,9 +460,12 @@ public class DWLibrary extends Composite
 		    
 		});
 		
-		tree.setItemCount(MainWin.libraryroot.length);
-		sashForm.setWeights(new int[] {350, 700});
 		
+		//TODO 
+		//tree.setItemCount(MainWin.libraryroot.length);
+		//sashForm.setWeights(new int[] {350, 700});
+		
+		sashForm.setWeights(new int[] {0, 700});
 		
 	}
 

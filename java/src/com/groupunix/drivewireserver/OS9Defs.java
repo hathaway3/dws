@@ -35,5 +35,7 @@ public class OS9Defs
 	public static final byte SS_Ticks = 16;
 	public static final byte SS_Lock = 17;
 	
+	public static final byte SS_DirEnt = 0x21;
+	
 	
 }

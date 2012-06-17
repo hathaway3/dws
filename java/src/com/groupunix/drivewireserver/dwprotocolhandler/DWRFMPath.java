@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
@@ -30,6 +31,10 @@ public class DWRFMPath
 	
 	private FileSystemManager fsManager;
 	private FileObject fileobj;
+	
+	private int dirEntryNum = 0;
+
+	private ArrayList<DWRFMDirEntry> dirEntries = new ArrayList<DWRFMDirEntry>();
 	
 	public DWRFMPath(int handlerno, int pathno) throws FileSystemException
 	{
@@ -104,9 +109,13 @@ public class DWRFMPath
 					if (fileobj.getType() == FileType.FOLDER)
 					{
 						this.dirmode = true;
-						genDirBuffer();
 						
 						logger.debug("directory open: modebyte " + modebyte);
+						
+						for (int i = 0;i<fileobj.getChildren().length; i++)
+						{
+							this.dirEntries.add(new DWRFMDirEntry(fileobj.getChildren()[i]));
+						}
 						
 						return(0);
 						
@@ -145,47 +154,6 @@ public class DWRFMPath
 		}
 	}
 
-	private void genDirBuffer() throws FileSystemException 
-	{
-		FileObject[] childs = this.fileobj.getChildren();
-		
-		if (childs.length > 0)
-		{
-			this.dirbuffer = new byte[(childs.length * 32) + 64];
-			
-			// . and ..
-			this.dirbuffer[0] = (byte) '.';
-			this.dirbuffer[1] = (byte) ('.' + 128);
-			this.dirbuffer[32] = (byte) ('.' + 128);
-			
-			// file entries
-			for (int i = 2;i<(childs.length+2);i++)
-			{
-				 String fname = childs[i-2].getName().getBaseName();
-				 if (fname.length() <= 29)
-				 {
-					 System.arraycopy(fname.getBytes(), 0, this.dirbuffer, (i*32), fname.length());
-					 
-					 // set high bit in last char of filename
-					 this.dirbuffer[(i*32)+fname.length()-1] = (byte) (this.dirbuffer[(i*32)+fname.length()-1] + 128);
-					 
-					 // need to set last 3 bytes to something...
-					 
-				 }
-				 else
-				 {
-					 logger.debug("cannot add long named file '" +  childs[i-2].getName() + "'");
-				 }
-			}
-			
-		}
-		else
-		{
-			logger.debug("empty directory");
-			this.dirbuffer = null;
-		}
-		
-	}
 
 	public void setLocalroot(String localroot)
 	{
@@ -403,6 +371,21 @@ public class DWRFMPath
 		{
 			logger.error("write to non existent file");
 		}
+	}
+	
+	
+	public DWRFMDirEntry getNextDirEntry() throws FileSystemException
+	{
+		if (this.dirmode)
+		{
+			if (this.dirEntryNum < this.dirEntries.size())
+			{
+				
+				this.dirEntryNum++;
+			}
+		}
+		
+		return new DWRFMDirEntry(null);
 	}
 	
 	
