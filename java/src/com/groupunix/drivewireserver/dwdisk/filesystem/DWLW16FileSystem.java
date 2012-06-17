@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.groupunix.drivewireserver.DECBDefs;
-import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwdisk.DWDisk;
 import com.groupunix.drivewireserver.dwdisk.DWDiskSector;
 import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
@@ -16,7 +13,6 @@ import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFullException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidDirectoryException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
-import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
 
@@ -95,12 +91,9 @@ public class DWLW16FileSystem extends DWFileSystem
 		System.out.println();
 		
 		
-		
-		
 		DWLW16FileSystemInode in0 = new DWLW16FileSystemInode(0, this.disk.getSector(this.superblock.getFirstinodeblock() + 1).getData()) ;
 		
 		System.out.println(in0.toString());
-		
 		
 		return res;
 	}
@@ -204,7 +197,7 @@ public class DWLW16FileSystem extends DWFileSystem
 	@Override
 	public String getFSName()
 	{
-		return this.FSNAME;
+		return DWLW16FileSystem.FSNAME;
 	}
 
 

@@ -13,7 +13,7 @@ public class DWLW16FileSystemDirEntry extends DWFileSystemDirEntry
 	{
 		super(null);
 		
-		this.inode = inode;
+		this.setInode(inode);
 		this.filename = fn;
 		
 	}
@@ -79,6 +79,16 @@ public class DWLW16FileSystemDirEntry extends DWFileSystemDirEntry
 	{
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	public void setInode(DWLW16FileSystemInode inode)
+	{
+		this.inode = inode;
+	}
+
+	public DWLW16FileSystemInode getInode()
+	{
+		return inode;
 	}
 
 	

@@ -219,7 +219,11 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 					
 				if ((opcodeint > -1) && (this.protodev != null))
 				{
-					((DWSerialDevice) this.protodev).resetReadtime();
+					
+					if (this.protodev.getClass().getCanonicalName().equals("com.groupunix.drivewireserver.dwprotocolhandler.DWSerialDevice"))
+						((DWSerialDevice) this.protodev).resetReadtime();
+					
+					
 					optime = System.currentTimeMillis();
 					this.inOp = true;
 					lastOpcode = (byte) opcodeint;
