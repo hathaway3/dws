@@ -27,7 +27,7 @@ public class DWUtilDWThread implements Runnable
 		this.strargs = args;
 		this.dwVSerialPorts = dwProto.getVPorts();
 		
-		if (vport <= DWVSerialPorts.MAX_COCO_PORTS)
+		if (vport <= DWVSerialPorts.MAX_PORTS)
 		{
 			this.protect = dwProto.getConfig().getBoolean("ProtectedMode", false); 
 		}
@@ -79,7 +79,7 @@ public class DWUtilDWThread implements Runnable
 				Thread.sleep(100);
 			}
 			
-			if (this.vport < DWVSerialPorts.MAX_COCO_PORTS)
+			if (this.vport < DWVSerialPorts.MAX_PORTS)
 			{
 				dwVSerialPorts.closePort(this.vport);
 			}	

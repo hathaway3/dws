@@ -16,6 +16,8 @@ public class DWDefs
 	public static final byte OP_NAMEOBJ_TYPE 	= (byte) 3;		// 0x03
 																// 0x04 - 0x0F reserved for named object future use
 	public static final byte OP_TIME 			= (byte) 35;	// 0x23 #
+	public static final byte OP_SETTIME 		= (byte) 36;	// 0x24 $
+
 	public static final byte OP_AARON			= (byte) 65;	// 0x41 A
 	public static final byte OP_WIREBUG_MODE	= (byte) 66;	// 0x42 B	
 	public static final byte OP_SERREAD 		= (byte) 67;	// 0x43 C
@@ -34,23 +36,41 @@ public class DWDefs
 	public static final byte OP_SERWRITEM		= (byte) 100;	// 0x64 d
 	public static final byte OP_REREAD 			= (byte) 114;	// 0x72 r
 	public static final byte OP_REWRITE 		= (byte) 119;	// 0x77 w
+	
 	public static final byte OP_FASTWRITE_BASE 	= (byte) 128; 	// 0x80	
-	public static final byte OP_FASTWRITE_P1 	= (byte) 129; 	// 0x81
-	public static final byte OP_FASTWRITE_P2 	= (byte) 130; 	// 0x82
-	public static final byte OP_FASTWRITE_P3 	= (byte) 131; 	// 0x83
-	public static final byte OP_FASTWRITE_P4 	= (byte) 132; 	// 0x84
-	public static final byte OP_FASTWRITE_P5 	= (byte) 133; 	// 0x85
-	public static final byte OP_FASTWRITE_P6 	= (byte) 134; 	// 0x86
-	public static final byte OP_FASTWRITE_P7 	= (byte) 135; 	// 0x87
-	public static final byte OP_FASTWRITE_P8 	= (byte) 136; 	// 0x88
-	public static final byte OP_FASTWRITE_P9 	= (byte) 137; 	// 0x89
-	public static final byte OP_FASTWRITE_P10 	= (byte) 138; 	// 0x8A
-	public static final byte OP_FASTWRITE_P11 	= (byte) 139; 	// 0x8B
-	public static final byte OP_FASTWRITE_P12 	= (byte) 140; 	// 0x8C
-	public static final byte OP_FASTWRITE_P13 	= (byte) 141; 	// 0x8D
-	public static final byte OP_FASTWRITE_P14	= (byte) 142; 	// 0x8E
-	public static final byte OP_FASTWRITE_P15 	= (byte) 143; 	// 0x8F
-																// 0x90 - 0x9F reserved for future vserial use
+	public static final byte OP_FASTWRITE_N1 	= (byte) 129; 	// 0x81
+	public static final byte OP_FASTWRITE_N2 	= (byte) 130; 	// 0x82
+	public static final byte OP_FASTWRITE_N3 	= (byte) 131; 	// 0x83
+	public static final byte OP_FASTWRITE_N4 	= (byte) 132; 	// 0x84
+	public static final byte OP_FASTWRITE_N5 	= (byte) 133; 	// 0x85
+	public static final byte OP_FASTWRITE_N6 	= (byte) 134; 	// 0x86
+	public static final byte OP_FASTWRITE_N7 	= (byte) 135; 	// 0x87
+	public static final byte OP_FASTWRITE_N8 	= (byte) 136; 	// 0x88
+	public static final byte OP_FASTWRITE_N9 	= (byte) 137; 	// 0x89
+	public static final byte OP_FASTWRITE_N10 	= (byte) 138; 	// 0x8A
+	public static final byte OP_FASTWRITE_N11 	= (byte) 139; 	// 0x8B
+	public static final byte OP_FASTWRITE_N12 	= (byte) 140; 	// 0x8C
+	public static final byte OP_FASTWRITE_N13 	= (byte) 141; 	// 0x8D
+	public static final byte OP_FASTWRITE_N14	= (byte) 142; 	// 0x8E
+	
+	// one value here is wasted due to 15 port per type instead of 16...
+	
+	public static final byte OP_FASTWRITE_Z0 	= (byte) 144; 	// 0x90	
+	public static final byte OP_FASTWRITE_Z1 	= (byte) 145; 	// 0x91
+	public static final byte OP_FASTWRITE_Z2 	= (byte) 146; 	// 0x92
+	public static final byte OP_FASTWRITE_Z3 	= (byte) 147; 	// 0x93
+	public static final byte OP_FASTWRITE_Z4 	= (byte) 148; 	// 0x94
+	public static final byte OP_FASTWRITE_Z5 	= (byte) 149; 	// 0x95
+	public static final byte OP_FASTWRITE_Z6 	= (byte) 150; 	// 0x96
+	public static final byte OP_FASTWRITE_Z7 	= (byte) 151; 	// 0x97
+	public static final byte OP_FASTWRITE_Z8 	= (byte) 152; 	// 0x98
+	public static final byte OP_FASTWRITE_Z9 	= (byte) 153; 	// 0x99
+	public static final byte OP_FASTWRITE_Z10 	= (byte) 154; 	// 0x9A
+	public static final byte OP_FASTWRITE_Z11 	= (byte) 155; 	// 0x9B
+	public static final byte OP_FASTWRITE_Z12 	= (byte) 156; 	// 0x9C
+	public static final byte OP_FASTWRITE_Z13	= (byte) 157; 	// 0x9D
+	public static final byte OP_FASTWRITE_Z14 	= (byte) 143; 	// 0x8F
+	
 	public static final byte OP_SERWRITE 		= (byte) 195;	// 0xC3 C+128
 	public static final byte OP_SERSETSTAT 		= (byte) 196;	// 0xC4 D+128
 	public static final byte OP_SERTERM 		= (byte) 197;	// 0xC5 E+128
@@ -83,6 +103,7 @@ public class DWDefs
 	public static final int UTILMODE_TCPIN = 5;
 	public static final int UTILMODE_VMODEMIN = 6;
 	public static final int UTILMODE_TCPLISTEN = 7;
+	public static final int UTILMODE_NINESERVER = 8;
 	
 	
 	// result codes for DW virtual channel API calls - all subject to change until I know of anyone actually using these on client side
@@ -163,12 +184,12 @@ public class DWDefs
 
 	public static final int DISK_IMAGE_HEADER_SIZE = 256;
 
-	public static final int DISK_FILESYSTEM_OS9 = 0;
-	public static final int DISK_FILESYSTEM_DECB = 1;
-	public static final int DISK_FILESYSTEM_LWFS = 2;
-	public static final int DISK_FILESYSTEM_CCB = 3;
-	public static final int DISK_FILESYSTEM_UNKNOWN = -1;
-	public static final int DISK_FORMAT_SIDE = 4;
+	public static final int DISK_FILESYSTEM_OS9 = 1;
+	public static final int DISK_FILESYSTEM_DECB = 2;
+	public static final int DISK_FILESYSTEM_LWFS = 3;
+	public static final int DISK_FILESYSTEM_CCB = 4;
+	public static final int DISK_FILESYSTEM_UNKNOWN = 0;
+	public static final int DISK_FORMAT_SIDE = 5;
 	
 	// help
 	
@@ -225,9 +246,25 @@ public class DWDefs
 
 	public static final String[] LOG_LEVELS = {"ALL", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 
+	public static final int MODEL_COCO1 = 1;
+	public static final int MODEL_COCO2 = 2;
+	public static final int MODEL_COCO3 = 3;
+	public static final int MODEL_FPGA = 4;
+	public static final int MODEL_EMULATOR = 5;
+	public static final int MODEL_ATARI = 6;
+
+	public static final int POLL_RESP_MODE_SERIAL = 0;
+	public static final int POLL_RESP_MODE_WINDOW = 1;
+
+	// server IDs 0-2 reserved
+	public static final byte SERVER_ID_DW3_0 = 3;
+	public static final byte SERVER_ID_DW4_0 = 4;
 	
-
-
+	public static final byte SERVER_ID_MARK_0 = (byte) 128;
+	
+	// client IDs
+	
+	
 	
 
 	

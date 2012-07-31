@@ -142,6 +142,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 	
 	public void comWrite(byte[] data, int len, boolean prefix) 
 	{
+		if ((skt != null) && (!skt.isClosed()))
 		try 
 		{
 			skt.getOutputStream().write(data, 0, len);
@@ -169,6 +170,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 	
 	public void comWrite1(int data, boolean prefix) 
 	{
+		if ((skt != null) && (!skt.isClosed()))
 		try 
 		{
 			skt.getOutputStream().write((byte) data);

@@ -1,9 +1,9 @@
 package com.groupunix.drivewireserver.virtualserial;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
@@ -30,6 +30,8 @@ public class DWVPortTCPListenerThread implements Runnable
 	private DWProtocolHandler dwProto;
 	
 	
+	
+	
 	public DWVPortTCPListenerThread(DWProtocolHandler dwProto, int vport, int tcpport)
 	{
 		logger.debug("init tcp listener thread on port "+ tcpport);	
@@ -50,15 +52,21 @@ public class DWVPortTCPListenerThread implements Runnable
 		
 		logger.debug("run");
 		
-		// startup server 
-		ServerSocket srvr = null;
 		
 		try 
 		{
-			// check for listen address
+			// startup server 
+			ServerSocketChannel srvr = ServerSocketChannel.open();
+			
 			
 			try
 			{
+				InetSocketAddress sktaddr = new InetSocketAddress(this.tcpport);
+				
+				srvr.socket().setReuseAddress(true);
+				srvr.socket().bind(sktaddr, BACKLOG);
+				
+				/*
 				if (dwProto.getConfig().containsKey("ListenAddress"))
 				{
 					srvr = new ServerSocket(this.tcpport, BACKLOG, InetAddress.getByName(dwProto.getConfig().getString("ListenAddress")) );
@@ -67,7 +75,9 @@ public class DWVPortTCPListenerThread implements Runnable
 				{
 					srvr = new ServerSocket(this.tcpport, BACKLOG);
 				}
-				logger.info("tcp listening on port " + srvr.getLocalPort());
+				*/
+				
+				logger.info("tcp listening on port " + srvr.socket().getLocalPort());
 			}
 			catch (IOException e2) 
 			{
@@ -80,19 +90,19 @@ public class DWVPortTCPListenerThread implements Runnable
 
 			this.dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPLISTEN);
 			
-			this.dwVSerialPorts.getListenerPool().addListener(this.vport, srvr);
+			
 		
-		
-			while ((wanttodie == false) && dwVSerialPorts.isOpen(this.vport) && (srvr.isClosed() == false))
+			while ((wanttodie == false) && dwVSerialPorts.isOpen(this.vport) && (srvr.isOpen()) && (srvr.socket().isClosed() == false))
 			{
 				logger.debug("waiting for connection");
-				Socket skt = null;
-				
-				skt = srvr.accept();
+				SocketChannel skt = srvr.accept();
 				
 			
-				logger.info("new connection from " + skt.getInetAddress().getHostAddress());
+				logger.info("new connection from " + skt.socket().getInetAddress());
 			
+				this.dwVSerialPorts.getListenerPool().addListener(this.vport, skt);
+				
+				
 				if (mode == 2)
 				{
 					// http mode
@@ -109,6 +119,18 @@ public class DWVPortTCPListenerThread implements Runnable
 			
 			}
 		
+			if (srvr != null)
+			{
+				try 
+				{
+					srvr.close();
+				} 
+				catch (IOException e) 
+				{
+					logger.error("error closing server socket: " + e.getMessage());
+				}
+			}
+			
 		} 
 		catch (IOException e2) 
 		{
@@ -119,19 +141,6 @@ public class DWVPortTCPListenerThread implements Runnable
 			logger.error(e.getMessage());
 		}
 	
-
-		
-		if (srvr != null)
-		{
-			try 
-			{
-				srvr.close();
-			} 
-			catch (IOException e) 
-			{
-				logger.error("error closing server socket: " + e.getMessage());
-			}
-		}
 		
 		logger.debug("tcp listener thread exiting");
 	}

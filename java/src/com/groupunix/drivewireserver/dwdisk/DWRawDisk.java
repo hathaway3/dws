@@ -293,8 +293,11 @@ public class DWRawDisk extends DWDisk {
 
 	private void expandDisk(final int target) 
 	{
+		@SuppressWarnings("unused")
 		final int start = this.sectors.size();
+		@SuppressWarnings("unused")
 		final int sectorsize = this.getSectorSize();
+		@SuppressWarnings("unused")
 		final DWDisk disk = this;
 		
 		this.sectors.setSize(target);

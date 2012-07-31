@@ -42,7 +42,7 @@ public class DWRFMDirEntry
 			}
 			
 			this.fileSize = fo.getContent().getSize();
-			long lmt = fo.getContent().getLastModifiedTime();
+			//long lmt = fo.getContent().getLastModifiedTime();
 			
 			// TODO lat mod time
 		}

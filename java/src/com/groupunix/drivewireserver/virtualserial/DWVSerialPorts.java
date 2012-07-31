@@ -2,8 +2,8 @@ package com.groupunix.drivewireserver.virtualserial;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,6 +20,7 @@ import javax.sound.midi.Synthesizer;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
@@ -32,10 +33,15 @@ public class DWVSerialPorts {
 	
 	// should move multiread toggle and max ports to config file
 	public static final int MULTIREAD_LIMIT = 3;
-	public static final int TERM_PORT = 0;
 	public static final int MODE_TERM = 3;
-	public static final int MAX_COCO_PORTS = 15;
-	public static final int MAX_PORTS = MAX_COCO_PORTS;
+	
+	
+	public static final int MAX_NDEV_PORTS = 16;
+	public static final int MAX_ZDEV_PORTS = 16;
+	public static final int MAX_PORTS = MAX_NDEV_PORTS + MAX_ZDEV_PORTS;
+	
+	public static final int NTERM_PORT = 0;
+	public static final int ZTERM_PORT = 16;
 	public static final int MIDI_PORT = 14;
 	
 	
@@ -136,21 +142,29 @@ public class DWVSerialPorts {
 
 	public String prettyPort(int port) 
 	{
-		if (port == TERM_PORT)
+		if (port == NTERM_PORT)
 		{
-			return("Term");
+			return("NTerm");
+		}
+		else if (port == ZTERM_PORT)
+		{
+			return("ZTerm");
 		}
 		else if (port == MIDI_PORT)
 		{
-			return("/MIDI");
+			return("MIDI");
 		}
-		else if (port < MAX_COCO_PORTS)
+		else if (port < MAX_NDEV_PORTS)
 		{
-			return("/N" + port);
+			return("N" + port);
+		}
+		else if (port < MAX_NDEV_PORTS + MAX_ZDEV_PORTS)
+		{
+			return("Z" + (port - MAX_NDEV_PORTS));
 		}
 		else
 		{
-			return("NA:" + port);
+			return("?" + port);
 		}
 	}
 
@@ -176,10 +190,63 @@ public class DWVSerialPorts {
 	{
 		byte[] response = new byte[2];
 		
-		// redesigned to avoid bandwidth hogging
+		
+		// Z devices go first...
+		
+		for (int i = MAX_NDEV_PORTS;i < MAX_NDEV_PORTS+MAX_ZDEV_PORTS;i++)
+		{
+			if (vserialPorts[i] != null)
+			{
+				if (vserialPorts[i].bytesWaiting() > 0)
+				{
+					// increment wait count
+					dataWait[i]++;
+					
+					logger.debug("waiting Z " +i + ": " + vserialPorts[i].bytesWaiting());
+				}
+			}
+		}
+		
+		// second pass, look for oldest waiting ports
+		
+		int oldestZ = 0;
+		int oldestZport = -1;
+		
+		for (int i = MAX_NDEV_PORTS;i< MAX_NDEV_PORTS+MAX_ZDEV_PORTS;i++)
+		{
+			if (vserialPorts[i] != null)
+			{
+				if (dataWait[i] > oldestZ)
+				{
+					oldestZ = dataWait[i];
+					oldestZport = i;
+					
+				}
+			}
+		}
+		
+		if (oldestZport > -1)
+		{
+			// if we have a small byte waiter, send serread for it
+			
+			dataWait[oldestZport] = 0;
+			response[0] = (byte) (  (DWDefs.POLL_RESP_MODE_WINDOW << 6)  + (oldestZport) -  MAX_NDEV_PORTS );
+			response[1] = vserialPorts[oldestZport].read1();
+				
+			logger.debug("Z poll response " + response[0] + "," + response[1]);
+			
+			return(response);
+		}
+		
+		
+		
+		
+		
+		// N devices
+		
 		
 		// first look for termed ports
-		for (int i = 0;i<MAX_COCO_PORTS;i++)
+		for (int i = 0;i<MAX_NDEV_PORTS;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -197,11 +264,9 @@ public class DWVSerialPorts {
 			}
 		}
 		
-		
-		
 		// first data pass, increment data waiters
 		
-		for (int i = 0;i<MAX_COCO_PORTS;i++)
+		for (int i = 0;i<MAX_NDEV_PORTS;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -220,7 +285,7 @@ public class DWVSerialPorts {
 		int oldestM = 0;
 		int oldestMport = -1;
 		
-		for (int i = 0;i<MAX_COCO_PORTS;i++)
+		for (int i = 0;i<MAX_NDEV_PORTS;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -289,7 +354,7 @@ public class DWVSerialPorts {
 	{
 		
 		
-		if ((port < MAX_COCO_PORTS) && (port >= 0))
+		if ((port < MAX_PORTS) && (port >= 0))
 		{
 			if (vserialPorts[port] != null)
 			{
@@ -328,7 +393,7 @@ public class DWVSerialPorts {
 	{
 		
 
-		if ((port < MAX_COCO_PORTS) && (port >= 0))
+		if ((port < MAX_PORTS) && (port >= 0))
 		{
 			if (vserialPorts[port].isOpen())
 			{
@@ -355,6 +420,9 @@ public class DWVSerialPorts {
 		return (vserialPorts[vport].getPortInput());
 	}
 
+	
+	/*
+	
 	public InputStream getPortOutput(int vport) throws DWPortNotValidException 
 	{
 		validateport(vport);
@@ -372,7 +440,20 @@ public class DWVSerialPorts {
 			vserialPorts[vport].setPortOutput(output);
 		}
 	}
+	*/
 
+	public void setPortChannel(int vport, SocketChannel sc)
+	{
+		if (isNull(vport))
+		{
+			logger.debug("attempt to set io channel on null port " + vport);
+		}
+		else
+		{
+			vserialPorts[vport].setPortChannel(sc);
+		}
+	}
+	
 
 	public void markConnected(int port) 
 	{
@@ -516,7 +597,7 @@ public class DWVSerialPorts {
 		logger.debug("Resetting all virtual serial ports - part 1, close all sockets");
 		
 		
-		for (int i = 0;i<MAX_COCO_PORTS;i++)
+		for (int i = 0;i<MAX_PORTS;i++)
 		{
 			this.listenerpool.closePortConnectionSockets(i);
 			this.listenerpool.closePortServerSockets(i);
@@ -525,10 +606,10 @@ public class DWVSerialPorts {
 		logger.debug("Resetting all virtual serial ports - part 2, init all ports");
 		
 		//vserialPorts = new DWVSerialPort[MAX_PORTS];
-		for (int i = 0;i<MAX_COCO_PORTS;i++)
+		for (int i = 0;i<MAX_PORTS;i++)
 		{
 			// dont reset term
-			if (i != TERM_PORT)
+			if (i != NTERM_PORT)
 			{
 				try
 				{
@@ -542,11 +623,11 @@ public class DWVSerialPorts {
 		}
 		
 		// if term is null, init
-		if (this.vserialPorts[TERM_PORT] == null)
+		if (this.vserialPorts[NTERM_PORT] == null)
 		{
 			try
 			{
-				resetPort(TERM_PORT);
+				resetPort(NTERM_PORT);
 			} 
 			catch (DWPortNotValidException e)
 			{
@@ -613,18 +694,23 @@ public class DWVSerialPorts {
 		vserialPorts[vport].writeToCoco(str);
 		
 	}
-
-
-
-	public boolean hasOutput(int vport)
+	
+	public void writeToCoco(int vport, byte[] b) throws DWPortNotValidException 
 	{
-		if ((vport >= 0) && (vport < vserialPorts.length) && (vserialPorts[vport] != null))
-		{
-			return(vserialPorts[vport].hasOutput());
-		}
-
-		return false;
+		validateport(vport);
+		vserialPorts[vport].writeToCoco(b);
+		
 	}
+
+
+	public void writeToCoco(int vport, byte[] b, int offset, int length) throws DWPortNotValidException 
+	{
+		validateport(vport);
+		vserialPorts[vport].writeToCoco(b, offset, length);
+		
+	}
+
+
 	
 	public boolean isNull(int vport)
 	{
@@ -682,7 +768,7 @@ public class DWVSerialPorts {
 	public String getHostIP(int vport) throws DWPortNotValidException, DWConnectionNotValidException
 	{
 		validateport(vport);
-		return(this.listenerpool.getConn( vserialPorts[vport].getConn() ).getInetAddress().getHostAddress());
+		return(this.listenerpool.getConn( vserialPorts[vport].getConn() ).socket().getInetAddress().getHostAddress());
 		
 	}
 
@@ -690,7 +776,7 @@ public class DWVSerialPorts {
 	public int getHostPort(int vport) throws DWPortNotValidException, DWConnectionNotValidException
 	{
 		validateport(vport);
-		return(this.listenerpool.getConn(vserialPorts[vport].getConn()).getPort());
+		return(this.listenerpool.getConn(vserialPorts[vport].getConn()).socket().getPort());
 	}
 
 

@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.OS9Defs;
 import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
@@ -76,8 +77,10 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private HierarchicalConfiguration config;
 	private Thread termT;
 	private DWVSerialPorts dwVSerialPorts;
+	
 	private DWVPortTermThread termHandler;
 
+	
 
 	private DWHelp dwhelp;
 
@@ -234,7 +237,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 						
 						
 						// fast writes
-						if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_COCO_PORTS - 1)))
+						if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_PORTS - 1)))
 						{
 							DoOP_FASTSERWRITE(lastOpcode);
 							vserial_ops++;
@@ -292,6 +295,10 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 									DoOP_TIME();
 									break;
 			
+								case DWDefs.OP_SETTIME:
+									DoOP_SETTIME();
+									break;
+									
 								case DWDefs.OP_PRINT:
 									DoOP_PRINT();
 									break;
@@ -359,7 +366,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 									
 									
 								default:
-									logger.warn("UNKNOWN OPCODE: " + opcodeint);
+									logger.warn("UNKNOWN OPCODE: " + opcodeint + " " + ((char)opcodeint));
 									break;
 							}	
 						}
@@ -546,7 +553,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			logger.error(e2.getMessage());
 		} 
 		
-		
 	}
 
 
@@ -595,7 +601,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			{
 				if (this.config.getBoolean("HDBDOSMode",false))
 				{
-					logger.debug("Disabling HDBDOS mode due to non HDBDOS DWINIT");
+					logger.warn("Disabling HDBDOS mode due to non HDBDOS DWINIT");
 					this.config.setProperty("HDBDOSMode", false);
 				}
 			}
@@ -606,10 +612,11 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		
 			// reset all ports
 			dwVSerialPorts.resetAllPorts();
+		
 		}
 		else
 		{
-			logger.debug("DWINIT received, ignoring due to DW3Only setting");
+			logger.info("DWINIT received, ignoring due to DW3Only setting");
 		}
 	
 	}
@@ -1063,6 +1070,18 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		}
 	}
 	
+	private void DoOP_SETTIME() throws IOException, DWCommTimeOutException
+	{
+		byte[] responsebuf = new byte[6];
+		
+		responsebuf = protodev.comRead(6);
+	
+		if (config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_SETTIME data: " + DWUtils.byteArrayToHexString(responsebuf) );
+		}
+		
+	}
 	
 	private void DoOP_TIME()
 	{
@@ -1107,7 +1126,21 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		// get packet args
 		// port # and stat
 		responsebuf = protodev.comRead(2);
-		if (responsebuf[1] != 1)
+		
+		
+		// Z
+		if ((responsebuf[0] >= DWVSerialPorts.MAX_NDEV_PORTS) && (responsebuf[0] < DWVSerialPorts.MAX_ZDEV_PORTS))
+		{
+			switch (responsebuf[1])
+			{
+				case OS9Defs.SS_KySns:
+					protodev.comWrite1(0, true);
+			}
+			
+			
+		}
+		
+		//if (responsebuf[1] != 1)
 		{
 			if (config.getBoolean("LogOpCode", false))
 			{
@@ -1134,11 +1167,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				logger.info("DoOP_SERSETSTAT: " + DWUtils.prettySS(responsebuf[1]) + " port: " + responsebuf[0] + "(" + dwVSerialPorts.prettyPort(responsebuf[0]) + ")");
 			}
 			
-			if (!dwVSerialPorts.isValid(responsebuf[0]))
-			{
-				logger.debug("Invalid port '" + responsebuf[0] + "' in sersetstat, ignored.");
-				return;
-			}
 			
 			switch(responsebuf[1])
 			{
@@ -1147,7 +1175,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 					byte[] devdescr = new byte[26];
 					devdescr = protodev.comRead(26);
 					
-					// logger.debug("COMST: " + byteArrayToHexString(devdescr));
+					logger.debug("COMST on port " + responsebuf[0] + ": " + DWUtils.byteArrayToHexString(devdescr));
 					
 					// should move into DWVSerialPorts
 					
@@ -1278,14 +1306,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			
 			if (config.getBoolean("LogOpCode", false))
 			{
-				try 
-				{
-					logger.info("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0] + " (" + dwVSerialPorts.getPortOutput(cmdpacket[0]).available() + " bytes in buffer)");
-				} 
-				catch (IOException e) 
-				{
-					logger.warn("While logging: " + e.getMessage());
-				}
+				logger.info("DoOP_SERREADM for " +  (cmdpacket[1] & 0xFF) + " bytes on port " + cmdpacket[0]);
 			}
 			
 			data = dwVSerialPorts.serReadM((int) cmdpacket[0],(cmdpacket[1] & 0xFF));
@@ -1312,15 +1333,15 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		try {
 			cmdpacket = protodev.comRead(2);
 			
-			byte[] data = new byte[cmdpacket[1]];
+			byte[] data = new byte[(0xff & cmdpacket[1])];
 		
-			data = protodev.comRead(cmdpacket[1]);
+			data = protodev.comRead(0xff & cmdpacket[1]);
 			
 			dwVSerialPorts.serWriteM(cmdpacket[0],data);	
 			
 			if (config.getBoolean("LogOpCode", false))
 			{
-				logger.debug("DoOP_SERWRITEM to port " + cmdpacket[0] + ", " + cmdpacket[1] + " bytes");
+				logger.debug("DoOP_SERWRITEM to port " + cmdpacket[0] + ", " + (0xff & cmdpacket[1]) + " bytes");
 			}
 			
 			

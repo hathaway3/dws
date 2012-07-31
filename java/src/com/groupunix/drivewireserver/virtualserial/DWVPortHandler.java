@@ -23,6 +23,7 @@ public class DWVPortHandler
 	private DWVSerialPorts dwVSerialPorts;
 	private	DWVSerialCircularBuffer inputBuffer = new DWVSerialCircularBuffer(1024, true);
 	private DWProtocolHandler dwProto;
+
 	
 	public DWVPortHandler(DWProtocolHandler dwProto, int port) 
 	{
@@ -36,6 +37,7 @@ public class DWVPortHandler
 
 	public void takeInput(int databyte) 
 	{
+		
 		
 		// echo character if modem echo is on
 		if (this.vModem.isEcho())
@@ -63,18 +65,18 @@ public class DWVPortHandler
 			
 
 		}
-			
+		
+		
+	
+		
 		// process command if enter
-		
-		// logger.debug("takeinput: " + databyte);
-		
-		if (databyte == this.vModem.getCR())
+		if ((databyte == this.vModem.getCR()) || (databyte == this.vModem.getCR()))
 		{
 			logger.debug("port command '" + port_command + "'");
 				
-			processCommand(port_command);
+			processCommand(port_command.trim());
 				
-			this.port_command = new String();
+			this.port_command = "";
 		}
 		else
 		{
@@ -88,6 +90,10 @@ public class DWVPortHandler
 			{
 				// is this really the easiest way to append a character to a string??  
 				this.port_command += Character.toString((char) databyte);
+				
+				// check for os9 window wcreate:1b 20 + (valid screen type: ff,0,1,2,5,6,7,8)   
+				
+				
 				
 				// check for MIDI header
 				if (this.port_command.equals("MThd"))
@@ -103,7 +109,9 @@ public class DWVPortHandler
 					{
 						logger.warn(e.getMessage());
 					}
-					dwProto.getVPorts().setPortOutput(vport, this.inputBuffer.getOutputStream());
+					
+					// TODO
+					//dwProto.getVPorts().setPortOutput(vport, this.inputBuffer.getOutputStream());
 					dwProto.getVPorts().markConnected(vport);
 					
 					logger.info("MIDI file detected on handler # " + this.dwProto.getHandlerNo() + " port " + this.vport);
@@ -119,6 +127,8 @@ public class DWVPortHandler
 			
 	}
 
+
+	
 	private void processCommand(String cmd) 
 	{
 		// hitting enter on a blank line is ok
@@ -143,12 +153,15 @@ public class DWVPortHandler
 	{
 	// new API based implementation 1/2/10
 		
+		
+		
 		String[] cmdparts = cmd.split("\\s+");
 		
 		if (cmdparts.length > 0)
 		{
 			if (cmdparts[0].equalsIgnoreCase("tcp"))
 			{
+				
 				if ((cmdparts.length == 4) && (cmdparts[1].equalsIgnoreCase("connect"))) 
 				{
 					doTCPConnect(cmdparts[2],cmdparts[3]);
@@ -188,6 +201,10 @@ public class DWVPortHandler
 			{
 				// log entry
 				logger.info("coco " + cmd);
+			}
+			else
+			{
+				logger.warn("Unknown API command: '" + cmd + "'");
 			}
 		}
 		else

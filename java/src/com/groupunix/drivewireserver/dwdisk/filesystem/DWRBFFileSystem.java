@@ -89,7 +89,7 @@ public class DWRBFFileSystem extends DWFileSystem
 	}
 
 	
-	public DWRBFFileDescriptor getFDFromPath(String filename) throws IOException, DWDiskInvalidSectorNumber, DWFileSystemFileNotFoundException
+	public DWRBFFileDescriptor getFDFromPath(String filename) throws IOException, DWDiskInvalidSectorNumber, DWFileSystemFileNotFoundException, DWFileSystemInvalidDirectoryException
 	{
 		if (filename == null)
 		{
@@ -214,7 +214,7 @@ public class DWRBFFileSystem extends DWFileSystem
 		return res;
 	}
 
-	public ArrayList<DWRBFFileSystemDirEntry> getRootDirectory() throws IOException, DWDiskInvalidSectorNumber
+	public ArrayList<DWRBFFileSystemDirEntry> getRootDirectory() throws IOException, DWDiskInvalidSectorNumber, DWFileSystemInvalidDirectoryException
 	{
 		ArrayList<DWRBFFileSystemDirEntry> dir = new ArrayList<DWRBFFileSystemDirEntry>();
 		
@@ -253,7 +253,7 @@ public class DWRBFFileSystem extends DWFileSystem
 		return rootsec;
 	}
 
-	public ArrayList<DWRBFFileSystemDirEntry> getDirectoryFromFD(DWRBFFileDescriptor fd) throws IOException, DWDiskInvalidSectorNumber
+	public ArrayList<DWRBFFileSystemDirEntry> getDirectoryFromFD(DWRBFFileDescriptor fd) throws IOException, DWDiskInvalidSectorNumber, DWFileSystemInvalidDirectoryException
 	{
 		
 		return this.directoryFromContents(this.getFileContentsFromDescriptor(fd));
@@ -282,8 +282,13 @@ public class DWRBFFileSystem extends DWFileSystem
 		return res;
 	}
 
-	public byte[] getFileContentsFromDescriptor(DWRBFFileDescriptor fd) throws IOException, DWDiskInvalidSectorNumber
+	public byte[] getFileContentsFromDescriptor(DWRBFFileDescriptor fd) throws IOException, DWDiskInvalidSectorNumber, DWFileSystemInvalidDirectoryException
 	{
+		if (fd.getFilesize() < 0)
+		{
+			throw new DWFileSystemInvalidDirectoryException("Negative file size?");
+		}
+		
 		byte[] res = new byte[fd.getFilesize()];
 		
 		int bytesread = 0;

@@ -3,7 +3,7 @@ package com.groupunix.drivewireserver.virtualserial;
 
 
 import java.io.IOException;
-import java.net.Socket;
+import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
@@ -17,7 +17,7 @@ public class DWVPortTCPServerThread implements Runnable {
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPortTCPServerThread");
 	
 	private int vport = -1;
-	private Socket skt; 
+
 	private int conno;
 	private boolean wanttodie = false;
 	private int mode = 0;
@@ -26,6 +26,8 @@ public class DWVPortTCPServerThread implements Runnable {
 	private static final int MODE_TELNET = 1;
 	private static final int MODE_TERM = 3;
 
+	private SocketChannel sktchan;
+	
 	
 	public DWVPortTCPServerThread(DWProtocolHandler dwProto, int vport, int conno) throws DWConnectionNotValidException
 	{
@@ -35,7 +37,9 @@ public class DWVPortTCPServerThread implements Runnable {
 
 		this.dwVSerialPorts = dwProto.getVPorts();
 		this.mode = this.dwVSerialPorts.getListenerPool().getMode(conno);
-		this.skt = this.dwVSerialPorts.getListenerPool().getConn(conno);
+		this.sktchan = this.dwVSerialPorts.getListenerPool().getConn(conno);
+		
+		
 	}
 	
 
@@ -55,7 +59,7 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 			logger.debug("run for conn " + this.conno);
 				
-			if (skt == null)
+			if (sktchan == null)
 			{
 				logger.warn("got a null socket, bailing out");
 				return;
@@ -64,14 +68,14 @@ public class DWVPortTCPServerThread implements Runnable {
 			// 	set pass through mode
 			dwVSerialPorts.markConnected(vport);	
 			dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPIN);
-			dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
+			dwVSerialPorts.setPortChannel(vport, sktchan);
 		
 			int lastbyte = -1;
 		
-			while ((wanttodie == false) && (skt.isClosed() == false) && (dwVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
+			while ((wanttodie == false) && (sktchan.isConnected()) && (dwVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
 			{
 			
-				int databyte = skt.getInputStream().read();
+				int databyte = sktchan.socket().getInputStream().read();
 				if (databyte == -1)
 				{
 					wanttodie = true;
@@ -99,18 +103,13 @@ public class DWVPortTCPServerThread implements Runnable {
 			}
 			
 			dwVSerialPorts.markDisconnected(this.vport);
-			dwVSerialPorts.setPortOutput(vport, null);
-			
-			if (skt.isClosed() == false)
-			{
-				skt.close();
-			}
+			dwVSerialPorts.setPortChannel(vport, null);
 			
 		
 			// 	only if we got connected.. and its not term
-			if ((skt != null) && (mode != MODE_TERM))
+			if ((sktchan != null) && (mode != MODE_TERM))
 			{
-				if (skt.isConnected())
+				if (sktchan.isConnected())
 				{
 		
 					logger.debug("exit stage 1, flush buffer");
@@ -175,7 +174,8 @@ public class DWVPortTCPServerThread implements Runnable {
 		this.wanttodie = true;
 		try
 		{
-			this.skt.close();
+			if (this.sktchan != null)
+				this.sktchan.close();
 		} 
 		catch (IOException e)
 		{

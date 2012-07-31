@@ -47,6 +47,7 @@ public class DWCmdPortShow extends DWCommand {
 		
 		for (int i = 0;i<DWVSerialPorts.MAX_PORTS;i++)
 		{
+			
 			text += String.format("%6s", dwProto.getVPorts().prettyPort(i));
 			
 			try 

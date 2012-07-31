@@ -16,7 +16,6 @@ import com.groupunix.drivewireserver.dwexceptions.DWFileSystemFullException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidDirectoryException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATException;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
-import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireserver.dwexceptions.DWInvalidSectorException;
 import com.groupunix.drivewireserver.dwexceptions.DWSeekPastEndOfDeviceException;
 

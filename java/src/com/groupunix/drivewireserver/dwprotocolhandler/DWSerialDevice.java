@@ -387,9 +387,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 	public byte[] comRead(int len) throws IOException, DWCommTimeOutException 
 	{
-	
 		byte[] buf = new byte[len];
-		
 		
 		for (int i = 0;i<len;i++)
 		{
@@ -408,7 +406,6 @@ public class DWSerialDevice implements DWProtocolDevice
 			logger.debug("READ " + len + ": " + tmps);
 		}
 		
-		
 		return(buf);
 	}
 	
@@ -418,38 +415,10 @@ public class DWSerialDevice implements DWProtocolDevice
 		return comRead1(timeout, true);
 	}
 	
+	
 	public int comRead1(boolean timeout, boolean blog) throws IOException, DWCommTimeOutException 
 	{
-		/*
-		int retdata = -1;
 		
-		if (timeout)
-		{
-			long starttime = System.currentTimeMillis();
-			retdata = serialPort.getInputStream().read();
-			this.readtime += System.currentTimeMillis() - starttime;
-			if (retdata == -1)
-				throw (new DWCommTimeOutException("Timed out waiting for serial data"));
-		}
-		else
-		{
-			while ((retdata == -1) && (!this.wanttodie) && (serialPort != null))
-			{
-				retdata = serialPort.getInputStream().read();
-			}
-		}
-		if (bytelog)
-			logger.debug("READ1: " + retdata);
-		
-		if (wanttodie)
-		{
-			//logger.debug("died while in read1");
-			return(-1);
-		}
-		
-		return(retdata);
-	
-		*/
 		int res = -1;
 		
 		try

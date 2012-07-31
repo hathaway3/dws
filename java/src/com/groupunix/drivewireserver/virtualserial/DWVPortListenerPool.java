@@ -1,8 +1,7 @@
 package com.groupunix.drivewireserver.virtualserial;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
@@ -12,21 +11,22 @@ public class DWVPortListenerPool {
 
 	public static final int MAX_CONN = 256;
 	public static final int MAX_LISTEN = 64;
-	private Socket[] sockets = new Socket[MAX_CONN];
-	private ServerSocket[] server_sockets = new ServerSocket[MAX_LISTEN];
+	private SocketChannel[] sockets = new SocketChannel[MAX_CONN];
+	private SocketChannel[] server_sockets = new SocketChannel[MAX_LISTEN];
+	
 	private int[] serversocket_ports = new int[MAX_LISTEN];
 	private int[] socket_ports = new int[MAX_CONN];
 	private int[] modes = new int[MAX_CONN];
 	
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPortListenerPool");
 	
-	public int addConn(int port, Socket skt, int mode) 
+	public int addConn(int port, SocketChannel sktchan, int mode) 
 	{
 		for (int i = 0; i< MAX_CONN;i++)
 		{
 			if (sockets[i] == null)
 			{
-				sockets[i] = skt;
+				sockets[i] = sktchan;
 				modes[i] = mode;
 				socket_ports[i] = port;
 				return(i);
@@ -36,7 +36,7 @@ public class DWVPortListenerPool {
 		return(-1);
 	}
 
-	public Socket getConn(int conno) throws DWConnectionNotValidException
+	public SocketChannel getConn(int conno) throws DWConnectionNotValidException
 	{
 		validateConn(conno);
 		return(sockets[conno]);
@@ -56,13 +56,13 @@ public class DWVPortListenerPool {
 		socket_ports[conno] = port;
 	}
 	
-	public int addListener(int port, ServerSocket srvskt)
+	public int addListener(int port, SocketChannel srvskt)
 	{
 		for (int i = 0; i< MAX_LISTEN;i++)
 		{
 			if (server_sockets[i] == null)
 			{
-				server_sockets[i] = srvskt;
+				
 				serversocket_ports[i] = port;
 				return(i);
 			}
@@ -71,7 +71,7 @@ public class DWVPortListenerPool {
 		return(-1);
 	}
 	
-	public ServerSocket getListener(int conno)
+	public SocketChannel getListener(int conno)
 	{
 		return(server_sockets[conno]);
 	}

@@ -50,7 +50,7 @@ public class DWCmdNetShow extends DWCommand {
 	
 			try 
 			{
-				text += "Connection " + i + ": " + dwProto.getVPorts().getListenerPool().getConn(i).getInetAddress().getHostName() + ":" + dwProto.getVPorts().getListenerPool().getConn(i).getPort() + " (connected to port " + dwProto.getVPorts().prettyPort(dwProto.getVPorts().getListenerPool().getConnPort(i)) + ")\r\n";
+				text += "Connection " + i + ": " + dwProto.getVPorts().getListenerPool().getConn(i).socket().getInetAddress().getHostName() + ":" + dwProto.getVPorts().getListenerPool().getConn(i).socket().getPort() + " (connected to port " + dwProto.getVPorts().prettyPort(dwProto.getVPorts().getListenerPool().getConnPort(i)) + ")\r\n";
 			} 
 			catch (DWConnectionNotValidException e) 
 			{
@@ -64,7 +64,7 @@ public class DWCmdNetShow extends DWCommand {
 		{
 			if (dwProto.getVPorts().getListenerPool().getListener(i) != null)
 			{
-				text += "Listener " + i + ": TCP port " + dwProto.getVPorts().getListenerPool().getListener(i).getLocalPort() + " (control port " + dwProto.getVPorts().prettyPort(dwProto.getVPorts().getListenerPool().getListenerPort(i)) +")\r\n";
+				text += "Listener " + i + ": TCP port " + dwProto.getVPorts().getListenerPool().getListener(i).socket().getLocalPort() + " (control port " + dwProto.getVPorts().prettyPort(dwProto.getVPorts().getListenerPool().getListenerPort(i)) +")\r\n";
 			}
 		}
 		

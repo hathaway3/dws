@@ -1,160 +1,103 @@
 package com.groupunix.drivewireserver.virtualserial;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWVModemConnThread implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVModemConnThread");
 	
-	private Socket skt; 
-	private String clientHost = "none";
-	private int clientPort = -1;
+	private SocketChannel sktchan; 
 	private int vport = -1;
-	private int handlerno;
-	private DWVSerialPorts dwVSerialPorts;
+
+	private DWVModem vm;
+
+	private String tcphost;
+	private int tcpport;
+
+	private DWVModemListenerThread listenerThread = null;
+
 	
-	 /**
-	    * The Telnet command code IAC (255)
-	    */
-	   
+	// telnet protocol cmds
 	public static final int IAC = 255;
-
-	   /**
-	    * The Telnet command code SE (240)
-	    */
-	   
 	public static final int SE = 240;
-
-	   /**
-	    * The Telnet command code NOP (241)
-	    */
 	public static final int NOP = 241;
-
-	   /**
-	    * The Telnet command code DM (242)
-	    */
-	   
 	public static final int DM = 242;
-
-	   /**
-	    * The Telnet command code BREAK (243)
-	    */
-	   
 	public static final int BREAK = 243;
-
-	   /**
-	    * The Telnet command code IP (244)
-	    */
-	   
 	public static final int IP = 244;
-
-	   /**
-	    * The Telnet command code AO (245)
-	    */
-	   
 	public static final int AO = 245;
-
-	   /**
-	    * The Telnet command code IAC (246)
-	    */
-	   
 	public static final int AYT = 246;
-
-	   /**
-	    * The Telnet command code EC (247)
-	    */
-	   
 	public static final int EC = 247;
-
-	   /**
-	    * The Telnet command code EL (248)
-	    */
-	   
 	public static final int EL = 248;
-
-	   /**
-	    * The Telnet command code GA (249)
-	    */
-	   
 	public static final int GA = 249;
-
-	   /**
-	    * The Telnet command code SB (250)
-	    */
-	   
 	public static final int SB = 250;
-
-	   /**
-	    * The Telnet command code WILL (251)
-	    */
-	   
 	public static final int WILL = 251;
-
-	   /**
-	    * The Telnet command code WONT (252)
-	    */
-	   
 	public static final int WONT = 252;
-
-	   /**
-	    * The Telnet command code DO (253)
-	    */
-	   
 	public static final int DO = 253;
-
-	   /**
-	    * The Telnet command code DONT (254)
-	    */
-	   
 	public static final int DONT = 254;
 	
 	
 	
-	
-	public DWVModemConnThread(int handlerno, int vport, String host, int tcpport) 
+	public DWVModemConnThread(DWVModem vm, SocketChannel skt, DWVModemListenerThread dwvModemListenerThread) 
 	{
-		this.vport = vport;
- 		this.clientHost = host;
-		this.clientPort = tcpport;
-		this.handlerno = handlerno;
-		this.dwVSerialPorts = ((DWProtocolHandler) DriveWireServer.getHandler(this.handlerno)).getVPorts();
-		
+ 		this.vm = vm;
+ 		this.vport = vm.getVPort();
+ 		this.sktchan = skt;
+ 		this.listenerThread  = dwvModemListenerThread;
+
+	}
+
+	public DWVModemConnThread(DWVModem dwvModem, String tcphost, int tcpport)
+	{
+		this.tcphost = tcphost;
+		this.tcpport = tcpport;
+		this.vm = dwvModem;
+		this.vport = vm.getVPort();
+		this.sktchan = null;
 	}
 
 	public void run() 
 	{
 		Thread.currentThread().setName("mdmconn-" + Thread.currentThread().getId());
-		logger.debug("thread run for connection to " + this.clientHost + ":" + clientPort);
+	
+		int telmode = 0;
 		
+		if (sktchan == null)
+		{
+			try
+			{
+				sktchan = SocketChannel.open(new InetSocketAddress(tcphost, tcpport));
+				
+				
+			}
+			catch (IOException e)
+			{
+				logger.warn("while making outgoing vmodem connection: " + e.getMessage());
+			} 
+			
+		}
+		
+			
 		try 
 		{
 			
-			skt = new Socket(clientHost,clientPort);
-			
-			dwVSerialPorts.markConnected(vport);
-			dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_VMODEMOUT);
-			dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
-				
-			//int lastbyte = 0;
-				
-			int telmode = 0;
-			
-			dwVSerialPorts.getPortInput(vport).write("CONNECT\r\n".getBytes());
-			
-			while (skt.isConnected())
+			if ((sktchan != null) && sktchan.isConnected())
 			{
-				int data = skt.getInputStream().read();
-				
-				if (DriveWireServer.getHandler(this.handlerno).getConfig().getBoolean("LogVPortBytes"))
-					logger.debug("VMODEM to CoCo: " + data + "  (" + (char)data + ")");
+				vm.getVSerialPorts().markConnected(vport);
+				vm.getVSerialPorts().setUtilMode(vport, DWDefs.UTILMODE_VMODEMOUT);
+				vm.getVSerialPorts().setPortChannel(vport, sktchan);
+				vm.getVSerialPorts().getPortInput(vport).write("CONNECT\r\n".getBytes());
+			}
+			
+			while ((sktchan != null) && sktchan.isConnected())
+			{
+				int data = sktchan.socket().getInputStream().read();
 				
 				if (data >= 0)
 				{
@@ -178,22 +121,22 @@ public class DWVModemConnThread implements Runnable {
 						  		break;
 						  		
 						  	case WILL:
-						  		data = skt.getInputStream().read();
-					        	skt.getOutputStream().write(255);
-					        	skt.getOutputStream().write(DONT);
-					        	skt.getOutputStream().write(data);
+						  		data = sktchan.socket().getInputStream().read();
+						  		sktchan.socket().getOutputStream().write(255);
+						  		sktchan.socket().getOutputStream().write(DONT);
+						  		sktchan.socket().getOutputStream().write(data);
 					        	break;
 					        	
 					        case WONT:
 					        case DONT:
-					        	data = skt.getInputStream().read();
+					        	data = sktchan.socket().getInputStream().read();
 					        	break;
 					        	
 					        case DO:
-					        	data = skt.getInputStream().read();
-					        	skt.getOutputStream().write(255);
-					        	skt.getOutputStream().write(WONT);
-					        	skt.getOutputStream().write(data);
+					        	data = sktchan.socket().getInputStream().read();
+					        	sktchan.socket().getOutputStream().write(255);
+					        	sktchan.socket().getOutputStream().write(WONT);
+					        	sktchan.socket().getOutputStream().write(data);
 					        	break;
 						
 					        	
@@ -208,21 +151,17 @@ public class DWVModemConnThread implements Runnable {
 						
 						default:
 							// write it to the serial port
-							dwVSerialPorts.getPortInput(vport).write((byte) data);
+							vm.write((byte) data);
 			         
-			        	   
 					}
-					
-					
-				
 				}
 				else
 				{
-					logger.info("end of stream from TCP client at " + this.clientHost + ":" + this.clientPort);
-					if (skt.isConnected())
+					logger.info("connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " closed");
+					if (sktchan.isConnected())
 					{
 						logger.debug("closing socket");
-						skt.close();
+						sktchan.close();
 					}
 						
 				}
@@ -231,31 +170,25 @@ public class DWVModemConnThread implements Runnable {
 		} 
 		catch (IOException e) 
 		{
-			logger.warn("IO error in connection to " + this.clientHost + ":" + this.clientPort + " = " + e.getMessage());
-		}
+			logger.warn("IO error in connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " = " + e.getMessage());
+		} 
 		catch (DWPortNotValidException e)
 		{
-			logger.warn(e.getMessage());
-		} 
+			logger.warn("in connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " = " + e.getMessage());
+		}
+	
 		finally
 		{
 			if (this.vport > -1)
 			{
-				dwVSerialPorts.markDisconnected(this.vport);
+				vm.getVSerialPorts().markDisconnected(this.vport);
 				// TODO: this is all wrong
-				try 
-				{
-					dwVSerialPorts.getPortInput(vport).write("\r\n\r\nNO CARRIER\r\n".getBytes());
-				} 
-				catch (IOException e) 
-				{
-					logger.warn(e.getMessage());
-				} 
-				catch (DWPortNotValidException e)
-				{
-					logger.warn(e.getMessage());
-				}
-			}
+				vm.write("\r\n\r\nNO CARRIER\r\n");
+				
+				if (this.listenerThread != null)
+					this.listenerThread.setConnected(false);
+			}	
+			
 			logger.debug("thread exiting");
 		}
 	}

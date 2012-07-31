@@ -73,9 +73,8 @@ public class DWCmdPortOpen extends DWCommand {
 			
 			dwProto.getVPorts().openPort(portno);
 			
-			Thread cthread = new Thread(new DWVPortTCPConnectionThread(this.dwProto, portno, tcphost, tcpport));
+			Thread cthread = new Thread(new DWVPortTCPConnectionThread(this.dwProto, portno, tcphost, tcpport, false));
 			cthread.start();
-			
 			
 			return(new DWCommandResponse("Port #"+ portno + " open."));
 		

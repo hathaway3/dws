@@ -15,7 +15,6 @@ public class DWLW16FileSystemDirEntry extends DWFileSystemDirEntry
 		
 		this.setInode(inode);
 		this.filename = fn;
-		
 	}
 
 	@Override

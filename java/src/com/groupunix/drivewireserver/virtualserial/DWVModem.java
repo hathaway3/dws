@@ -16,9 +16,6 @@ public class DWVModem {
 	private int vport;
 	
 	// modem state
-	private boolean vmodem_echo = false;
-	private boolean vmodem_verbose = true;
-	private boolean vmodem_quiet = false;
 	private int[] vmodem_registers = new int[256];
 	private String vmodem_lastcommand = new String();
 	private String vmodem_dialstring = new String();
@@ -42,18 +39,36 @@ public class DWVModem {
 	private static final int REG_BS = 5;
 	private static final int REG_GUARDTIME = 12;
 	
+	private static final int REG_LISTENPORTHI = 13;
+	private static final int REG_LISTENPORTLO = 14;
+
+	private static final int REG_ECHO = 15;
+	private static final int REG_VERBOSE = 16;
+	private static final int REG_QUIET = 17;
+	
+	private static final int REG_DCDMODE = 18;
+	private static final int REG_DSRMODE = 19;
+	private static final int REG_DTRMODE = 20;
+	
+	
 	private Thread tcpthread;
-	private int handlerno;
+
 	private DWVSerialPorts dwVSerialPorts;
+
+	private DWProtocolHandler dwProto;
+
+	private Thread listenThread;
 	
 	
 	public DWVModem(DWProtocolHandler dwProto, int port) 
 	{
 		this.vport = port;
+		this.dwProto = dwProto;
+		
 		this.dwVSerialPorts = dwProto.getVPorts();
 		// logger.debug("new vmodem for port " + port);
 		
-		doCommandReset();
+		doCommandReset(1);
 	}
 
 	
@@ -127,6 +142,8 @@ public class DWVModem {
 						case 'V':
 						case 'F':
 						case 'D':
+						case 'C':
+						case 'A':
 							
 							// handle extended mode
 							if (extended)
@@ -135,6 +152,11 @@ public class DWVModem {
 								{
 									case 'V':
 									case 'F':
+									case 'C':
+									case 'D':
+									case 'S':
+									case 'Z':
+									case 'A':
 										extendedpart = true;
 										break;
 								}
@@ -143,7 +165,7 @@ public class DWVModem {
 							if (cmd.toUpperCase().charAt(i) == '&')
 								extended = true;
 							
-							if (cmd.toUpperCase().charAt(i) == 'D')
+							if ((!extended) && cmd.toUpperCase().charAt(i) == 'D')
 								dialing = true;
 													
 							if (extendedpart)
@@ -278,15 +300,15 @@ public class DWVModem {
 		{
 			// ignored
 			case 'B':  // call negotiation, might implement if needed
-			case 'L':
-			case 'M':
-			case 'N':
-			case 'X':
+			case 'L':  // speaker volume
+			case 'M':  // speaker mode
+			case 'N':  // handshake speed lock to s37
+			case 'X':  // result code/dialing style
 				break;
 				
 			// reset
 			case 'Z':
-				doCommandReset();
+				doCommandReset(val);
 				break;
 				
 			// toggles
@@ -294,28 +316,19 @@ public class DWVModem {
 				if (val > 1)
 					errors++;
 				else
-					if (val == 0)
-						vmodem_echo = false;
-					else
-						vmodem_echo = true;
+					this.vmodem_registers[REG_ECHO] = val;
 				break;
 			case 'Q':
 				if (val > 1)
 					errors++;
 				else
-					if (val == 0)
-						vmodem_quiet = false;
-					else
-						vmodem_quiet = true;
+					this.vmodem_registers[REG_QUIET] = val;
 				break;
 			case 'V':
 				if (val > 1)
 					errors++;
 				else
-					if (val == 0)
-						vmodem_verbose = false;
-					else
-						vmodem_verbose = true;
+					this.vmodem_registers[REG_VERBOSE] = val;
 				break;			
 			
 			// info
@@ -323,16 +336,19 @@ public class DWVModem {
 				switch(val)
 				{
 					case 0:
-						write("\n\rDWVM " +dwVSerialPorts.prettyPort(this.vport) + "\r\n");
+						write(getCRLF() + "DWVM " +dwVSerialPorts.prettyPort(this.vport) + getCRLF());
 						break;
 					case 1:
 					case 3:
-						write("\n\rDriveWire " + DriveWireServer.DWServerVersion + " Virtual Modem on port " + dwVSerialPorts.prettyPort(this.vport) + "\r\n");
+						write(getCRLF() + "DriveWire " + DriveWireServer.DWServerVersion + " Virtual Modem on port " + dwVSerialPorts.prettyPort(this.vport) + getCRLF());
 						break;
 					case 2:
 						try 
 						{
-							write("\n\rConnected to " + dwVSerialPorts.getHostIP(this.vport) + ":" + dwVSerialPorts.getHostPort(this.vport) + "\n\r");
+							if (dwVSerialPorts.getConn(this.vport) > -1)
+								write(getCRLF() + "Connected to " + dwVSerialPorts.getHostIP(this.vport) + ":" + dwVSerialPorts.getHostPort(this.vport) + getCRLF());
+							else
+								write(getCRLF() + "Not connected" + getCRLF());
 						} 
 						catch (DWPortNotValidException e) 
 						{
@@ -346,7 +362,7 @@ public class DWVModem {
 						}
 						break;
 					case 4:
-						doCommandShowProfile();
+						doCommandShowActiveProfile();
 						break;
 					default:
 						errors++;
@@ -361,12 +377,25 @@ public class DWVModem {
 				{
 					switch(thiscmd.toUpperCase().charAt(1))
 					{
+					
+						case 'C':
+							doCommandSetDCDMode(val);
+							break;
+						case 'D':
+							doCommandSetDTRMode(val);
+							break;
+						case 'S':
+							doCommandSetDSRMode(val);
+							break;
+						
+						case 'A':
+							doCommandAnswerMode(val);
+							break;
+						case 'Z':
 						case 'F':
-							doCommandReset();
+							doCommandReset(val);
 							break;
-						case 'V':
-							doCommandShowProfile();
-							break;
+						
 						default:
 							errors++;
 							break;
@@ -388,7 +417,7 @@ public class DWVModem {
 					if (thisarg.equals("?"))
 					{
 						// display
-						write("\n\r" + this.vmodem_registers[regval] + "\n\r");	
+						write(getCRLF() + this.vmodem_registers[regval] + getCRLF());	
 					}	
 					else
 					{
@@ -434,6 +463,34 @@ public class DWVModem {
 		return(errors);
 	}
 
+	private void doCommandAnswerMode(int val)
+	{
+		this.vmodem_registers[REG_LISTENPORTHI] = val / 256;
+		this.vmodem_registers[REG_LISTENPORTLO] = val % 256;
+		
+		disableListener();
+		
+		if (val > 0)
+		{
+			enableListener(val);
+		}
+		
+	}
+
+
+	private void enableListener(int val)
+	{
+		this.listenThread = new Thread(new DWVModemListenerThread(this));
+		listenThread.start();
+	}
+
+
+	private void disableListener()
+	{
+		
+	}
+
+
 	private int doDial() 
 	{
 		String tcphost;
@@ -457,24 +514,27 @@ public class DWVModem {
 			return 0;
 		}
 		
-		// start TCP thread
-		this.tcpthread = new Thread(new DWVModemConnThread(this.handlerno, this.vport, tcphost, tcpport));
-		this.tcpthread.setDaemon(true);
-		//this.tcpthread = new Thread(new DWVPortTCPConnectionThread(this.handlerno, this.vport, tcphost, tcpport));
+		// try to connect..
 		
+		this.tcpthread = new Thread(new DWVModemConnThread(this, tcphost, tcpport));
+		this.tcpthread.setDaemon(true);
 		this.tcpthread.start();
-
+		
 		return 1;
 	}
 
-	private void doCommandShowProfile() 
+	private void doCommandShowActiveProfile() 
 	{
 		// display current modem settings
 		write("Active profile:" + getCRLF() + getCRLF());
 		
-		write("E" + onoff(this.vmodem_echo) + " ");
-		write("Q" + onoff(this.vmodem_quiet) + " ");
-		write("V" + onoff(this.vmodem_verbose) + " ");
+		write("E" + onoff(this.isEcho()) + " ");
+		write("Q" + onoff(this.isQuiet()) + " ");
+		write("V" + onoff(this.isVerbose()) + " ");
+		
+		write("&C" + this.vmodem_registers[REG_DCDMODE] + " ");
+		write("&D" + this.vmodem_registers[REG_DTRMODE] + " ");
+		write("&S" + this.vmodem_registers[REG_DSRMODE] + " ");
 		
 		write(getCRLF() + getCRLF());
 		
@@ -488,6 +548,10 @@ public class DWVModem {
 		write(getCRLF() + getCRLF());
 	}
 
+	
+	
+	
+	
 	private String onoff(boolean val) 
 	{
 		if (val)
@@ -496,25 +560,63 @@ public class DWVModem {
 			return("0");
 	}
 
-	private void doCommandReset() 
+	private void doCommandReset(int val) 
 	{
-		// state
-		this.vmodem_echo = false;
+		// common settings
 		this.vmodem_lastcommand = new String();
-		this.vmodem_quiet = false;
-		this.vmodem_verbose = true;
-		
-		// registers
+		this.vmodem_registers[REG_LISTENPORTHI] = 0;
+		this.vmodem_registers[REG_LISTENPORTLO] = 0;
 		this.vmodem_registers[REG_ANSWERONRING] = 0;
 		this.vmodem_registers[REG_RINGS] = 0;
-		this.vmodem_registers[REG_ESCCHAR] = 43;
 		this.vmodem_registers[REG_CR] = 13;
 		this.vmodem_registers[REG_LF] = 10;
 		this.vmodem_registers[REG_BS] = 8;
-		this.vmodem_registers[REG_GUARDTIME] = 50;
+
+		switch(val)
+		{
+			case 1:
+				// settings for tcp mode/non modem use
+				this.vmodem_registers[REG_ESCCHAR] = 255;
+				this.vmodem_registers[REG_GUARDTIME] = 0;
+				this.vmodem_registers[REG_ECHO] = 0;
+				this.vmodem_registers[REG_VERBOSE] = 0;
+				this.vmodem_registers[REG_QUIET] = 0;
+				this.vmodem_registers[REG_DCDMODE] = 0;
+				this.vmodem_registers[REG_DSRMODE] = 0;
+				this.vmodem_registers[REG_DTRMODE] = 0;
+				break;
+			case 0:
+			default:
+				// settings better for use as a modem
+				this.vmodem_registers[REG_ESCCHAR] = 43;
+				this.vmodem_registers[REG_GUARDTIME] = 50;
+				this.vmodem_registers[REG_ECHO] = 1;
+				this.vmodem_registers[REG_VERBOSE] = 1;
+				this.vmodem_registers[REG_QUIET] = 0;
+				this.vmodem_registers[REG_DCDMODE] = 1;
+				this.vmodem_registers[REG_DSRMODE] = 1;
+				this.vmodem_registers[REG_DTRMODE] = 1;
+				
+				break;
+		}
 		
 	}
 
+	
+	private void doCommandSetDCDMode(int val)
+	{
+		this.vmodem_registers[REG_DCDMODE] = val;
+	}
+	
+	private void doCommandSetDTRMode(int val)
+	{
+		this.vmodem_registers[REG_DTRMODE] = val;
+	}
+	
+	private void doCommandSetDSRMode(int val)
+	{
+		this.vmodem_registers[REG_DSRMODE] = val;
+	}
 	
 	private String getCRLF()
 	{
@@ -526,10 +628,10 @@ public class DWVModem {
 	{
 		
 		// quiet mode
-		if (!vmodem_quiet)
+		if (!this.isQuiet())
 		{
 			// verbose mode
-			if (vmodem_verbose)
+			if (this.isVerbose())
 			{
 				write(getVerboseResponse(resp) + getCRLF());
 			}
@@ -577,7 +679,7 @@ public class DWVModem {
 		return(msg);
 	}
 	
-	private void write(String str)
+	public void write(String str)
 	{
 		try 
 		{
@@ -588,11 +690,44 @@ public class DWVModem {
 			logger.error(e.getMessage());
 		}
 	}
+	
+
+	public void write(byte data)
+	{
+		try 
+		{
+			dwVSerialPorts.writeToCoco(this.vport, data);
+		} 
+		catch (DWPortNotValidException e) 
+		{
+			logger.error(e.getMessage());
+		}
+	}
+	
 
 
 	public boolean isEcho() 
 	{
-		return(this.vmodem_echo);
+		if (this.vmodem_registers[REG_ECHO] == 1)
+			return true;
+		
+		return false;
+	}
+
+	public boolean isVerbose() 
+	{
+		if (this.vmodem_registers[REG_VERBOSE] == 1)
+			return true;
+		
+		return false;
+	}
+
+	public boolean isQuiet() 
+	{
+		if (this.vmodem_registers[REG_QUIET] == 1)
+			return true;
+		
+		return false;
 	}
 
 
@@ -610,6 +745,39 @@ public class DWVModem {
 	{
 		return(this.vmodem_registers[REG_BS]);
 	}
+
+
+	public int getListenPort()
+	{
+		return(this.vmodem_registers[REG_LISTENPORTHI] * 256 + this.vmodem_registers[REG_LISTENPORTLO]);
+	}
+
+
+	public int getVPort()
+	{
+		return this.vport;
+	}
+
+
+	public DWVSerialPorts getVSerialPorts()
+	{
+		return this.dwVSerialPorts;
+	}
+
+
+	public int[] getRegisters()
+	{
+		return this.vmodem_registers;
+	}
+
+
+	public DWProtocolHandler getVProto()
+	{
+		return this.dwProto;
+	}
+
+
+		
 	
 	
 }

@@ -22,7 +22,7 @@ public class DWServerConfigListener implements ConfigurationListener
         	DriveWireServer.configserial++;
         	
         	
-            if (event.getPropertyName() != null)
+            if ((event.getPropertyName() != null) && (event.getPropertyValue() != null))
             {	
             	DriveWireServer.submitServerConfigEvent(event.getPropertyName(), event.getPropertyValue().toString());
             	

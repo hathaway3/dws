@@ -7,7 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.Socket;
+import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
@@ -21,7 +21,6 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	private static final Logger logger = Logger.getLogger("DWServer.DWVPortTelnetPreflightThread");
 	
 	
-	private Socket skt;
 	private int vport;
 
 	private boolean banner = false;
@@ -30,11 +29,14 @@ public class DWVPortTelnetPreflightThread implements Runnable
 
 	private DWVSerialPorts dwVSerialPorts;
 	private DWProtocolHandler dwProto;
+
+
+	private SocketChannel sktchan;
 	
-	public DWVPortTelnetPreflightThread(DWProtocolHandler dwProto, int vport, Socket skt, boolean doTelnet, boolean doBanner)
+	public DWVPortTelnetPreflightThread(DWProtocolHandler dwProto, int vport, SocketChannel sktchan, boolean doTelnet, boolean doBanner)
 	{
 		this.vport = vport;
-		this.skt = skt;
+		this.sktchan = sktchan;
 
 		this.banner = doBanner;
 		this.telnet = doTelnet;
@@ -48,13 +50,13 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		Thread.currentThread().setName("tcppre-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 		
-		logger.info("preflight checks for new connection from " + skt.getInetAddress().getHostName());
+		logger.info("preflight checks for new connection from " + sktchan.socket().getInetAddress().getHostName());
 		
 		try
 		{
 			// hello
 			if (this.telnet)
-				skt.getOutputStream().write(("DriveWire Telnet Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
+				sktchan.socket().getOutputStream().write(("DriveWire Telnet Server " + DriveWireServer.DWServerVersion + "\r\n\n").getBytes());
 
 
 			if (telnet == true)
@@ -73,18 +75,18 @@ public class DWVPortTelnetPreflightThread implements Runnable
 				buf[8] = (byte) 243;
 		
 		
-				skt.getOutputStream().write(buf, 0, 9);
+				sktchan.socket().getOutputStream().write(buf, 0, 9);
 		
 				// 	read back the echoed controls - TODO has issues
 		
 				for (int i = 0; i<9; i++)
 				{
-					skt.getInputStream().read();
+					sktchan.socket().getInputStream().read();
 				}
 			}
 				
 			
-			if (skt.isClosed())
+			if (sktchan.socket().isClosed())
 			{
 				// bail out
 				logger.debug("thread exiting after auth");
@@ -94,7 +96,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 			
 			if ((dwProto.getConfig().containsKey("TelnetBannerFile")) && (banner == true))
 			{
-				displayFile(skt.getOutputStream(), dwProto.getConfig().getString("TelnetBannerFile"));
+				displayFile(sktchan.socket().getOutputStream(), dwProto.getConfig().getString("TelnetBannerFile"));
 			}
 			
 		} 
@@ -102,12 +104,12 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		{
 			logger.warn("IOException: " + e.getMessage());
 			
-			if (skt.isConnected())
+			if (sktchan.isConnected())
 			{
 				logger.debug("closing socket");
 				try
 				{
-					skt.close();
+					sktchan.close();
 				} catch (IOException e1)
 				{
 					logger.warn(e1.getMessage());
@@ -118,19 +120,17 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		}
 			
 		
-		if (skt.isClosed() == false)
+		if (sktchan.isConnected())
 		{
 			
-			logger.debug("Preflight success for " + skt.getInetAddress().getHostName());
-			
 			//add connection to pool
-			int conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt, 1);
+			int conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, sktchan, 1);
 
 			
 			// announce new connection to listener
 			try 
 			{
-				dwVSerialPorts.sendConnectionAnnouncement(this.vport, conno, skt.getLocalPort(), skt.getInetAddress().getHostAddress());
+				dwVSerialPorts.sendConnectionAnnouncement(this.vport, conno, sktchan.socket().getLocalPort(), sktchan.socket().getInetAddress().getHostAddress());
 			} 
 			catch (DWPortNotValidException e) 
 			{

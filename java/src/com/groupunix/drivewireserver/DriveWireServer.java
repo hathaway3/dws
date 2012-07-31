@@ -48,8 +48,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 public class DriveWireServer 
 {
 
-	public static final String DWServerVersion = "4.0.9c1";
-	public static final String DWServerVersionDate = "06/17/2012";
+	public static final String DWServerVersion = "4.1.2c";
+	public static final String DWServerVersionDate = "07/26/2012";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;
@@ -88,10 +88,14 @@ public class DriveWireServer
 	private static boolean noMount = false;
 	private static boolean configFreeze = false;
 	
+	@SuppressWarnings("unused")
 	private static boolean noUI = false;
+	@SuppressWarnings("unused")
 	private static boolean noServer = false;
 	
+	@SuppressWarnings("unused")
 	private static boolean restart_logging = false;
+	@SuppressWarnings("unused")
 	private static boolean restart_ui = false;
 	
 	public static void main(String[] args) throws ConfigurationException

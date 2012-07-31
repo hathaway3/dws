@@ -51,6 +51,7 @@ public class RBFFileSystemIDSector
 		
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void addStrAttrib(String key, int offset)
 	{
 		String val = "";
@@ -66,6 +67,7 @@ public class RBFFileSystemIDSector
 		attribs.put(key, val);
 	}
 
+	@SuppressWarnings("unchecked")
 	private void addIntAttrib(String key, int offset, int len)
 	{
 		int val = 0;

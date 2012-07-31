@@ -1,8 +1,10 @@
 package com.groupunix.drivewireserver.virtualserial;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
@@ -17,10 +19,18 @@ public class DWVPortTCPConnectionThread implements Runnable {
 	private int vport = -1;
 	private int tcpport = -1;
 	private String tcphost = null;
-	private Socket skt; 
+	
 	private boolean wanttodie = false;
 
 	private DWVSerialPorts dwVSerialPorts;
+
+	private boolean reportConnect = true;
+
+	private byte[] wcdata = null;
+
+	
+	private SocketChannel sktchan;
+	private InetSocketAddress sktaddr;
 	
 	
 	public DWVPortTCPConnectionThread(DWProtocolHandler dwProto, int vport, String tcphostin, int tcpportin)
@@ -35,6 +45,32 @@ public class DWVPortTCPConnectionThread implements Runnable {
 	}
 	
 
+	public DWVPortTCPConnectionThread(DWProtocolHandler dwProto, int vport, String tcphostin, int tcpportin, boolean rc)
+	{
+		logger.debug("init tcp connection thread");	
+		this.vport = vport;
+		this.tcpport = tcpportin;
+		this.tcphost = tcphostin;
+		this.reportConnect  = rc;
+
+		this.dwVSerialPorts = dwProto.getVPorts();
+		
+	}
+
+
+	public DWVPortTCPConnectionThread(DWProtocolHandler dwProto, int vport, String tcphostin, int tcpportin, boolean rc, byte[] wcdata)
+	{
+		logger.debug("init NineServer connection thread");	
+		this.vport = vport;
+		this.tcpport = tcpportin;
+		this.tcphost = tcphostin;
+		this.reportConnect  = rc;
+		this.wcdata  = wcdata;
+		
+		this.dwVSerialPorts = dwProto.getVPorts();
+	}
+
+
 	public void run() 
 	{
 		Thread.currentThread().setName("tcpconn-" + Thread.currentThread().getId());
@@ -46,124 +82,140 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		// try to establish connection
 		try 
 		{
-			skt = new Socket(this.tcphost, this.tcpport);
+			sktaddr = new InetSocketAddress(this.tcphost, this.tcpport);
+			sktchan = SocketChannel.open();
+			sktchan.configureBlocking(true);
+			
+			sktchan.connect(sktaddr);
+			
+			if (sktchan.finishConnect())
+			{
+				dwVSerialPorts.setPortChannel(vport, this.sktchan);
+				
+				if (this.reportConnect)
+					dwVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
+				
+				dwVSerialPorts.markConnected(vport);
+				
+				logger.debug("Connected to " + this.tcphost + ":" + this.tcpport);
+			
+				dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPOUT);
+				
+				if (this.wcdata != null)
+				{
+					dwVSerialPorts.write(this.vport, new String(this.wcdata) );
+				}
+				
+			}
 		} 
 		catch (UnknownHostException e) 
 		{
 			logger.debug("unknown host " + tcphost );
-			try
-			{
-				dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_UNKNOWN_HOST,"Unknown host '" + this.tcphost + "'");
-			} 
-			catch (DWPortNotValidException e1)
-			{
-				logger.warn(e1.getMessage());
-			}
+			
+			if (this.reportConnect)
+				try
+				{
+					dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_UNKNOWN_HOST,"Unknown host '" + this.tcphost + "'");
+				} 
+				catch (DWPortNotValidException e1)
+				{
+					logger.warn(e1.getMessage());
+				}
 			this.wanttodie = true;
 		} 
 		catch (IOException e1) 
 		{
 			logger.debug("IO error: " + e1.getMessage());
-			try
-			{
-				dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_IO_ERROR, e1.getMessage());
-			} 
-			catch (DWPortNotValidException e)
-			{
-				logger.warn(e1.getMessage());
-			}
+			
+			if (this.reportConnect)
+				try
+				{
+					dwVSerialPorts.sendUtilityFailResponse(this.vport, DWDefs.RC_NET_IO_ERROR, e1.getMessage());
+				} 
+				catch (DWPortNotValidException e)
+				{
+					logger.warn(e1.getMessage());
+				}
 			this.wanttodie = true;
+		} 
+		catch (DWPortNotValidException e)
+		{
+			logger.warn(e.getMessage());
 		}
 		
-		if (wanttodie == false)
+		byte[] readbytes = new byte[256];
+		ByteBuffer readBuffer = ByteBuffer.wrap(readbytes);
+		
+		
+		while ((wanttodie == false) && (sktchan.isConnected()) && (dwVSerialPorts.isOpen(this.vport)))
 		{
-			
-			try
+						
+			try 
 			{
-				dwVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
-				dwVSerialPorts.markConnected(vport);
-				dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPOUT);
-				logger.debug("Connected to " + this.tcphost + ":" + this.tcpport);
-				dwVSerialPorts.setPortOutput(vport, skt.getOutputStream());
+				int readsize = sktchan.read(readBuffer);
+				
+				if (readsize == -1)
+				{
+					logger.debug("got end of input stream");
+					wanttodie = true;
+				}
+				else if (readsize > 0)
+				{
+					
+					
+					dwVSerialPorts.writeToCoco(this.vport, readbytes, 0, readsize);
+					readBuffer.clear();
+				}
 				
 			} 
-			catch (DWPortNotValidException e2)
+			catch (IOException e) 
 			{
-				logger.warn(e2.getMessage());
-				this.wanttodie = true;
-			}
-			catch (IOException e1) 
+					logger.debug("IO error reading tcp: " + e.getMessage());
+					wanttodie = true;
+			} 
+			catch (DWPortNotValidException e) 
 			{
-				logger.error("IO Error setting output: " + e1.getMessage());
+				logger.error(e.getMessage());
+				
 				wanttodie = true;
 			}
 			
-			while ((wanttodie == false) && (skt.isClosed() == false) && (dwVSerialPorts.isOpen(this.vport)))
-			{
-							
-				try 
-				{
-					int databyte = skt.getInputStream().read();
-					if (databyte == -1)
-					{
-						logger.debug("got -1 in input stream");
-						wanttodie = true;
-					}
-					else
-					{
-						dwVSerialPorts.writeToCoco(this.vport,(byte)databyte);
-					}
-					
-				} 
-				catch (IOException e) 
-				{
-						logger.debug("IO error reading tcp: " + e.getMessage());
-						wanttodie = true;
-				} 
-				catch (DWPortNotValidException e) 
-				{
-					logger.error(e.getMessage());
-					
-					wanttodie = true;
-				}
-				
-			}
+		}
+	
 		
+		if (wanttodie)
+			logger.debug("exit because wanttodie");
+		else if (!sktchan.isConnected())
+			logger.debug("exit because skt isClosed");
+		else if (!dwVSerialPorts.isOpen(this.vport))
+			logger.debug("exit because port is not open");			
+		
+		dwVSerialPorts.markDisconnected(this.vport);
+		
+		
+		try
+		{
+			dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_UNSET);
 			
-			if (wanttodie)
-				logger.debug("exit because wanttodie");
+			if (sktchan != null)
+				sktchan.close();
 			
-			if (skt.isClosed())
-				logger.debug("exit because skt isClosed");
-			
-			if (!dwVSerialPorts.isOpen(this.vport))
-				logger.debug("exit because port is not open");			
-			
-			dwVSerialPorts.markDisconnected(this.vport);
-			dwVSerialPorts.setPortOutput(vport, null);
-			
-			if (skt.isClosed() == false)
-			{
-				// close socket
-				try 
-				{
-					skt.close();
-				} 
-				catch (IOException e) 
-				{
-					logger.debug("error closing socket: " + e.getMessage());
-				}
-			}
-			
-			
-			
+		}
+		catch (DWPortNotValidException e1)
+		{
+		} catch (IOException e)
+		{
+			logger.warn("while closing io channel: " + e.getMessage());
 		}
 		
 		
+		
+			
+		
 		// only if we got connected..
-		if (skt != null)
+		if (sktchan != null)
 		{
-			if (skt.isConnected())
+			if (sktchan.isConnected())
 			{
 		
 				logger.debug("exit stage 1, flush buffer");

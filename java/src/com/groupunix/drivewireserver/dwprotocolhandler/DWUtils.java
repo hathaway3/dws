@@ -289,6 +289,9 @@ public class DWUtils
 		case DWDefs.UTILMODE_TCPLISTEN:
 			res = "tcp listen";
 			break;
+		case DWDefs.UTILMODE_NINESERVER:
+			res = "nineserver";
+			
 		}
 		
 		return(res);
@@ -298,7 +301,7 @@ public class DWUtils
 	{
 		String res = "Unknown";
 
-		if ((opcode >= DWDefs.OP_FASTWRITE_BASE) && (opcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_COCO_PORTS - 1)))
+		if ((opcode >= DWDefs.OP_FASTWRITE_BASE) && (opcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_PORTS - 1)))
 		{
 			res = "OP_FASTWRITE_" + (opcode - DWDefs.OP_FASTWRITE_BASE);
 		}

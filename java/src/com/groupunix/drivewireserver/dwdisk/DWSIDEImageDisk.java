@@ -1,6 +1,5 @@
 package com.groupunix.drivewireserver.dwdisk;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 
 import org.apache.commons.vfs.FileObject;
@@ -19,6 +18,7 @@ public class DWSIDEImageDisk extends DWDisk
 	private static final Logger logger = Logger.getLogger("DWServer.DWSIDEImageDisk");
 	private long startpos;
 	private long endpos;
+	@SuppressWarnings("unused")
 	private boolean halfsector;
 	
 

@@ -49,7 +49,7 @@ public class DWLogAppender extends AppenderSkeleton
 		}
 		
 		// ignore those pesky XMLConfiguration debug messages and massive httpd client noise
-		if ((!event.getMessage().equals("ConfigurationUtils.locate(): base is null, name is null")) && (!event.getLocationInformation().getClassName().startsWith("org.apache.commons.httpclient"))) 		
+		if ((event != null) && (event.getMessage() != null) && (event.getLocationInformation().getClassName() != null) && (!event.getMessage().equals("ConfigurationUtils.locate(): base is null, name is null")) && (!event.getLocationInformation().getClassName().startsWith("org.apache.commons.httpclient"))) 		
 		{
 			// send it to UI listeners
 			DriveWireServer.submitLogEvent(event);
