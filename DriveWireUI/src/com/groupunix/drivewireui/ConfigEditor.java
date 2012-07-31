@@ -78,6 +78,14 @@ public class ConfigEditor extends Shell
 	private Label lblString;
 	private Button btnFileDir;
 	private ToolItem tltmDisk;
+	private Label lblIntTextS1;
+	private Label lblIntTextS2;
+	private Spinner spinnerIntS2;
+	private Label lblDescriptS1;
+	private Text textDecriptS1;
+	private Text textDescriptS1;
+	private Text textNameS1;
+	private Label lblNameS1;
 
 	
 	@Override
@@ -225,6 +233,19 @@ public class ConfigEditor extends Shell
 		textDescription.setText("");
 		textDescription.setVisible(true);
 		
+		textNameS1 = new Text(scrolledComposite, SWT.BORDER);
+		textNameS1.setBounds(10,60,137,24);
+		
+		lblNameS1 = new Label(scrolledComposite, SWT.NONE);
+		lblNameS1.setBounds(10, 40, 137, 20);
+		
+		
+		textDescriptS1 = new Text(scrolledComposite, SWT.BORDER);
+		textDescriptS1.setBounds(155,60,502,24);
+		
+		lblDescriptS1 = new Label(scrolledComposite, SWT.NONE);
+		lblDescriptS1.setBounds(155, 40, 502, 20);
+		
 		btnToggle = new Button(scrolledComposite, SWT.CHECK);
 		btnToggle.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -300,6 +321,18 @@ public class ConfigEditor extends Shell
 		
 		lblIntText = new Label(scrolledComposite, SWT.NONE);
 		lblIntText.setBounds(86, 116, 398, 18);
+		
+		lblIntTextS1 = new Label(scrolledComposite, SWT.NONE);
+		lblIntTextS1.setBounds(86, 116, 198, 18);
+		
+		
+		spinnerIntS2 = new Spinner(scrolledComposite, SWT.BORDER);
+		spinnerIntS2.setBounds(200, 114, 70, 22);
+		
+		lblIntTextS2 = new Label(scrolledComposite, SWT.NONE);
+		lblIntTextS2.setBounds(276, 116, 198, 18);
+		
+		
 		
 		comboList = new Combo(scrolledComposite, SWT.READ_ONLY);
 		comboList.setBounds(10, 114, 128, 23);
@@ -421,6 +454,8 @@ public class ConfigEditor extends Shell
 		@SuppressWarnings("unchecked")
 		final ArrayList<String> cmds = generateConfigCommands("", temp.getRootNode().getChildren());
 		
+		
+		/*
 		cmds.add(0, "ui server conf freeze true");
 		
 		for (int i = 0;i<256;i++)
@@ -433,7 +468,7 @@ public class ConfigEditor extends Shell
 		
 		cmds.add("ui server conf freeze false");
 		
-		
+		*/
 		
 		
 		class Stupid
@@ -697,20 +732,14 @@ public class ConfigEditor extends Shell
 	{
 		Node node = (Node) ti.getData("param");
 		
-		if (this.getAttributeVal(node.getAttributes(), "type") == null)
+		String type = null;
+		
+		if (this.getAttributeVal(node.getAttributes(), "type") != null)
 		{
-			// unknown item
-			
-			
-			setDisplayFor(null,"none");
+			type = this.getAttributeVal(node.getAttributes(), "type").toString();
 		}
-		else
-		{
-			String type = this.getAttributeVal(node.getAttributes(), "type").toString();
-			
-			setDisplayFor(ti, type);
-			
-		}
+		
+		setDisplayFor(ti, type);
 			
 		
 		
@@ -739,6 +768,15 @@ public class ConfigEditor extends Shell
 		this.btnFileDir.setVisible(false);
 		this.textString.setVisible(false);
 		
+		this.lblIntTextS1.setVisible(false);
+		this.spinnerIntS2.setVisible(false);
+		this.lblIntTextS2.setVisible(false);
+		this.textDescriptS1.setVisible(false);
+		this.lblDescriptS1.setVisible(false);
+		this.textNameS1.setVisible(false);
+		this.lblNameS1.setVisible(false);
+		
+		
 		if (ti == null)
 		{
 			this.setRedraw(true);
@@ -747,7 +785,47 @@ public class ConfigEditor extends Shell
 		
 		Node node = (Node) ti.getData("param");
 		
-		if (type.equals("boolean"))
+		if (type == null)
+		{
+			if (node.getName().equals("midisynthprofile"))
+			{
+				this.lblItemTitle.setVisible(true);
+				this.lblItemTitle.setText(node.getName());
+				
+				this.spinnerInt.setVisible(true);
+				this.lblIntTextS1.setVisible(true);
+				this.lblIntTextS1.moveAbove(null);
+				this.spinnerIntS2.setVisible(true);
+				this.spinnerIntS2.moveAbove(null);
+				this.lblIntTextS2.setVisible(true);
+				this.lblIntTextS2.moveAbove(null);
+				this.textDescriptS1.setVisible(true);
+				this.textDescriptS1.moveAbove(null);
+				this.lblDescriptS1.setVisible(true);
+				this.lblDescriptS1.moveAbove(null);
+				this.textNameS1.setVisible(true);
+				this.textNameS1.moveAbove(null);
+				this.lblNameS1.setVisible(true);
+				this.lblNameS1.moveAbove(null);
+				
+				
+				this.lblIntTextS1.setText("Device offset");
+				this.lblIntTextS2.setText("GM offset");
+				this.lblDescriptS1.setText("Description:");
+				this.lblNameS1.setText("Name:");
+				
+			}
+			else
+			{
+				
+				
+				System.out.println("n: " + node.getName());
+				System.out.println("v: " + node.getValue());
+			}
+			
+
+		}
+		else if (type.equals("boolean"))
 		{
 			this.lblItemTitle.setVisible(true);
 			this.lblItemTitle.setText(node.getName());
@@ -911,6 +989,51 @@ public class ConfigEditor extends Shell
 			this.textString.setVisible(true);
 			this.btnFileDir.setVisible(true);
 		}
+		else if (type.equals("serialdev"))
+		{
+			this.lblItemTitle.setVisible(true);
+			this.lblItemTitle.setText(node.getName());
+			this.comboList.setVisible(true);
+			
+			this.comboList.removeModifyListener(this.comboModifyListener);
+			
+			this.comboList.removeAll();
+			
+			try
+			{
+				List<String> p = UIUtils.loadList("ui server show serialdevs");
+				
+				for (String i : p)
+				{
+					this.comboList.add(i);
+				}
+				
+				if (ti.getText(2).equals(""))
+				{
+					if (node.getValue() != null)
+						this.comboList.select(this.comboList.indexOf(node.getValue().toString()));
+				}
+				else
+					this.comboList.select(this.comboList.indexOf(ti.getText(2)));
+				
+			} 
+			catch (IOException e)
+			{
+			} catch (DWUIOperationFailedException e)
+			{
+			}
+			
+			
+			this.comboList.addModifyListener(this.comboModifyListener);
+			
+			this.lblList.setVisible(true);
+			this.lblList.setText("Select serial port");
+			
+			this.textDescription.setVisible(true);
+			
+			showHelpFor(node);
+		}
+				
 		
 		this.setRedraw(true);
 		

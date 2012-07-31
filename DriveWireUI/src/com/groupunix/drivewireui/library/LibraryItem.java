@@ -2,6 +2,7 @@ package com.groupunix.drivewireui.library;
 
 import java.util.Vector;
 
+import org.apache.commons.configuration.HierarchicalConfiguration.Node;
 import org.eclipse.swt.graphics.Image;
 
 import com.groupunix.drivewireui.DWLibrary;
@@ -48,6 +49,22 @@ public class LibraryItem
 	public Image getIcon()
 	{
 		return org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/inactive.png");
+	}
+
+	public Vector<MenuItemDef> getPopupMenuItems()
+	{
+		return null;
+	}
+
+	public Node getNode()
+	{
+		
+		return null;
+	}
+
+	public String getHoverText()
+	{
+		return this.title;
 	}
 	
 

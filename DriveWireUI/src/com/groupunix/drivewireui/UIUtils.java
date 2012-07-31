@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.net.UnknownHostException;
@@ -615,16 +616,31 @@ public class UIUtils {
 	
 	
 	
-	public static void simpleConfigServer(int rate, String devname, String device, boolean usemidi, String printertype, String printerdir) throws IOException, DWUIOperationFailedException 
+	public static void simpleConfigServer(int cocomodel, int rate, String devname, String device, boolean usemidi, String printertype, String printerdir) throws IOException, DWUIOperationFailedException 
 	{
 		// configure device
 		
 		ArrayList<String> cmds = new ArrayList<String>();
 		
-		cmds.add("dw config set DeviceType serial");
-		cmds.add("dw config set SerialDevice " + device);
-		cmds.add("dw config set SerialRate " + rate);
+		if (cocomodel == DWDefs.MODEL_EMULATOR)
+		{
+			// tcp device
+			cmds.add("dw config set DeviceType tcp-server");
+			cmds.add("dw config set TCPServerPort 65504");
+		}
+		else
+		{
+			// serial device
+			
+			cmds.add("dw config set DeviceType serial");
+			cmds.add("dw config set SerialDevice " + device);
+			cmds.add("dw config set SerialRate " + rate);
+			
+			
+		}
+		
 		cmds.add("dw config set [@name] "+ devname + " on " + device);
+		
 		cmds.add("dw config set [@desc] Autocreated " +  new java.sql.Timestamp(Calendar.getInstance().getTime().getTime()).toString() );
 		
 		cmds.add("dw config set UseMIDI " + usemidi);
@@ -790,7 +806,7 @@ public class UIUtils {
 
 
 
-	static Object getAttributeVal(List<Node> attributes, String key)
+	public static Object getAttributeVal(List<Node> attributes, String key)
 	{
 		for (Node n : attributes)
 		{
@@ -902,4 +918,210 @@ public class UIUtils {
 		return res;
 	}
 	*/
+	
+	
+	private static String convertToHex(byte[] data) { 
+	        StringBuffer buf = new StringBuffer();
+	        for (int i = 0; i < data.length; i++) { 
+	            int halfbyte = (data[i] >>> 4) & 0x0F;
+	            int two_halfs = 0;
+	            do { 
+	                if ((0 <= halfbyte) && (halfbyte <= 9)) 
+	                    buf.append((char) ('0' + halfbyte));
+	                else 
+	                    buf.append((char) ('a' + (halfbyte - 10)));
+	                halfbyte = data[i] & 0x0F;
+	            } while(two_halfs++ < 1);
+	        } 
+	        return buf.toString();
+	    } 
+	 
+	
+	public static String getSHA1(String text) 
+	{ 
+	    MessageDigest md;
+	    byte[] sha1hash = new byte[40];
+	    
+	    try
+		{
+	    	md = MessageDigest.getInstance("SHA-1");
+			md.update(text.getBytes("iso-8859-1"), 0, text.length());
+			sha1hash = md.digest();
+		} 
+	    catch (UnsupportedEncodingException e)
+		{
+	    	e.printStackTrace();
+		}
+	    catch (NoSuchAlgorithmException e)
+	    {
+	    	e.printStackTrace();
+	    }
+	    
+	    return convertToHex(sha1hash);
+	}
+
+
+	public static String getSHA1(InputStream is)
+	{
+		
+		byte[] sha1hash = new byte[40];
+		
+		
+		try
+		{
+		MessageDigest digest = MessageDigest.getInstance("SHA-1");
+		
+		byte[] buffer = new byte[8192];
+		int read = 0;
+	
+		while( (read = is.read(buffer)) > 0) {
+				digest.update(buffer, 0, read);
+		
+		}		
+			
+		sha1hash = digest.digest();
+			
+		}
+		catch (UnsupportedEncodingException e)
+		{
+	    	e.printStackTrace();
+		}
+	    catch (NoSuchAlgorithmException e)
+	    {
+	    	e.printStackTrace();
+	    } 
+	    catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
+	    
+		return convertToHex(sha1hash);
+	} 
+	
+	
+
+	public String prettyBuffer(int i, int j)
+	{
+		String res = String.format("%03d ",j);
+		
+		switch(i)
+		{
+			case 200:
+				
+				switch(j)
+				{
+					case 1: 
+						res += "Fnt_S8x8";
+						break;
+					case 2: 
+						res += "Fnt_S6x8";
+						break;
+					case 3: 
+						res += "Fnt_G8x8";
+						break;
+				}
+				
+				break;
+			case 202:
+				switch(j)
+				{
+					case 1: 
+						res += "Ptr_Arr";
+						break;
+					case 2: 
+						res += "Ptr_Pen";
+						break;
+					case 3: 
+						res += "Ptr_LCH";
+						break;
+					case 4: 
+						res += "Ptr_Slp";
+						break;
+					case 5: 
+						res += "Ptr_Ill";
+						break;
+					case 6: 
+						res += "Ptr_Txt";
+						break;
+					case 7: 
+						res += "Ptr_SCH";
+						break;
+					
+				}
+				break;
+			
+			case 203:
+			case 204:
+			case 205:
+				switch(j)
+				{
+					case 1: 
+						res += "Pat_Dot";
+						break;
+					case 2: 
+						res += "Pat_Vrt";
+						break;
+					case 3: 
+						res += "Pat_Hrz";
+						break;
+					case 4: 
+						res += "Pat_XHtc";
+						break;
+					case 5: 
+						res += "Pat_LSnt";
+						break;
+					case 6: 
+						res += "Pat_RSnt";
+						break;
+					case 7: 
+						res += "Pat_SDot";
+						break;
+					case 8: 
+						res += "Pat_BDot";
+						break;
+					
+				}
+			
+				break;
+			
+		}
+		
+		return res;
+	}
+
+
+
+	public String prettyBufferGroup(int i)
+	{
+		String res = String.format("%03d ",i);
+		
+		switch(i)
+		{
+			case 200:
+				res += "Grp_Fnt";
+				break;
+			case 201:
+				res += "Grp_Clip";
+				break;
+			case 202:
+				res += "Grp_Ptr";
+				break;
+			case 203:
+				res += "Grp_Pat2";
+				break;
+			case 204:
+				res += "Grp_Pat4";
+				break;
+			case 205:
+				res += "Grp_Pat16";
+				break;
+			
+		}
+		
+		return res;
+	}
+
+	
 }

@@ -1,5 +1,6 @@
 package com.groupunix.drivewireui.library;
 
+import org.apache.commons.configuration.HierarchicalConfiguration.Node;
 import org.eclipse.swt.graphics.Image;
 
 import com.groupunix.drivewireui.DWLibrary;
@@ -9,8 +10,10 @@ public class URLLibraryItem extends LibraryItem
 {
 	private String url;
 	private String iconpath;
+	private Node node = null;
 	
-	public URLLibraryItem(String title, String url)
+	
+	public URLLibraryItem(String title, String url, Node item)
 	{
 		super(title);
 		
@@ -18,7 +21,7 @@ public class URLLibraryItem extends LibraryItem
 		
 		this.type = DWLibrary.TYPE_URL;
 		this.iconpath = "/menu/world-link.png";
-		
+		this.node = item;
 		
 	}
 
@@ -37,6 +40,14 @@ public class URLLibraryItem extends LibraryItem
 		return org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, this.iconpath);
 	}
 	
+	public Node getNode()
+	{
+		return this.node;
+	}
 	
+	public String getHoverText()
+	{
+		return this.url;
+	}
 	
 }

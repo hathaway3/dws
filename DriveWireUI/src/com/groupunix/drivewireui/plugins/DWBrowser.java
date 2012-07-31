@@ -1,5 +1,6 @@
 package com.groupunix.drivewireui.plugins;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,9 +36,11 @@ import org.eclipse.wb.swt.SWTResourceManager;
 
 import swing2swt.layout.BorderLayout;
 
+import com.groupunix.drivewireui.ErrorWin;
 import com.groupunix.drivewireui.GradientHelper;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.SendCommandWin;
+import com.groupunix.drivewireui.UIUtils;
 
 public class DWBrowser extends Composite
 {
@@ -182,62 +185,90 @@ public class DWBrowser extends Composite
 		
 		//DWBrowserUtils.GenerateHTMLDir("E:/cocodisks");
 		
+		browser = null;
 		
-		browser = new Browser(this, SWT.NONE);
+		UncaughtExceptionHandler uncex =  Thread.currentThread().getUncaughtExceptionHandler();
 		
-		
-		browser.addLocationListener(new LocationAdapter() {
+		Thread.currentThread().setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+
 			@Override
-			public void changed(LocationEvent event) {
-				comboURL.setText(event.location);
+			public void uncaughtException(Thread t, final Throwable e)
+			{
 				
+				System.out.println("It seems we cannot open a browser window on this system.");
+				System.out.println();
+				System.out.println("The error message is: " + e.getMessage());
+				System.out.println();
 				
+				MainWin.config.setProperty("NoBrowsers", true);
 				
-				if (browser.isBackEnabled())
-					tltmBack.setEnabled(true);
-				else
-					tltmBack.setEnabled(false);
+				System.out.println("I've disabled opening browsers in the configuration.  You will have to restart DriveWire.");
+				System.exit(1);
+			}
+		
+			});
+		
+		
+			
+		
+			browser = new Browser(this, SWT.NONE);
+			
+			Thread.currentThread().setUncaughtExceptionHandler(uncex);
+			
+			
+			browser.addLocationListener(new LocationAdapter() {
+				@Override
+				public void changed(LocationEvent event) {
+					comboURL.setText(event.location);
+					
+					
+					
+					if (browser.isBackEnabled())
+						tltmBack.setEnabled(true);
+					else
+						tltmBack.setEnabled(false);
+					
+					if (browser.isForwardEnabled())
+						tltmForward.setEnabled(true);
+					else
+						tltmForward.setEnabled(false);
+					
+					
+					
+				}
 				
-				if (browser.isForwardEnabled())
-					tltmForward.setEnabled(true);
-				else
-					tltmForward.setEnabled(false);
-				
-				
-				
+				@Override
+				public void changing(LocationEvent event) 
+				{
+					if (isCocoLink(event.location))
+					{
+						event.doit = false;
+						
+						doCoCoLink(event.location);
+					}
+				}
+			});
+			
+			browser.addTitleListener( new TitleListener() {
+		         public void changed(TitleEvent event) {
+		        	 ourtab.setText(event.title);
+		        	 ourtab.setImage(SWTResourceManager.getImage(MainWin.class, "/menu/www.png"));
+		          }
+		       });
+			
+			
+			
+			if (url != null)
+			{
+				browser.setUrl(url);
+			}
+			else
+			{
+				// browser.setUrl(MainWin.config.getString("Browser_homepage", "http://cococoding.com/cloud") );
 			}
 			
-			@Override
-			public void changing(LocationEvent event) 
-			{
-				if (isCocoLink(event.location))
-				{
-					event.doit = false;
-					
-					doCoCoLink(event.location);
-				}
-			}
-		});
-		
-		browser.addTitleListener( new TitleListener() {
-	         public void changed(TitleEvent event) {
-	        	 ourtab.setText(event.title);
-	        	 ourtab.setImage(SWTResourceManager.getImage(MainWin.class, "/menu/www.png"));
-	          }
-	       });
 		
 		
-		
-		if (url != null)
-		{
-			browser.setUrl(url);
-		}
-		else
-		{
-			// browser.setUrl(MainWin.config.getString("Browser_homepage", "http://cococoding.com/cloud") );
-		}
-		
-	
 		
 		
 	}

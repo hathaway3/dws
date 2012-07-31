@@ -8,6 +8,7 @@ import javax.swing.colorchooser.ColorSelectionModel;
 import javax.swing.text.NumberFormatter;
 
 import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
 import org.eclipse.swt.SWT;
@@ -47,6 +48,7 @@ import com.groupunix.drivewireui.DWLibrary;
 import com.groupunix.drivewireui.GradientHelper;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.UIUtils;
+import com.groupunix.drivewireui.cococloud.Cloud;
 import com.groupunix.drivewireui.library.PathLibraryItem;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -79,6 +81,8 @@ public class PathInfoViewer extends Composite
 	private Composite compositeRBF;
 	private Composite compositeUnknown;
 	private Composite compositeDir;
+	private Composite compositeCloudInfo;
+	
 	private Label lblImageType;
 	private Label lblImageTypeVal;
 	private Label lblSectors;
@@ -175,7 +179,8 @@ public class PathInfoViewer extends Composite
 	private TreeColumn trclmnOwner;
 	private TreeColumn trclmnDateModified;
 	private RBFFileSystemIDSector currentRBFIDSec;
-	
+	private PathLibraryItem pitem;
+	private DWLibrary library = null;
 	
 	@SuppressWarnings("unused")
 	public PathInfoViewer(Composite parent, int style)
@@ -224,12 +229,23 @@ public class PathInfoViewer extends Composite
 		ToolItem tltmInsertDisk = new ToolItem(toolBar, SWT.NONE);
 		tltmInsertDisk.setImage(SWTResourceManager.getImage(PathInfoViewer.class, "/menu/disk-insert.png"));
 		tltmInsertDisk.setText("Insert Disk");
+		tltmInsertDisk.addSelectionListener(new SelectionListener(){
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				MainWin.quickInDisk(MainWin.getDisplay().getActiveShell(), pitem.getPath());
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				// TODO Auto-generated method stub
+				
+			}});
 		
-		ToolItem toolItem_2 = new ToolItem(toolBar, SWT.SEPARATOR);
 		
-		ToolItem tltmInsertCopy = new ToolItem(toolBar, SWT.NONE);
-		tltmInsertCopy.setImage(SWTResourceManager.getImage(PathInfoViewer.class, "/menu/new-disk-16.png"));
-		tltmInsertCopy.setText("Insert Copy");
+		//ToolItem toolItem_2 = new ToolItem(toolBar, SWT.SEPARATOR);
 		
 		ToolItem toolItem = new ToolItem(toolBar, SWT.SEPARATOR);
 		
@@ -242,7 +258,35 @@ public class PathInfoViewer extends Composite
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				//String md5 = UIUtils.getMD5sum(disk.getFileObject());
+				
+				String sha1;
+				try
+				{
+					sha1 = UIUtils.getSHA1(disk.getFileObject().getContent().getInputStream());
+					
+					int diskID = Cloud.lookupDisk(sha1);
+					
+					if (diskID > -1)
+					{
+						// display cloud details
+						((CloudDiskInfoViewer) compositeCloudInfo).displayDisk(diskID);
+						stackLayout.topControl = compositeCloudInfo;
+						compositeDetail.layout();
+					}
+					else
+					{
+						// offer to add to cloud?
+						System.out.println("unknown disk " + sha1);
+					}
+					
+				} 
+				catch (FileSystemException e1)
+				{
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				
 				
 			} } );
 		
@@ -354,6 +398,9 @@ public class PathInfoViewer extends Composite
 		
 		stackLayout = new StackLayout();
 		compositeDetail.setLayout(stackLayout);
+		
+		compositeCloudInfo = new CloudDiskInfoViewer(compositeDetail, SWT.NONE);
+		
 		
 		compositeDECB = new Composite(compositeDetail, SWT.NONE);
 		compositeDECB.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
@@ -967,7 +1014,7 @@ public class PathInfoViewer extends Composite
 				xsize = 5 * ((int) Math.sqrt( map.length * 8.0 ) * 2) + 1;
 				ysize = 5 * ((int) Math.sqrt( map.length * 8.0 ) / 2 + 2) + 1;
 				
-				System.out.println("mapsize: " + map.length + "  xsize: " + xsize + " ysize: " + ysize);
+				//System.out.println("mapsize: " + map.length + "  xsize: " + xsize + " ysize: " + ysize);
 				
 				
 				res = new Image(this.getDisplay(), xsize, ysize);
@@ -1036,6 +1083,8 @@ public class PathInfoViewer extends Composite
 	{
 		// header
 		
+		this.pitem = pitem;
+		
 		FileObject fobj;
 		try
 		{
@@ -1058,7 +1107,7 @@ public class PathInfoViewer extends Composite
 				
 				if (fobj.isReadable())
 				{
-					DWDisk disk = DWDiskDrives.DiskFromFile(fobj);
+					disk = DWDiskDrives.DiskFromFile(fobj);
 					
 					this.lblImageTypeVal.setText(DWUtils.prettyFormat(disk.getDiskFormat()));
 					this.lblSectorsVal.setText(disk.getDiskSectors() + "");
@@ -1080,8 +1129,7 @@ public class PathInfoViewer extends Composite
 					{
 						lblFileIcon.setImage(SWTResourceManager.getImage(PathInfoViewer.class, "/path/disk-rbf.png"));
 						ourtab.setImage(SWTResourceManager.getImage(PathInfoViewer.class, "/fs/rbf.png"));
-						
-						this.disk = disk;
+					
 						doDetailsRBF();
 						this.sectorMapImage = null;
 						
@@ -1284,6 +1332,10 @@ public class PathInfoViewer extends Composite
 		} 
 		catch (ParseException e)
 		{
+		} 
+		catch (DWFileSystemInvalidDirectoryException e)
+		{
+			
 		}
 		
 	}

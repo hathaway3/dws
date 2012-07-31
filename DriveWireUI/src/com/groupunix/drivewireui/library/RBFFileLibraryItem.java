@@ -9,6 +9,7 @@ import org.eclipse.swt.graphics.Image;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidDirectoryException;
 import com.groupunix.drivewireui.DWLibrary;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.plugins.FileTypeDetector;
@@ -84,6 +85,9 @@ public class RBFFileLibraryItem extends LibraryItem
 			{
 			} 
 			catch (DWDiskInvalidSectorNumber e)
+			{
+			} 
+			catch (DWFileSystemInvalidDirectoryException e)
 			{
 			}
 		}

@@ -628,6 +628,8 @@ public class AboutWin extends Dialog {
 						String[] c = { "DriveWire " + MainWin.DWUIVersion + " (" + MainWin.DWUIVersionDate + ")", 
 							"by mobster #3", " " };
 					
+						
+						
 						for (int i = 0; i < 3;i++)
 						{
 							for (int j = 0;j<32;j++)

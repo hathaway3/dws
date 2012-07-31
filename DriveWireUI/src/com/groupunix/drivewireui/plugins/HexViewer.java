@@ -55,14 +55,7 @@ public class HexViewer extends FileViewer
 
 	private Color colorPostamble;
 	private Color colorPreamble;
-	
-	private Canvas canvasMemMap;
-
-
-	private Vector<MemMapObj> memMap;
-	
-	private int gwidth = 100;
-	
+		
 	public HexViewer(Composite parent, int style)
 	{
 		super(parent, style);
@@ -87,8 +80,6 @@ public class HexViewer extends FileViewer
 		sector_hilights = new Color[2];
 		sector_hilights[0] = new Color(parent.getDisplay(), new RGB(255,255,255));
 		sector_hilights[1] = new Color(parent.getDisplay(), new RGB(235,235,235));
-
-		memMap = new Vector<MemMapObj>();
 		
 		createContents();
 	}
@@ -102,14 +93,6 @@ public class HexViewer extends FileViewer
 		tableHex.setHeaderVisible(true);
 		tableHex.setFont(MainWin.logFont);
 		
-		tableHex.addPaintListener(new PaintListener() {
-
-			@Override
-			public void paintControl(PaintEvent e)
-			{
-				// TODO Auto-generated method stub
-				canvasMemMap.redraw();
-			} } );
 		
 		TableColumn tblclmnOffset = new TableColumn(tableHex, SWT.NONE);
 		tblclmnOffset.setWidth(40);
@@ -120,8 +103,8 @@ public class HexViewer extends FileViewer
 		for (int i = 0;i<16;i++)
 		{
 			TableColumn tableColumn = new TableColumn(tableHex, SWT.NONE);
-			tableColumn.setWidth(28);
-			tableColumn.setText("0" + intToHexStr(i));
+			tableColumn.setWidth(30);
+			tableColumn.setText(intToHexStr(i,2));
 		}
 		
 		TableColumn tblclmnabcdef = new TableColumn(tableHex, SWT.NONE);
@@ -199,114 +182,8 @@ public class HexViewer extends FileViewer
 		lblValue = new Label(composite_3, SWT.NONE);
 		lblValue.setBounds(250, 3, 250, 16);
 		
-		
-		
-		ScrolledComposite compositeMemMap = new ScrolledComposite( this, SWT.NONE);
-		compositeMemMap.setLayoutData(BorderLayout.WEST);
-		
 		FillLayout fl_compositeMemMap = new FillLayout();
 		fl_compositeMemMap.type = SWT.VERTICAL;
-		compositeMemMap.setLayout(fl_compositeMemMap); 
-        
-		//compositeMemMap.setSize(gwidth, 100);
-		compositeMemMap.setExpandVertical(true);
-		
-		canvasMemMap = new Canvas(compositeMemMap, SWT.DOUBLE_BUFFERED);
-		canvasMemMap.setSize(gwidth, compositeMemMap.getBounds().height);
-		
-		compositeMemMap.setContent(canvasMemMap);
-		
-		
-		
-		canvasMemMap.addPaintListener(new PaintListener() 
-		{
-			int wx;
-			int hx;
-			
-			@Override
-			
-			public void paintControl(PaintEvent e)
-			{
-				
-				
-				e.gc.setTextAntialias(SWT.OFF);
-				e.gc.setAntialias(SWT.OFF);
-				e.gc.setAdvanced(false);
-				
-				wx = canvasMemMap.getBounds().width;
-				hx = canvasMemMap.getBounds().height;
-				
-				
-				int lo = 0;
-				int hi = 0;
-					
-				for (MemMapObj mmo : memMap)
-				{
-					if ((lo == 0) || (mmo.getBaseaddr()/256 < lo))
-					{
-						lo = mmo.getBaseaddr()/256;
-					}
-					if ((mmo.getBaseaddr() + 256 + mmo.getSize())/256 > hi)
-					{
-						hi = (mmo.getBaseaddr() + 256 + mmo.getSize())/256;
-					}
-				}
-					
-				e.gc.setBackground(MainWin.colorWhite);
-				e.gc.fillRectangle(0, 0, wx, hx );
-				
-				lo = lo * 256;
-				hi = hi * 256;
-				
-				//lo = 0;
-				//hi = 65535;
-					
-				if (hi - lo > 0)
-				{
-					e.gc.setFont(MainWin.fontGraphLabel);
-					
-					double scale = ( (double)hx - tableHex.getHeaderHeight()) / (double)(hi - lo);
-						
-					e.gc.setFont(MainWin.fontGraphLabel);
-						
-					for (MemMapObj mmo : memMap)
-					{
-						e.gc.setBackground(mmo.getHicol());
-							
-						int start = (int)Math.rint(mmo.getBaseaddr() - lo);
-						int wend = (int)Math.rint(mmo.getSize());
-						int end =  start + wend;
-						
-						int lty = (int)(start * scale) + tableHex.getHeaderHeight();
-						int lby = (int)(end * scale) + tableHex.getHeaderHeight();
-						
-						e.gc.setForeground(mmo.hicol);
-						
-						//e.gc.fillRectangle(0, lty, 30, (int) (wend *scale) );
-						
-						int rty = mmo.getTableItem().getBounds().y + tableHex.getItemHeight()/2;
-						int rby = mmo.getEndItem().getBounds().y + tableHex.getItemHeight()/2;
-						int sl = 28;							
-						
-						e.gc.fillPolygon(new int[]{ 0, lty, 28, lty, gwidth, rty, gwidth, rby, sl, lby, 0, lby });
-						
-						e.gc.setForeground(MainWin.colorGraphBG);
-					
-						for (int i = 0;i<17;i++)
-						{
-							int addr = (int)((hi - lo) / 16) * i;
-							e.gc.drawString(intToHexStr(addr + lo) , 3, (int)((addr) * scale) + tableHex.getHeaderHeight() - 12 , true);
-							e.gc.drawLine(0, (int)((addr) * scale) + tableHex.getHeaderHeight()-1, 28, (int)((addr) * scale) + tableHex.getHeaderHeight()-1);
-						}
-						
-						
-					}
-					
-				}
-			
-			}
-			
-		});
 		
 	}
 	
@@ -336,7 +213,7 @@ public class HexViewer extends FileViewer
 			if (x == 1)
 			{
 				ti = new TableItem(tableHex, SWT.NONE);
-				ti.setText(0, String.format("%4s", intToHexStr(off)));
+				ti.setText(0, intToHexStr(off,4));
 				ti.setBackground(0, this.sector_hilights[ (off/256) % 2 ]);
 				off += 16;
 				txt = "";
@@ -370,7 +247,6 @@ public class HexViewer extends FileViewer
 		int flag = 0;
 		int pos = 0;
 		
-		this.memMap.clear();
 		
 		while ((pos < bytes.length - 4) && (bytes[pos] == 0))
 		{
@@ -382,7 +258,6 @@ public class HexViewer extends FileViewer
 			
 			try
 			{
-				memMap.add(new MemMapObj(loadaddr, blocksize, hc, tableHex.getItem( pos / 16 ), tableHex.getItem( (pos + blocksize + 5) / 16 )));
 				
 				for (int i = pos; i < pos + 5;i++)
 				{
@@ -500,9 +375,9 @@ public class HexViewer extends FileViewer
 
 
 
-	private String intToHexStr(int i)
+	private String intToHexStr(int i, int j)
 	{
-		return String.format("%04x", i);
+		return String.format("%0" + j + "x", i);
 	}
 
 	
@@ -542,71 +417,6 @@ public class HexViewer extends FileViewer
 	
 	
 
-	class MemMapObj {
-		
-		private int baseaddr = 0;
-		private int size = 0;
-		private Color hicol = MainWin.colorGreen;
-		private TableItem tableItem;
-		private TableItem endItem;
-		
-		public MemMapObj(int base, int sz, Color col, TableItem tableItem, TableItem endItem)
-		{
-			this.setBaseaddr(base);
-			this.setSize(sz);
-			this.setHicol(col);
-			this.setTableItem(tableItem);
-			this.endItem = endItem;
-		}
-
-		public void setBaseaddr(int baseaddr)
-		{
-			this.baseaddr = baseaddr;
-		}
-
-		public int getBaseaddr()
-		{
-			return baseaddr;
-		}
-
-		public void setSize(int size)
-		{
-			this.size = size;
-		}
-
-		public int getSize()
-		{
-			return size;
-		}
-
-		public void setHicol(Color hicol)
-		{
-			this.hicol = hicol;
-		}
-
-		public Color getHicol()
-		{
-			return hicol;
-		}
-
-		public void setTableItem(TableItem tableItem)
-		{
-			this.tableItem = tableItem;
-		}
-
-		public TableItem getTableItem()
-		{
-			return tableItem;
-		}
-		
-		public TableItem getEndItem()
-		{
-			return endItem;
-		}
-		
-		
-		
-		
-	}
+	
 }
 

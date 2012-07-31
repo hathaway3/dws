@@ -36,6 +36,8 @@ public class PathLibraryItem extends LibraryItem
 	private boolean validdisk = false;
 	private int validfs = DWLibrary.FSTYPE_UNKNOWN;
 	private Node node = null;
+	private boolean directory = false;
+	
 	
 	public PathLibraryItem(String title, String path, Node item)
 	{
@@ -57,6 +59,12 @@ public class PathLibraryItem extends LibraryItem
 		return path;
 	}
 
+	@Override
+	public String getHoverText()
+	{
+		return path;
+	}
+	
 	
 	public Node getNode()
 	{
@@ -82,6 +90,7 @@ public class PathLibraryItem extends LibraryItem
 			{
 				if (fobj.getType() == FileType.FOLDER)
 				{
+					this.directory = true;
 					if (this.node == null)
 						this.iconpath = "/menu/folder.png";
 					else
@@ -284,6 +293,16 @@ public class PathLibraryItem extends LibraryItem
 	public int getFSType()
 	{
 		return this.validfs;
+	}
+
+	public void setDirectory(boolean directory)
+	{
+		this.directory = directory;
+	}
+
+	public boolean isDirectory()
+	{
+		return directory;
 	}
 	
 	

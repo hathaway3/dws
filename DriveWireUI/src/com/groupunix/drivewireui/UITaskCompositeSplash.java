@@ -104,7 +104,7 @@ public class UITaskCompositeSplash extends UITaskComposite
 	
 	boolean doAnim()
 	{
-		if (logodat.alpha < 255)
+		if ( (!this.getDisplay().isDisposed()) && (logoc != null ) && (logodat != null) && (logodat.alpha < 255))
 		{	
 			logodat.alpha = Math.min(255, logodat.alpha + 5);
 			logoi = new Image(this.getDisplay(),logodat);
@@ -119,17 +119,20 @@ public class UITaskCompositeSplash extends UITaskComposite
 
 	public void doAnim2(int i)
 	{
-		this.logodat = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/dw/anim" + i + ".png").getImageData();
-		logoi = new Image(this.getDisplay(),logodat);
-		logoc.redraw();		
-		this.update();
-		
-		try
+		if ( (!this.getDisplay().isDisposed()) && (logoc != null ) && (logodat != null) && (logodat.alpha < 255))
 		{
-			Thread.sleep(15);
-		} catch (InterruptedException e)
-		{
-		
+			this.logodat = org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/dw/anim" + i + ".png").getImageData();
+			logoi = new Image(this.getDisplay(),logodat);
+			logoc.redraw();		
+			this.update();
+			
+			try
+			{
+				Thread.sleep(15);
+			} catch (InterruptedException e)
+			{
+			
+			}
 		}
 	}
 

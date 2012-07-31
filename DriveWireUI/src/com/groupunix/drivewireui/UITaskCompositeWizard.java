@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 
 public class UITaskCompositeWizard extends UITaskComposite
@@ -182,7 +183,10 @@ public class UITaskCompositeWizard extends UITaskComposite
 		}
 		else if (state == 2)
 		{
-			drawSerialSelectControls();
+			if (cocomodel != DWDefs.MODEL_EMULATOR)
+				drawSerialSelectControls();
+			else
+				drawMIDISelectControls();
 		}
 		else if (state == 3)
 		{
@@ -194,12 +198,22 @@ public class UITaskCompositeWizard extends UITaskComposite
 		}
 		else if (state == 5)
 		{
-			if (cocomodel == 4)
+			switch(cocomodel)
 			{
-				drawFPGABaudChooseControls();
+				case DWDefs.MODEL_FPGA:
+					drawFPGABaudChooseControls();
+					break;
+					
+				case DWDefs.MODEL_EMULATOR:
+				case DWDefs.MODEL_ATARI:
+					applyConfig();
+					drawWizardSuccessControls();
+					break;
+					
+				default:
+					drawCommTestChooseControls();
+					break;
 			}
-			else
-				drawCommTestChooseControls();
 		}
 		else if (state == 6)
 		{
@@ -358,10 +372,12 @@ public class UITaskCompositeWizard extends UITaskComposite
 							// set params
 					    	int rate = 115200;
 					    	
-					    	if (cocomodel == 1)
+					    	if (cocomodel == DWDefs.MODEL_COCO1)
 					    		 rate = 38400;
-					    	else if (cocomodel == 2)
+					    	else if (cocomodel == DWDefs.MODEL_COCO2)
 					    	  	rate = 57600;
+					    	
+					    	
 					    	  
 					    	portopen = DriveWireServer.testSerialPort_setParams(rate);
 					  } 
@@ -1015,7 +1031,7 @@ public class UITaskCompositeWizard extends UITaskComposite
 		intro.setBounds(0, y, width, 130);
 		intro.setForeground(DiskWin.colorDiskBG);
 		intro.setFont(this.introFont);
-		intro.setText("DriveWire 4 can provide a virtual MIDI device which can be used with any OS-9 software running on your CoCo.  The device is not accessible from DECB at this time.");
+		intro.setText("DriveWire 4 can provide a virtual MIDI device which allows software running on your " + this.cocodevname + " to use any MIDI hardware on the server.");
 		intro.append(intro.getLineDelimiter() + intro.getLineDelimiter());
 		intro.append("Would you like to enable MIDI support?");
 		intro.setBounds(0, y, width, intro.getTextBounds(0, intro.getCharCount()-1 ).height);
@@ -1276,14 +1292,21 @@ public class UITaskCompositeWizard extends UITaskComposite
 				
 				try
 				{
+					// fixup params for submit to server..
+					
 					int rate = fpgarate;
 					
-					if (cocomodel == 1)
+					if (cocomodel == DWDefs.MODEL_COCO1)
 						rate = 38400;
-					else if (cocomodel == 2)
+					else if ((cocomodel == DWDefs.MODEL_COCO2) || (cocomodel == DWDefs.MODEL_ATARI)) 
 						rate = 57600;
-						
-					UIUtils.simpleConfigServer(rate, cocodevname, device, usemidi, printertype, printerdir);
+					
+					if (cocomodel == DWDefs.MODEL_EMULATOR)
+						device = "TCP";
+					
+					UIUtils.simpleConfigServer(cocomodel, rate, cocodevname, device, usemidi, printertype, printerdir);
+					
+										
 				}
 				catch (DWUIOperationFailedException e1)
 				{
@@ -1743,31 +1766,33 @@ public class UITaskCompositeWizard extends UITaskComposite
 		intro.setBounds(0, y, width - 180, 60);
 		intro.setForeground(DiskWin.colorDiskBG);
 		intro.setFont(this.introFont);
-		intro.setText("This wizard will help you generate a basic configuration.  It assumes you wish to run everything on a single PC and connect via a serial port to a CoCo.  For other options, please use the server configuration tool in the Config menu.");
+		intro.setText("This wizard will help you generate a basic configuration. For additional options, please use the configuration editor in the Config menu.");
 		intro.append(intro.getLineDelimiter() + intro.getLineDelimiter());
 		intro.append("Let's get started!");
 		intro.append(intro.getLineDelimiter() + intro.getLineDelimiter());
-		intro.append("First, we need to know what type of CoCo you would like to connect.  Please choose your model from the options below:");
+		intro.append("First, we need to know what type of device you would like to connect.  Please choose your device from the options below:");
 		intro.setBounds(0, y, width - 180, intro.getTextBounds(0, intro.getCharCount() - 1).height);
 		
-		y += 215;
+		y += 165;
 		
 		int bwidth = 105;
 		int bheight = 81;
-		int gap = 15;
-		int loff = (width/2) - (bwidth + bwidth +gap + gap/2);
+		int gap = 24;
+		
+		int loff = (width/2) - (bwidth + bwidth/2 + gap);
 		int toff = y;
+		
 		int txtoff = toff + bheight + 5;
+		
 		int bstyle = SWT.TOGGLE;
+		
 		final Color tcolor = DiskWin.colorDiskGraphBG;
 		final Color tacolor = SWTResourceManager.getColor(SWT.COLOR_BLACK);
 		
 		final Button coco1 = new Button(this, bstyle);
 		coco1.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/wizard/coco1.png"));
 		coco1.setBounds(loff, toff, bwidth, bheight);
-		
-	
-		
+			
 		final StyledText coco1txt = new StyledText(this,SWT.WRAP);
 		coco1txt.setAlignment(SWT.CENTER);
 		coco1txt.setBounds(loff, txtoff, bwidth, 20);
@@ -1811,20 +1836,56 @@ public class UITaskCompositeWizard extends UITaskComposite
 		coco3txt.setForeground(tacolor);
 		coco3txt.setText("CoCo 3");
 		
+		toff += bheight + 30;
+		txtoff += bheight + 30;
+		
 		
 		final Button fpga = new Button(this, bstyle);
 		fpga.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/wizard/fpga.png"));
-		fpga.setBounds(loff + bwidth + gap + bwidth + gap + bwidth + gap, toff, bwidth, bheight);
+		fpga.setBounds(loff, toff, bwidth, bheight);
 		
 		final StyledText fpgatxt = new StyledText(this,SWT.WRAP);
 		fpgatxt.setAlignment(SWT.CENTER);
-		fpgatxt.setBounds(loff + bwidth + gap + bwidth + gap+ bwidth + gap, txtoff, bwidth, 20);
+		fpgatxt.setBounds(loff, txtoff, bwidth, 20);
 		fpgatxt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
 		fpgatxt.setEditable(false);
 		fpgatxt.setEnabled(false);
 		fpgatxt.setFont(this.introFont);
 		fpgatxt.setForeground(tcolor);
 		fpgatxt.setText("CoCo3FPGA");
+		
+		
+		
+		final Button emulator = new Button(this, bstyle);
+		emulator.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/wizard/emulator.png"));
+		emulator.setBounds(loff + bwidth + gap, toff, bwidth, bheight);
+		
+		final StyledText emutxt = new StyledText(this,SWT.WRAP);
+		emutxt.setAlignment(SWT.CENTER);
+		emutxt.setBounds(loff + bwidth + gap, txtoff, bwidth, 20);
+		emutxt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
+		emutxt.setEditable(false);
+		emutxt.setEnabled(false);
+		emutxt.setFont(this.introFont);
+		emutxt.setForeground(tcolor);
+		emutxt.setText("Emulator");
+		
+		
+		
+		final Button atari = new Button(this, bstyle);
+		atari.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/wizard/atari.png"));
+		atari.setBounds(loff + bwidth + gap + bwidth + gap, toff, bwidth, bheight);
+		
+		final StyledText ataritxt = new StyledText(this,SWT.WRAP);
+		ataritxt.setAlignment(SWT.CENTER);
+		ataritxt.setBounds(loff + bwidth + gap + bwidth + gap, txtoff, bwidth, 20);
+		ataritxt.setCursor(new org.eclipse.swt.graphics.Cursor(this.getDisplay(), SWT.CURSOR_ARROW));
+		ataritxt.setEditable(false);
+		ataritxt.setEnabled(false);
+		ataritxt.setFont(this.introFont);
+		ataritxt.setForeground(tcolor);
+		ataritxt.setText("Atari");
+		
 		
 		
 		final Button doit = new Button(this, SWT.NONE);
@@ -1857,17 +1918,23 @@ public class UITaskCompositeWizard extends UITaskComposite
 		
 		// make it act like a radio group.. sort of.. bah
 		
-		coco1.setData("cocomodel", 1);
+		coco1.setData("cocomodel", DWDefs.MODEL_COCO1);
 		coco1.setData("cocodevname", "CoCo 1");
 		
-		coco2.setData("cocomodel", 2);
+		coco2.setData("cocomodel", DWDefs.MODEL_COCO2);
 		coco2.setData("cocodevname", "CoCo 2");
 		
-		coco3.setData("cocomodel", 3);
+		coco3.setData("cocomodel", DWDefs.MODEL_COCO3);
 		coco3.setData("cocodevname", "CoCo 3");
 
-		fpga.setData("cocomodel", 4);
+		fpga.setData("cocomodel", DWDefs.MODEL_FPGA);
 		fpga.setData("cocodevname", "FPGA board");
+		
+		emulator.setData("cocomodel", DWDefs.MODEL_EMULATOR);
+		emulator.setData("cocodevname", "emulator");
+		
+		atari.setData("cocomodel", DWDefs.MODEL_ATARI);
+		atari.setData("cocodevname", "Atari");
 		
 		
 		SelectionListener cocorg = new SelectionListener () {
@@ -1882,10 +1949,15 @@ public class UITaskCompositeWizard extends UITaskComposite
 					coco2.setSelection(false);
 					coco3.setSelection(false);
 					fpga.setSelection(false);
+					emulator.setSelection(false);
+					atari.setSelection(false);
+					
 					coco1txt.setForeground(tcolor);
 					coco2txt.setForeground(tcolor);
 					coco3txt.setForeground(tcolor);
 					fpgatxt.setForeground(tcolor);
+					emutxt.setForeground(tcolor);
+					ataritxt.setForeground(tcolor);
 				
 					cocomodel = Integer.parseInt(e.widget.getData("cocomodel").toString());
 					cocodevname = e.widget.getData("cocodevname").toString();
@@ -1910,6 +1982,16 @@ public class UITaskCompositeWizard extends UITaskComposite
 					{
 						fpga.setSelection(true);
 						fpgatxt.setForeground(tacolor);
+					}
+					else if (cocomodel == 5)
+					{
+						emulator.setSelection(true);
+						emutxt.setForeground(tacolor);
+					}
+					else if (cocomodel == 6)
+					{
+						atari.setSelection(true);
+						ataritxt.setForeground(tacolor);
 					}
 				}
 			}
@@ -1992,12 +2074,49 @@ public class UITaskCompositeWizard extends UITaskComposite
 			}
 		});
 		
+		emulator.addMouseTrackListener(new MouseTrackAdapter() 
+		{
+			@Override
+			public void mouseEnter(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_HAND));
+				
+			}
+			
+			@Override
+			public void mouseExit(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_ARROW));
+				
+			}
+		});
+		
+		atari.addMouseTrackListener(new MouseTrackAdapter() 
+		{
+			@Override
+			public void mouseEnter(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_HAND));
+				
+			}
+			
+			@Override
+			public void mouseExit(MouseEvent e) 
+			{
+				setCursor(new Cursor(getDisplay(), SWT.CURSOR_ARROW));
+				
+			}
+		});
+		
+		
+		
 		
 		coco1.addSelectionListener(cocorg);
 		coco2.addSelectionListener(cocorg);
 		coco3.addSelectionListener(cocorg);
 		fpga.addSelectionListener(cocorg);
-		
+		emulator.addSelectionListener(cocorg);
+		atari.addSelectionListener(cocorg);
 		
 		
 	
