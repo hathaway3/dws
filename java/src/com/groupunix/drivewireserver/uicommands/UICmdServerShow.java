@@ -9,8 +9,7 @@ public class UICmdServerShow extends DWCommand {
 
 	static final String command = "show";
 	
-	private DWCommandList commands = new DWCommandList(null);
-		
+	
 	public UICmdServerShow(DWUIClientThread dwuiClientThread)
 	{
 		commands.addcommand(new UICmdServerShowVersion());

@@ -25,6 +25,7 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -76,6 +77,7 @@ import com.groupunix.drivewireui.library.LibraryItem;
 import com.groupunix.drivewireui.nineserver.NineServer;
 import com.groupunix.drivewireui.nineserver.OS9BufferGroup;
 import com.groupunix.drivewireui.plugins.DWBrowser;
+import com.groupunix.drivewireui.simplewizard.SimpleWizard;
 import com.swtdesigner.SWTResourceManager;
 
 
@@ -85,8 +87,8 @@ public class MainWin {
 	static Logger logger = Logger.getLogger(MainWin.class);
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
 
-	public static final String DWUIVersion = "4.2.0d";
-	public static final String DWUIVersionDate = "07/30/2012";
+	public static final String DWUIVersion = "4.3.0";
+	public static final String DWUIVersionDate = "10/21/2012";
 	
 	public static final double LOWMEM_START = 4096 * 1024;
 	public static final double LOWMEM_STOP = LOWMEM_START * 2;
@@ -922,7 +924,11 @@ public class MainWin {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				MainWin.processClientCmd("/wizard");
+				SimpleWizard ww = new SimpleWizard();
+				WizardDialog dialog = new WizardDialog(shell, ww);
+			    dialog.create();
+			    dialog.open();
+			    
 			}
 		});
 		mntmInitialConfig.setText("Simple Config Wizard...");
@@ -1021,7 +1027,7 @@ public class MainWin {
 		mntmUserInterface.addArmListener(new ArmListener() {
 			public void widgetArmed(ArmEvent e) 
 			{
-				if (MainWin.dwThread.isAlive())
+				if ((MainWin.dwThread != null) && MainWin.dwThread.isAlive())
 					mntmUseInternalServer.setSelection(true);
 				else
 					mntmUseInternalServer.setSelection(false);
@@ -1100,48 +1106,49 @@ public class MainWin {
 				try
 				{
 					List<String> res = UIUtils.loadList(MainWin.getInstance(), "ui instance printer");
-					String curp = "";
 					
-					for (String l : res)
+					if (res !=null)
 					{
-						final String[] parts = l.split("\\|");
-						if (parts.length > 1)
+						String curp = "";
+						
+						for (String l : res)
 						{
-							if (parts[0].equals("currentprinter"))
-								curp = parts[1].trim();
-							if (parts[0].equals("printer") && (parts.length == 3))
+							final String[] parts = l.split("\\|");
+							if (parts.length > 1)
 							{
-								MenuItem tmp = new MenuItem(menu_2, SWT.CHECK);
-								tmp.setText(parts[1] + ": " + parts[2].trim());
-								
-								if (parts[1].equals(curp))
-									tmp.setSelection(true);
-								else
-									tmp.setSelection(false);
-								
-								tmp.addSelectionListener(new SelectionAdapter() {
-									@Override
-									public void widgetSelected(SelectionEvent e) 
-									{
-										sendCommand("dw config set CurrentPrinter " + parts[1]);
-										
-									}
-								});
-								
+								if (parts[0].equals("currentprinter"))
+									curp = parts[1].trim();
+								if (parts[0].equals("printer") && (parts.length == 3))
+								{
+									MenuItem tmp = new MenuItem(menu_2, SWT.CHECK);
+									tmp.setText(parts[1] + ": " + parts[2].trim());
+									
+									if (parts[1].equals(curp))
+										tmp.setSelection(true);
+									else
+										tmp.setSelection(false);
+									
+									tmp.addSelectionListener(new SelectionAdapter() {
+										@Override
+										public void widgetSelected(SelectionEvent e) 
+										{
+											sendCommand("dw config set CurrentPrinter " + parts[1]);
+											
+										}
+									});
+									
+								}
 							}
 						}
+						
 					}
-					
-					
 				} 
 				catch (IOException e1)
 				{
-					MainWin.showError("Error loading printer info", e1.getMessage(), UIUtils.getStackTrace(e1), false);
-				} 
+						} 
 				catch (DWUIOperationFailedException e1)
 				{
-					MainWin.showError("Error loading printer info", e1.getMessage(), UIUtils.getStackTrace(e1), false);
-				}
+ 				}
 				
 			}
 		});
@@ -2226,6 +2233,8 @@ public class MainWin {
 			MenuItem[] profitems = MainWin.menuMIDIProfiles.getItems();
 			String[] profiles = MainWin.midiStatus.getProfiles().toArray(new String[0]);
 			
+			java.util.Arrays.sort(profiles);
+			
 			boolean profok = false;
 			
 			if (profitems.length == profiles.length)
@@ -2253,11 +2262,10 @@ public class MainWin {
 				MainWin.mntmSetProfile.setMenu(MainWin.menuMIDIProfiles);
 			
 			
-				Iterator<String> itr = MainWin.midiStatus.getProfiles().iterator();
-			
-				while(itr.hasNext())
+				
+				for (String pn : profiles)
 				{
-					final String key = itr.next();
+					final String key = pn;
 					MenuItem tmp = new MenuItem(MainWin.menuMIDIProfiles, SWT.CHECK);
 					tmp.setText(MainWin.midiStatus.getProfile(key).getDesc());
 				
@@ -3062,10 +3070,15 @@ public class MainWin {
 	{
 		MainWin.dwconfig = serverConfig;
 		
+		/*
 		if (MainWin.getInstanceConfig().getString("DeviceType","").equals("dummy"))
 		{
-			processClientCmd("/wizard");
+			SimpleWizard ww = new SimpleWizard();
+			WizardDialog dialog = new WizardDialog(shell, ww);
+		    dialog.create();
+		    dialog.open();
 		}
+		*/
 	}
 
 

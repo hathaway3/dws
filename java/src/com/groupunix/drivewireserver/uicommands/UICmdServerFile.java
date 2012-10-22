@@ -9,7 +9,6 @@ public class UICmdServerFile extends DWCommand {
 
 	static final String command = "file";
 	
-	private DWCommandList commands = new DWCommandList(null);
 		
 	public UICmdServerFile(DWUIClientThread dwuiClientThread)
 	{

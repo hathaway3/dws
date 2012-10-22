@@ -4,7 +4,8 @@ import com.groupunix.drivewireserver.DWDefs;
 
 public abstract class DWCommand 
 {
-
+	protected DWCommandList commands = new DWCommandList(null);;
+	
 	private DWCommand parentcmd = null;
 	
 	public abstract String getCommand();
@@ -12,8 +13,9 @@ public abstract class DWCommand
 	
 	public DWCommandList getCommandList()
 	{
-		return null;
+		return(this.commands);
 	}
+	
 	
 	public DWCommandResponse parse(String cmdline)
 	{

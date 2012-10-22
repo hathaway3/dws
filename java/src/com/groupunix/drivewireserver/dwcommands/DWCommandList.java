@@ -69,6 +69,10 @@ public class DWCommandList {
 			{
 				return(getLongHelp(getCommandMatch(args[0])));
 			}
+			else if ((args.length == 2) && args[1].equals("*"))
+			{
+				return(getCmdTree(getCommandMatch(args[0])));
+			}
 			else
 			{
 				return(getCommandMatch(args[0]).parse(DWUtils.dropFirstToken(cmdline)));
@@ -76,7 +80,54 @@ public class DWCommandList {
 		}
 	}
 
+	
+	
+	private DWCommandResponse getCmdTree(DWCommand cmd) 
+	{
+		String text = new String();
+		
+		
+		// figure out whole command..
+		String cmdline = cmd.getCommand();
+		
+		DWCommand tmp = cmd;
+		
+		while (tmp.getParentCmd() != null)
+		{
+			tmp = tmp.getParentCmd();
+			cmdline = tmp.getCommand() + " " + cmdline;
+		}
+		
+		text = "Tree for " + cmdline + "\r\n\n";
+		
+		text += makeTreeString(cmd,0);
+		
+		
+		if (this.outputcols <= 32)
+			text = text.toUpperCase();
+		
+		return(new DWCommandResponse(text));
+	}
 
+
+
+	private String makeTreeString(DWCommand cmd, int depth)
+	{
+			
+		String res = "";
+		
+		res += String.format("%-30s", String.format( ("%-" + (depth + 1)*4 + "s") , " " ) + cmd.getCommand()) + cmd.getShortHelp() + "\r\n";
+		
+		if (cmd.getCommandList() != null)
+		{
+			for (DWCommand c : cmd.getCommandList().commands)
+			{
+				res += makeTreeString(c, depth + 1);
+			}
+		}
+		
+		return res;
+	}
 
 	private DWCommandResponse getLongHelp(DWCommand cmd) 
 	{

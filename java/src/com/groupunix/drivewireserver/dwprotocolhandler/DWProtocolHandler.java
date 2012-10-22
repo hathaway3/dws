@@ -220,6 +220,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 					}
 				}
 					
+				
 				if ((opcodeint > -1) && (this.protodev != null))
 				{
 					
@@ -363,7 +364,10 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 								case DWDefs.OP_NAMEOBJ_MOUNT:
 									DoOP_NAMEOBJ_MOUNT();
 									break;
-									
+								
+								case DWDefs.OP_AARON:
+									DoOP_AARON();
+									break;
 									
 								default:
 									logger.warn("UNKNOWN OPCODE: " + opcodeint + " " + ((char)opcodeint));
@@ -387,21 +391,25 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 					this.inOp = false;
 					
 					if (System.currentTimeMillis() - optime > DWDefs.SERVER_SLOW_OP)
-						logger.warn(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms.  Server loaded or low on ram?");
+						logger.warn(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms.");
 					else if (config.getBoolean("LogTiming",false))
 						logger.debug(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms, serial read delay was " + ((DWSerialDevice) this.protodev).getReadtime());
 				}
 				else
 				{
+					
 					if (!this.wanttodie)
 					{
+						
 						if (this.resetPending)
 						{
 							logger.debug("device is resetting...");
 							
 							// kill device
 							if (protodev != null)
-								this.protodev.shutdown();							
+								this.protodev.shutdown();
+							
+							this.resetPending = false;
 						}
 						else if (!config.getString("DeviceType","").equals("dummy"))
 							logger.debug("device unavailable, will retry in " + config.getInt("DeviceFailRetryTime",6000) + "ms");
@@ -468,6 +476,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			}
 		}
 			
+	}
+	
+	
+	private void DoOP_AARON()
+	{
+		logger.warn("DriveWire " + DriveWireServer.DWServerVersion + " (" + DriveWireServer.DWServerVersionDate + ") by Aaron Wolfe");
+		
 	}
 
 	
@@ -1510,7 +1525,10 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			// flag that we want a reset
 			this.resetPending = true;
 			
-			
+			if (this.protodev != null)
+			{
+				this.protodev.close();
+			}
 			
 		}
 	}

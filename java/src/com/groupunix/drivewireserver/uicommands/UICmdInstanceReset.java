@@ -9,7 +9,6 @@ public class UICmdInstanceReset extends DWCommand {
 
 	static final String command = "reset";
 	
-	private DWCommandList commands = new DWCommandList(null);
 		
 	public UICmdInstanceReset(DWUIClientThread dwuiClientThread)
 	{

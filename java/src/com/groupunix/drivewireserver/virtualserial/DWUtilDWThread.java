@@ -8,6 +8,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.uicommands.UICmd;
 
 public class DWUtilDWThread implements Runnable 
 {
@@ -35,6 +36,7 @@ public class DWUtilDWThread implements Runnable
 
 		commands = new DWCommandList(dwProto, dwProto.getCMDCols());
 		commands.addcommand(new DWCmd(dwProto));
+		commands.addcommand(new UICmd(dwProto));
 		
 		logger.debug("init dw util thread (protected mode: " + this.protect + ")");	
 	}

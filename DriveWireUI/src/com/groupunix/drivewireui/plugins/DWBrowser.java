@@ -41,6 +41,7 @@ import com.groupunix.drivewireui.GradientHelper;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.SendCommandWin;
 import com.groupunix.drivewireui.UIUtils;
+import org.eclipse.swt.widgets.Label;
 
 public class DWBrowser extends Composite
 {
@@ -63,8 +64,6 @@ public class DWBrowser extends Composite
 	private ToolItem tltmReload;
 	private Combo comboURL;
 	private Spinner spinnerDrive;
-	
-	private Canvas canvas;
 
 	private CTabItem ourtab;
 	
@@ -165,14 +164,6 @@ public class DWBrowser extends Composite
 		fd_comboURL.top = new FormAttachment(2, 5);
 		comboURL.setLayoutData(fd_comboURL);
 		
-		canvas = new Canvas(header, SWT.NONE);
-		FormData fd_canvas = new FormData();
-		fd_canvas.left = new FormAttachment(100, -75);
-		fd_canvas.right = new FormAttachment(100, -55);
-		fd_canvas.top = new FormAttachment(2, 6);
-		fd_canvas.bottom = new FormAttachment(2, 28);
-		canvas.setLayoutData(fd_canvas);
-		
 		spinnerDrive = new Spinner(header, SWT.BORDER);
 		spinnerDrive.setBackground(new Color(MainWin.getDisplay(), 255,255,255));
 		spinnerDrive.setToolTipText("Working drive");
@@ -182,6 +173,14 @@ public class DWBrowser extends Composite
 		fd_spinnerDrive.left = new FormAttachment(100, -50);
 		spinnerDrive.setLayoutData(fd_spinnerDrive);
 		spinnerDrive.setMaximum(255);
+		
+		Label lblDiskPic = new Label(header, SWT.NONE);
+		lblDiskPic.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/disk-insert.png"));
+		FormData fd_lblDiskPic = new FormData();
+		fd_lblDiskPic.top = new FormAttachment(spinnerDrive, 3, SWT.TOP);
+		fd_lblDiskPic.right = new FormAttachment(spinnerDrive, -5);
+		lblDiskPic.setLayoutData(fd_lblDiskPic);
+		
 		
 		//DWBrowserUtils.GenerateHTMLDir("E:/cocodisks");
 		
@@ -588,5 +587,4 @@ public class DWBrowser extends Composite
 					  }
 				  });
 	}
-	
 }

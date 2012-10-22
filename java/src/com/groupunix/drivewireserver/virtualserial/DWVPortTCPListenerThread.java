@@ -77,6 +77,8 @@ public class DWVPortTCPListenerThread implements Runnable
 				}
 				*/
 				
+				this.dwVSerialPorts.getListenerPool().addListener(this.vport, srvr);
+				
 				logger.info("tcp listening on port " + srvr.socket().getLocalPort());
 			}
 			catch (IOException e2) 
@@ -100,7 +102,7 @@ public class DWVPortTCPListenerThread implements Runnable
 			
 				logger.info("new connection from " + skt.socket().getInetAddress());
 			
-				this.dwVSerialPorts.getListenerPool().addListener(this.vport, skt);
+				this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt, mode);
 				
 				
 				if (mode == 2)

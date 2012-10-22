@@ -1,6 +1,7 @@
 package com.groupunix.drivewireserver.virtualserial;
 
 import java.io.IOException;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
@@ -12,7 +13,7 @@ public class DWVPortListenerPool {
 	public static final int MAX_CONN = 256;
 	public static final int MAX_LISTEN = 64;
 	private SocketChannel[] sockets = new SocketChannel[MAX_CONN];
-	private SocketChannel[] server_sockets = new SocketChannel[MAX_LISTEN];
+	private ServerSocketChannel[] server_sockets = new ServerSocketChannel[MAX_LISTEN];
 	
 	private int[] serversocket_ports = new int[MAX_LISTEN];
 	private int[] socket_ports = new int[MAX_CONN];
@@ -22,6 +23,9 @@ public class DWVPortListenerPool {
 	
 	public int addConn(int port, SocketChannel sktchan, int mode) 
 	{
+		
+		logger.debug("add connection entry for port " + port + " mode " + mode);
+		
 		for (int i = 0; i< MAX_CONN;i++)
 		{
 			if (sockets[i] == null)
@@ -56,22 +60,28 @@ public class DWVPortListenerPool {
 		socket_ports[conno] = port;
 	}
 	
-	public int addListener(int port, SocketChannel srvskt)
+	public int addListener(int port, ServerSocketChannel srvr)
 	{
+		
+		
 		for (int i = 0; i< MAX_LISTEN;i++)
 		{
 			if (server_sockets[i] == null)
 			{
 				
 				serversocket_ports[i] = port;
+				server_sockets[i] = srvr;
+				logger.debug("add listener entry for port " + port + " id " + i);
+				
 				return(i);
+
 			}
 		}
 	 	
 		return(-1);
 	}
 	
-	public SocketChannel getListener(int conno)
+	public ServerSocketChannel getListener(int conno)
 	{
 		return(server_sockets[conno]);
 	}
@@ -79,7 +89,7 @@ public class DWVPortListenerPool {
 	
 	public void closePortServerSockets(int port)
 	{
-		logger.debug("closing listener sockets for port " + port + "...");
+		
 		for (int i = 0;i<MAX_LISTEN;i++)
 		{
 			if (this.getListener(i) != null)
@@ -88,6 +98,7 @@ public class DWVPortListenerPool {
 				{
 					try 
 					{
+						logger.debug("closing listener sockets for port " + port + "...");
 						this.killListener(i);
 					} 
 					catch (DWConnectionNotValidException e) 

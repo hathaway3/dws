@@ -67,10 +67,6 @@ public class UITaskMaster
 					  tc = new UITaskCompositeSplash(master, SWT.DOUBLE_BUFFERED, nexttaskno);
 					
 				  }
-				  else if (cmd.equals("/wizard"))
-				  {
-					  tc = new UITaskCompositeWizard(master, SWT.DOUBLE_BUFFERED, nexttaskno);
-				  }
 				  else
 				  {
 					  master.setRedraw(false);

@@ -72,7 +72,7 @@ public class DWVPortTCPServerThread implements Runnable {
 		
 			int lastbyte = -1;
 		
-			while ((wanttodie == false) && (sktchan.isConnected()) && (dwVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
+			while ((wanttodie == false) && (sktchan.isOpen()) && (dwVSerialPorts.isOpen(this.vport) || (mode == MODE_TERM)))
 			{
 			
 				int databyte = sktchan.socket().getInputStream().read();

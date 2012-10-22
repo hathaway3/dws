@@ -147,9 +147,8 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		ByteBuffer readBuffer = ByteBuffer.wrap(readbytes);
 		
 		
-		while ((wanttodie == false) && (sktchan.isConnected()) && (dwVSerialPorts.isOpen(this.vport)))
+		while ((wanttodie == false) && (sktchan.isOpen()) && (dwVSerialPorts.isOpen(this.vport)))
 		{
-						
 			try 
 			{
 				int readsize = sktchan.read(readBuffer);

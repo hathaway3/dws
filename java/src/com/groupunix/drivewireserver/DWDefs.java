@@ -252,6 +252,7 @@ public class DWDefs
 	public static final int MODEL_FPGA = 4;
 	public static final int MODEL_EMULATOR = 5;
 	public static final int MODEL_ATARI = 6;
+	public static final int MODEL_APPLE2 = 7;
 
 	public static final int POLL_RESP_MODE_SERIAL = 0;
 	public static final int POLL_RESP_MODE_WINDOW = 1;
@@ -261,6 +262,8 @@ public class DWDefs
 	public static final byte SERVER_ID_DW4_0 = 4;
 	
 	public static final byte SERVER_ID_MARK_0 = (byte) 128;
+
+	
 	
 	// client IDs
 	

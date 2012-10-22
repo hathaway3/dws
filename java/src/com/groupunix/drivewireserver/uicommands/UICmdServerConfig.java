@@ -8,8 +8,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 public class UICmdServerConfig extends DWCommand {
 
 	static final String command = "config";
-	
-	private DWCommandList commands = new DWCommandList(null);
+
 		
 	public UICmdServerConfig(DWUIClientThread dwuiClientThread)
 	{

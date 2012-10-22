@@ -48,8 +48,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 public class DriveWireServer 
 {
 
-	public static final String DWServerVersion = "4.1.2c";
-	public static final String DWServerVersionDate = "07/26/2012";
+	public static final String DWServerVersion = "4.3.0";
+	public static final String DWServerVersionDate = "10/21/2012";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;

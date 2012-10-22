@@ -290,18 +290,20 @@ public abstract class DWDisk
 	public int getDirtySectors() 
 	{
 		int drt = 0;
-			
-		for (int i=0;i<this.sectors.size();i++)
+		
+		if (this.sectors != null)
 		{
-			if (this.sectors.get(i) != null)
+			for (int i=0;i<this.sectors.size();i++)
 			{
-				if (this.sectors.get(i).isDirty())
+				if (this.sectors.get(i) != null)
 				{
-					drt++;
+					if (this.sectors.get(i).isDirty())
+					{
+						drt++;
+					}
 				}
 			}
 		}
-			
 		return(drt);
 	}
 	 

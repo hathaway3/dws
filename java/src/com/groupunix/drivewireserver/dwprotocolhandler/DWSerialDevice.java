@@ -26,12 +26,15 @@ public class DWSerialDevice implements DWProtocolDevice
 	private String device;
 	private DWProtocol dwProto;
 	private boolean DATurboMode = false; 
+	private boolean xorinput = false;
+	
 	private byte[] prefix;
 	private long readtime;
 
 	private ArrayBlockingQueue<Byte> queue;
 
 	private DWSerialReader evtlistener;
+
 	
 	public DWSerialDevice(DWProtocol dwProto) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException, IOException, TooManyListenersException
 	{
@@ -44,11 +47,11 @@ public class DWSerialDevice implements DWProtocolDevice
 		//prefix[0] = (byte) 0xFF;
 		prefix[0] = (byte) 0xC0;
 
-		
-		
+		xorinput = dwProto.getConfig().getBoolean("ProtocolXORInputBits", false);
+			
 		bytelog = dwProto.getConfig().getBoolean("LogDeviceBytes", false);
 		
-		logger.debug("init " + device + " for handler #" + dwProto.getHandlerNo() + " (logging bytes: " + bytelog + ")");
+		logger.debug("init " + device + " for handler #" + dwProto.getHandlerNo() + " (logging bytes: " + bytelog + "  xorinput: " + xorinput +")");
 		
 		connect(device);
 				
@@ -71,36 +74,24 @@ public class DWSerialDevice implements DWProtocolDevice
 
 	public void close()
 	{
-		logger.debug("closing serial device " +  device + " in handler #" + dwProto.getHandlerNo());
 		
-		if (this.evtlistener != null)
+		if (this.serialPort != null)
 		{
-			if (this.serialPort != null)
+			logger.debug("closing serial device " +  device + " in handler #" + dwProto.getHandlerNo());
+			
+			serialPort.notifyOnDataAvailable(false);
+			
+			if (this.evtlistener != null)
+			{
+				this.evtlistener.shutdown();
 				serialPort.removeEventListener();
-			this.evtlistener.shutdown();
-		}
-		
-		if (serialPort != null)
-		{
-			try
-			{
-				serialPort.getInputStream().close();
-			} catch (IOException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 			
 			serialPort.close();
 			serialPort = null;
 			
 		}
-		
-		  //serialPort.notifyOnDataAvailable(false);
-		  //serialPort.removeEventListener();
-		  
-		  //evtlistener = null;
-		  
+
 		  
 		  /*
 		
@@ -164,14 +155,6 @@ public class DWSerialDevice implements DWProtocolDevice
 	{
 		if (this.serialPort != null)
 		{
-			// these settings seem to solve the lost bytes problems on my usb adapter
-			// dedicating a thread to busy wait on the port works better than using the
-			// event driven model... ok i guess
-			serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
-			serialPort.enableReceiveThreshold(1);
-			//serialPort.enableReceiveTimeout(1000);
-        	
-			
 			setSerialParams(serialPort);               
         	
 			if (this.evtlistener != null)
@@ -233,6 +216,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 		rate = dwProto.getConfig().getInt("SerialRate", 115200);
 		
+		serialPort.enableReceiveThreshold(1);
 		
 		if (dwProto.getConfig().containsKey("SerialStopbits"))
 		{
@@ -265,8 +249,37 @@ public class DWSerialDevice implements DWProtocolDevice
 					
 		}
 		
+		int flow = SerialPort.FLOWCONTROL_NONE;
+		
+		if (dwProto.getConfig().getBoolean("SerialFlowControl_RTSCTS_IN", false))
+			flow = flow | SerialPort.FLOWCONTROL_RTSCTS_IN;
+		
+		if (dwProto.getConfig().getBoolean("SerialFlowControl_RTSCTS_OUT", false))
+			flow = flow | SerialPort.FLOWCONTROL_RTSCTS_OUT;
+		
+		if (dwProto.getConfig().getBoolean("SerialFlowControl_XONXOFF_IN", false))
+			flow = flow | SerialPort.FLOWCONTROL_XONXOFF_IN;
+		
+		if (dwProto.getConfig().getBoolean("SerialFlowControl_XONXOFF_OUT", false))
+			flow = flow | SerialPort.FLOWCONTROL_XONXOFF_OUT;
+		
+		serialPort.setFlowControlMode(flow);
+		
 		logger.debug("setting port params to " + rate + " " + databits + ":" + parity + ":" + stopbits );
 		sport.setSerialPortParams(rate, databits, stopbits, parity);
+		
+		if (dwProto.getConfig().containsKey("SerialDTR"))
+		{
+			sport.setDTR(dwProto.getConfig().getBoolean("SerialDTR", false));
+			logger.debug("setting port DTR to " + dwProto.getConfig().getBoolean("SerialDTR", false));
+		}
+		
+		if (dwProto.getConfig().containsKey("SerialRTS"))
+		{
+			sport.setRTS(dwProto.getConfig().getBoolean("SerialRTS", false));
+			logger.debug("setting port RTS to " + dwProto.getConfig().getBoolean("SerialRTS", false));
+		}
+		
 		
 	}
 	
@@ -423,7 +436,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 		try
 		{
-			while (res == -1) 
+			while ((res == -1) && (this.serialPort != null)) 
 			{
 				long starttime = System.currentTimeMillis();
 				Byte read = queue.poll(200, TimeUnit.MILLISECONDS);
@@ -442,6 +455,9 @@ public class DWSerialDevice implements DWProtocolDevice
 		{
 			logger.debug("interrupted in serial read");
 		}
+		
+		if (this.xorinput )
+			res = res ^ 0xFF;
 		
 		if (blog && this.bytelog)
 			logger.debug("READ1: " + res);

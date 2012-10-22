@@ -616,50 +616,11 @@ public class UIUtils {
 	
 	
 	
-	public static void simpleConfigServer(int cocomodel, int rate, String devname, String device, boolean usemidi, String printertype, String printerdir) throws IOException, DWUIOperationFailedException 
+	public static void simpleConfigServer(ArrayList<String> cmds) throws IOException, DWUIOperationFailedException 
 	{
 		// configure device
 		
-		ArrayList<String> cmds = new ArrayList<String>();
-		
-		if (cocomodel == DWDefs.MODEL_EMULATOR)
-		{
-			// tcp device
-			cmds.add("dw config set DeviceType tcp-server");
-			cmds.add("dw config set TCPServerPort 65504");
-		}
-		else
-		{
-			// serial device
-			
-			cmds.add("dw config set DeviceType serial");
-			cmds.add("dw config set SerialDevice " + device);
-			cmds.add("dw config set SerialRate " + rate);
-			
-			
-		}
-		
-		cmds.add("dw config set [@name] "+ devname + " on " + device);
-		
-		cmds.add("dw config set [@desc] Autocreated " +  new java.sql.Timestamp(Calendar.getInstance().getTime().getTime()).toString() );
-		
-		cmds.add("dw config set UseMIDI " + usemidi);
-		
-		
-		for (int i = 0;i<=MainWin.getInstanceConfig().getMaxIndex("Printer");i++)
-		{
-			if (MainWin.getInstanceConfig().getString("Printer("+i+")[@name]").equals(printertype))
-				cmds.add("dw config set CurrentPrinter " + printertype);
-			
-			if (MainWin.getInstanceConfig().getString("Printer("+i+")[@name]").equals("Text"))
-				cmds.add("dw config set Printer("+i+").OutputDir " + printerdir);
-			
-			if (MainWin.getInstanceConfig().getString("Printer("+i+")[@name]").equals("FX80"))
-				cmds.add("dw config set Printer("+i+").OutputDir " + printerdir);
-		}
-	
-		
-		int tid = MainWin.taskman.addTask("Configure server for " + devname + " on " + device);
+		int tid = MainWin.taskman.addTask("Send configuration to server..");
 		String res = "";
 		
 			

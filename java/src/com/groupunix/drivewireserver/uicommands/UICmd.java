@@ -5,6 +5,7 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmd extends DWCommand
 {
@@ -23,6 +24,12 @@ public class UICmd extends DWCommand
 	} 
 
 	
+	public UICmd(DWProtocolHandler dwProto)
+	{
+		// TODO Auto-generated constructor stub
+	}
+
+
 	public String getCommand() 
 	{
 		return command;
@@ -42,7 +49,7 @@ public class UICmd extends DWCommand
 
 	public String getShortHelp() 
 	{
-		return this.commands.getShortHelp();
+		return "Managment commands with machine parsable output";
 	}
 
 
