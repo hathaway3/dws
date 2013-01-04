@@ -73,7 +73,7 @@ public class DWCmdServerDir extends DWCommand {
 	    	longest++;
 	    	longest++;
 	    	
-	    	int cols = (80 / longest);
+	    	int cols = Math.max(1, 80 / longest);
 	    	
 	    	for (int i=0; i<children.length; i++) 
 	        {
