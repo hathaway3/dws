@@ -90,13 +90,14 @@ public class MainWin {
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
 
 	public static final String DWUIVersion = "4.3.1c";
+	public static final Long DWUIVersionSerial = 0L;
 	public static final String DWUIVersionDate = "01/07/2013";
 	
 	public static final double LOWMEM_START = 4096 * 1024;
 	public static final double LOWMEM_STOP = LOWMEM_START * 2;
 	
 	public static final int DISPLAY_ANIM_TIMER = 90;
-
+	
 
 	public final static int LTYPE_LOCAL_ROOT = 0;
 	public final static int LTYPE_LOCAL_FOLDER = 1;
@@ -1026,6 +1027,29 @@ public class MainWin {
 		
 		
 		
+		final MenuItem mntmNoChecks = new MenuItem(menu_1, SWT.CHECK);
+		mntmNoChecks.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				if (config.getBoolean("NoUpdateChecks",false))
+				{
+					config.setProperty("NoUpdateChecks", false);
+					
+				}
+				else
+				{
+					config.setProperty("NoUpdateChecks", true);
+									
+				}
+			}
+		});
+		mntmNoChecks.setText("Disable new version checks");
+		
+		
+		
+		
+		
 		mntmUserInterface.addArmListener(new ArmListener() {
 			public void widgetArmed(ArmEvent e) 
 			{
@@ -1036,6 +1060,7 @@ public class MainWin {
 				
 				mntmUseRemoteFile.setSelection(config.getBoolean("UseRemoteFilebrowser", false));
 				mntmNoBrowsers.setSelection(config.getBoolean("NoBrowsers", false));
+				mntmNoChecks.setSelection(config.getBoolean("NoUpdateChecks", false));
 			}
 		});
 		
