@@ -26,7 +26,11 @@ public class UICmd extends DWCommand
 	
 	public UICmd(DWProtocolHandler dwProto)
 	{
-		// TODO Auto-generated constructor stub
+		commands = new DWCommandList(null);
+		commands.addcommand(new UICmdInstance(dwProto));
+		commands.addcommand(new UICmdServer(dwProto));
+	//	commands.addcommand(new UICmdSync(dwProto));
+	//	commands.addcommand(new UICmdTest(dwProto));
 	}
 
 
@@ -43,6 +47,11 @@ public class UICmd extends DWCommand
 
 	public DWCommandResponse parse(String cmdline)
 	{
+		if (cmdline.length() == 0)
+		{
+			return(new DWCommandResponse(this.commands.getShortHelp()));
+		}
+		
 		return(commands.parse(cmdline));
 	}
 

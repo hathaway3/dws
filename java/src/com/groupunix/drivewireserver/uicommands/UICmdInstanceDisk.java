@@ -4,6 +4,7 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstanceDisk extends DWCommand {
 
@@ -14,11 +15,20 @@ public class UICmdInstanceDisk extends DWCommand {
 	{
 
 		commands.addcommand(new UICmdInstanceDiskShow(dwuiClientThread));
-		commands.addcommand(new UICmdInstanceDiskSerial(dwuiClientThread));
-		commands.addcommand(new UICmdInstanceDiskStatus(dwuiClientThread));
+		// commands.addcommand(new UICmdInstanceDiskSerial(dwuiClientThread));
+		// commands.addcommand(new UICmdInstanceDiskStatus(dwuiClientThread));
 	}
 
 	
+	public UICmdInstanceDisk(DWProtocolHandler dwProto) 
+	{
+		commands.addcommand(new UICmdInstanceDiskShow(dwProto));
+		// commands.addcommand(new UICmdInstanceDiskSerial(dwProto));
+		// commands.addcommand(new UICmdInstanceDiskStatus(dwProto));
+	
+	}
+
+
 	public String getCommand() 
 	{
 		return command;

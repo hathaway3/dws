@@ -13,11 +13,18 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstancePrinterStatus extends DWCommand {
 
-	private DWUIClientThread dwuithread;
+	private DWUIClientThread dwuithread = null;
+	private DWProtocolHandler dwProto = null;
 
 	public UICmdInstancePrinterStatus(DWUIClientThread dwuiClientThread) 
 	{
 		this.dwuithread = dwuiClientThread;
+	}
+
+
+	public UICmdInstancePrinterStatus(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 
@@ -43,28 +50,22 @@ public class UICmdInstancePrinterStatus extends DWCommand {
 	{
 		String res = "";
 		
-		if (this.dwuithread.getInstance() > -1)
+		if (dwProto == null)
+			dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
+			
+			
+		res = "currentprinter|" + dwProto.getConfig().getString("CurrentPrinter","none") + "\r\n";
+			
+		@SuppressWarnings("unchecked")
+		List<HierarchicalConfiguration> profiles =  dwProto.getConfig().configurationsAt("Printer");
+    	
+		for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
 		{
-			DWProtocolHandler dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
-			
-			
-			
-			if (!(dwProto == null))
-			{
-				res = "currentprinter|" + DriveWireServer.getHandler(this.dwuithread.getInstance()).getConfig().getString("CurrentPrinter","none") + "\r\n";
-					
-				@SuppressWarnings("unchecked")
-				List<HierarchicalConfiguration> profiles =  DriveWireServer.getHandler(this.dwuithread.getInstance()).getConfig().configurationsAt("Printer");
-		    	
-				for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
-				{
-				    HierarchicalConfiguration mprof = it.next();
-				    
-				    res += "printer|" + mprof.getString("[@name]") +"|" + mprof.getString("[@desc]") + "\r\n";
-				}
-			
-			}
+		    HierarchicalConfiguration mprof = it.next();
+		    
+		    res += "printer|" + mprof.getString("[@name]") +"|" + mprof.getString("[@desc]") + "\r\n";
 		}
+	
 		
 		return(new DWCommandResponse(res));
 	}

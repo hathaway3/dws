@@ -17,11 +17,18 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstanceMIDIStatus extends DWCommand {
 
-	private DWUIClientThread dwuithread;
+	private DWUIClientThread dwuithread = null;
+	private DWProtocolHandler dwProto = null;
 
 	public UICmdInstanceMIDIStatus(DWUIClientThread dwuiClientThread) 
 	{
 		this.dwuithread = dwuiClientThread;
+	}
+
+
+	public UICmdInstanceMIDIStatus(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 
@@ -47,45 +54,44 @@ public class UICmdInstanceMIDIStatus extends DWCommand {
 	{
 		String res = "enabled|false";
 		
-		if (this.dwuithread.getInstance() > -1)
-		{
-			DWProtocolHandler dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
-			
-			
-			
-			if (!(dwProto == null) && !(dwProto.getVPorts() == null) &&  !(dwProto.getVPorts().getMidiDeviceInfo() == null) )
-			{
-				try
-				{
-					res = "enabled|" + DriveWireServer.getHandler(this.dwuithread.getInstance()).getConfig().getBoolean("UseMIDI", false) + "\r\n";
-					res += "cdevice|" + dwProto.getVPorts().getMidiDeviceInfo().getName() + "\r\n";
-					res += "cprofile|" +dwProto.getVPorts().getMidiProfileName() + "\r\n";
-				
-					MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+		if (this.dwProto == null)
+			dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
 		
-					for (int j = 0;j<infos.length;j++)
-					{
-						MidiDevice.Info i = infos[j];
-						MidiDevice dev = MidiSystem.getMidiDevice(i);
-						
-						res += "device|" + j + "|" + dev.getClass().getSimpleName() + "|" + i.getName() +"|"+ i.getDescription() +"|" + i.getVendor() + "|" + i.getVersion() +"\r\n";
-						
-					}
-
-					@SuppressWarnings("unchecked")
-					List<HierarchicalConfiguration> profiles = DriveWireServer.serverconfig.configurationsAt("midisynthprofile");
-			    	
-					for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
-					{
-					    HierarchicalConfiguration mprof = it.next();
-					    
-					    res += "profile|" + mprof.getString("[@name]") +"|" + mprof.getString("[@desc]") + "\r\n";
-					}
-				}
-				catch (MidiUnavailableException e)
+	
+		
+		
+		if (!(dwProto == null) && !(dwProto.getVPorts() == null) &&  !(dwProto.getVPorts().getMidiDeviceInfo() == null) )
+		{
+			try
+			{
+				res = "enabled|" + dwProto.getConfig().getBoolean("UseMIDI", false) + "\r\n";
+				res += "cdevice|" + dwProto.getVPorts().getMidiDeviceInfo().getName() + "\r\n";
+				res += "cprofile|" +dwProto.getVPorts().getMidiProfileName() + "\r\n";
+			
+				MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+	
+				for (int j = 0;j<infos.length;j++)
 				{
-					res = "enabled|false\n\n";
+					MidiDevice.Info i = infos[j];
+					MidiDevice dev = MidiSystem.getMidiDevice(i);
+					
+					res += "device|" + j + "|" + dev.getClass().getSimpleName() + "|" + i.getName() +"|"+ i.getDescription() +"|" + i.getVendor() + "|" + i.getVersion() +"\r\n";
+					
 				}
+
+				@SuppressWarnings("unchecked")
+				List<HierarchicalConfiguration> profiles = DriveWireServer.serverconfig.configurationsAt("midisynthprofile");
+		    	
+				for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
+				{
+				    HierarchicalConfiguration mprof = it.next();
+				    
+				    res += "profile|" + mprof.getString("[@name]") +"|" + mprof.getString("[@desc]") + "\r\n";
+				}
+			}
+			catch (MidiUnavailableException e)
+			{
+				res = "enabled|false\n\n";
 			}
 		}
 		

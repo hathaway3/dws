@@ -4,6 +4,7 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdServerShow extends DWCommand {
 
@@ -20,13 +21,30 @@ public class UICmdServerShow extends DWCommand {
 		commands.addcommand(new UICmdServerShowSerialDevs());
 		commands.addcommand(new UICmdServerShowStatus());
 		commands.addcommand(new UICmdServerShowNet());
-		commands.addcommand(new UICmdServerShowLog(dwuiClientThread));
+		commands.addcommand(new UICmdServerShowLog());
 		commands.addcommand(new UICmdServerShowTopics(dwuiClientThread));
 		commands.addcommand(new UICmdServerShowHelp(dwuiClientThread));
 		commands.addcommand(new UICmdServerShowErrors(dwuiClientThread));
 	}
 
 	
+	public UICmdServerShow(DWProtocolHandler dwProto) 
+	{
+		commands.addcommand(new UICmdServerShowVersion());
+		commands.addcommand(new UICmdServerShowInstances());
+		commands.addcommand(new UICmdServerShowMIDIDevs());
+		commands.addcommand(new UICmdServerShowSynthProfiles());
+		commands.addcommand(new UICmdServerShowLocalDisks());
+		commands.addcommand(new UICmdServerShowSerialDevs());
+		commands.addcommand(new UICmdServerShowStatus());
+		commands.addcommand(new UICmdServerShowNet());
+		commands.addcommand(new UICmdServerShowLog());
+		commands.addcommand(new UICmdServerShowTopics(dwProto));
+		commands.addcommand(new UICmdServerShowHelp(dwProto));
+		commands.addcommand(new UICmdServerShowErrors(dwProto));
+	}
+
+
 	public String getCommand() 
 	{
 		return command;

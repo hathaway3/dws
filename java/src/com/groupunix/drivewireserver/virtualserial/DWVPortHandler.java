@@ -70,7 +70,7 @@ public class DWVPortHandler
 	
 		
 		// process command if enter
-		if ((databyte == this.vModem.getCR()) || (databyte == this.vModem.getCR()))
+		if (databyte == this.vModem.getCR())
 		{
 			logger.debug("port command '" + port_command + "'");
 				
@@ -190,13 +190,14 @@ public class DWVPortHandler
 			}
 
 
-			else if (cmdparts[0].equalsIgnoreCase("dw"))
+			else if (cmdparts[0].equalsIgnoreCase("dw") || cmdparts[0].equalsIgnoreCase("ui"))
 			{
 				// start DWcmd thread
 				
 				this.utilthread = new Thread(new DWUtilDWThread(this.dwProto, this.vport, cmd));
 				this.utilthread.start();
 			}
+			
 			else if (cmdparts[0].equalsIgnoreCase("log"))
 			{
 				// log entry

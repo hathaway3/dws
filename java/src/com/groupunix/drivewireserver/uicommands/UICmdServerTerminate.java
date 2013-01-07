@@ -4,6 +4,7 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdServerTerminate extends DWCommand {
 
@@ -11,6 +12,8 @@ public class UICmdServerTerminate extends DWCommand {
 
 	@SuppressWarnings("unused")
 	private DWUIClientThread dwuiref;
+
+	private DWProtocolHandler dwProto;
 		
 	public UICmdServerTerminate(DWUIClientThread dwuiClientThread)
 	{
@@ -18,6 +21,12 @@ public class UICmdServerTerminate extends DWCommand {
 	}
 
 	
+	public UICmdServerTerminate(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
+	}
+
+
 	public String getCommand() 
 	{
 		return command;

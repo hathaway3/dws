@@ -12,11 +12,18 @@ import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class UICmdInstancePortStatus extends DWCommand {
 
-	private DWUIClientThread dwuithread;
+	private DWUIClientThread dwuithread = null;
+	private DWProtocolHandler dwProto = null;
 
 	public UICmdInstancePortStatus(DWUIClientThread dwuiClientThread) 
 	{
 		this.dwuithread = dwuiClientThread;
+	}
+
+
+	public UICmdInstancePortStatus(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 
@@ -42,71 +49,69 @@ public class UICmdInstancePortStatus extends DWCommand {
 	{
 		String res = "";
 		
-		if (this.dwuithread.getInstance() > -1)
-		{
-			DWProtocolHandler dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
+		if (this.dwProto == null)
+			dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
 			
-			if (!(dwProto == null) && !(dwProto.getVPorts() == null) )
+		if (!(dwProto == null) && !(dwProto.getVPorts() == null) )
+		{
+			dwProto.getVPorts();
+			
+			for (int p = 0;p < DWVSerialPorts.MAX_PORTS;p++)
 			{
-				dwProto.getVPorts();
-				
-				for (int p = 0;p < DWVSerialPorts.MAX_PORTS;p++)
+				if (!dwProto.getVPorts().isNull(p))
 				{
-					if (!dwProto.getVPorts().isNull(p))
+					try
 					{
-						try
+						res += dwProto.getVPorts().prettyPort(p) + "|";
+						
+						if (dwProto.getVPorts().isOpen(p))
 						{
-							res += dwProto.getVPorts().prettyPort(p) + "|";
+							res += "open|";
 							
-							if (dwProto.getVPorts().isOpen(p))
+							res += dwProto.getVPorts().getOpen(p) + "|";
+							
+							res += dwProto.getVPorts().getUtilMode(p) + "|";
+							
+							res += DWUtils.prettyUtilMode(dwProto.getVPorts().getUtilMode(p)) + "|";
+							
+							res += dwProto.getVPorts().bytesWaiting(p)  + "|";
+							
+							res += dwProto.getVPorts().getConn(p) + "|";
+							
+							if (dwProto.getVPorts().getConn(p) > -1)
 							{
-								res += "open|";
-								
-								res += dwProto.getVPorts().getOpen(p) + "|";
-								
-								res += dwProto.getVPorts().getUtilMode(p) + "|";
-								
-								res += DWUtils.prettyUtilMode(dwProto.getVPorts().getUtilMode(p)) + "|";
-								
-								res += dwProto.getVPorts().bytesWaiting(p)  + "|";
-								
-								res += dwProto.getVPorts().getConn(p) + "|";
-								
-								if (dwProto.getVPorts().getConn(p) > -1)
+								try
 								{
-									try
-									{
-										res += dwProto.getVPorts().getHostIP(p) + "|";
-										res += dwProto.getVPorts().getHostPort(p) + "|";
-										
-									} 
-									catch (DWConnectionNotValidException e)
-									{
-										res += "||";
-									}
-								}
-								else
+									res += dwProto.getVPorts().getHostIP(p) + "|";
+									res += dwProto.getVPorts().getHostPort(p) + "|";
+									
+								} 
+								catch (DWConnectionNotValidException e)
+								{
 									res += "||";
-								
-								
-								
-								res += new String(dwProto.getVPorts().getDD(p)) + "|";
-								
-								
+								}
 							}
 							else
-							{
-								res += "closed|";
-							}
+								res += "||";
+							
+							
+							
+							res += new String(dwProto.getVPorts().getDD(p)) + "|";
+							
+							
 						}
-						catch (DWPortNotValidException e)
+						else
 						{
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							res += "closed|";
 						}
-						
-						res += "\r\n";
 					}
+					catch (DWPortNotValidException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					res += "\r\n";
 				}
 			}
 		}

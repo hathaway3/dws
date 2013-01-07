@@ -4,6 +4,7 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstanceReset extends DWCommand {
 
@@ -18,6 +19,13 @@ public class UICmdInstanceReset extends DWCommand {
 	}
 
 	
+	public UICmdInstanceReset(DWProtocolHandler dwProto) 
+	{
+		commands.addcommand(new UICmdInstanceResetProtodev(dwProto));
+
+	}
+
+
 	public String getCommand() 
 	{
 		return command;

@@ -8,14 +8,23 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
-public class UICmdServerShowErrors extends DWCommand {
+public class UICmdServerShowErrors extends DWCommand 
+{
 
-	private DWUIClientThread dwuiref;
+	
+	private DWProtocolHandler dwProto;
 
 	public UICmdServerShowErrors(DWUIClientThread dwuiClientThread) 
 	{
-		this.dwuiref = dwuiClientThread;
+		this.dwProto = (DWProtocolHandler) DriveWireServer.getHandler(dwuiClientThread.getInstance());
+	}
+
+
+	public UICmdServerShowErrors(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 
@@ -44,24 +53,27 @@ public class UICmdServerShowErrors extends DWCommand {
 	{
 		String res = "";
 		
-		List<String> rconfs = DriveWireServer.getHandler(this.dwuiref.getInstance()).getHelp().getSectionTopics("resultcode"); 
-		
-		if (rconfs != null)
+		if (dwProto != null)
 		{
-			for (String rc : rconfs)
-			{
-				try
-				{
-					res += rc.substring(1) + "|" + DriveWireServer.getHandler(this.dwuiref.getInstance()).getHelp().getTopicText("resultcode." + rc).trim() + "\r\n";
-				} 
-				catch (DWHelpTopicNotFoundException e)
-				{
-					// whatever 
-				}
-						
-			}
+			List<String> rconfs = dwProto.getHelp().getSectionTopics("resultcode"); 
 			
-			return(new DWCommandResponse(res));
+			if (rconfs != null)
+			{
+				for (String rc : rconfs)
+				{
+					try
+					{
+						res += rc.substring(1) + "|" + dwProto.getHelp().getTopicText("resultcode." + rc).trim() + "\r\n";
+					} 
+					catch (DWHelpTopicNotFoundException e)
+					{
+						// whatever 
+					}
+							
+				}
+				
+				return(new DWCommandResponse(res));
+			}
 		}
 		
 		return(new DWCommandResponse(false, DWDefs.RC_HELP_TOPIC_NOT_FOUND , "No error descriptions available from server"));

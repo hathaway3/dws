@@ -4,6 +4,7 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdServerConfig extends DWCommand {
 
@@ -21,6 +22,14 @@ public class UICmdServerConfig extends DWCommand {
 	}
 
 	
+	public UICmdServerConfig(DWProtocolHandler dwProto) 
+	{
+		commands.addcommand(new UICmdServerConfigShow());
+		commands.addcommand(new UICmdServerConfigSet());
+		commands.addcommand(new UICmdServerConfigWrite());
+	}
+
+
 	public String getCommand() 
 	{
 		return command;

@@ -4,17 +4,25 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstanceResetProtodev extends DWCommand {
 
 	static final String command = "protodev";
 	
-	private DWUIClientThread uiref;
+	private DWUIClientThread uiref = null;
+
+	private DWProtocolHandler dwProto = null;
 
 	public UICmdInstanceResetProtodev(DWUIClientThread dwuiClientThread) 
 	{
 
 		this.uiref = dwuiClientThread;
+	}
+
+	public UICmdInstanceResetProtodev(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 	public String getCommand() 
@@ -24,9 +32,20 @@ public class UICmdInstanceResetProtodev extends DWCommand {
 
 	public DWCommandResponse parse(String cmdline)
 	{
-		String res = "Resetting protocol device in instance " + this.uiref.getInstance();
 		
-		DriveWireServer.getHandler(this.uiref.getInstance()).resetProtocolDevice();
+		String res = "Resetting protocol device in instance ";
+		
+		if (this.uiref != null)
+		{
+			res += this.uiref.getInstance();
+			DriveWireServer.getHandler(this.uiref.getInstance()).resetProtocolDevice();
+		}
+		else
+		{
+			res += this.dwProto.getHandlerNo();
+			dwProto.resetProtocolDevice();
+		}
+		
 		
 		return(new DWCommandResponse(res));
 	}

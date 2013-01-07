@@ -2,7 +2,6 @@ package com.groupunix.drivewireserver.uicommands;
 
 import java.io.File;
 
-import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
@@ -11,14 +10,7 @@ public class UICmdServerFileRoots extends DWCommand {
 
 	static final String command = "roots";
 
-	@SuppressWarnings("unused")
-	private DWUIClientThread dwuiref;
 		
-	public UICmdServerFileRoots(DWUIClientThread dwuiClientThread)
-	{
-		this.dwuiref = dwuiClientThread;
-	}
-
 	
 	public String getCommand() 
 	{

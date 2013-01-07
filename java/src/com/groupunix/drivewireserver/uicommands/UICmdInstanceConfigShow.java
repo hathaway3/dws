@@ -9,19 +9,28 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstanceConfigShow extends DWCommand {
 
 	static final String command = "show";
 	
-	private DWUIClientThread uiref;
+	private DWUIClientThread uiref = null;
+	private DWProtocolHandler dwProto = null;
 
+	
 	public UICmdInstanceConfigShow(DWUIClientThread dwuiClientThread) 
 	{
 
 		this.uiref = dwuiClientThread;
 	}
 
+	public UICmdInstanceConfigShow(DWProtocolHandler dwProto) 
+	{
+		this.dwProto  = dwProto;
+	}
+
+	
 	public String getCommand() 
 	{
 		return command;
@@ -32,7 +41,17 @@ public class UICmdInstanceConfigShow extends DWCommand {
 	{
 		String res = new String();
 		
-		int instance = this.uiref.getInstance();
+		int instance;
+		
+		if (this.uiref != null)
+		{
+			instance = this.uiref.getInstance();
+		}
+		else
+		{
+			instance = this.dwProto.getHandlerNo();
+		}
+		
 		
 		if (cmdline.length() == 0)
 		{

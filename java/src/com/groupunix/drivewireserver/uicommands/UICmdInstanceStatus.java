@@ -9,11 +9,17 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class UICmdInstanceStatus extends DWCommand {
 
-	private DWUIClientThread clientref;
+	private DWUIClientThread clientref = null;
+	private DWProtocolHandler dwProto = null;
 	
 	public UICmdInstanceStatus(DWUIClientThread dwuiClientThread) 
 	{
 		clientref = dwuiClientThread;
+	}
+
+	public UICmdInstanceStatus(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 	@Override
@@ -37,24 +43,26 @@ public class UICmdInstanceStatus extends DWCommand {
 	{
 		String txt = "";
 		
-		DWProtocolHandler ph = (DWProtocolHandler) DriveWireServer.getHandler(clientref.getInstance());   
+		if (this.clientref != null)
+			dwProto = (DWProtocolHandler) DriveWireServer.getHandler(clientref.getInstance());   
 		
-		txt = "name: " + ph.getConfig().getString("Name","not set") + "\n";
 		
-		txt += "connected: " + ph.connected() + "\n";
+		txt = "name: " + dwProto.getConfig().getString("Name","not set") + "\n";
 		
-		txt += "devicetype: " + ph.getProtoDev().getDeviceType() + "\n";
-		txt += "devicerate: " + ph.getProtoDev().getRate() + "\n";
-		txt += "devicename: " + ph.getProtoDev().getDeviceName() + "\n";
-		txt += "deviceconnected: " + ph.getProtoDev().connected() + "\n";
+		txt += "connected: " + dwProto.connected() + "\n";
 		
-		txt += "lastopcode: " + DWUtils.prettyOP(ph.getLastOpcode()) + "\n";
-		txt += "lastgetstat: " + DWUtils.prettySS(ph.getLastGetStat()) + "\n";
-		txt += "lastsetstat: " + DWUtils.prettySS(ph.getLastSetStat()) + "\n";
-		txt += "lastlsn: " + DWUtils.int3(ph.getLastLSN()) + "\n";
-		txt += "lastdrive: " + ph.getLastDrive() +"\n";
-		txt += "lasterror: " + ph.getLastError() + "\n";
-		txt += "lastchecksum: " + ph.getLastChecksum() + "\n";
+		txt += "devicetype: " + dwProto.getProtoDev().getDeviceType() + "\n";
+		txt += "devicerate: " + dwProto.getProtoDev().getRate() + "\n";
+		txt += "devicename: " + dwProto.getProtoDev().getDeviceName() + "\n";
+		txt += "deviceconnected: " + dwProto.getProtoDev().connected() + "\n";
+		
+		txt += "lastopcode: " + DWUtils.prettyOP(dwProto.getLastOpcode()) + "\n";
+		txt += "lastgetstat: " + DWUtils.prettySS(dwProto.getLastGetStat()) + "\n";
+		txt += "lastsetstat: " + DWUtils.prettySS(dwProto.getLastSetStat()) + "\n";
+		txt += "lastlsn: " + DWUtils.int3(dwProto.getLastLSN()) + "\n";
+		txt += "lastdrive: " + dwProto.getLastDrive() +"\n";
+		txt += "lasterror: " + dwProto.getLastError() + "\n";
+		txt += "lastchecksum: " + dwProto.getLastChecksum() + "\n";
 		
 		
 		

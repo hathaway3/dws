@@ -6,17 +6,11 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdServerShowLog extends DWCommand {
 
-	@SuppressWarnings("unused")
-	private DWUIClientThread dwuiref;
-
-	public UICmdServerShowLog(DWUIClientThread dwuiClientThread) 
-	{
-		this.dwuiref = dwuiClientThread;
-	}
-
+	
 
 	@Override
 	public String getCommand() 

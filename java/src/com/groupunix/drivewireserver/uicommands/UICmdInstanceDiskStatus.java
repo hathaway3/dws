@@ -13,12 +13,18 @@ public class UICmdInstanceDiskStatus extends DWCommand {
 
 	static final String command = "status";
 	
-	private DWUIClientThread uiref;
+	private DWUIClientThread uiref = null;
+	private DWProtocolHandler dwProto = null;
 
 	public UICmdInstanceDiskStatus(DWUIClientThread dwuiClientThread) 
 	{
 
 		this.uiref = dwuiClientThread;
+	}
+
+	public UICmdInstanceDiskStatus(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 	public String getCommand() 
@@ -31,7 +37,8 @@ public class UICmdInstanceDiskStatus extends DWCommand {
 		String res = new String();
 		
 		// TODO ASSumes we are using DW protocol
-		DWProtocolHandler dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
+		if (this.dwProto == null)
+			dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
 		
 		if (cmdline.length() > 0)
 		{

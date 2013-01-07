@@ -2,7 +2,6 @@ package com.groupunix.drivewireserver.uicommands;
 
 import java.io.File;
 
-import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
@@ -12,14 +11,8 @@ public class UICmdServerFileDefaultDir extends DWCommand {
 
 	static final String command = "defaultdir";
 
-	@SuppressWarnings("unused")
-	private DWUIClientThread dwuiref;
 		
-	public UICmdServerFileDefaultDir(DWUIClientThread dwuiClientThread)
-	{
-		this.dwuiref = dwuiClientThread;
-	}
-
+	
 	
 	public String getCommand() 
 	{

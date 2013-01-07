@@ -17,12 +17,19 @@ public class UICmdInstanceDiskShow extends DWCommand {
 
 	static final String command = "show";
 	
-	private DWUIClientThread uiref;
+	private DWUIClientThread uiref = null;
+
+	private DWProtocolHandler dwProto = null;
 
 	public UICmdInstanceDiskShow(DWUIClientThread dwuiClientThread) 
 	{
 
 		this.uiref = dwuiClientThread;
+	}
+
+	public UICmdInstanceDiskShow(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 	public String getCommand() 
@@ -36,7 +43,8 @@ public class UICmdInstanceDiskShow extends DWCommand {
 		String res = new String();
 		
 		// TODO ASSumes we are using DW protocol
-		DWProtocolHandler dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
+		if (this.dwProto == null)
+			dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
 		
 		if (cmdline.length() == 0)
 		{

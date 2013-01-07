@@ -5,15 +5,22 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstanceConfigSet extends DWCommand {
 
 	static final String command = "set";
-	private DWUIClientThread uiref;
+	private DWUIClientThread uiref = null;
+	private DWProtocolHandler dwProto = null;
 
 	public UICmdInstanceConfigSet(DWUIClientThread dwuiClientThread) 
 	{
 		this.uiref = dwuiClientThread;
+	}
+
+	public UICmdInstanceConfigSet(DWProtocolHandler dwProto) 
+	{
+		this.dwProto = dwProto;
 	}
 
 	public String getCommand() 
@@ -65,19 +72,37 @@ public class UICmdInstanceConfigSet extends DWCommand {
 	private DWCommandResponse doSetConfig(String item)
 	{
 		
-		if (DriveWireServer.getHandler(this.uiref.getInstance()).getConfig().containsKey(item))
+		if (this.uiref != null)
 		{
-			synchronized(DriveWireServer.serverconfig)
+			if (DriveWireServer.getHandler(this.uiref.getInstance()).getConfig().containsKey(item))
 			{
-				DriveWireServer.getHandler(this.uiref.getInstance()).getConfig().clearProperty(item);
+				synchronized(DriveWireServer.serverconfig)
+				{
+					DriveWireServer.getHandler(this.uiref.getInstance()).getConfig().clearProperty(item);
+				}
+				return(new DWCommandResponse("Item '" + item + "' removed from config."));
 			}
-			return(new DWCommandResponse("Item '" + item + "' removed from config."));
+			else
+			{
+				return(new DWCommandResponse("Item '" + item + "' is not set."));
+			}
+			
 		}
 		else
 		{
-			return(new DWCommandResponse("Item '" + item + "' is not set."));
+			if (dwProto.getConfig().containsKey(item))
+			{
+				synchronized(DriveWireServer.serverconfig)
+				{
+					dwProto.getConfig().clearProperty(item);
+				}
+				return(new DWCommandResponse("Item '" + item + "' removed from config."));
+			}
+			else
+			{
+				return(new DWCommandResponse("Item '" + item + "' is not set."));
+			}
 		}
-		
 		
 	}
 	
@@ -86,7 +111,10 @@ public class UICmdInstanceConfigSet extends DWCommand {
 	{
 		synchronized(DriveWireServer.serverconfig)
 		{
-			DriveWireServer.getHandler(this.uiref.getInstance()).getConfig().setProperty(item, value);
+			if (this.uiref != null)
+				DriveWireServer.getHandler(this.uiref.getInstance()).getConfig().setProperty(item, value);
+			else
+				dwProto.getConfig().setProperty(item, value);
 		}
 		return(new DWCommandResponse("Item '" + item + "' set to '" + value + "'."));
 	}

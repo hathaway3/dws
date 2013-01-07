@@ -26,7 +26,7 @@ public class DWCmdConfigSave extends DWCommand {
 	
 	public String getShortHelp() 
 	{
-		return "Save configuration)";
+		return "Save configuration";
 	}
 
 

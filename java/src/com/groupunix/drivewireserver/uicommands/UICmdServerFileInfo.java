@@ -11,13 +11,7 @@ public class UICmdServerFileInfo extends DWCommand {
 
 	static final String command = "info";
 
-	@SuppressWarnings("unused")
-	private DWUIClientThread dwuiref;
-		
-	public UICmdServerFileInfo(DWUIClientThread dwuiClientThread)
-	{
-		this.dwuiref = dwuiClientThread;
-	}
+
 
 	
 	public String getCommand() 

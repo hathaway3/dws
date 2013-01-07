@@ -47,7 +47,7 @@ public class DWCommandList {
 		
 		String[] args = cmdline.split(" ");
 		
-		if (cmdline.length() == 0)
+		if ((cmdline == null) || (cmdline.length() == 0))
 		{
 			// ended here, show commands..
 			return(new DWCommandResponse(getShortHelp()));

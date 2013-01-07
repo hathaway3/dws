@@ -4,22 +4,24 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdServerFile extends DWCommand {
 
 	static final String command = "file";
 	
 		
-	public UICmdServerFile(DWUIClientThread dwuiClientThread)
+	public UICmdServerFile()
 	{
 
-		commands.addcommand(new UICmdServerFileRoots(dwuiClientThread));
-		commands.addcommand(new UICmdServerFileDefaultDir(dwuiClientThread));
-		commands.addcommand(new UICmdServerFileDir(dwuiClientThread));
-		commands.addcommand(new UICmdServerFileInfo(dwuiClientThread));
+		commands.addcommand(new UICmdServerFileRoots());
+		commands.addcommand(new UICmdServerFileDefaultDir());
+		commands.addcommand(new UICmdServerFileDir());
+		commands.addcommand(new UICmdServerFileInfo());
 	}
 
 	
+
 	public String getCommand() 
 	{
 		return command;
