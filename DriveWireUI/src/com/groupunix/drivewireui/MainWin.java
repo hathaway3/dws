@@ -71,6 +71,8 @@ import org.eclipse.swt.widgets.Text;
 import swing2swt.layout.BorderLayout;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireserver.dwdisk.DWDiskDrive;
+import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
 import com.groupunix.drivewireui.library.CloudLibraryItem;
 import com.groupunix.drivewireui.library.FolderLibraryItem;
 import com.groupunix.drivewireui.library.LibraryItem;
@@ -260,7 +262,7 @@ public class MainWin {
 	private static LogItem lowMemLogItem;
 	private static int lowMemWarningTid = -1;
 	private static boolean noServer = false;
-	private static boolean debugging = false;
+	static boolean debugging = true;
 	protected static int logNoticeLevel = -1;
 	
 	public static Vector<OS9BufferGroup> os9BufferGroups;
@@ -2465,7 +2467,7 @@ public class MainWin {
 	{    
 		final String curpath;
 		
-		if ((disks[diskno] != null) && (disks[diskno].isLoaded()))
+		if ((diskno > -1) && (diskno < disks.length) && (disks[diskno] != null) && (disks[diskno].isLoaded()))
 			curpath = disks[diskno].getPath();
 		else
 			curpath = "";

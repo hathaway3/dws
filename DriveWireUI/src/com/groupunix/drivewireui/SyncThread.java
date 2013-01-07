@@ -86,19 +86,26 @@ public class SyncThread implements Runnable
 				    // cache error meanings
 				    MainWin.errorHelpCache.load();
 				    
+				    MainWin.debug("Sync: Connecting... phase 1");
+				    
 				    // load full config
 				    MainWin.setServerConfig(UIUtils.getServerConfig());
 				    MainWin.applyConfig();
+				    
+				    MainWin.debug("Sync: Connecting... phase 2");
 				    
 				    
 				    // load all disk info
 				    MainWin.setDisks(UIUtils.getServerDisks());
 				    MainWin.applyDisks();
 				    
+				    MainWin.debug("Sync: Connecting... phase 3");
+				    
 				    // load midi status
 				    MainWin.setMidiStatus(UIUtils.getServerMidiStatus());
 				    MainWin.applyMIDIStatus();
 				    
+				    MainWin.debug("Sync: Connecting... phase 4");
 				    
 				    sock = new Socket(host, port);
 					
@@ -117,7 +124,8 @@ public class SyncThread implements Runnable
 				} 
 				catch (Exception e) 
 				{
-					//e.printStackTrace();
+					if (MainWin.debugging == true)
+						e.printStackTrace();
 					
 					MainWin.setConStatusError();
 					// TODO MainWin.addToDisplay("Sync: " + e.getMessage());

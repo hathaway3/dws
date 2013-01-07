@@ -1,6 +1,7 @@
 package com.groupunix.drivewireui;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -30,10 +31,27 @@ public class ErrorHelpCache
 	}
 
 	
-	public void load() throws IOException, DWUIOperationFailedException
+	public void load() 
 	{
-
-		List<String> res = UIUtils.loadList(MainWin.getInstance(), "ui server show errors");
+		
+		MainWin.debug("Loading error help for instance # " + MainWin.getInstance());
+		
+		List<String> res = new ArrayList<String>();
+		
+		try 
+		{
+			res = UIUtils.loadList(MainWin.getInstance(), "ui server show errors");
+		} 
+		catch (IOException e1) 
+		{
+			if (MainWin.debugging)
+				e1.printStackTrace();
+			
+		} catch (DWUIOperationFailedException e1) 
+		{
+			if (MainWin.debugging)
+				e1.printStackTrace();
+		}
 		
 		for (String r : res)
 		{
