@@ -37,7 +37,7 @@
 	            	<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
 	            	<attribute name="Rsrc-Main-Class" value="com.groupunix.drivewireui.MainWin"/>
 	                <attribute name="Class-Path" value="."/>
-	            	<attribute name="Rsrc-Class-Path" value=" ./ commons-configuration-1.6.jar swing2swt.jar commons-lang-2.4.jar swt.jar commons-collections-3.2.1.jar commons-configuration-1.6-sources.jar commons-logging-1.1.1.jar commons-configuration-1.6-javadoc.jar dwimages.jar"/>
+	            	<attribute name="Rsrc-Class-Path" value=" ./ commons-configuration-1.6.jar swing2swt.jar commons-lang-2.4.jar swt.jar commons-collections-3.2.1.jar commons-logging-1.1.1.jar dwimages.jar"/>
 	            </manifest>
 	        	<fileset dir="${basedir}/classes"/>
 	        	
@@ -49,6 +49,13 @@
 	        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/dwimages.jar"/>
 	        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/swing2swt.jar"/>
 	        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/swt.jar"/>
+	        	
+	        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.eclipse.equinox.common_3.6.0.v20100503.jar"/>
+	        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar"/>
+	        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.eclipse.core.runtime_3.6.0.v20100505.jar"/>
+	        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.eclipse.jface_3.6.2.M20110210-1200.jar"/>
+	        	<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.osgi.core-4.3.0.jar"/>
+	        		                
 	        	
 	        		            <zipfileset excludes="META-INF/*.SF" src="../java/lib/commons-net-2.0.jar"/>
 	        		            <zipfileset excludes="META-INF/*.SF" src="../java/lib/commons-codec-1.4.jar"/>
@@ -70,6 +77,10 @@
 	        		<zipfileset excludes="META-INF/*.SF" src="../java/lib/apache-mime4j-0.6.jar"/>
 	        	
 	        	
+	        	
+	        	   
+	        	
+	        	
 	        </jar>
 	    </target>
 	
@@ -77,7 +88,7 @@
 	<!-- Package cross platform SWT Jar -->
 	<swtjar jarfile="./DW4UI.jar"
 			targetmainclass="com.groupunix.drivewireui.MainWin"
-			swtversion="3.8M2">
+			swtversion="4.2.1">
 		
 		
 		
@@ -97,6 +108,12 @@
 		<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/swtjar.jar"/>
 		<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/dwimages.jar"/>
 		<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/swing2swt.jar"/>
+		<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.eclipse.equinox.common_3.6.0.v20100503.jar"/>
+		<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar"/>
+		<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.eclipse.core.runtime_3.6.0.v20100505.jar"/>
+		<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.eclipse.jface_3.6.2.M20110210-1200.jar"/>
+		<zipfileset excludes="META-INF/*.SF" src="${basedir}/lib/org.osgi.core-4.3.0.jar"/>
+		                
 		
         <zipfileset excludes="META-INF/*.SF" src="../java/lib/commons-net-2.0.jar"/>
           <zipfileset excludes="META-INF/*.SF" src="../java/lib/commons-codec-1.4.jar"/>
@@ -119,7 +136,7 @@
 		
 		
 	  <!-- SWT Jars -->
-	  <fileset dir="./lib" includes="swt-*-3.8M2.jar" />
+	  <fileset dir="./lib" includes="swt-*.jar" />
 	</swtjar>
 
 	
