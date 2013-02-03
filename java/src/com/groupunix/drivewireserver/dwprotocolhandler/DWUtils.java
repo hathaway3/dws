@@ -116,6 +116,67 @@ public class DWUtils
 
 	
 	
+	public static String prettyTimer(byte tno)
+	{
+		String result = "unknown " + (tno & 0xff);
+		
+		switch (tno)
+		{
+			case DWDefs.TIMER_BAD_DATA:
+				result = "invalid protocol data";
+				break;
+				
+			case DWDefs.TIMER_DWINIT:
+				result = "DWINIT operation";
+				break;
+			
+			case DWDefs.TIMER_IO:
+				result = "I/O operation";
+				break;
+				
+			case DWDefs.TIMER_NP_OP:
+				result = "protocol operation (non poll)";
+				break;
+			
+			case DWDefs.TIMER_OP:
+				result = "protocol operation";
+				break;
+			
+			case DWDefs.TIMER_READ:
+				result = "read operation";
+				break;
+			
+			case DWDefs.TIMER_RESET:
+				result = "instance reset";
+				break;
+			
+			case DWDefs.TIMER_START:
+				result = "server start";
+				break;
+			
+			case DWDefs.TIMER_WRITE:
+				result = "write operation";
+				break;
+			
+			case DWDefs.TIMER_POLL:
+				result = "poll operation";
+				break;
+				
+				
+			default:
+				if ( (tno & 0xff) >= (DWDefs.TIMER_USER & 0xff))
+				{
+					result = "user " + ((tno & 0xff) -  (DWDefs.TIMER_USER & 0xff));
+				}
+			
+		}
+		
+		return(result);
+	}
+		
+	
+	
+	
 	
 	public static String prettySS(byte statcode)
 	{

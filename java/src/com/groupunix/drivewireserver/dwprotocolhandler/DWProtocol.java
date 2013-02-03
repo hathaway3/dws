@@ -34,5 +34,6 @@ public interface DWProtocol extends Runnable
 	long getNumOps();
 	long getNumDiskOps();
 	long getNumVSerialOps();
+	DWProtocolTimers getTimers();
 	
 }

@@ -898,6 +898,14 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+
+	@Override
+	public DWProtocolTimers getTimers()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }
 	

@@ -83,7 +83,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	
 
 	private DWHelp dwhelp;
-
+	private DWProtocolTimers timers;
 
 	private boolean ready = false;
 
@@ -99,6 +99,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		this.config = hconf;
 		
 		config.addConfigurationListener(new DWProtocolConfigListener(this));   
+		
 		
 	}
 
@@ -137,6 +138,9 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	public void run()
 	{
 		int opcodeint = -1;
+		
+		this.timers = new DWProtocolTimers();
+		this.timers.resetTimer(DWDefs.TIMER_START);
 		
 		Thread.currentThread().setName("dwproto-" + handlerno + "-" +  Thread.currentThread().getId());
 	
@@ -190,6 +194,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 
 		this.ready = true;
 		long optime = 0;
+		long optook = 0;
 		
 		logger.info("handler #" + handlerno + " is ready");
 		
@@ -229,6 +234,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 					
 					
 					optime = System.currentTimeMillis();
+					
 					this.inOp = true;
 					lastOpcode = (byte) opcodeint;
 					total_ops++;
@@ -241,6 +247,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 						if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_PORTS - 1)))
 						{
 							DoOP_FASTSERWRITE(lastOpcode);
+							this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 							vserial_ops++;
 						}
 						else
@@ -253,123 +260,161 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 								case DWDefs.OP_RESET1:
 								case DWDefs.OP_RESET2:
 								case DWDefs.OP_RESET3:
+									this.timers.resetTimer(DWDefs.TIMER_RESET, optime);
 									DoOP_RESET();
 									break;
 			
 								case DWDefs.OP_DWINIT:
+									this.timers.resetTimer(DWDefs.TIMER_DWINIT, optime);
 									DoOP_DWINIT();
 									break;
 											
 								case DWDefs.OP_INIT:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_INIT();
 									break;
 			
 								case DWDefs.OP_TERM:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_TERM();	
 									break;
 			
 								case DWDefs.OP_REREAD:
 								case DWDefs.OP_READ:
+									this.timers.resetTimer(DWDefs.TIMER_READ, optime);
 									DoOP_READ(lastOpcode);
 									disk_ops++;
 									break;
 			
 								case DWDefs.OP_REREADEX:
 								case DWDefs.OP_READEX:
+								
+									this.timers.resetTimer(DWDefs.TIMER_READ, optime);
 									DoOP_READEX(lastOpcode);
 									disk_ops++;
 									break;
 			
 								case DWDefs.OP_WRITE:
 								case DWDefs.OP_REWRITE:
+									
+									this.timers.resetTimer(DWDefs.TIMER_WRITE, optime);
 									DoOP_WRITE(lastOpcode);
 									disk_ops++;
 									break;
 			
 								case DWDefs.OP_GETSTAT:
 								case DWDefs.OP_SETSTAT:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_STAT(lastOpcode);
 									disk_ops++;
 									break;
 			
 								case DWDefs.OP_TIME:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_TIME();
 									break;
 			
 								case DWDefs.OP_SETTIME:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_SETTIME();
 									break;
 									
 								case DWDefs.OP_PRINT:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_PRINT();
 									break;
 			
 								case DWDefs.OP_PRINTFLUSH:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_PRINTFLUSH();
 									break;
 									
 								case DWDefs.OP_SERREADM:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_SERREADM();
 									vserial_ops++;
 									break;
 			
 								case DWDefs.OP_SERREAD:
+									this.timers.resetTimer(DWDefs.TIMER_POLL, optime);
 									DoOP_SERREAD();
 									vserial_ops++;
 									break;
 			
 								case DWDefs.OP_SERWRITE:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_SERWRITE();
 									vserial_ops++;
 									break;
 									
 								case DWDefs.OP_SERWRITEM:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_SERWRITEM();
 									vserial_ops++;
 									break;
 			
 								case DWDefs.OP_SERSETSTAT:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_SERSETSTAT();
 									vserial_ops++;
 									break;
 									      
 								case DWDefs.OP_SERGETSTAT:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_SERGETSTAT();
 									vserial_ops++;
 									break;
 					    
 								case DWDefs.OP_SERINIT:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_SERINIT();
 									vserial_ops++;
 									break;
 									      
 								case DWDefs.OP_SERTERM:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_SERTERM();
 									vserial_ops++;
 									break;	
 											
 								case DWDefs.OP_NOP:
 								case DWDefs.OP_230K230K:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_NOP();
 									break;
 										
 								case DWDefs.OP_RFM:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_RFM();
 									break;
 										
 								case DWDefs.OP_230K115K:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_230K115K();
 									break;
 								
 								case DWDefs.OP_NAMEOBJ_MOUNT:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_NAMEOBJ_MOUNT();
 									break;
 								
+								case DWDefs.OP_TIMER:
+									
+									DoOP_TIMER();
+									break;
+									
+								case DWDefs.OP_RESET_TIMER:
+									
+									DoOP_RESET_TIMER();
+									break;
+									
 								case DWDefs.OP_AARON:
+									this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
 									DoOP_AARON();
 									break;
 									
 								default:
+									this.timers.resetTimer(DWDefs.TIMER_BAD_DATA, optime);
 									logger.warn("UNKNOWN OPCODE: " + opcodeint + " " + ((char)opcodeint));
 									break;
 							}	
@@ -390,10 +435,12 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		
 					this.inOp = false;
 					
-					if (System.currentTimeMillis() - optime > DWDefs.SERVER_SLOW_OP)
-						logger.warn(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms.");
+					optook = System.currentTimeMillis() - optime;
+					
+					if (optook > DWDefs.SERVER_SLOW_OP)
+						logger.warn(DWUtils.prettyOP(lastOpcode) + " took " + optook +"ms.");
 					else if (config.getBoolean("LogTiming",false))
-						logger.debug(DWUtils.prettyOP(lastOpcode) + " took " + (System.currentTimeMillis() - optime) +"ms, serial read delay was " + ((DWSerialDevice) this.protodev).getReadtime());
+						logger.debug(DWUtils.prettyOP(lastOpcode) + " took " + optook  +"ms, serial read delay was " + ((DWSerialDevice) this.protodev).getReadtime());
 				}
 				else
 				{
@@ -1131,6 +1178,39 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	}
 	
 	
+	private void DoOP_TIMER() throws IOException, DWCommTimeOutException
+	{
+		
+		// read rest of packet - timer #
+		byte tno = (byte) protodev.comRead1(true);
+			
+		protodev.comWrite(timers.getTimerBytes(tno), 4, true);
+		
+		if (config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_TIMER # " + (tno & 0xff) + " val ~" + timers.getTimer(tno));
+		}
+	}
+
+	
+	private void DoOP_RESET_TIMER() throws IOException, DWCommTimeOutException
+	{
+		
+		// read rest of packet - timer #
+		byte tno = (byte) protodev.comRead1(true);
+			
+		timers.resetTimer(tno);
+		
+		if (config.getBoolean("LogOpCode", false))
+		{
+			logger.info("DoOP_RESET_TIMER # " + (tno & 0xff));
+		}
+	}
+	
+	
+	
+	
+	
 	
 	// serial ports
 	
@@ -1757,6 +1837,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	public boolean isInOp()
 	{
 		return this.inOp;
+	}
+
+
+	@Override
+	public DWProtocolTimers getTimers()
+	{
+			return this.timers;
 	}
 	
 	
