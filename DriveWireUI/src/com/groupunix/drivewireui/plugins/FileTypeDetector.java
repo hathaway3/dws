@@ -5,7 +5,6 @@ import java.io.IOException;
 import org.eclipse.swt.graphics.Image;
 
 import com.groupunix.drivewireserver.DECBDefs;
-import com.groupunix.drivewireserver.dwdisk.DWDiskSector;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWDECBFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystemDirEntry;

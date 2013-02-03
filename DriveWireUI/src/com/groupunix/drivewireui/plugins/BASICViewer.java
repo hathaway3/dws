@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -26,8 +27,6 @@ import com.groupunix.drivewireui.DWLibrary;
 import com.groupunix.drivewireui.GradientHelper;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.UIUtils;
-
-import org.eclipse.swt.custom.StackLayout;
 
 public class BASICViewer extends FileViewer
 {

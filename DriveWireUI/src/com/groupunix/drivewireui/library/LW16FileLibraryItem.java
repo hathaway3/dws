@@ -1,21 +1,16 @@
 package com.groupunix.drivewireui.library;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.swt.graphics.Image;
 
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWLW16FileSystem;
 import com.groupunix.drivewireserver.dwdisk.filesystem.DWLW16FileSystemDirEntry;
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystem;
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystemDirEntry;
 import com.groupunix.drivewireserver.dwexceptions.DWDiskInvalidSectorNumber;
 import com.groupunix.drivewireui.DWLibrary;
 import com.groupunix.drivewireui.MainWin;
-import com.groupunix.drivewireui.plugins.FileTypeDetector;
 
 public class LW16FileLibraryItem extends LibraryItem
 {

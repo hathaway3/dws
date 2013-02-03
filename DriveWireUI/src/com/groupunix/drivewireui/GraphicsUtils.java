@@ -1,8 +1,14 @@
 package com.groupunix.drivewireui;
 
 
-import org.eclipse.swt.*;
-import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontMetrics;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 
 /**
@@ -33,7 +39,8 @@ public class GraphicsUtils {
     if (display == null) SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS);
 
     // Determine string's dimensions
-    FontMetrics fm = gc.getFontMetrics();
+    @SuppressWarnings("unused")
+	FontMetrics fm = gc.getFontMetrics();
     Point pt = gc.textExtent(string);
 
     // Create an image the same size as the string
@@ -140,7 +147,8 @@ public class GraphicsUtils {
     gc.setFont(font);
 
     // Determine string's dimensions
-    FontMetrics fm = gc.getFontMetrics();
+    @SuppressWarnings("unused")
+	FontMetrics fm = gc.getFontMetrics();
     Point pt = gc.textExtent(text);
 
     // Dispose that gc

@@ -82,7 +82,7 @@ public class ConfigEditor extends Shell
 	private Label lblIntTextS2;
 	private Spinner spinnerIntS2;
 	private Label lblDescriptS1;
-	private Text textDecriptS1;
+	
 	private Text textDescriptS1;
 	private Text textNameS1;
 	private Label lblNameS1;

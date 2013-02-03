@@ -71,8 +71,6 @@ import org.eclipse.swt.widgets.Text;
 import swing2swt.layout.BorderLayout;
 
 import com.groupunix.drivewireserver.DriveWireServer;
-import com.groupunix.drivewireserver.dwdisk.DWDiskDrive;
-import com.groupunix.drivewireserver.dwdisk.DWDiskDrives;
 import com.groupunix.drivewireui.library.CloudLibraryItem;
 import com.groupunix.drivewireui.library.FolderLibraryItem;
 import com.groupunix.drivewireui.library.LibraryItem;

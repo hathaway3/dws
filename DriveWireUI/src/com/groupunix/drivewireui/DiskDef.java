@@ -31,8 +31,8 @@ public class DiskDef implements Cloneable
 	
 	private int lastread = 0;
 	private int lastwrite = 0;
-	private int lastclean = 0;
-	private int coin = 0;
+
+	
 	
 	private DiskWin diskwin = null;
 	private boolean graphchanged = true;
@@ -79,7 +79,7 @@ public class DiskDef implements Cloneable
 			//this.gc.setAntialias(SWT.ON);
 			
 			this.sectors = new HashMap<Integer,Integer>();
-			this.lastclean = 0;
+
 			this.lastread = 0;
 			this.lastwrite = 0;
 			this.graphchanged = true;
@@ -419,9 +419,9 @@ public class DiskDef implements Cloneable
 			this.gc.setBackground(DiskWin.colorDiskDirty);
 			this.gc.fillPolygon(tri);
 			
-			this.coin ++;
 			
 			int lastchange = 0;
+			@SuppressWarnings("unused")
 			int changes = 0;
 			
 			this.gc.setBackground(DiskWin.colorBlack);
@@ -507,6 +507,7 @@ public class DiskDef implements Cloneable
 	}
 
 	
+	@SuppressWarnings("unused")
 	private int getGraphAlphaFor(int x)
 	{
 		

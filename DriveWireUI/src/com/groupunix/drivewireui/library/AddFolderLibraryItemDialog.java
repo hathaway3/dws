@@ -18,6 +18,7 @@ public class AddFolderLibraryItemDialog extends Dialog {
 	protected static Shell shlAddPath;
 	private Text textTitle;
 	private Node node;
+	@SuppressWarnings("unused")
 	private FolderLibraryItem folderItem;
 	private Tree tree;
 

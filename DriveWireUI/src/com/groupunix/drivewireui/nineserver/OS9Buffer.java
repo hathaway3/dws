@@ -1,6 +1,5 @@
 package com.groupunix.drivewireui.nineserver;
 
-import org.eclipse.swt.graphics.Color;
 
 public class OS9Buffer
 {

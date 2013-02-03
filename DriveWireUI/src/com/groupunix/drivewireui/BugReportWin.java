@@ -401,6 +401,7 @@ public class BugReportWin extends Dialog {
 				
 				BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 				String line;
+				@SuppressWarnings("unused")
 				String txt = "";
 				while ((line = rd.readLine()) != null) 
 				{

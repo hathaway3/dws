@@ -1,12 +1,9 @@
 package com.groupunix.drivewireui.cococloud;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.MalformedURLException;
-import java.net.PasswordAuthentication;
 import java.net.URL;
-import java.util.Iterator;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;

@@ -26,8 +26,6 @@ import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFATExceptio
 import com.groupunix.drivewireserver.dwexceptions.DWImageFormatException;
 import com.groupunix.drivewireui.DWLibrary;
 import com.groupunix.drivewireui.MainWin;
-import com.groupunix.drivewireui.plugins.DWBrowser;
-import com.swtdesigner.SWTResourceManager;
 
 public class PathLibraryItem extends LibraryItem
 {

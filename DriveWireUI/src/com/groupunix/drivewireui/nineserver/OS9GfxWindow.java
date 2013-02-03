@@ -1,9 +1,7 @@
 package com.groupunix.drivewireui.nineserver;
 
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.internal.gdip.Rect;
 
 import com.groupunix.drivewireserver.OS9Defs;
 import com.groupunix.drivewireui.MainWin;

@@ -12,8 +12,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 
-import com.groupunix.drivewireui.MainWin;
-
 public class RenameLibraryItemDialog extends Dialog {
 
 	protected Object result;

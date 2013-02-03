@@ -1,6 +1,5 @@
 package com.groupunix.drivewireui;
 
-import java.util.Date;
 
 public class TimerData
 {

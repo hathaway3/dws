@@ -3,9 +3,6 @@ package com.groupunix.drivewireui.library;
 import java.util.Vector;
 
 import org.apache.commons.configuration.HierarchicalConfiguration.Node;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 
 import com.groupunix.drivewireui.DWLibrary;
@@ -76,6 +73,7 @@ public class FolderLibraryItem extends LibraryItem
 			
 			if (item.getName().equals("Folder"))
 			{
+				@SuppressWarnings("unused")
 				FolderLibraryItem folditem;
 			
 				if (UIUtils.getAttributeVal(item.getAttributes(),"title") == null)

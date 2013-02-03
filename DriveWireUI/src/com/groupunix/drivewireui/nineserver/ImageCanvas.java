@@ -1,6 +1,5 @@
 package com.groupunix.drivewireui.nineserver;
 
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
@@ -10,7 +9,6 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.opengl.GLCanvas;

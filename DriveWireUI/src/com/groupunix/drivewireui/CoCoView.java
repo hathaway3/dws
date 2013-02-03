@@ -20,7 +20,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import com.groupunix.drivewireui.BasicLine;
+
 import com.swtdesigner.SWTResourceManager;
 
 public class CoCoView extends Composite 

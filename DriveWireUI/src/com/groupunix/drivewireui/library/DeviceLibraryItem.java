@@ -1,22 +1,8 @@
 package com.groupunix.drivewireui.library;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.Vector;
-
 import org.apache.commons.configuration.HierarchicalConfiguration.Node;
-import org.apache.commons.vfs.FileContent;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.VFS;
 import org.eclipse.swt.graphics.Image;
 
-import com.groupunix.drivewireserver.dwdisk.DWDisk;
-import com.groupunix.drivewireserver.dwdisk.DWSIDEImageDisk;
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystem;
-import com.groupunix.drivewireserver.dwdisk.filesystem.DWRBFFileSystemDirEntry;
-import com.groupunix.drivewireserver.dwdisk.filesystem.RBFFileSystemIDSector;
 import com.groupunix.drivewireui.DWLibrary;
 import com.groupunix.drivewireui.MainWin;
 

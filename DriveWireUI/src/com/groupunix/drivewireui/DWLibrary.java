@@ -141,6 +141,7 @@ public class DWLibrary extends Composite
 	CTabItem ourtab;
 	private String currentItemPath = null;
 
+	@SuppressWarnings("unused")
 	private CloudDiskInfoViewer compositeCloudDiskViewer;
 
 	
@@ -927,6 +928,7 @@ public class DWLibrary extends Composite
 
 
 
+	@SuppressWarnings("unused")
 	private void selectItemPath(TreeItem pti, Vector<String> path)
 	{
 		if ((path.size()>0) && (pti != null))

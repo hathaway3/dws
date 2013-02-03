@@ -1,7 +1,5 @@
 package com.groupunix.drivewireui.library;
 
-import javax.swing.SwingUtilities;
-
 import org.apache.commons.configuration.HierarchicalConfiguration.Node;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -13,7 +11,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeItem;
 
 import com.groupunix.drivewireui.MainWin;
 
@@ -25,6 +22,7 @@ public class AddURLLibraryItemDialog extends Dialog {
 	private Text textTitle;
 	private Label lblPath;
 	private Node node;
+	@SuppressWarnings("unused")
 	private FolderLibraryItem folderItem;
 	private Tree tree;
 
