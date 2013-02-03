@@ -84,28 +84,30 @@ public class SyncThread implements Runnable
 				    // get initial state
 				    
 				    // cache error meanings
-				    MainWin.errorHelpCache.load();
+					try
+					{
+						MainWin.errorHelpCache.load();
+					}
+					catch (DWUIOperationFailedException e)
+					{
+						// don't care
+						MainWin.debug("Sync: caching error descriptions failed");
+					}
 				    
-				    MainWin.debug("Sync: Connecting... phase 1");
+				    
 				    
 				    // load full config
 				    MainWin.setServerConfig(UIUtils.getServerConfig());
 				    MainWin.applyConfig();
-				    
-				    MainWin.debug("Sync: Connecting... phase 2");
 				    
 				    
 				    // load all disk info
 				    MainWin.setDisks(UIUtils.getServerDisks());
 				    MainWin.applyDisks();
 				    
-				    MainWin.debug("Sync: Connecting... phase 3");
-				    
 				    // load midi status
 				    MainWin.setMidiStatus(UIUtils.getServerMidiStatus());
 				    MainWin.applyMIDIStatus();
-				    
-				    MainWin.debug("Sync: Connecting... phase 4");
 				    
 				    sock = new Socket(host, port);
 					

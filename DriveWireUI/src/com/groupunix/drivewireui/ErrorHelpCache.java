@@ -31,7 +31,7 @@ public class ErrorHelpCache
 	}
 
 	
-	public void load() 
+	public void load() throws DWUIOperationFailedException 
 	{
 		
 		MainWin.debug("Loading error help for instance # " + MainWin.getInstance());
@@ -47,12 +47,7 @@ public class ErrorHelpCache
 			if (MainWin.debugging)
 				e1.printStackTrace();
 			
-		} catch (DWUIOperationFailedException e1) 
-		{
-			if (MainWin.debugging)
-				e1.printStackTrace();
 		}
-		
 		for (String r : res)
 		{
 			
