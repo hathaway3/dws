@@ -1,6 +1,5 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 

@@ -13,6 +13,7 @@ public class UICmdServerTerminate extends DWCommand {
 	@SuppressWarnings("unused")
 	private DWUIClientThread dwuiref;
 
+	@SuppressWarnings("unused")
 	private DWProtocolHandler dwProto;
 		
 	public UICmdServerTerminate(DWUIClientThread dwuiClientThread)

@@ -138,7 +138,6 @@ public class DWDMKDisk extends DWDisk
 		
 		for (int t = 0;t < header.getTracks();t++)
 		{
-			int spt = 0;
 			
 			// track header / IDAM ptr table
 			for (int i = 0; i < 64; i++)
@@ -153,7 +152,7 @@ public class DWDMKDisk extends DWDisk
 						System.out.println("mismatch track in IDAM?");
 					}
 
-					spt++;
+				
 					
 					addSectorFrom(idam, t);
 					
