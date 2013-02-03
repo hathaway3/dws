@@ -371,13 +371,13 @@ public class DWVSerialPorts {
 				}
 				else
 				{
-					throw new DWPortNotOpenException("Port " + port + " is not open");
+					throw new DWPortNotOpenException("Port " + port + " is not open (but coco sent us a byte: " + (0xff & databyte) + " '" + Character.toString((char) databyte) + "')");
 				}
 			}
 			else
 			{
 				// should port not initialized be different than port not open?
-				throw new DWPortNotOpenException("Port " + port + " is not open");
+				throw new DWPortNotOpenException("Port " + port + " is not open (but coco sent us a byte: " + (0xff & databyte) + " '" + Character.toString((char) databyte) + "')");
 			}
 		}
 		else

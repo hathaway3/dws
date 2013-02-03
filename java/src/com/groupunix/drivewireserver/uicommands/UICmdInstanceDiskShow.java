@@ -45,7 +45,8 @@ public class UICmdInstanceDiskShow extends DWCommand {
 		// TODO ASSumes we are using DW protocol
 		if (this.dwProto == null)
 			dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
-		
+	
+			
 		if (cmdline.length() == 0)
 		{
 			if (dwProto.getDiskDrives() == null)

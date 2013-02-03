@@ -11,13 +11,16 @@ public class DWDefs
 	// DW protocol op codes
 	
 	public static final byte OP_NOP 			= (byte) 0;		// 0x00
+	
 	public static final byte OP_NAMEOBJ_MOUNT 	= (byte) 1;		// 0x01
 	public static final byte OP_NAMEOBJ_CREATE 	= (byte) 2;		// 0x02
 	public static final byte OP_NAMEOBJ_TYPE 	= (byte) 3;		// 0x03
 																// 0x04 - 0x0F reserved for named object future use
 	public static final byte OP_TIME 			= (byte) 35;	// 0x23 #
 	public static final byte OP_SETTIME 		= (byte) 36;	// 0x24 $
-
+	public static final byte OP_TIMER	 		= (byte) 37;	// 0x25 
+	public static final byte OP_RESET_TIMER	 	= (byte) 38;	// 0x26 
+	
 	public static final byte OP_AARON			= (byte) 65;	// 0x41 A
 	public static final byte OP_WIREBUG_MODE	= (byte) 66;	// 0x42 B	
 	public static final byte OP_SERREAD 		= (byte) 67;	// 0x43 C
@@ -268,10 +271,20 @@ public class DWDefs
 	// client IDs
 	
 	
+	// Timer defs
+	public static final byte TIMER_START 		= (byte) 0;  // time since server started
+	public static final byte TIMER_RESET 		= (byte) 1;  // time since reset
+	public static final byte TIMER_OP 		= (byte) 2;  // time since last operation
+	public static final byte TIMER_NP_OP	= (byte) 3;  // time since last operation (non-poll)
+	public static final byte TIMER_POLL 		= (byte) 4;  // time since last poll
+	public static final byte TIMER_BAD_DATA		= (byte) 5;  // time since last error
 	
-
+	public static final byte TIMER_IO		= (byte) 6;  // time of last IO operation
+	public static final byte TIMER_DWINIT		= (byte) 8; 
+	public static final byte TIMER_READ	= (byte) 9; 
+	public static final byte TIMER_WRITE	= (byte) 10; 
 	
-
+	public static final byte TIMER_USER			= (byte) 128; // start of user timers 
 	
 
 	

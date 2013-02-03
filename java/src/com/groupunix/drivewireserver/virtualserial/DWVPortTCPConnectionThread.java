@@ -93,8 +93,8 @@ public class DWVPortTCPConnectionThread implements Runnable {
 				dwVSerialPorts.setPortChannel(vport, this.sktchan);
 				
 				if (this.reportConnect)
-					dwVSerialPorts.sendUtilityOKResponse(this.vport, "Connected to " + this.tcphost + ":" + this.tcpport);
-				
+					dwVSerialPorts.write(this.vport, ("OK Connected to " + this.tcphost + ":" + this.tcpport + (char) 10 + (char) 13));
+					
 				dwVSerialPorts.markConnected(vport);
 				
 				logger.debug("Connected to " + this.tcphost + ":" + this.tcpport);
@@ -189,27 +189,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 		else if (!dwVSerialPorts.isOpen(this.vport))
 			logger.debug("exit because port is not open");			
 		
-		dwVSerialPorts.markDisconnected(this.vport);
 		
-		
-		try
-		{
-			dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_UNSET);
-			
-			if (sktchan != null)
-				sktchan.close();
-			
-		}
-		catch (DWPortNotValidException e1)
-		{
-		} catch (IOException e)
-		{
-			logger.warn("while closing io channel: " + e.getMessage());
-		}
-		
-		
-		
-			
 		
 		// only if we got connected..
 		if (sktchan != null)
