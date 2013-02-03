@@ -4,6 +4,7 @@ import java.io.File;
 
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class UICmdServerFileXDir extends DWCommand {
@@ -30,13 +31,21 @@ public class UICmdServerFileXDir extends DWCommand {
 			for (File f : contents)
 			{
 				if (f.isDirectory())
-					text += DWUtils.getFileDescriptor(f) + "|false\n";
+					try {
+						text += DWUtils.getFileXDescriptor(f) + "\n";
+					} catch (DWFileSystemInvalidFilenameException e) 
+					{
+						
+					}
 			}
 			
 			for (File f : contents)
 			{
 				if (!f.isDirectory())
-					text += DWUtils.getFileDescriptor(f) + "|false\n";
+					try {
+						text += DWUtils.getFileXDescriptor(f) + "\n";
+					} catch (DWFileSystemInvalidFilenameException e) {
+					}
 			}
 			
 		}

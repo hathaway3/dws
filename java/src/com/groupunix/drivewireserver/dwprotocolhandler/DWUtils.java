@@ -7,8 +7,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class DWUtils
@@ -781,6 +783,74 @@ public class DWUtils
 		}
 
 
+		@SuppressWarnings("deprecation")
+		public static String getFileXDescriptor(File f) throws DWFileSystemInvalidFilenameException 
+		{
+			
+			if (f.length() > 4294967295L)
+			{
+				throw new DWFileSystemInvalidFilenameException("File too large for XDir");
+			}
+			
+			if (f.getName().length() > 255)
+			{
+				throw new DWFileSystemInvalidFilenameException("Filename too long for XDir");
+			}
+			
+			byte[] res = new byte[12 + f.getName().length()]; 
+			
+			int pos = 0;
+			
+			
+			long l = f.length();
+			
+			// 4 byte file size
+			
+			res[pos++] = (byte) (l >>> 24);
+			res[pos++] = (byte) (l >>> 16);
+			res[pos++] = (byte) (l >>> 8);
+			res[pos++] = (byte) (l);
+			
+			// 5 byte OS9 style modified date - Y M D Hr Min
+			Date moddate = new Date(f.lastModified());
+			
+			res[pos++] = (byte) (moddate.getYear());
+			res[pos++] = (byte) (moddate.getMonth());
+			res[pos++] = (byte) (moddate.getDate());
+			res[pos++] = (byte) (moddate.getHours());
+			res[pos++] = (byte) (moddate.getMinutes());
+			
+			// is directory
+			
+			if (f.isDirectory())
+				res[pos++] = (byte) 1;
+			else
+				res[pos++] = (byte) 0;
+			
+			// is readonly
+			
+			if (f.canWrite())
+				res[pos++] = (byte) 0;
+			else
+				res[pos++] = (byte) 1;
+			
+			// name length
+			
+			res[pos++] = (byte) f.getName().length();
+			
+			for (int i = 0;i<f.getName().length();i++)
+				res[pos++] = f.getName().getBytes()[i];
+			
+		
+			System.out.println(f.getName() + "\t" + f.length());
+			
+			for (int i = 0;i<res.length;i++)
+			{
+				System.out.println((res[i] & 0xFF) + "\t" + new Character((char) res[i]) );
+			}
+			
+			return(new String(res));
+		}
 		
 		
 		
@@ -897,5 +967,7 @@ public class DWUtils
 			
 			return res;
 		}
+
+		
 		
 }
