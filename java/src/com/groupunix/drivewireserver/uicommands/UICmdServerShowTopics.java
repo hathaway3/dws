@@ -13,10 +13,11 @@ public class UICmdServerShowTopics extends DWCommand {
 
 
 	private DWProtocolHandler dwProto;
+	private DWUIClientThread dwuiClientThread;
 
 	public UICmdServerShowTopics(DWUIClientThread dwuiClientThread) 
 	{
-		this.dwProto = (DWProtocolHandler) DriveWireServer.getHandler(dwuiClientThread.getInstance());
+		this.dwuiClientThread = dwuiClientThread;
 	}
 
 
@@ -51,6 +52,9 @@ public class UICmdServerShowTopics extends DWCommand {
 	{
 		String txt = new String();
 		
+		if (this.dwProto == null)
+			this.dwProto = (DWProtocolHandler) DriveWireServer.getHandler(dwuiClientThread.getInstance());
+
 		ArrayList<String> tops = dwProto.getHelp().getTopics(null);
 		
 		Iterator<String> t = tops.iterator();

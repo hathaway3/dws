@@ -12,10 +12,11 @@ public class UICmdServerShowHelp extends DWCommand {
 
 
 	private DWProtocolHandler dwProto;
+	private DWUIClientThread dwuiClientThread;
 
 	public UICmdServerShowHelp(DWUIClientThread dwuiClientThread) 
 	{
-		this.dwProto = (DWProtocolHandler) DriveWireServer.getHandler(dwuiClientThread.getInstance());
+		this.dwuiClientThread = dwuiClientThread;
 	}
 
 
@@ -48,7 +49,13 @@ public class UICmdServerShowHelp extends DWCommand {
 	@Override
 	public DWCommandResponse parse(String cmdline) 
 	{
-	
+		if (this.dwProto == null)
+			this.dwProto = (DWProtocolHandler) DriveWireServer.getHandler(dwuiClientThread.getInstance());
+
+		
+		if (dwProto.getHelp() == null)
+			return(new DWCommandResponse(false, DWDefs.RC_HELP_TOPIC_NOT_FOUND, "No help available"));
+		
 		try
 		{
 			return(new DWCommandResponse(dwProto.getHelp().getTopicText(cmdline)));

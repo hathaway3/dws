@@ -47,22 +47,22 @@ public class UICmdInstanceStatus extends DWCommand {
 			dwProto = (DWProtocolHandler) DriveWireServer.getHandler(clientref.getInstance());   
 		
 		
-		txt = "name: " + dwProto.getConfig().getString("Name","not set") + "\n";
+		txt = "name|" + dwProto.getConfig().getString("Name","not set") + "\n";
 		
-		txt += "connected: " + dwProto.connected() + "\n";
+		txt += "connected|" + dwProto.connected() + "\n";
 		
-		txt += "devicetype: " + dwProto.getProtoDev().getDeviceType() + "\n";
-		txt += "devicerate: " + dwProto.getProtoDev().getRate() + "\n";
-		txt += "devicename: " + dwProto.getProtoDev().getDeviceName() + "\n";
-		txt += "deviceconnected: " + dwProto.getProtoDev().connected() + "\n";
+		txt += "devicetype|" + dwProto.getProtoDev().getDeviceType() + "\n";
+		txt += "devicerate|" + dwProto.getProtoDev().getRate() + "\n";
+		txt += "devicename|" + dwProto.getProtoDev().getDeviceName() + "\n";
+		txt += "deviceconnected|" + dwProto.getProtoDev().connected() + "\n";
 		
-		txt += "lastopcode: " + DWUtils.prettyOP(dwProto.getLastOpcode()) + "\n";
-		txt += "lastgetstat: " + DWUtils.prettySS(dwProto.getLastGetStat()) + "\n";
-		txt += "lastsetstat: " + DWUtils.prettySS(dwProto.getLastSetStat()) + "\n";
-		txt += "lastlsn: " + DWUtils.int3(dwProto.getLastLSN()) + "\n";
-		txt += "lastdrive: " + dwProto.getLastDrive() +"\n";
-		txt += "lasterror: " + dwProto.getLastError() + "\n";
-		txt += "lastchecksum: " + dwProto.getLastChecksum() + "\n";
+		txt += "lastopcode|" + DWUtils.prettyOP(dwProto.getLastOpcode()) + "\n";
+		txt += "lastgetstat|" + DWUtils.prettySS(dwProto.getLastGetStat()) + "\n";
+		txt += "lastsetstat|" + DWUtils.prettySS(dwProto.getLastSetStat()) + "\n";
+		txt += "lastlsn|" + DWUtils.int3(dwProto.getLastLSN()) + "\n";
+		txt += "lastdrive|" + dwProto.getLastDrive() +"\n";
+		txt += "lasterror|" + dwProto.getLastError() + "\n";
+		txt += "lastchecksum|" + dwProto.getLastChecksum() + "\n";
 		
 		
 		

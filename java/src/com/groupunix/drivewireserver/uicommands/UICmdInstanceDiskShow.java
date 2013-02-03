@@ -85,7 +85,7 @@ public class UICmdInstanceDiskShow extends DWCommand {
 				
 				if ((!(dwProto.getDiskDrives() == null)) && (dwProto.getDiskDrives().isLoaded(driveno)))
 				{
-					res += "*loaded: true\n"; 
+					res += "*loaded|true\n"; 
 					
 					HierarchicalConfiguration disk = dwProto.getDiskDrives().getDisk(driveno).getParams();
 					
@@ -93,13 +93,13 @@ public class UICmdInstanceDiskShow extends DWCommand {
 					{
 						String option = itk.next();
 						
-						res += option + ": " + disk.getProperty(option) + "\n";
+						res += option + "|" + disk.getProperty(option) + "\n";
 					}
 	
 				}
 				else
 				{
-					res += "*loaded: false\n";
+					res += "*loaded|false\n";
 				}
 			}
 			catch (NumberFormatException e)
@@ -108,7 +108,7 @@ public class UICmdInstanceDiskShow extends DWCommand {
 			}
 			catch (DWDriveNotLoadedException e) 
 			{
-				res += "*loaded: false\n";
+				res += "*loaded|false\n";
 			} 
 			catch (DWDriveNotValidException e) 
 			{

@@ -273,7 +273,7 @@ public class UIUtils {
 			
 			for (int i = 0;i<res.size();i++)
 			{
-				Pattern p_item = Pattern.compile("^(.+):\\s(.+)");
+				Pattern p_item = Pattern.compile("^(.+)\\|(.+)");
 				Matcher m = p_item.matcher(res.get(i));
 				
 				if (m.find())

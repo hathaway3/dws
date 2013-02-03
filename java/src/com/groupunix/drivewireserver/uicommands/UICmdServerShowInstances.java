@@ -33,7 +33,7 @@ public class UICmdServerShowInstances extends DWCommand {
 		
 		for (int i =0;i < DriveWireServer.getNumHandlers();i++)
 		{
-			txt += DriveWireServer.getHandlerName(i) + "\n";
+			txt += i + "|" + DriveWireServer.getHandlerName(i) + "\n";
 			
 		}
 		

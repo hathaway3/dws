@@ -43,7 +43,7 @@ public class UICmdServerShowSynthProfiles extends DWCommand {
 		{
 			
 		    HierarchicalConfiguration mprof = (HierarchicalConfiguration) it.next();
-		    res += mprof.getString("name") + " " + mprof.getString("desc") + "\n";
+		    res += mprof.getString("name") + "|" + mprof.getString("desc") + "\n";
 	    	
 		    
 		}
