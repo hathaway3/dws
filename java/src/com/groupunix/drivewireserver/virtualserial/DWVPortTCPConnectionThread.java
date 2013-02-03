@@ -93,7 +93,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 				dwVSerialPorts.setPortChannel(vport, this.sktchan);
 				
 				if (this.reportConnect)
-					dwVSerialPorts.write(this.vport, ("OK Connected to " + this.tcphost + ":" + this.tcpport + (char) 10 + (char) 13));
+					dwVSerialPorts.writeToCoco(this.vport, ("OK Connected to " + this.tcphost + ":" + this.tcpport + (char) 10 + (char) 13));
 					
 				dwVSerialPorts.markConnected(vport);
 				
