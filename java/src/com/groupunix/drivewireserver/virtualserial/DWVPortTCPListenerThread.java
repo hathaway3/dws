@@ -88,7 +88,7 @@ public class DWVPortTCPListenerThread implements Runnable
 				return;
 			} 
 			
-			dwVSerialPorts.writeToCoco(vport, "OK listening on port " + this.tcpport + (char) 0 + (char) 13);
+			dwVSerialPorts.writeToCoco(vport, "OK listening on port " + this.tcpport + (char) 10 + (char) 13);
 
 			this.dwVSerialPorts.setUtilMode(vport, DWDefs.UTILMODE_TCPLISTEN);
 			
