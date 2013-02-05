@@ -17,6 +17,7 @@ public class DWCmdServerShow extends DWCommand {
 		commands.addcommand(new DWCmdServerShowThreads(this));
 		commands.addcommand(new DWCmdServerShowHandlers(this));
 		commands.addcommand(new DWCmdServerShowTimers(this.dwProto, this));
+		commands.addcommand(new DWCmdServerShowSerial(this.dwProto, this));
 	}
 	
 	public String getCommand() 
