@@ -3,7 +3,11 @@ package com.groupunix.drivewireui.plugins;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration.HierarchicalConfiguration.Node;
+import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.VFS;
@@ -11,6 +15,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.LocationAdapter;
 import org.eclipse.swt.browser.LocationEvent;
+import org.eclipse.swt.browser.ProgressEvent;
+import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.browser.TitleEvent;
 import org.eclipse.swt.browser.TitleListener;
 import org.eclipse.swt.custom.CTabItem;
@@ -19,6 +25,7 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -39,6 +46,12 @@ import swing2swt.layout.BorderLayout;
 import com.groupunix.drivewireui.GradientHelper;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.SendCommandWin;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseTrackAdapter;
+import org.eclipse.swt.widgets.ProgressBar;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class DWBrowser extends Composite
 {
@@ -63,13 +76,23 @@ public class DWBrowser extends Composite
 	private Spinner spinnerDrive;
 
 	private CTabItem ourtab;
+	private Cursor handcursor;
+	private Cursor normcursor;
+	private ToolBar toolBar_1;
+	private ToolItem toolBookmarks;
+	private ToolBar toolBar_2;
+	private ToolItem toolDrive;
 	
+	private boolean append_mode = false;
 	
 	
 	public DWBrowser(final Composite parent, String url, final CTabItem ourtab)
 	{
 		super(parent, SWT.BORDER);
 		this.ourtab = ourtab;
+		
+		handcursor = new Cursor( MainWin.getDisplay(), SWT.CURSOR_HAND);
+		normcursor = new Cursor( MainWin.getDisplay(), SWT.CURSOR_ARROW);
 		
 		setLayout(new BorderLayout(0, 0));
 		
@@ -96,11 +119,12 @@ public class DWBrowser extends Composite
 		ToolBar toolBar = new ToolBar(header, SWT.FLAT | SWT.RIGHT);
 		
 		FormData fd_toolBar = new FormData();
-		fd_toolBar.top = new FormAttachment(0, 5);
-		fd_toolBar.left = new FormAttachment(1, 5);
+		fd_toolBar.left = new FormAttachment(0, 10);
+		fd_toolBar.top = new FormAttachment(0, 8);
 		toolBar.setLayoutData(fd_toolBar);
 		
 		tltmBack = new ToolItem(toolBar, SWT.NONE);
+		tltmBack.setToolTipText("Back");
 		tltmBack.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -111,6 +135,7 @@ public class DWBrowser extends Composite
 		tltmBack.setImage(SWTResourceManager.getImage(DWBrowser.class, "/toolbar/arrow-left-3.png"));
 		
 		tltmForward = new ToolItem(toolBar, SWT.NONE);
+		tltmForward.setToolTipText("Forward");
 		tltmForward.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -121,6 +146,7 @@ public class DWBrowser extends Composite
 		tltmForward.setImage(SWTResourceManager.getImage(DWBrowser.class, "/toolbar/arrow-right-3.png"));
 		
 		tltmReload = new ToolItem(toolBar, SWT.NONE);
+		tltmReload.setToolTipText("Reload page");
 		tltmReload.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -131,10 +157,17 @@ public class DWBrowser extends Composite
 		tltmReload.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/view-refresh-7.png"));
 		
 		comboURL = new Combo(header, SWT.NONE);
+		comboURL.setToolTipText("");
+		fd_toolBar.right = new FormAttachment(comboURL, -6);
 		comboURL.setBackground(new Color(MainWin.getDisplay(), 255,255,255));
 		comboURL.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
+				
+				
+				toggleBookmarkIcon(comboURL.getText());
+				
+				
 				if (e.keyCode == 13)
 				{
 					browser.setUrl(comboURL.getText());
@@ -152,34 +185,111 @@ public class DWBrowser extends Composite
 				browser.setUrl(comboURL.getText());
 			}
 		});
-		fd_toolBar.right = new FormAttachment(comboURL, -6);
 		
 		FormData fd_comboURL = new FormData();
 		fd_comboURL.left = new FormAttachment(0, 90);
-		fd_comboURL.right = new FormAttachment(100, -90);
 		fd_comboURL.bottom = new FormAttachment(100, -5);
-		fd_comboURL.top = new FormAttachment(2, 5);
+		fd_comboURL.top = new FormAttachment(2, 8);
 		comboURL.setLayoutData(fd_comboURL);
+		
+		
+		
 		
 		spinnerDrive = new Spinner(header, SWT.BORDER);
 		spinnerDrive.setBackground(new Color(MainWin.getDisplay(), 255,255,255));
 		spinnerDrive.setToolTipText("Working drive");
 		FormData fd_spinnerDrive = new FormData();
-		fd_spinnerDrive.bottom = new FormAttachment(100, -5);
-		fd_spinnerDrive.right = new FormAttachment(100, -5);
-		fd_spinnerDrive.left = new FormAttachment(100, -50);
+	
+		fd_spinnerDrive.right = new FormAttachment(100, -45);
+		fd_spinnerDrive.left = new FormAttachment(100, -90);
+		fd_spinnerDrive.top = new FormAttachment(0, 8);
 		spinnerDrive.setLayoutData(fd_spinnerDrive);
 		spinnerDrive.setMaximum(255);
 		
-		Label lblDiskPic = new Label(header, SWT.NONE);
-		lblDiskPic.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/disk-insert.png"));
-		FormData fd_lblDiskPic = new FormData();
-		fd_lblDiskPic.top = new FormAttachment(spinnerDrive, 3, SWT.TOP);
-		fd_lblDiskPic.right = new FormAttachment(spinnerDrive, -5);
-		lblDiskPic.setLayoutData(fd_lblDiskPic);
+		final Label lblHelp = new Label(header, SWT.NONE);
+		
+		lblHelp.setToolTipText("Show browser help");
+		lblHelp.setCursor(handcursor);
+		lblHelp.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent arg0) {
+				
+				browser.setUrl(MainWin.config.getString("Browser_helppage","http://cococoding.com/dw4/browserhelp"));
+				
+			}
+		});
+		lblHelp.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/help-about-3.png"));
+		FormData fd_lblHelp = new FormData();
+		fd_lblHelp.bottom = new FormAttachment(toolBar, 0, SWT.BOTTOM);
+		fd_lblHelp.top = new FormAttachment(toolBar, 0, SWT.TOP);
+		fd_lblHelp.right = new FormAttachment(100, -10);
+		lblHelp.setLayoutData(fd_lblHelp);
 		
 		
-		//DWBrowserUtils.GenerateHTMLDir("E:/cocodisks");
+		toolBar_1 = new ToolBar(header, SWT.FLAT | SWT.RIGHT);
+		fd_comboURL.right = new FormAttachment(toolBar_1, -6);
+		
+		FormData fd_toolBar_1 = new FormData();
+		fd_toolBar_1.right = new FormAttachment(spinnerDrive, -32);
+		fd_toolBar_1.left = new FormAttachment(spinnerDrive, -100);
+		
+		fd_toolBar_1.bottom = new FormAttachment(toolBar, 0, SWT.BOTTOM);
+		
+		toolBar_1.setLayoutData(fd_toolBar_1);
+		
+		toolBookmarks = new ToolItem(toolBar_1, SWT.NONE);
+		toolBookmarks.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				
+				if (isBookmark(comboURL.getText()))
+				{
+					removeBookmark(comboURL.getText());
+				}
+				else
+				{
+					addBookmark(comboURL.getText());
+				}
+				
+			}
+		});
+		toolBookmarks.setToolTipText("Add/Remove bookmark");
+		toolBookmarks.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/bookmark-new-2.png"));
+		
+		
+		toolBar_2 = new ToolBar(header, SWT.FLAT | SWT.RIGHT);
+		fd_comboURL.right = new FormAttachment(toolBar_1, -6);
+		
+		FormData fd_toolBar_2 = new FormData();
+		fd_toolBar_2.right = new FormAttachment(spinnerDrive);
+		fd_toolBar_2.left = new FormAttachment(spinnerDrive, -70);
+		fd_toolBar_2.bottom = new FormAttachment(toolBar, 0, SWT.BOTTOM);
+		
+		toolBar_2.setLayoutData(fd_toolBar_2);
+		
+		toolDrive = new ToolItem(toolBar_2, SWT.NONE);
+		toolDrive.setToolTipText("Toggle append mode");
+		toolDrive.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				
+				if (append_mode)
+				{
+					toolDrive.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/disk-insert.png"));
+					append_mode = false;
+				}
+				else
+				{
+					toolDrive.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/new-disk-16.png"));
+					append_mode = true;
+				}
+				
+				
+			}
+		});
+		toolDrive.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/disk-insert.png"));
+		
+		
 		
 		browser = null;
 		
@@ -215,8 +325,10 @@ public class DWBrowser extends Composite
 			browser.addLocationListener(new LocationAdapter() {
 				@Override
 				public void changed(LocationEvent event) {
+					
 					comboURL.setText(event.location);
 					
+					toggleBookmarkIcon(event.location);
 					
 					
 					if (browser.isBackEnabled())
@@ -229,7 +341,7 @@ public class DWBrowser extends Composite
 					else
 						tltmForward.setEnabled(false);
 					
-					
+					tltmReload.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/view-refresh-7.png"));
 					
 				}
 				
@@ -243,19 +355,47 @@ public class DWBrowser extends Composite
 						doCoCoLink(event.location);
 					}
 				}
+				
+				
+				
 			});
 			
 			browser.addTitleListener( new TitleListener() {
 		         public void changed(TitleEvent event) {
 		        	 ourtab.setText(event.title);
 		        	 ourtab.setImage(SWTResourceManager.getImage(MainWin.class, "/menu/www.png"));
+		        	 
 		          }
 		       });
 			
 			
 			
+			browser.addProgressListener(new ProgressListener() 
+			{
+				 public void changed(ProgressEvent event) 
+				 {
+					 		
+			          if (event.total == 0) return;                            
+			
+			          tltmReload.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/network.png"));
+						
+			          
+			      }
+				 
+			      public void completed(ProgressEvent event) 
+			      {
+			      
+			        tltmReload.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/view-refresh-7.png"));
+					
+			      }
+			      
+			});
+			
+			
+			
 			if (url != null)
 			{
+				loadBookmarkList();
 				browser.setUrl(url);
 			}
 			else
@@ -270,11 +410,102 @@ public class DWBrowser extends Composite
 	}
 
 	
+	protected void toggleBookmarkIcon(String url)
+	{
+		if (isBookmark(url))
+		{
+			toolBookmarks.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/bookmark-del-2.png"));
+		}
+		else
+		{
+			toolBookmarks.setImage(SWTResourceManager.getImage(DWBrowser.class, "/menu/bookmark-new-2.png"));
+		}
+		
+		
+	}
+
+
+	protected void addBookmark(String url) 
+	{
+		List<String> bm = MainWin.config.getList("Bookmark");
+		
+		if (!bm.contains(url))
+			MainWin.config.addProperty("Bookmark", url);
 	
+		
+		
+		toggleBookmarkIcon(url);
+		
+		String tmp = comboURL.getText();
+		comboURL.removeAll();
+		
+		bm = MainWin.config.getList("Bookmark");
+		
+		for (String b : bm)
+			comboURL.add(b);
+		
+		comboURL.setText(tmp);
+	}
+
+
+
+
+
+	protected void removeBookmark(String url) 
+	{
+		int bms = MainWin.config.getMaxIndex("Bookmark");
+		
+		for (int x = 0;x<=bms;x++)
+		{
+			if (MainWin.config.getString("Bookmark(" + x + ")").equalsIgnoreCase(url) )
+			{
+				MainWin.config.clearProperty("Bookmark(" + x + ")");
+		
+				break;
+			}
+		}
+		
+		
+		toggleBookmarkIcon(url);
+		
+		loadBookmarkList();
+	}
+
+
+
+
+
+	private void loadBookmarkList() 
+	{
+		String tmp = comboURL.getText();
+		comboURL.removeAll();
+		
+		List<String> bm = MainWin.config.getList("Bookmark");
+		
+		for (String b : bm)
+			comboURL.add(b);
+	
+		comboURL.setText(tmp);
+	}
+
+
+	protected boolean isBookmark(String url) 
+	{
+		List<String> bm = MainWin.config.getList("Bookmark");
+		
+		if (bm.contains(url))
+			return(true);
+		
+		return false;
+	}
+
+
+
 
 
 	public void openURL(String url)
 	{
+		
 		browser.setUrl(url);
 		
 	}
@@ -384,19 +615,24 @@ public class DWBrowser extends Composite
 							{
 								// all dos files
 								
-								String title = "Appending file(s) to image...";
-								String msg = "Please wait while the server appends to the image in drive " + this.spinnerDrive.getSelection() + ".";
 								List<String> cmds = new ArrayList<String>();
+								String title;
+								String msg;
 								
-								/*
-								if (!this.tltmAppend.getSelection())
+								if (this.append_mode == true)
+								{
+									title = "Appending file(s) to image...";
+									msg = "Please wait while the server appends to the image in drive " + this.spinnerDrive.getSelection() + ".";
+									
+								}
+								else
 								{
 									title = "Creating disk image...";
 									msg = "Please wait while the server creates a new DOS disk image and then adds the file(s).";
 									cmds.add("dw disk create " + this.spinnerDrive.getSelection());
 									cmds.add("dw disk dos format " + this.spinnerDrive.getSelection());
 								}
-								*/
+								
 								
 								for (FileObject f : fileobj.getChildren())
 								{
@@ -441,15 +677,15 @@ public class DWBrowser extends Composite
 					String msg = "Please wait while the server appends the file to the image in drive " + this.spinnerDrive.getSelection() + ".";
 					List<String> cmds = new ArrayList<String>();
 					
-					/*
-					if (!this.tltmAppend.getSelection())
+					
+					if (!this.append_mode)
 					{
 						title = "Creating disk image...";
 						msg = "Please wait while the server creates a new DOS disk image and then adds the file.";
 						cmds.add("dw disk create " + this.spinnerDrive.getSelection());
 						cmds.add("dw disk dos format " + this.spinnerDrive.getSelection());
 					}
-					*/
+					
 					
 					cmds.add("dw disk dos add " + this.spinnerDrive.getSelection() + " " + url);
 					
@@ -584,4 +820,13 @@ public class DWBrowser extends Composite
 					  }
 				  });
 	}
+	
+	
+	
+	
+	
 }
+
+
+
+

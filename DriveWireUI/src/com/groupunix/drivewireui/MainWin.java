@@ -87,8 +87,8 @@ public class MainWin {
 	static Logger logger = Logger.getLogger(MainWin.class);
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
 
-	public static final String DWUIVersion = "4.3.1g";
-	public static final String DWUIVersionDate = "02/03/2013";
+	public static final String DWUIVersion = "4.3.2";
+	public static final String DWUIVersionDate = "03/21/2013";
 	
 	public static final double LOWMEM_START = 4096 * 1024;
 	public static final double LOWMEM_STOP = LOWMEM_START * 2;
@@ -260,7 +260,7 @@ public class MainWin {
 	private static LogItem lowMemLogItem;
 	private static int lowMemWarningTid = -1;
 	private static boolean noServer = false;
-	static boolean debugging = true;
+	static boolean debugging = false;
 	protected static int logNoticeLevel = -1;
 	
 	public static Vector<OS9BufferGroup> os9BufferGroups;

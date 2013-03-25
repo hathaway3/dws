@@ -292,9 +292,10 @@ public class DWDECBFileSystem extends DWFileSystem
 			for (int i = 0;i<256;i++)
 				buf[i] = (byte) 0xFF;
 			
+			this.disk.getSectors().removeAllElements();
+			
 			for (int i =0; i< 630;i++)
 			{
-				this.disk.getSectors().removeAllElements();
 				this.disk.getSectors().add(new DWDiskSector(this.disk, i, 256, this.disk.getDirect()));
 				this.disk.getSectors().get(i).setData(buf);
 			}

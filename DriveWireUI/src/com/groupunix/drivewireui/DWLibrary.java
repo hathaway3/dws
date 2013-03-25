@@ -273,7 +273,7 @@ public class DWLibrary extends Composite
 		
 		if (! MainWin.config.getBoolean("NoBrowsers", false))
 		{
-			compositeWebViewer = new DWBrowser(compositeViewers, MainWin.config.getString("LibraryHomeURL", DWLibrary.DEFAULT_URL), ourtab);
+			compositeWebViewer = new DWBrowser(compositeViewers, MainWin.config.getString("Browser_homepage", DWLibrary.DEFAULT_URL), ourtab);
 			compositeWebViewer.setLayout(new BorderLayout(0, 0));
 		}
 		

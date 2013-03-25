@@ -18,10 +18,6 @@ import java.util.Map;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
@@ -31,6 +27,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class BugReportWin extends Dialog {
 
@@ -51,6 +48,7 @@ public class BugReportWin extends Dialog {
 	private Button btnJavaInfo;
 	private Button btnUIText;
 	private Button btnServerText;
+
 	
 	/**
 	 * Create the dialog.
@@ -82,11 +80,11 @@ public class BugReportWin extends Dialog {
 		shlBugReport.setLocation(x, y);
 		
 		btnUIText = new Button(shlBugReport, SWT.CHECK);
-		btnUIText.setBounds(25, 284, 543, 16);
+		btnUIText.setBounds(25, 192, 543, 16);
 		btnUIText.setText("The contents of the 'UI' pane (output from dw commands, etc)");
 		
 		btnServerText = new Button(shlBugReport, SWT.CHECK);
-		btnServerText.setBounds(25, 306, 543, 16);
+		btnServerText.setBounds(25, 214, 543, 16);
 		btnServerText.setText("The contents of the 'Server' pane (server log entries)");
 		
 		while (!shlBugReport.isDisposed()) {
@@ -105,14 +103,8 @@ public class BugReportWin extends Dialog {
 	 */
 	private void createContents() {
 		shlBugReport = new Shell(getParent(), getStyle());
-		shlBugReport.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) 
-			{
-				//moveTheBug();
-				
-			}
-		});
-		shlBugReport.setSize(598, 561);
+		
+		shlBugReport.setSize(581, 491);
 		shlBugReport.setText("Bug Report for '" + title + "'");
 		
 		
@@ -128,38 +120,35 @@ public class BugReportWin extends Dialog {
 			
 			}
 		});
-		btnClose.setBounds(483, 498, 85, 25);
+		btnClose.setBounds(464, 421, 85, 32);
 		btnClose.setText("Cancel");
 		
 		btnErrMsg = new Button(shlBugReport, SWT.CHECK);
 		btnErrMsg.setSelection(true);
-		btnErrMsg.setBounds(25, 176, 543, 16);
+		btnErrMsg.setBounds(25, 84, 543, 16);
 		btnErrMsg.setText("The error message itself, if any");
 		
 		btnErrDetails = new Button(shlBugReport, SWT.CHECK);
 		btnErrDetails.setSelection(true);
 		btnErrDetails.setText("The extended error details, as seen in the lower pane of the error dialog");
-		btnErrDetails.setBounds(25, 198, 543, 16);
+		btnErrDetails.setBounds(25, 106, 543, 16);
 		
 		btnUIConf = new Button(shlBugReport, SWT.CHECK);
 		btnUIConf.setSelection(true);
-		btnUIConf.setBounds(25, 220, 543, 16);
+		btnUIConf.setBounds(25, 128, 543, 16);
 		btnUIConf.setText("The DriveWire UI configuration (the contents of drivewireUI.xml on the client)");
 		
 		btnServerConf = new Button(shlBugReport, SWT.CHECK);
 		btnServerConf.setSelection(true);
 		btnServerConf.setText("The DriveWire server configuration (the contents of config.xml on the server)");
-		btnServerConf.setBounds(25, 241, 543, 16);
+		btnServerConf.setBounds(25, 149, 543, 16);
 		
 		textAdditionalInfo = new Text(shlBugReport, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
-		textAdditionalInfo.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				//moveTheBug();
-			}
-		});
-		textAdditionalInfo.setBounds(25, 359, 543, 60);
+		
+		textAdditionalInfo.setBounds(25, 267, 525, 60);
 		
 		Button btnNewButton = new Button(shlBugReport, SWT.NONE);
+		btnNewButton.setImage(SWTResourceManager.getImage(BugReportWin.class, "/constatus/network-transmit-2.png"));
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -170,11 +159,11 @@ public class BugReportWin extends Dialog {
 				
 			}
 		});
-		btnNewButton.setBounds(203, 498, 183, 25);
-		btnNewButton.setText("Submit Bug Report");
+		btnNewButton.setBounds(216, 421, 153, 32);
+		btnNewButton.setText(" Submit via Internet");
 		
 		textEmail = new Text(shlBugReport, SWT.BORDER);
-		textEmail.setBounds(25, 451, 288, 21);
+		textEmail.setBounds(25, 359, 288, 21);
 		
 		Link link = new Link(shlBugReport, SWT.NONE);
 		link.addSelectionListener(new SelectionAdapter() {
@@ -194,61 +183,38 @@ public class BugReportWin extends Dialog {
 				
 			}
 		});
-		link.setBounds(43, 263, 525, 15);
+		link.setBounds(43, 171, 525, 15);
 		link.setText("Information about your Java environment  (<a>click here to see what is included</a>)");
 		
 		btnJavaInfo = new Button(shlBugReport, SWT.CHECK);
 		btnJavaInfo.setSelection(true);
-		btnJavaInfo.setBounds(25, 263, 20, 16);
+		btnJavaInfo.setBounds(25, 171, 20, 16);
 		
 		Label lblIfYouBelieve = new Label(shlBugReport, SWT.WRAP);
-		lblIfYouBelieve.setBounds(25, 10, 543, 129);
-		lblIfYouBelieve.setText("Please submit as much information as you can about this problem.  Internet access is required to submit a bug report.\r\n\r\nFor those concerned with privacy, you should know that all information in this bug report is sent in plain text over the internet.  While it will never intentionally be made public, the author offers absolutely no promise of confidentiality.   On the other hand, it's just some DriveWire configuration data and will normally not contain anything sensitive.\r\n\r\n");
+		lblIfYouBelieve.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
+		lblIfYouBelieve.setBounds(25, 10, 543, 25);
+		lblIfYouBelieve.setText("Please submit as much information as you can about this problem. ");
 		
 		Label lblEmailAddressoptional = new Label(shlBugReport, SWT.NONE);
-		lblEmailAddressoptional.setBounds(25, 430, 288, 15);
-		lblEmailAddressoptional.setText("Email address (optional):");
+		lblEmailAddressoptional.setBounds(25, 338, 388, 15);
+		lblEmailAddressoptional.setText("Email address (if you wish to be contacted regarding this problem):");
 		
 		Label lblAdditionalInformationbe = new Label(shlBugReport, SWT.NONE);
-		lblAdditionalInformationbe.setBounds(25, 338, 393, 15);
-		lblAdditionalInformationbe.setText("Additional information (be verbose!):");
+		lblAdditionalInformationbe.setBounds(25, 246, 393, 15);
+		lblAdditionalInformationbe.setText("Additional information (please be verbose):");
 		
 		Label lblDataToInclude = new Label(shlBugReport, SWT.NONE);
-		lblDataToInclude.setBounds(25, 145, 543, 25);
+		lblDataToInclude.setBounds(25, 53, 543, 25);
 		lblDataToInclude.setText("What data would you like to include in this bug report?");
 		
-		
 	
 	}
 
-	/*
 	
-	protected void moveTheBug() 
-	{
-		//possibly the most vital routine in all of DriveWire...
-		
-		Random r = new Random();
-		
-		int x = lblBug.getLocation().x;
-		int y = lblBug.getLocation().y;
-		
-		int maxx = shlBugReport.getSize().x - 48;
-		int maxy = shlBugReport.getSize().y - 48;
-		
-		x = x + (r.nextInt(11) - 5);
-		y = y + (r.nextInt(11) - 5);
-		
-		if ((x < 0) || (x > maxx) || (y < 0) || (y > maxy))
-		{
-			x = r.nextInt(maxx);
-			y = r.nextInt(maxy);
-		}
-		
-		
-		lblBug.setLocation(x, y);	
-	}
+	
+	
 
-	*/
+	
 
 	protected boolean doSubmit() 
 	{
@@ -289,7 +255,7 @@ public class BugReportWin extends Dialog {
 					MainWin.config.save(sw);
 					surl += "&" + encv("uiconf", sw.getBuffer().toString());
 				} 
-				catch (ConfigurationException e) 
+				catch (Exception e) 
 				{
 					surl += "&" + encv("uiconf", e.getMessage());
 				}
@@ -431,7 +397,10 @@ public class BugReportWin extends Dialog {
 		
 		if (!res)
 		{
-			MainWin.showError("This just isn't your day...", "We had an error sending the bug report.  Seek alternate routes, consult an exorcist, abort, retry, fail, etc...", "Possible clues: " + err);
+			if (err.equals("aaronwolfe.com"))
+				MainWin.showError("This just isn't your day...", "We had an error sending the bug report.  No internet connection?", "It seems we were unable to contact the bug report site via the internet.  The site could be down, or there may be a networking problem.");
+			else
+				MainWin.showError("This just isn't your day...", "We had an error sending the bug report.  Seek alternate routes, consult an exorcist, abort, retry, fail, etc...", "Possible clues: " + err);
 		}
 		
 		
