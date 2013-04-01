@@ -128,6 +128,7 @@ public class DWLibrary extends Composite
 
 	HierarchicalConfiguration locallib;
 	HierarchicalConfiguration cloudlib;
+	HierarchicalConfiguration mountedlib;
 
 	ArrayList<FileViewer> viewers;
 	Composite compositeViewers;
@@ -143,6 +144,8 @@ public class DWLibrary extends Composite
 
 	@SuppressWarnings("unused")
 	private CloudDiskInfoViewer compositeCloudDiskViewer;
+
+	protected LibraryItem currentLibraryItem;
 
 	
 
@@ -308,104 +311,9 @@ public class DWLibrary extends Composite
 					LibraryItem libitem = (LibraryItem) e.item.getData();
 					
 					currentItemPath = getItemPath((TreeItem) e.item);
+										
+					openViewer(libitem);
 					
-					if (libitem.getType() == DWLibrary.TYPE_DECB_FILE)
-					{
-						DECBFileLibraryItem decbitem = (DECBFileLibraryItem) e.item.getData();
-						
-					
-						FileViewer bestv = null;
-								
-						bestv = getBestViewer(decbitem.getEntry(), decbitem.getData());
-							
-						if (bestv != null)
-						{
-							
-							compositeFileView.setContent(bestv);
-							bestv.viewFile(decbitem.getEntry(), decbitem.getData());
-							compositeFileView.layout();
-								
-							ourtab.setText(decbitem.getEntry().getFileName().trim() + "." + decbitem.getEntry().getFileExt() + " ");
-							ourtab.setImage(SWTResourceManager.getImage(MainWin.class, bestv.getTypeIcon()));
-							stackViewersLayout.topControl = compositeFileViewer;
-							compositeViewers.layout();
-							
-							
-						}
-						else
-						{
-							// no viewer? bah
-						}
-						
-					}
-					else if (libitem.getType() == DWLibrary.TYPE_RBF_FILE)
-					{
-						RBFFileLibraryItem rbfitem = (RBFFileLibraryItem) e.item.getData();
-						
-						compositeFileView.setContent(viewers.get(1));
-						
-						try
-						{
-							viewers.get(1).viewFile(rbfitem.getEntry(), rbfitem.getRBFFS().getFileContentsFromDescriptor(rbfitem.getEntry().getFD()));
-							ourtab.setText(rbfitem.getEntry().getFileName() + " ");
-							
-							stackViewersLayout.topControl = compositeFileViewer;
-							compositeViewers.layout();
-						} 
-						catch (IOException e1)
-						{
-						} 
-						catch (DWDiskInvalidSectorNumber e1)
-						{
-						} 
-						catch (DWFileSystemInvalidDirectoryException e1)
-						{
-							
-						}
-								
-						
-					}
-					
-					else if (libitem.getType() == DWLibrary.TYPE_URL)
-					{
-						if (MainWin.config.getBoolean("NoBrowsers",false))
-						{
-							MainWin.showError("No Browser Support", "Sorry, we don't seem to be able to open a browser on this system.", "The URL we wanted to show you is:  " + ((URLLibraryItem) libitem).getUrl() , false);
-						}
-						else
-						{
-							if (compositeWebViewer == null)
-							{
-								compositeWebViewer = new DWBrowser(compositeViewers, MainWin.config.getString("LibraryHomeURL", DWLibrary.DEFAULT_URL), ourtab);
-								compositeWebViewer.setLayout(new BorderLayout(0, 0));
-							}
-							
-							compositeWebViewer.openURL( ((URLLibraryItem) libitem).getUrl()  );
-						
-							stackViewersLayout.topControl = compositeWebViewer;
-							compositeViewers.layout();
-						}
-					}
-					else if (libitem.getType() == DWLibrary.TYPE_PATH)
-					{
-						PathLibraryItem pitem = (PathLibraryItem)  e.item.getData();
-						
-						if ((pitem.getFSType() == DWLibrary.FSTYPE_DECB) || (pitem.getFSType() == DWLibrary.FSTYPE_RBF)) 
-						{
-							compositePathViewer.displayPath(pitem, ourtab);
-							stackViewersLayout.topControl = compositePathViewer;
-							compositeViewers.layout();
-						}
-					}
-					else if (libitem.getType() == DWLibrary.TYPE_FOLDER)
-					{
-						FolderLibraryItem pitem = (FolderLibraryItem)  e.item.getData();
-						
-						compositeNodeViewer.displayNode(pitem, ourtab);
-						stackViewersLayout.topControl = compositeNodeViewer;
-						compositeViewers.layout();
-						
-					}
 				}						
 			}
 
@@ -430,8 +338,10 @@ public class DWLibrary extends Composite
 				{
 					treemenu.getItem(0).dispose();
 				}
+					
 				
-				if (tree.getSelection()[0].getData()  != null)
+				
+				if ((tree != null) && (tree.getSelectionCount() > 0)  &&  (tree.getSelection()[0].getData()  != null))
 				{
 					final LibraryItem libitem = (LibraryItem) tree.getSelection()[0].getData();
 					
@@ -702,6 +612,8 @@ public class DWLibrary extends Composite
 		
 		tree.setData(MainWin.libraryroot);
 		
+		
+		
 		tree.addListener(SWT.SetData, new Listener() 
 		{
 		    public void handleEvent(Event event) 
@@ -743,6 +655,125 @@ public class DWLibrary extends Composite
 
 
 	
+
+	protected void openViewer(LibraryItem libitem) 
+	{
+	
+		if (libitem.getType() == DWLibrary.TYPE_DECB_FILE)
+		{
+			DECBFileLibraryItem decbitem = (DECBFileLibraryItem)libitem;
+			
+		
+			FileViewer bestv = null;
+					
+			bestv = getBestViewer(decbitem.getEntry(), decbitem.getData());
+				
+			if (bestv != null)
+			{
+				
+				compositeFileView.setContent(bestv);
+				bestv.viewFile(decbitem.getEntry(), decbitem.getData());
+				compositeFileView.layout();
+					
+				ourtab.setText(decbitem.getEntry().getFileName().trim() + "." + decbitem.getEntry().getFileExt() + " ");
+				ourtab.setImage(SWTResourceManager.getImage(MainWin.class, bestv.getTypeIcon()));
+				stackViewersLayout.topControl = compositeFileViewer;
+				compositeViewers.layout();
+				
+				currentLibraryItem = libitem;
+			}
+			else
+			{
+				currentLibraryItem = null;
+			}
+			
+		}
+		else if (libitem.getType() == DWLibrary.TYPE_RBF_FILE)
+		{
+			RBFFileLibraryItem rbfitem = (RBFFileLibraryItem) libitem;
+			
+			compositeFileView.setContent(viewers.get(1));
+			
+			try
+			{
+				viewers.get(1).viewFile(rbfitem.getEntry(), rbfitem.getRBFFS().getFileContentsFromDescriptor(rbfitem.getEntry().getFD()));
+				ourtab.setText(rbfitem.getEntry().getFileName() + " ");
+				
+				stackViewersLayout.topControl = compositeFileViewer;
+				compositeViewers.layout();
+				
+				currentLibraryItem = libitem;
+			} 
+			catch (IOException e1)
+			{
+			} 
+			catch (DWDiskInvalidSectorNumber e1)
+			{
+			} 
+			catch (DWFileSystemInvalidDirectoryException e1)
+			{
+				
+			}
+					
+			
+		}
+		
+		else if (libitem.getType() == DWLibrary.TYPE_URL)
+		{
+			if (MainWin.config.getBoolean("NoBrowsers",false))
+			{
+				currentLibraryItem = null;
+				MainWin.showError("No Browser Support", "Sorry, we don't seem to be able to open a browser on this system.", "The URL we wanted to show you is:  " + ((URLLibraryItem) libitem).getUrl() , false);
+			}
+			else
+			{
+				currentLibraryItem = libitem;
+				
+				if (compositeWebViewer == null)
+				{
+					compositeWebViewer = new DWBrowser(compositeViewers, MainWin.config.getString("LibraryHomeURL", DWLibrary.DEFAULT_URL), ourtab);
+					compositeWebViewer.setLayout(new BorderLayout(0, 0));
+				}
+				
+				compositeWebViewer.openURL( ((URLLibraryItem) libitem).getUrl()  );
+			
+				stackViewersLayout.topControl = compositeWebViewer;
+				compositeViewers.layout();
+			}
+		}
+		else if (libitem.getType() == DWLibrary.TYPE_PATH)
+		{
+			currentLibraryItem = libitem;
+			
+			PathLibraryItem pitem = (PathLibraryItem) libitem;
+			
+			if ((pitem.getFSType() == DWLibrary.FSTYPE_DECB) || (pitem.getFSType() == DWLibrary.FSTYPE_RBF)) 
+			{
+				compositePathViewer.displayPath(pitem, ourtab);
+				stackViewersLayout.topControl = compositePathViewer;
+				compositeViewers.layout();
+			}
+		}
+		else if (libitem.getType() == DWLibrary.TYPE_FOLDER)
+		{
+			currentLibraryItem = libitem;
+			
+			FolderLibraryItem pitem = (FolderLibraryItem) libitem;
+			
+			compositeNodeViewer.displayNode(pitem, ourtab);
+			stackViewersLayout.topControl = compositeNodeViewer;
+			compositeViewers.layout();
+			
+		}
+		else
+		{
+			currentLibraryItem = null;
+		}
+		
+	}
+
+
+
 
 	protected String getItemPath(TreeItem ti)
 	{
@@ -845,6 +876,9 @@ public class DWLibrary extends Composite
 
 	private void loadlibs()
 	{
+		
+	
+		
 		if (! MainWin.config.containsKey("Library.Local.updated") )
 		{
 			MainWin.config.addProperty("Library.Local.autocreated", System.currentTimeMillis());
@@ -862,6 +896,9 @@ public class DWLibrary extends Composite
 		cloudlib = MainWin.config.configurationAt("Library.Cloud");
 		
 	}
+
+
+
 
 
 
@@ -970,7 +1007,16 @@ public class DWLibrary extends Composite
 	}
 
 
-	
+	public void updateTree()
+	{
+		
+		if (this.tree != null)
+			tree.clearAll(true);
+		
+		if (this.currentLibraryItem != null)
+			this.openViewer(this.currentLibraryItem);
+		
+	}
 
 	
 	

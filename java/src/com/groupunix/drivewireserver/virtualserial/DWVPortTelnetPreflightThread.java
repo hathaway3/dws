@@ -50,7 +50,7 @@ public class DWVPortTelnetPreflightThread implements Runnable
 		Thread.currentThread().setName("tcppre-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 		
-		logger.info("preflight checks for new connection from " + sktchan.socket().getInetAddress().getHostName());
+		logger.debug("preflight checks for new connection from " + sktchan.socket().getInetAddress().getHostName());
 		
 		try
 		{

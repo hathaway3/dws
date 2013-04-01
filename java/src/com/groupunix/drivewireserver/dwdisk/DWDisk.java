@@ -1,5 +1,6 @@
 package com.groupunix.drivewireserver.dwdisk;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
@@ -10,7 +11,9 @@ import org.apache.commons.configuration.event.ConfigurationListener;
 import org.apache.commons.vfs.Capability;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs.RandomAccessContent;
 import org.apache.commons.vfs.VFS;
+import org.apache.commons.vfs.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -30,6 +33,8 @@ public abstract class DWDisk
 	protected FileObject fileobj = null;
 	protected DWDiskConfigListener configlistener;
 	protected DWDiskDrive drive;
+
+
 	
 	
 	// required for format implementation:
@@ -238,44 +243,62 @@ public abstract class DWDisk
 	 {
 		 // write out all sectors
 		   
-		 OutputStream fos;
-		   
+		 long time_getdata = 0;
+		 long time_write = 0;
+		 long time_clean = 0;
+		 long time_init = 0;
+		 
+		 long time_point = System.currentTimeMillis();
+		 
 		 logger.debug("Writing out all sectors from cache to " + fobj.getName());
 		 
-		 fos = fobj.getContent().getOutputStream();
+		 BufferedOutputStream fos = new BufferedOutputStream(fobj.getContent().getOutputStream());
 
-		   
+		 int ss = DWDefs.DISK_SECTORSIZE;
+ 		 
+ 		 if (this.getParams().containsKey("_sectorsize"))
+ 		 {
+ 			 try
+ 			 {
+ 				ss = (Integer) this.getParam("_sectorsize");
+ 			 }
+ 			 catch (NumberFormatException e)
+ 			 {
+ 				 // how did they get a non int value in there.. whatever
+ 			 }
+ 			 
+ 		 }
+		 
+ 		 byte[] zerofill = new byte[ss];
+ 		 
+ 		 time_init = System.currentTimeMillis() - time_point;
+ 		 
 		 for (int i = 0;i < this.sectors.size();i++)
 		 {
 		 	 // we do have a sector obj
 		 	 if (this.sectors.get(i) != null)
 		 	 {
-			 	 fos.write(this.sectors.get(i).getData(), 0, this.sectors.get(i).getData().length);
+		 		 time_point = System.currentTimeMillis();
+		 		 byte[] tmp = this.sectors.get(i).getData();
+		 		 time_getdata += (System.currentTimeMillis() - time_point);
+		 		 
+		 		 time_point = System.currentTimeMillis();
+			 	 fos.write(tmp, 0, tmp.length);
+			 	 time_write += (System.currentTimeMillis() - time_point);
+			 	 
+			 	 time_point = System.currentTimeMillis();
 		 		 this.sectors.get(i).makeClean();
+		 		 time_clean += (System.currentTimeMillis() - time_point);
 		 	 }
 		 	 // we dont, write 0 filled
 		 	 else
 		 	 {
-		 		 int ss = DWDefs.DISK_SECTORSIZE;
-		 		 
-		 		 if (this.getParams().containsKey("_sectorsize"))
-		 		 {
-		 			 try
-		 			 {
-		 				ss = (Integer) this.getParam("_sectorsize");
-		 			 }
-		 			 catch (NumberFormatException e)
-		 			 {
-		 				 // how did they get a non int value in there.. whatever
-		 			 }
-		 			 
-		 		 }
-		 		 
-		 		fos.write(new byte[ss], 0, ss);
-		 		 
+		 		fos.write(zerofill, 0, ss);
 		 	 }
 		 }
 			
+		 
+		 logger.debug("disk write timing = init: " + time_init + "  getdata: " + time_getdata + "  writestream: " + time_write + "  clean: " + time_clean);
 		 
 		 fos.close();
 		   
@@ -384,6 +407,9 @@ public abstract class DWDisk
 	{
 		return this.sectors;
 	}
+	
+	
+
 
 
 	

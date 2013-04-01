@@ -47,6 +47,8 @@ public class DiskTableUpdateThread implements Runnable
 						diskentry.getValue().clear();
 					}
 					
+					MainWin.updateDiskTabs();
+					
 					// clear cache
 					colval.clear();
 					

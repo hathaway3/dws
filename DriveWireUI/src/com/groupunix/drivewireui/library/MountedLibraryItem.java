@@ -7,11 +7,13 @@ import com.groupunix.drivewireui.MainWin;
 
 public class MountedLibraryItem extends LibraryItem
 {
+	private int diskno;
 
-	public MountedLibraryItem(String title)
+	public MountedLibraryItem(String title, int diskno)
 	{
 		super(title);
 		this.type = DWLibrary.TYPE_FOLDER_MOUNTED;
+		this.diskno = diskno;
 	}
 
 	

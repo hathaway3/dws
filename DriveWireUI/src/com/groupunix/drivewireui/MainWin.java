@@ -4,6 +4,8 @@ package com.groupunix.drivewireui;
 
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -74,10 +76,13 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireui.library.CloudLibraryItem;
 import com.groupunix.drivewireui.library.FolderLibraryItem;
 import com.groupunix.drivewireui.library.LibraryItem;
+import com.groupunix.drivewireui.library.MountedFolderLibraryItem;
 import com.groupunix.drivewireui.nineserver.NineServer;
 import com.groupunix.drivewireui.nineserver.OS9BufferGroup;
 import com.groupunix.drivewireui.plugins.DWBrowser;
 import com.groupunix.drivewireui.simplewizard.SimpleWizard;
+import com.groupunix.drivewireui.updatewizard.NoUpdateDialog;
+import com.groupunix.drivewireui.updatewizard.UpdateWizard;
 import com.swtdesigner.SWTResourceManager;
 
 
@@ -86,9 +91,14 @@ public class MainWin {
 
 	static Logger logger = Logger.getLogger(MainWin.class);
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
-
-	public static final String DWUIVersion = "4.3.2";
-	public static final String DWUIVersionDate = "03/21/2013";
+	
+	public static final int DWUIVersionMajor = 4;
+	public static final int DWUIVersionMinor = 3;
+	public static final int DWUIVersionBuild = 3;
+	public static final String DWUIVersionRevision = "c";
+	public static final String DWUIVersionDate = "03/31/2013";
+	
+	public static final Version DWUIVersion = new Version(DWUIVersionMajor, DWUIVersionMinor, DWUIVersionBuild, DWUIVersionRevision, DWUIVersionDate);
 	
 	public static final double LOWMEM_START = 4096 * 1024;
 	public static final double LOWMEM_STOP = LOWMEM_START * 2;
@@ -329,6 +339,8 @@ public class MainWin {
 		loadConfig();
 		
 		
+		
+		
 		// fire up a server
 		if (config.getBoolean("LocalServer",true) && !noServer)
 			startDWServer(args);
@@ -343,7 +355,7 @@ public class MainWin {
 			
 			// make ourselves look pretty
 			Display.setAppName("DriveWire");
-			Display.setAppVersion(MainWin.DWUIVersion);
+			Display.setAppVersion(MainWin.DWUIVersion.toString());
 		
 			display = new Display();
 			
@@ -396,6 +408,7 @@ public class MainWin {
 			
 			// setup library roots
 			
+		
 			if (! MainWin.config.containsKey("Library.Local.updated") )
 			{
 				MainWin.config.addProperty("Library.Local.autocreated", System.currentTimeMillis());
@@ -411,11 +424,13 @@ public class MainWin {
 			
 			HierarchicalConfiguration locallib = MainWin.config.configurationAt("Library.Local");
 			
-			MainWin.libraryroot = new LibraryItem[2];
+			MainWin.libraryroot = new LibraryItem[3];
 			
-			libraryroot[0] = new FolderLibraryItem("Local", locallib.getRoot());
+			libraryroot[0] = new MountedFolderLibraryItem("Mounted");
 			
-			libraryroot[1] = new CloudLibraryItem("CoCoCloud");
+			libraryroot[1] = new FolderLibraryItem("Local", locallib.getRoot());
+			
+			libraryroot[2] = new CloudLibraryItem("CoCoCloud");
 			
 			
 			MainWin window = new MainWin();
@@ -440,8 +455,14 @@ public class MainWin {
 				nsThread.start();
 			}
 			
+			// update check	
+			// if (config.getBoolean("CheckForUpdates", true))
+			//		doUpdateCheck();
+			
 			// get this party started
 			window.open(display, args);
+			
+			
 		}
 			
 		// game over.  flag to let threads know.
@@ -480,23 +501,18 @@ public class MainWin {
 	{
 		if ((dwThread != null) && (!dwThread.isInterrupted()))
 		{
-			int tid = MainWin.taskman.addTask("Stop local server");
 			
-			MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE, "Stopping DriveWire server...");
-			
-			// interrupt the server..
+			// 	interrupt the server..
 			dwThread.interrupt();
 			
-			try 
-			{
-				dwThread.join(3000);
-				MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE, "DriveWire server shut down.");
+				try 
+				{
+					dwThread.join(3000);
 				
-			} 
-			catch (InterruptedException e) 
-			{
-				MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_FAILED, "Interrupted while waiting for the server to exit.");
-			}
+				} 
+				catch (InterruptedException e) 
+				{
+				}
 			
 		}
 	}
@@ -547,6 +563,11 @@ public class MainWin {
 			MainWin.host = config.getString("LastHost",default_Host);
 			MainWin.port = config.getInt("LastPort",default_Port);
 			MainWin.instance = config.getInt("LastInstance",default_Instance);
+			
+			
+			// clear update lock
+			config.setProperty("UpdateRestartRequired", false);
+			
 			
 			// master file
 			try
@@ -923,6 +944,22 @@ public class MainWin {
 		
 		
 		
+		new MenuItem(menu_tools, SWT.SEPARATOR);
+		
+		
+		
+		final MenuItem mntmCheckUpdates = new MenuItem(menu_tools, SWT.NONE);
+		mntmCheckUpdates.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+					doUpdateCheck();
+				
+			}
+		});
+		mntmCheckUpdates.setText("Check for new version...");
+		mntmCheckUpdates.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/wand.png"));
+		
 		
 		
 		
@@ -1041,6 +1078,9 @@ public class MainWin {
 		
 		
 		
+		
+		
+		
 		mntmUserInterface.addArmListener(new ArmListener() {
 			public void widgetArmed(ArmEvent e) 
 			{
@@ -1051,6 +1091,7 @@ public class MainWin {
 				
 				mntmUseRemoteFile.setSelection(config.getBoolean("UseRemoteFilebrowser", false));
 				mntmNoBrowsers.setSelection(config.getBoolean("NoBrowsers", false));
+				mntmCheckUpdates.setSelection(config.getBoolean("CheckForUpdates", true));
 			}
 		});
 		
@@ -1420,7 +1461,8 @@ public class MainWin {
 		mitemReload.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				MainWin.sendCommand("dw disk reload " + table.getSelectionIndex(), false);
+				//MainWin.sendCommand("dw disk reload " + table.getSelectionIndex(), false);
+				MainWin.sendCommand("dw disk reload " + table.getSelectionIndex());
 			}
 		});
 		mitemReload.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/toolbar/arrow-refresh.png"));
@@ -1600,10 +1642,128 @@ public class MainWin {
 	
 	
 	
+	protected static String doVerifyVersion() 
+	{
+		String res = "";
+		
+		String cr = System.getProperty("line.separator");
+		
+		try 
+		{
+			res = "Running version is " + MainWin.DWUIVersion.toString() + cr + cr;
+			
+			Updater up;
+			
+			up = new Updater();
+			
+			Version ver = up.getVersion(MainWin.DWUIVersionMajor, MainWin.DWUIVersionMinor, MainWin.DWUIVersionBuild, MainWin.DWUIVersionRevision);
+			
+			if (ver == null)
+			{
+				res += "No definition was found for the running version, cannot verify.";
+			}
+			else
+			{
+				
+				for (String fn : ver.getFiles().keySet())
+				{
+					
+					try 
+					{
+						File f = new File(fn);
+						
+						String cursha = UIUtils.getSHA1(new FileInputStream(f));
+							
+						if (!cursha.equalsIgnoreCase( ver.getFiles().get(fn)))
+						{
+							res += "File '" + fn + "' checksum does not match the version definition.";
+						}
+							
+					} 
+					
+					catch (FileNotFoundException e) 
+					{
+						
+						res += "File '" + fn + "' is defined for this version, but does not exist locally.";
+					} 
+				}
+					
+				
+				
+			}
+			
+		} 
+		catch (Exception e) 
+		{
+			res += "Error while verifying version: " + e.getClass().getName() + ": " + e.getMessage();
+			e.printStackTrace();
+		}
+		
+		return res;
+	}
 	
 	
 	
-	
+	protected static void doUpdateCheck()
+	{
+		doUpdateCheck(false);
+	}
+
+	protected static void doUpdateCheck(boolean force) 
+	{
+		
+		try 
+		{
+			Updater up;
+			
+			up = new Updater();
+			
+			if ((force) || ((up.getLatestVersion().newerThan(MainWin.DWUIVersion)) && (!isIgnoredUpdate(up.getLatestVersion()))))
+			{
+				// update available..
+				
+				if (config.getBoolean("UpdateRestartRequired", false))
+				{
+					showError("A restart is pending", "We cannot do further updates until DriveWire is restarted", "An update is available for the running version, but a newer version is already installed.  Please check for updates again after restarting DriveWire.");
+				}
+				else
+				{
+					UpdateWizard uz = new UpdateWizard(up);
+					
+					WizardDialog dialog = new WizardDialog(shell, uz);
+				    dialog.create();
+				    dialog.open();
+				}
+			}
+			else
+			{
+				NoUpdateDialog nd = new NoUpdateDialog(shell);
+				nd.open();
+				
+			}
+		} 
+		catch (Exception e) 
+		{
+			MainWin.showError("Error while checking for updates", e.getMessage(), e.getMessage(), true);
+			
+		}
+		
+		
+	}
+
+
+	private static boolean isIgnoredUpdate(Version ver) 
+	{
+		
+		for (int x = 0; x <= MainWin.config.getMaxIndex("IgnoreUpdateVersion");x++)
+		{
+			if (MainWin.config.getString("IgnoreUpdateVersion(" + x + ")","").equals(ver.toString()) )
+				return true;
+		}
+		
+		return false;
+	}
+
 
 	public static void setSashformWeights(int[] w)
 	{
@@ -1704,7 +1864,7 @@ public class MainWin {
 
 
 
-	protected static void doShutdown() 
+	public static void doShutdown() 
 	{
 	  
 	
@@ -1734,66 +1894,70 @@ public class MainWin {
 		  
 		  
 		  // save window pos
-							
-		  sdwin.setStatus("Saving main window layout...",40);
-	
-	
-						  
-		  config.setProperty("MainWin_Width", shell.getSize().x);
-		  config.setProperty("MainWin_Height", shell.getSize().y);
-			
-		  config.setProperty("MainWin_x", shell.getLocation().x);
-		  config.setProperty("MainWin_y", shell.getLocation().y);
-			
-		  config.setProperty("MainWin_Tab", MainWin.tabFolderOutput.getSelectionIndex());
-			
-		  //sanity check, wizard might have screwed these
-		  if (!(sashForm.getWeights()[0] == 0) && !(sashForm.getWeights()[1] == 0))
-			  config.setProperty("SashForm_Weights", sashForm.getWeights());
-			
-		  sdwin.setStatus("Saving main window layout...",50);
-
-		  for (int i = 0;i<table.getColumnCount();i++)
-		  {
-			  config.setProperty("DiskTable_Items("+ i +")", table.getColumn(table.getColumnOrder()[i]).getData("param") );
-			  config.setProperty(table.getColumn(i).getData("param") +"_ColWidth", table.getColumn(i).getWidth());
-		  }
-			
-		  
-		  sdwin.setStatus("Saving disk window layouts...",65);
 		
-		  
+		  if (shell != null)
+		  {
+			  sdwin.setStatus("Saving main window layout...",40);
+		
+		
+							  
+			  config.setProperty("MainWin_Width", shell.getSize().x);
+			  config.setProperty("MainWin_Height", shell.getSize().y);
+				
+			  config.setProperty("MainWin_x", shell.getLocation().x);
+			  config.setProperty("MainWin_y", shell.getLocation().y);
+				
+			  config.setProperty("MainWin_Tab", MainWin.tabFolderOutput.getSelectionIndex());
+				
+			  //sanity check, wizard might have screwed these
+			  if (!(sashForm.getWeights()[0] == 0) && !(sashForm.getWeights()[1] == 0))
+				  config.setProperty("SashForm_Weights", sashForm.getWeights());
+				
+			  sdwin.setStatus("Saving main window layout...",50);
 	
-		  for (int i = 0;i<256;i++)
-		  {
-			  sdwin.setProgress(65 + (i / 8));
-			
-			  if (disks != null)
-				  if ((disks[i] != null) && (disks[i].hasDiskwin()))
-				  {
-					  disks[i].getDiskwin().close();
-					  config.setProperty("DiskWin_"+ i+"_open",true);
-				  }
-		  }
-		  
-		  sdwin.setStatus("Saving library window layouts...",95);
-		  
-		  int tabs = 0;
-		   
-		  for (Control c : MainWin.tabFolderOutput.getTabList() )
-		  {
-			  if  ((c.getClass().getCanonicalName().equals("com.groupunix.drivewireui.DWLibrary")))
+			  for (int i = 0;i<table.getColumnCount();i++)
 			  {
-				  if (!((DWLibrary) c).getOurTab().isDisposed())
-				  {
-					  config.setProperty("LibraryTab_" + tabs, ((DWLibrary) c).getCurrentItemPath());
-					  tabs++;
-				  }
+				  config.setProperty("DiskTable_Items("+ i +")", table.getColumn(table.getColumnOrder()[i]).getData("param") );
+				  config.setProperty(table.getColumn(i).getData("param") +"_ColWidth", table.getColumn(i).getWidth());
+			  }
+				
+			  
+			  sdwin.setStatus("Saving disk window layouts...",65);
+			
+			  
+		
+			  for (int i = 0;i<256;i++)
+			  {
+				  sdwin.setProgress(65 + (i / 8));
+				
+				  if (disks != null)
+					  if ((disks[i] != null) && (disks[i].hasDiskwin()))
+					  {
+						  disks[i].getDiskwin().close();
+						  config.setProperty("DiskWin_"+ i+"_open",true);
+					  }
 			  }
 			  
+			  sdwin.setStatus("Saving library window layouts...",95);
+			  
+			  int tabs = 0;
+			   
+			  for (Control c : MainWin.tabFolderOutput.getTabList() )
+			  {
+				  if  ((c.getClass().getCanonicalName().equals("com.groupunix.drivewireui.DWLibrary")))
+				  {
+					  if (!((DWLibrary) c).getOurTab().isDisposed())
+					  {
+						  config.setProperty("LibraryTab_" + tabs, ((DWLibrary) c).getCurrentItemPath());
+						  tabs++;
+					  }
+				  }
+				  
+			  }
+			  
+			  config.setProperty("LibraryTabs", tabs);
+
 		  }
-		  
-		  config.setProperty("LibraryTabs", tabs);
 		  
 		  sdwin.setStatus("Exiting...",100);
 		  
@@ -1813,13 +1977,20 @@ public class MainWin {
 				
 			}
 		  
+		  // do updated file replacement on the way out..
+		  UIUtils.replaceFiles(".", "");
+		  
 		  System.exit(0);
 	}
 
 
 	
 
-	 void createOutputTabs()
+	 
+
+
+
+	void createOutputTabs()
 	{
 		tabFolderOutput = new CTabFolder(sashForm, SWT.BORDER);
 		tabFolderOutput.setSimple(false);
@@ -2138,6 +2309,9 @@ public class MainWin {
 		
 		addNewBrowserTab(null);
 		
+		//tabFolderOutput.setSelection(0);
+		//tabFolderOutput.update();
+		
 		tabFolderOutput.setSelection(config.getInt("MainWin_Tab", 0));
 	}
 	
@@ -2403,6 +2577,7 @@ public class MainWin {
 		
 		MainWin.table.setRedraw(false);
 		
+		
 		for (int i = 0;i<256;i++)
 		{
 			MainWin.clearDiskTableEntry(i);
@@ -2419,6 +2594,7 @@ public class MainWin {
 					setDiskTableEntry(i,key,disks[i].getParam(key).toString());
 				}
 				
+			
 			}
 			
 		}
@@ -2429,6 +2605,20 @@ public class MainWin {
 		}
 	
 		MainWin.table.setRedraw(true);
+		
+		
+		
+		for (Control cti : MainWin.tabFolderOutput.getTabList())
+		{
+			if  ((cti.getClass().getCanonicalName().equals("com.groupunix.drivewireui.DWLibrary")))
+			  {
+				  if (!((DWLibrary) cti).getOurTab().isDisposed())
+				  {
+			
+					  ((DWLibrary)cti).updateTree();
+				  }
+			}
+		}
 		
 	}
 		
@@ -2750,8 +2940,44 @@ public class MainWin {
 						  }
 					  });
 		  }
-		  else if (cmd.equals("/wizard"))
+		  else if (cmd.equals("/sha"))
 		  {
+			  display.asyncExec(
+					  new Runnable() {
+						  public void run()
+						  {  
+							  String txt = UIUtils.getSHAForDir(".", "."); 
+							  
+							  MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE , txt);
+							 
+						  }
+					  });
+			
+		  }
+		  else if (cmd.equals("/forceupdate"))
+		  {
+			  display.asyncExec(
+					  new Runnable() {
+						  public void run()
+						  {  
+							  doUpdateCheck(true);
+							  
+							  MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE , "Forced update complete");
+						  }
+					  });
+			
+		  }
+		  else if (cmd.equals("/verify"))
+		  {
+			  display.asyncExec(
+					  new Runnable() {
+						  public void run()
+						  {  
+							  
+							  
+							  MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE , doVerifyVersion());
+						  }
+					  });
 			
 		  }
 		  else if (cmd.equals("/mem"))
@@ -2805,6 +3031,9 @@ public class MainWin {
 	
 
 	
+	
+
+
 	public static String getHost()
 	{
 		return host;
@@ -3265,6 +3494,7 @@ public class MainWin {
 			MainWin.driveactivity = true;
 		}
 		
+		
 	}
 
 	
@@ -3389,6 +3619,28 @@ public class MainWin {
 		}
 	}
 
+	
+	public static void updateDiskTabs()
+	{
+		display.syncExec(new Runnable() {
+			  public void run()
+			  {
+				for (Control cti : MainWin.tabFolderOutput.getTabList())
+				{
+					if  ((cti.getClass().getCanonicalName().equals("com.groupunix.drivewireui.DWLibrary")))
+					  {
+						  if (!((DWLibrary) cti).getOurTab().isDisposed())
+						  {
+					
+							  ((DWLibrary)cti).updateTree();
+						  }
+					}
+				}
+			  }
+		});
+	}
+	
+	
 
 	public static Display getDisplay()
 	{

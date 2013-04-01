@@ -5,6 +5,11 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class ShutdownWin
 {
@@ -29,8 +34,13 @@ public class ShutdownWin
 	public void open()
 	{
 		createContents();
-		this.x = parent.getLocation().x + (parent.getSize().x / 2) - 180;
-		this.y = parent.getLocation().y + (parent.getSize().y / 2) - 90;
+		
+		if (parent != null)
+		{
+			this.x = parent.getLocation().x + (parent.getSize().x / 2) - 180;
+			this.y = parent.getLocation().y + (parent.getSize().y / 2) - 90;
+		}
+		
 		shlShuttingDown.setLocation(x , y);
 		shlShuttingDown.open();
 		shlShuttingDown.layout();
@@ -44,23 +54,51 @@ public class ShutdownWin
 	 */
 	private void createContents()
 	{
-		shlShuttingDown = new Shell(Display.getCurrent(), SWT.DIALOG_TRIM);
-		shlShuttingDown.setSize(369, 181);
+		shlShuttingDown = new Shell(Display.getCurrent(), SWT.NO_TRIM);
+		shlShuttingDown.setSize(348, 159);
 		shlShuttingDown.setText("Shutting down...");
+		shlShuttingDown.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
-		lblPleaseWaitA = new Label(shlShuttingDown, SWT.WRAP);
-		lblPleaseWaitA.setBounds(10, 21, 343, 36);
-		lblPleaseWaitA.setText("Please wait a moment for DriveWire to save the configuration and shutdown cleanly.");
+		Composite composite = new Composite(shlShuttingDown, SWT.BORDER);
+		composite.setLayout(new GridLayout(3, false));
 		
-		progressBar = new ProgressBar(shlShuttingDown, SWT.SMOOTH);
-		progressBar.setBounds(31, 81, 295, 17);
+		Label label = new Label(composite, SWT.NONE);
+		label.setText("    ");
+		new Label(composite, SWT.NONE);
+		
+		Label label_1 = new Label(composite, SWT.NONE);
+		label_1.setText("    ");
+		new Label(composite, SWT.NONE);
+		
+		lblPleaseWaitA = new Label(composite, SWT.WRAP);
+		lblPleaseWaitA.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.NORMAL));
+		lblPleaseWaitA.setAlignment(SWT.CENTER);
+		lblPleaseWaitA.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		lblPleaseWaitA.setText("Please wait a moment for DriveWire to save\r\nthe configuration and shutdown cleanly...");
+		new Label(composite, SWT.NONE);
+		new Label(composite, SWT.NONE);
+		new Label(composite, SWT.NONE);
+		new Label(composite, SWT.NONE);
+		new Label(composite, SWT.NONE);
+		
+		progressBar = new ProgressBar(composite, SWT.SMOOTH);
+		progressBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		progressBar.setSize(184, 181);
 		progressBar.setMinimum(0);
 		progressBar.setMaximum(100);
 		progressBar.setSelection(0);
+		new Label(composite, SWT.NONE);
+		new Label(composite, SWT.NONE);
+		new Label(composite, SWT.NONE);
+		new Label(composite, SWT.NONE);
+		new Label(composite, SWT.NONE);
 		
 		
-		lblStatus = new Label(shlShuttingDown, SWT.WRAP);
-		lblStatus.setBounds(31, 110, 295, 36);
+		lblStatus = new Label(composite, SWT.WRAP);
+		lblStatus.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+		lblStatus.setAlignment(SWT.CENTER);
+		lblStatus.setSize(123, 181);
+		new Label(composite, SWT.NONE);
 
 	}
 
@@ -106,6 +144,4 @@ public class ShutdownWin
 		}
 		
 	}
-
-	
 }

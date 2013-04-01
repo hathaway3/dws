@@ -246,7 +246,7 @@ public class BugReportWin extends Dialog {
 			if (this.getBtnUIConf().getSelection())
 			{
 				// DWUI version
-				surl += "&" + encv("uiv",MainWin.DWUIVersion);
+				surl += "&" + encv("uiv",MainWin.DWUIVersion.toString());
 			
 				// DWUI config
 				StringWriter sw = new StringWriter();

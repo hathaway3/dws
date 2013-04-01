@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -129,7 +130,7 @@ public class DWDMKDisk extends DWDisk
 	}
 
 
-	private void loadSectors() throws DWImageFormatException
+	private void loadSectors() throws DWImageFormatException, FileSystemException
 	{
 		this.sectors.clear();
 		// hard coded to 18 spt until i find a reason not to
@@ -163,7 +164,7 @@ public class DWDMKDisk extends DWDisk
 	
 	
 	
-	private void addSectorFrom(DWDMKDiskIDAM idam, int track) throws DWImageFormatException
+	private void addSectorFrom(DWDMKDiskIDAM idam, int track) throws DWImageFormatException, FileSystemException
 	{
 		int lsn = calcLSN(idam);
 		

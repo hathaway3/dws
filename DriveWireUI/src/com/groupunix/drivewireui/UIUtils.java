@@ -3,6 +3,7 @@ package com.groupunix.drivewireui;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -15,6 +16,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.UnknownHostException;
+import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -422,22 +425,78 @@ public class UIUtils {
 		
 	}
 
-	public static void fileCopy(String infile, String outfile) throws IOException 
+	
+	public static void fileUnGzip(String src, String dst) throws IOException
 	{
-		File f1 = new File(infile);
-		File f2 = new File(outfile);
-		InputStream in = new FileInputStream(f1);
-		  
-		OutputStream out = new FileOutputStream(f2);
+		File destFile = new File(dst);
+		File sourceFile = new File(src);
+		
+		 OutputStream out = new FileOutputStream(destFile);
+		 InputStream in = new FileInputStream(sourceFile);
+		 
+		 try 
+		 {
+		      in = new GZIPInputStream(in);
+		      
+		      byte[] buffer = new byte[65536];
+		      int noRead;
+		      while ((noRead = in.read(buffer)) != -1) 
+		      {
+		        out.write(buffer, 0, noRead);
+		      }
+		 } 
+		 finally 
+		 {
+		      try { out.close(); in.close(); } catch (Exception e) {}
+		    
+		 }
+	}
+	
+	
+	public static void fileCopy(String src, String dst) throws IOException
+	{
+		File destFile = new File(dst);
+		File sourceFile = new File(src);
+		
+	    if(!destFile.exists()) {
+	        destFile.createNewFile();
+	    }
 
-		byte[] buf = new byte[1024];
-		int len;
-		while ((len = in.read(buf)) > 0)
-		{
-			out.write(buf, 0, len);
-		}
-		in.close();
-		out.close();
+	    FileChannel source = null;
+	    FileChannel destination = null;
+	    FileInputStream sis = null;
+	    FileOutputStream dos = null;
+	    
+	    try {
+	    	sis = new FileInputStream(sourceFile);
+	    	dos = new FileOutputStream(destFile);
+	    	
+	        source = sis.getChannel();
+	        destination = dos.getChannel();
+
+	        long count = 0;
+	        long size = source.size();              
+	        while((count += destination.transferFrom(source, count, size-count))<size);
+	    }
+	    finally {
+	    	if (sis != null)
+	    	{
+	    		sis.close();
+	    		
+	    	}
+	    	if (dos != null)
+	    	{
+	    		dos.close();
+	    	}
+	    	if(source != null) {
+	            source.close();
+	        }
+	        if(destination != null) {
+	            destination.close();
+	        }
+	        
+	       
+	    }
 		
 	}
 
@@ -1081,5 +1140,89 @@ public class UIUtils {
 		return res;
 	}
 
+
+	public static String getSHAForDir(String path, String prefix) 
+	{
+		String res = "";
+		
+		 
+		File root = new File( path );
+	    File[] list = root.listFiles();
+
+	    for ( File f : list ) 
+	    {
+	    
+	    	if ( f.isDirectory() ) 
+	    	{
+	                res += getSHAForDir( f.getAbsolutePath(), prefix + "/" + f.getName());
+	        }
+	        else 
+	    	{
+	        	try 
+	        	{
+					res += "<file sha=\"" + getSHA1(new FileInputStream(f)) + "\" name=\"";
+					res += prefix + "/" + f.getName() + "\"/>" + System.getProperty("line.separator");
+				} 
+	        	catch (FileNotFoundException e) 
+	        	{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	        	
+	        	
+	        	
+	            
+	            
+	    	}
+	        
+	    }
+		
+		return res;
+	}
+
+	
+	
+	public static void replaceFiles(String path, String prefix) 
+	{
+		 
+		File root = new File( path );
+	    File[] list = root.listFiles();
+
+	    for ( File f : list ) 
+	    {
+	    
+	    	if ( f.isDirectory() ) 
+	    	{
+	                replaceFiles( f.getAbsolutePath(), prefix + "/" + f.getName());
+	        }
+	        else if (f.getName().endsWith(".gzt"))
+	    	{
+	        	try 
+	        	{
+	        		UIUtils.fileUnGzip(f.getAbsolutePath(), f.getAbsolutePath().substring(0, f.getAbsolutePath().length() - 4));
+	        		f.deleteOnExit();
+				} 
+	        	catch (FileNotFoundException e) 
+	        	{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
+	        	catch (IOException e) 
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	        	
+	        	
+	        	
+	            
+	            
+	    	}
+	        
+	    }
+		
+	}
+	
+	
 	
 }

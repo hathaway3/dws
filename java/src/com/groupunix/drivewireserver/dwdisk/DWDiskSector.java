@@ -2,6 +2,7 @@ package com.groupunix.drivewireserver.dwdisk;
 
 import java.io.IOException;
 
+import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.RandomAccessContent;
 import org.apache.commons.vfs.util.RandomAccessMode;
 
@@ -17,15 +18,18 @@ public class DWDiskSector
 	private boolean direct;
 	private RandomAccessContent raf;
 	
-	public DWDiskSector( DWDisk disk, int lsn, int sectorsize, boolean direct)
+	
+	public DWDiskSector( DWDisk disk, int lsn, int sectorsize, boolean direct) throws FileSystemException
 	{
 		this.LSN = lsn;
 		this.sectorsize = sectorsize;
 		this.direct = direct;
+		this.disk = disk;
+		
 		if (!direct)
 			this.data = new byte[sectorsize];
 		
-		this.disk = disk;
+		
 	}
 
 	public int getLSN() {
@@ -34,7 +38,7 @@ public class DWDiskSector
 
 	public void setData(byte[] newdata) 
 	{
-		if (direct)
+		if (this.data == null)
 		{
 			this.data = new byte[newdata.length];
 		}	
@@ -48,10 +52,9 @@ public class DWDiskSector
 	{
 		this.dirty = dirty;
 		
-		if (direct)
+		if (this.data == null)
 		{
 			this.data = new byte[newdata.length];
-			this.dirty = true;
 		}
 		
 		System.arraycopy(newdata, 0, this.data, 0, this.sectorsize);
@@ -88,6 +91,7 @@ public class DWDiskSector
 
 	private byte[] getFileSector() throws IOException
 	{
+		
 		raf = this.disk.getFileObject().getContent().getRandomAccessContent(RandomAccessMode.READ);
 		long pos = this.LSN * this.sectorsize;
 		raf.seek(pos);
