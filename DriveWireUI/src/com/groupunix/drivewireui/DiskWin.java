@@ -403,10 +403,13 @@ public class DiskWin {
 		
 		// reload history
 		comboDiskPath.removeAll();
-		List<String> dhist = MainWin.getDiskHistory();
-		for (String d : dhist)
+		
+		if ( MainWin.getDiskHistory() != null)
 		{
-			comboDiskPath.add(d, 0);
+			for (String d : MainWin.getDiskHistory())
+			{
+				comboDiskPath.add(d, 0);
+			}
 		}
 		
 		if (currentDisk.isLoaded())

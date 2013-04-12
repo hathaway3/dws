@@ -48,8 +48,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 public class DriveWireServer 
 {
 
-	public static final String DWServerVersion = "4.3.3c";
-	public static final String DWServerVersionDate = "03/31/2013";
+	public static final String DWServerVersion = "4.3.3e";
+	public static final String DWServerVersionDate = "04/12/2013";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;
@@ -393,13 +393,12 @@ public class DriveWireServer
 		    	dwProtoHandlers.add(new DWProtocolHandler(hno, hconf));
 		    }
 		    
+		    dwProtoHandlerThreads.add(new Thread(dwProtoHandlers.get(hno)) );
 		    
 		    
 		    if (hconf.getBoolean("AutoStart", true))
 		    {
-		    	logger.info("Starting handler #" + hno + ": " + hconf.getString("[@name]","unnamed") + " (" + dwProtoHandlers.get(hno).getClass().getSimpleName() + ")");
-		    	dwProtoHandlerThreads.add(new Thread(dwProtoHandlers.get(hno)) );
-		    	dwProtoHandlerThreads.get(dwProtoHandlerThreads.size()-1).start();	
+		    	startHandler(hno);
     	    }
 		    
 		    hno++;
@@ -409,6 +408,51 @@ public class DriveWireServer
 
 
 
+	public static void startHandler(int hno) 
+	{
+		logger.info("Starting handler #" + hno + ": " + dwProtoHandlers.get(hno).getClass().getSimpleName() );
+    	
+    	dwProtoHandlerThreads.get(hno).start();	
+    	
+    	while (!dwProtoHandlers.get(hno).isReady())
+    	{
+    		try 
+    		{
+				Thread.sleep(100);
+			} 
+    		catch (InterruptedException e) 
+    		{
+    			System.out.println("Interrupted while waiting for instance " + hno + "  to become ready.");
+    		}
+    	}
+	}
+
+
+	public static void stopHandler(int hno) 
+	{
+		logger.info("Stopping handler #" + hno + ": " + dwProtoHandlers.get(hno).getClass().getSimpleName() );
+		
+		HierarchicalConfiguration hc = dwProtoHandlers.get(hno).getConfig();
+		
+		dwProtoHandlers.get(hno).shutdown();	
+		
+		try 
+		{
+			dwProtoHandlerThreads.get(hno).join(15000);
+		} 
+		catch (InterruptedException e) 
+		{
+			logger.warn("Interrupted while waiting for handler " + hno + " to exit");
+		}
+		
+		dwProtoHandlers.remove(hno);
+		dwProtoHandlers.add(hno,  new DWProtocolHandler(hno, hc));
+		dwProtoHandlerThreads.remove(hno);
+		dwProtoHandlerThreads.add(hno , new Thread(dwProtoHandlers.get(hno)) );
+		
+    }
+    
+    
 	private static boolean checkRXTXLoaded() 
 	{
 		// try to load RXTX, redirect it's version messages into our logs
@@ -866,32 +910,11 @@ public class DriveWireServer
 
 	public static void restartHandler(int handler)
 	{
-	/*	String configfile = dwProtoHandlers[handler].config.getPath();
 		
 		logger.info("Restarting handler #" + handler);
 		
-		// signal shutdown
-		dwProtoHandlers[handler].shutdown();
-		dwProtoHandlerThreads[handler].interrupt();
-		
-		// join thread to wait for death to finish
-		try
-		{
-			dwProtoHandlerThreads[handler].join();
-		} 
-		catch (InterruptedException e)
-		{
-			e.printStackTrace();
-		}
-		
-		// start handler
-		dwProtoHandlers[handler] = new DWProtocolHandler(handler, configfile);
-		dwProtoHandlerThreads[handler] = new Thread(dwProtoHandlers[handler]);
-		dwProtoHandlerThreads[handler].start();	
-		
-		*/
-		
-		logger.error("instance restart not implemented!");
+		stopHandler(handler);
+		startHandler(handler);
 		
 	}
 
@@ -902,9 +925,9 @@ public class DriveWireServer
 
 	public static boolean handlerIsAlive(int h)
 	{
-		if (dwProtoHandlers.get(h) != null)
+		if ((dwProtoHandlers.get(h) != null) && (dwProtoHandlerThreads.get(h) != null))
 		{
-			if ((!dwProtoHandlers.get(h).isDying()) && (dwProtoHandlerThreads.get(h) != null) && (dwProtoHandlerThreads.get(h).isAlive() ))
+			if ((!dwProtoHandlers.get(h).isDying()) && (dwProtoHandlerThreads.get(h).isAlive() ))
 			{
 				return(true);
 			}

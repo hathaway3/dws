@@ -147,6 +147,7 @@ public class DWDefs
 	public static final byte RC_SERVER_NOT_IMPLEMENTED 			= (byte) 204;
 	public static final byte RC_SERVER_NOT_READY 				= (byte) 205;
 	public static final byte RC_INSTANCE_NOT_READY				= (byte) 206;
+	public static final byte RC_INSTANCE_ALREADY_STARTED		= (byte) 207;
 	
 	public static final byte RC_UI_ERROR 			 			= (byte) 220;
 	public static final byte RC_UI_MALFORMED_REQUEST  			= (byte) 221;

@@ -120,10 +120,10 @@ public class CreateDiskWin extends Dialog {
 			{
 				final String curpath = textPath.getText();
 				
-				SwingUtilities.invokeLater(new Runnable() 
-				{
+				//SwingUtilities.invokeLater(new Runnable() 
+				//{
 						
-						public void run() 
+				//		public void run() 
 						{
 							final String filename = MainWin.getFile(true, false, curpath, "File for new disk image..", "Create");
 								// 	check if a file was selected
@@ -143,7 +143,7 @@ public class CreateDiskWin extends Dialog {
 							}
 						}
 					
-				});
+			//	});
 			
 			}
 		});

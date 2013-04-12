@@ -15,12 +15,17 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -1221,6 +1226,52 @@ public class UIUtils {
 	        
 	    }
 		
+	}
+
+	
+	
+	public static ArrayList<String> getNetworkInterfaceIPs() 
+	{
+		ArrayList<String> res = new ArrayList<String>();
+		
+	    Enumeration<NetworkInterface> nets;
+		try {
+			nets = NetworkInterface.getNetworkInterfaces();
+			
+			for (NetworkInterface netint : Collections.list(nets))
+	        {
+		        Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
+		        for (InetAddress inetAddress : Collections.list(inetAddresses)) 
+		        {
+		            res.add(inetAddress.getHostAddress());
+		        }
+	        }
+	     
+			
+		} catch (SocketException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	        
+	
+		return res;
+	}  
+	
+	
+
+	public static boolean isServerLocal() 
+	{
+		boolean res = false;
+		
+		for (String ip :  getNetworkInterfaceIPs())
+		{
+			
+			if (ip.equals(MainWin.getHost()))
+				res = true;
+		}
+		
+		return res;
 	}
 	
 	

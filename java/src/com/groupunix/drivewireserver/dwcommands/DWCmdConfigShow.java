@@ -82,8 +82,9 @@ public class DWCmdConfigShow extends DWCommand {
 		for (Iterator<String> i = dwProto.getConfig().getKeys(); i.hasNext();)
 		{
 			String key = i.next();
-			String value = StringUtils.join(dwProto.getConfig().getStringArray(key), ", ");
-		
+			//String value = StringUtils.join(dwProto.getConfig().getStringArray(key), ", ");
+			String value = dwProto.getConfig().getProperty(key).toString();
+			
 			text += key + " = " + value + "\r\n";
 		            
 		}

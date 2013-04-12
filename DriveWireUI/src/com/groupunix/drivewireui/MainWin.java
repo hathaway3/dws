@@ -95,8 +95,8 @@ public class MainWin {
 	public static final int DWUIVersionMajor = 4;
 	public static final int DWUIVersionMinor = 3;
 	public static final int DWUIVersionBuild = 3;
-	public static final String DWUIVersionRevision = "c";
-	public static final String DWUIVersionDate = "03/31/2013";
+	public static final String DWUIVersionRevision = "e";
+	public static final String DWUIVersionDate = "04/12/2013";
 	
 	public static final Version DWUIVersion = new Version(DWUIVersionMajor, DWUIVersionMinor, DWUIVersionBuild, DWUIVersionRevision, DWUIVersionDate);
 	
@@ -167,7 +167,7 @@ public class MainWin {
 	private static Menu menu_config;
 	private static Menu menu_help;
 
-	private static MenuItem mntmChooseInstance;	
+	private static MenuItem mntmInstances;	
 	private static MenuItem mntmInitialConfig;
 	private static MenuItem mntmUserInterface;
 	
@@ -274,6 +274,7 @@ public class MainWin {
 	protected static int logNoticeLevel = -1;
 	
 	public static Vector<OS9BufferGroup> os9BufferGroups;
+	private static boolean serverLocal = false;
 	
 	
 	public static void main(String[] args) 
@@ -460,6 +461,8 @@ public class MainWin {
 			//		doUpdateCheck();
 			
 			// get this party started
+			
+			
 			window.open(display, args);
 			
 			
@@ -778,8 +781,13 @@ public class MainWin {
 
 	private static void updateTitlebar() 
 	{
-		String txt = "DriveWire - " + host + ":" + port + " [" + instance + "]";
-
+		String txt = "DriveWire - " + host + ":" + port + " (";
+		
+		if (MainWin.getInstanceConfig() != null)
+			txt += MainWin.getInstanceConfig().getString("[@name]", "Instance " + instance) + ")";
+		else
+			txt += "Instance " + instance + ")";
+		
 		shell.setText(txt);
 	}
 
@@ -842,30 +850,89 @@ public class MainWin {
 		});
 		mntmChooseServer.setText("Choose server...");
 		
-		mntmChooseInstance = new MenuItem(menu_file, SWT.NONE);
-		mntmChooseInstance.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/view-list-tree-4.png"));
-		mntmChooseInstance.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
+		
+		mntmInstances = new MenuItem(menu_file, SWT.CASCADE);
+		mntmInstances.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/view-list-tree-4.png"));
+		mntmInstances.setText("Choose instance");
+		
+		final Menu menuInstances = new Menu(mntmInstances);
+		mntmInstances.setMenu(menuInstances);
+		
+		
+		mntmInstances.addArmListener(new ArmListener() 
+		{
+			public void widgetArmed(ArmEvent e) 
 			{
-				ChooseInstanceWin window = new ChooseInstanceWin(shell,SWT.DIALOG_TRIM);
-				
-				try 
+				for (MenuItem i : menuInstances.getItems())
 				{
-					window.open();
-				} 
-				catch (DWUIOperationFailedException e1) 
-				{
-					showError("Error sending command", e1.getMessage() , UIUtils.getStackTrace(e1));
-				} 
-				catch (IOException e1) 
-				{
-					showError("Error sending command", e1.getMessage(), UIUtils.getStackTrace(e1));
+					i.dispose();
 				}
-			
+				
+				try
+				{
+					List<String> res = UIUtils.loadList(MainWin.getInstance(), "ui server show instances");
+					
+					if (res !=null)
+					{
+						for (String l : res)
+						{
+							final String[] parts = l.split("\\|");
+							int intno = -1;
+							
+							try
+							{
+								intno = Integer.parseInt(parts[0]);
+							}
+							catch (NumberFormatException e2)
+							{
+								
+							}
+							
+							if ((parts.length > 1) && (intno > -1))
+							{
+								MenuItem tmp = new MenuItem(menuInstances, SWT.CHECK);
+								
+								tmp.setText(parts[1]);
+								
+								if (intno == MainWin.getInstance())
+								{
+									tmp.setSelection(true);
+								}
+								else
+								{
+									tmp.setSelection(false);
+								}
+								
+								final int fintno = intno;
+								
+								tmp.addSelectionListener(new SelectionAdapter() {
+									@Override
+									public void widgetSelected(SelectionEvent e) 
+									{
+										MainWin.setInstance(fintno);
+									}
+								});
+								
+							}
+						}
+						
+					}
+				} 
+				catch (IOException e1)
+				{
+						} 
+				catch (DWUIOperationFailedException e1)
+				{
+ 				}
+				
 			}
 		});
-		mntmChooseInstance.setText("Choose instance...");
+						
+						
+		
+		
+		
+	
 		
 		new MenuItem(menu_file, SWT.SEPARATOR);
 		
@@ -1213,6 +1280,7 @@ public class MainWin {
 		
 		new MenuItem(menu_config, SWT.SEPARATOR);
 		
+		
 		MenuItem mntmResetInstanceDevice = new MenuItem(menu_config, SWT.NONE);
 		mntmResetInstanceDevice.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/toolbar/arrow-refresh.png"));
 		mntmResetInstanceDevice.addSelectionListener(new SelectionAdapter() {
@@ -1223,8 +1291,8 @@ public class MainWin {
 				
 			}
 		});
-		mntmResetInstanceDevice.setText("Reset Instance Device");
-		
+		mntmResetInstanceDevice.setText("Reset Current Instance Device");
+
 		
 		
 		// help menu
@@ -1308,7 +1376,7 @@ public class MainWin {
 		
 		
 		createOutputTabs();
-		
+		updateTitlebar();
 		
 		
 		// disk table
@@ -2607,19 +2675,20 @@ public class MainWin {
 		MainWin.table.setRedraw(true);
 		
 		
-		
-		for (Control cti : MainWin.tabFolderOutput.getTabList())
+		if (MainWin.serverLocal )
 		{
-			if  ((cti.getClass().getCanonicalName().equals("com.groupunix.drivewireui.DWLibrary")))
-			  {
-				  if (!((DWLibrary) cti).getOurTab().isDisposed())
+			for (Control cti : MainWin.tabFolderOutput.getTabList())
+			{
+				if  ((cti.getClass().getCanonicalName().equals("com.groupunix.drivewireui.DWLibrary")))
 				  {
-			
-					  ((DWLibrary)cti).updateTree();
-				  }
+					  if (!((DWLibrary) cti).getOurTab().isDisposed())
+					  {
+				
+						  ((DWLibrary)cti).updateTree();
+					  }
+				}
 			}
 		}
-		
 	}
 		
 
@@ -3148,9 +3217,18 @@ public class MainWin {
 
 	public static void setInstance(int inst) 
 	{
-		MainWin.instance = inst;
+		if (inst != MainWin.instance)
+		{
+			MainWin.instance = inst;
+		
+			restartServerConn();
+		}
+		else
+			MainWin.instance = inst;
+		
 		config.setProperty("LastInstance", inst);
 		updateTitlebar();
+		
 	}
 
 	
@@ -3229,7 +3307,7 @@ public class MainWin {
 		}
 		
 	
-		mntmChooseInstance.setEnabled(en);
+		mntmInstances.setEnabled(en);
 		
 		MainWin.table.setEnabled(en);
 		MainWin.txtYouCanEnter.setEnabled(en);
@@ -3335,12 +3413,14 @@ public class MainWin {
 			MainWin.syncObj.die();
 		}
 		
+		MainWin.serverLocal = UIUtils.isServerLocal();
+			
+		
 		// start threads that talk with server
 		syncObj = new SyncThread();
 		syncThread = new Thread(syncObj);
 		syncThread.setDaemon(true);
 		syncThread.start();
-
 		
 	}
 
@@ -3847,7 +3927,8 @@ public class MainWin {
 				}
 			}
 			
-			// magic check
+			// magic check - turned off for now..
+			/*
 			if (ssbuf.getMagic() != MainWin.servermagic)
 			{
 				// do we care..
@@ -3863,6 +3944,7 @@ public class MainWin {
 				
 				servermagic = ssbuf.getMagic();
 			}
+			*/
 		}
 	}
 

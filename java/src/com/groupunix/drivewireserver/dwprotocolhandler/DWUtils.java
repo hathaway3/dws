@@ -842,12 +842,9 @@ public class DWUtils
 				res[pos++] = f.getName().getBytes()[i];
 			
 		
-			System.out.println(f.getName() + "\t" + f.length());
+			//System.out.println(f.getName() + "\t" + f.length());
 			
-			for (int i = 0;i<res.length;i++)
-			{
-				System.out.println((res[i] & 0xFF) + "\t" + new Character((char) res[i]) );
-			}
+			
 			
 			return(new String(res));
 		}

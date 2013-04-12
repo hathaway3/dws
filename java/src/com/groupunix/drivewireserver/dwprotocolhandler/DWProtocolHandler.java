@@ -481,7 +481,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 			}
 	 
 				
-			logger.debug("handler #"+ handlerno+ ": exiting");
+			logger.debug("handler #"+ handlerno+ ": shutting down");
 			
 			
 			if (this.dwVSerialPorts != null)
@@ -522,6 +522,8 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 				protodev.shutdown();
 			}
 		}
+		
+		logger.debug("handler #"+ handlerno+ ": exiting");
 			
 	}
 	

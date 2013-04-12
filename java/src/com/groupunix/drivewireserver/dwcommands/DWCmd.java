@@ -25,6 +25,7 @@ public class DWCmd extends DWCommand
 		commands.addcommand(new DWCmdLog(dwProtocol, this));
 		commands.addcommand(new DWCmdNet((DWProtocolHandler) dwProtocol, this));
 		commands.addcommand(new DWCmdMidi((DWProtocolHandler) dwProtocol, this));
+		commands.addcommand(new DWCmdInstance((DWProtocolHandler) dwProtocol, this));
 	} 
 
 	
