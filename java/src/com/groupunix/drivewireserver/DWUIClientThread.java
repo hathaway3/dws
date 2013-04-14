@@ -228,8 +228,6 @@ public class DWUIClientThread implements Runnable {
 		}
 		*/
 		
-		System.out.println("command '" + cmd + "' for inst " + this.instance);
-		
 		DWCommandResponse resp = this.commands.parse(cmd);
 		
 		sendUIresponse(resp);

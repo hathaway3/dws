@@ -131,6 +131,7 @@ public class DWDefs
 	public static final byte RC_INVALID_PORT 					= (byte) 140;
 	public static final byte RC_INVALID_HANDLER 				= (byte) 141;
 	public static final byte RC_CONFIG_KEY_NOT_SET 				= (byte) 142;
+	public static final byte RC_INSTANCE_WONT	 				= (byte) 143;
 	
 	public static final byte RC_MIDI_ERROR 						= (byte) 150;
 	public static final byte RC_MIDI_UNAVAILABLE 				= (byte) 151;
