@@ -9,7 +9,7 @@
 <ConfigAutosave category="advanced" type="boolean">true
 	</ConfigAutosave>
 <LogLevel category="server,logging" list="ALL,DEBUG,INFO,WARN,ERROR,FATAL" type="list">DEBUG</LogLevel>
-<LogToConsole category="logging" type="boolean">false</LogToConsole>
+<LogToConsole category="logging" type="boolean">true</LogToConsole>
 <LogFormat category="advanced,logging" type="string"/>
 <LogToFile category="logging" type="boolean">false</LogToFile>
 <LogFile category="logging" type="file"/>
@@ -17,7 +17,96 @@
 <DiskLazyWriteInterval category="advanced,disk" max="60000" min="1000" type="int">5000</DiskLazyWriteInterval>
 <LocalDiskDir category="advanced,disk" type="directory"/>
 <StatusInterval category="advanced,server" max="60000" min="1000" type="int">1000</StatusInterval>
-<instance category="instance" desc="Autocreated 2012-03-22 13:26:57.898" name="CoCo 3 on COM10">
+<instance category="instance" desc="Autocreated 2013-04-12 02:00:00.984" name="CoCo 3 on COM1">
+
+		<CurrentPrinter category="printing" section="instance.Printer" type="section">Text</CurrentPrinter>
+
+		<Printer category="printing" desc="Outputs images of emulated FX80 output" name="FX80">
+			<Driver list="TEXT,FX80" type="list">FX80</Driver>
+			<OutputDir type="directory">cocoprints</OutputDir>
+			<CharacterFile type="file">default.chars</CharacterFile>
+			<Columns max="132" min="1" type="int">80</Columns>
+			<Lines max="132" min="1" type="int">66</Lines>
+			<DPI max="1200" min="50" type="int">300</DPI>
+			<ImageFormat list="JPG,GIF,PNG,BMP" type="list">BMP</ImageFormat>
+			<FlushCommand type="string"/>
+			<OutputFile type="file"/>
+		</Printer>
+
+		<Printer category="printing" desc="Outputs plain text files" name="Text">
+			<Driver category="printing" list="TEXT,FX80" type="list">TEXT</Driver>
+			<OutputDir category="printing" type="directory">cocoprints</OutputDir>
+
+		</Printer>
+
+		<UseMIDI category="midi" type="boolean">true</UseMIDI>
+		<MIDISynthDefaultSoundbank category="midi" type="file">soundbank-deluxe.gm</MIDISynthDefaultSoundbank>
+		<MIDISynthDefaultProfile category="midi" section="midisynthprofile" type="section">gm</MIDISynthDefaultProfile>
+        <MIDIDefaultOutput category="midi">1</MIDIDefaultOutput>
+        
+		<HelpFile category="advanced">help.xml</HelpFile>
+
+		<LogOpCodePolls category="logging,advanced" type="boolean">false
+		</LogOpCodePolls>
+		<LogOpCode category="logging,advanced" type="boolean">true
+		</LogOpCode>
+		<LogDeviceBytes category="logging,advanced" type="boolean">false
+		</LogDeviceBytes>
+		<LogMIDIBytes category="logging,advanced" type="boolean">false
+		</LogMIDIBytes>
+		<LogVPortBytes category="logging,advanced" type="boolean">false
+		</LogVPortBytes>
+		<LogTiming category="logging,advanced" type="boolean">false
+        </LogTiming>
+
+
+		<DeviceType category="device" list="serial,tcp-server,tcp-client,dummy" type="list">serial</DeviceType>
+		<TCPServerPort category="device" max="65535" min="1" type="int">65504</TCPServerPort>
+		<TCPClientPort category="device" max="65535" min="1" type="int"/>
+		<TCPClientHost category="device" type="string"/>
+		<SerialDevice category="device" type="serialdev">COM1</SerialDevice>
+		<DetectDATurbo category="advanced,device" type="boolean">false
+		</DetectDATurbo>
+		<SerialRate category="device" list="38400,57600,115200,230400,460800,921600" type="list">115200</SerialRate>
+		<SerialParity category="device,advanced" list="none,even,odd,mark,space" type="list">none</SerialParity>
+		<SerialStopbits category="device,advanced" list="1,1.5,2" type="list">1</SerialStopbits>
+		<DW3Only category="device,advanced" type="boolean">false</DW3Only>
+		<ProtocolFlipOutputBits category="advanced,device" type="boolean">false</ProtocolFlipOutputBits>
+		<ProtocolResponsePrefix category="advanced,device" type="boolean">false</ProtocolResponsePrefix>
+		<ProtocolDisableReadChecksum category="advanced,device" type="boolean">false</ProtocolDisableReadChecksum>
+		<ProtocolLieAboutCRC category="advanced,device" type="boolean">false</ProtocolLieAboutCRC>
+		<DeviceFailRetryTime category="advanced,device" max="60000" min="1000" type="int"/>
+		<DiskSectorSize category="advanced,disk" max="16384" min="1" type="int"/>
+		<ReadDelay category="advanced,disk" max="16384" min="1" type="int"/>
+		
+		<!--   <WriteByteDelay category="advanced,device" type="int">10</WriteByteDelay> -->
+			
+		<OpTimeSendsDOW category="advanced,device" type="boolean">false
+		</OpTimeSendsDOW>
+		<DWCommandOutputWidth category="advanced,device" max="240" min="1" type="int"/>
+
+		<ListenAddress category="networking,advanced" type="networkinterface"/>
+		<TermPort category="networking" max="65535" min="1" type="int"/>
+		<TelnetBannerFile category="networking" type="file"/>
+		<TelnetNoPortsBannerFile category="networking,advanced" type="file"/>
+
+		<HDBDOSMode category="disk,advanced" type="boolean">false</HDBDOSMode>
+
+        <NamedObjectDir category="disk,advanced" type="directory">E:/cocodisks\named</NamedObjectDir>
+        <NamedObject category="disk,advanced" name="CoCoBoot.isave" path="E:/cocodisks/named/CoCoBoot.isave" type="namedobj"/>
+        <NamedObject category="disk,advanced" name="test" path="E:/cocodisks/named/CoCoBoot.isave" type="namedobj"/>
+        
+        <Drive0Path category="disk,advanced" type="file">file:///E:/cocodisks/cc.dsk</Drive0Path>
+        <Drive1Path category="disk,advanced" type="file"/>
+        <Drive2Path category="disk,advanced" type="file"/>
+
+
+<SerialDTR>false</SerialDTR>
+<SerialRTS>false</SerialRTS>
+<SerialFlowControl_RTSCTS_IN>false</SerialFlowControl_RTSCTS_IN>
+<SerialFlowControl_RTSCTS_OUT>false</SerialFlowControl_RTSCTS_OUT>
+	</instance>
+<instance category="instance" desc="Autocreated 2013-04-07 23:29:30.453" name="TCP connection no 2">
 
 		<CurrentPrinter category="printing" section="instance.Printer" type="section">Text</CurrentPrinter>
 
@@ -60,16 +149,16 @@
         </LogTiming>
 
 
-		<DeviceType category="device" list="serial,tcp-server,tcp-client,dummy" type="list">serial</DeviceType>
-		<TCPServerPort category="device" max="65535" min="1" type="int">65504</TCPServerPort>
+		<DeviceType category="device" list="serial,tcp-server,tcp-client,dummy" type="list">tcp-server</DeviceType>
+		<TCPServerPort category="device" max="65535" min="1" type="int">65505</TCPServerPort>
 		<TCPClientPort category="device" max="65535" min="1" type="int"/>
 		<TCPClientHost category="device" type="string"/>
-		<SerialDevice category="device" type="serialdev">COM10</SerialDevice>
+		<SerialDevice category="device" type="serialdev">COM1</SerialDevice>
 		<DetectDATurbo category="advanced,device" type="boolean">false
 		</DetectDATurbo>
-		<SerialRate category="device" list="38400,57600,115200,230400,460800,921600" type="list">115200</SerialRate>
-		<SerialParity category="device,advanced" list="none,even,odd,mark,space" type="list"/>
-		<SerialStopbits category="device,advanced" list="1,1.5,2" type="list"/>
+		<SerialRate category="device" list="38400,57600,115200,230400,460800,921600" type="list">38400</SerialRate>
+		<SerialParity category="device,advanced" list="none,even,odd,mark,space" type="list">none</SerialParity>
+		<SerialStopbits category="device,advanced" list="1,1.5,2" type="list">1</SerialStopbits>
 		<DW3Only category="device,advanced" type="boolean">false</DW3Only>
 		<ProtocolFlipOutputBits category="advanced,device" type="boolean">false</ProtocolFlipOutputBits>
 		<ProtocolResponsePrefix category="advanced,device" type="boolean">false</ProtocolResponsePrefix>
@@ -97,16 +186,109 @@
         <NamedObject category="disk,advanced" name="test" path="E:/cocodisks/named/CoCoBoot.isave" type="namedobj"/>
         
         <Drive0Path category="disk,advanced" type="file"/>
-        <Drive1Path category="disk,advanced" type="file">file:///E:/cocodisks/80t_18spt_256bps_2s.dsk</Drive1Path>
-        <Drive2Path category="disk,advanced" type="file">file:///e:/cocodisks/wtf/newdisk.dsk</Drive2Path>
-<Drive255Path>file:///E:/cocodisks/named/CoCoBoot.isave</Drive255Path>
-<Drive3Path>file:///E:/cocodisks/CFImage.img</Drive3Path>
+        <Drive1Path category="disk,advanced" type="file">file:///C:/Users/Aaron/workspace/drivewireserver/DriveWireUI/testdiskcreate.dsk</Drive1Path>
+        <Drive2Path category="disk,advanced" type="file"/>
+
+
+<SerialDTR>false</SerialDTR>
+<SerialRTS>false</SerialRTS>
+<SerialFlowControl_RTSCTS_IN>false</SerialFlowControl_RTSCTS_IN>
+<SerialFlowControl_RTSCTS_OUT>false</SerialFlowControl_RTSCTS_OUT>
+
+	<AutoStart>false</AutoStart>
 
 
 
 
+	</instance>
+<instance category="instance" desc="Autocreated 2013-04-12 02:02:17.655" name="TCP connection via TCP">
+	
+		<CurrentPrinter category="printing" section="instance.Printer" type="section">Text</CurrentPrinter>
+
+		<Printer category="printing" desc="Outputs images of emulated FX80 output" name="FX80">
+			<Driver list="TEXT,FX80" type="list">FX80</Driver>
+			<OutputDir type="directory">cocoprints</OutputDir>
+			<CharacterFile type="file">default.chars</CharacterFile>
+			<Columns max="132" min="1" type="int">80</Columns>
+			<Lines max="132" min="1" type="int">66</Lines>
+			<DPI max="1200" min="50" type="int">300</DPI>
+			<ImageFormat list="JPG,GIF,PNG,BMP" type="list">BMP</ImageFormat>
+			<FlushCommand type="string"/>
+			<OutputFile type="file"/>
+		</Printer>
+
+		<Printer category="printing" desc="Outputs plain text files" name="Text">
+			<Driver category="printing" list="TEXT,FX80" type="list">TEXT</Driver>
+			<OutputDir category="printing" type="directory">cocoprints</OutputDir>
+
+		</Printer>
+
+		<UseMIDI category="midi" type="boolean">true</UseMIDI>
+		<MIDISynthDefaultSoundbank category="midi" type="file">soundbank-deluxe.gm</MIDISynthDefaultSoundbank>
+		<MIDISynthDefaultProfile category="midi" section="midisynthprofile" type="section">gm</MIDISynthDefaultProfile>
+        <MIDIDefaultOutput category="midi">1</MIDIDefaultOutput>
+        
+		<HelpFile category="advanced">help.xml</HelpFile>
+
+		<LogOpCodePolls category="logging,advanced" type="boolean">false
+		</LogOpCodePolls>
+		<LogOpCode category="logging,advanced" type="boolean">true
+		</LogOpCode>
+		<LogDeviceBytes category="logging,advanced" type="boolean">false
+		</LogDeviceBytes>
+		<LogMIDIBytes category="logging,advanced" type="boolean">false
+		</LogMIDIBytes>
+		<LogVPortBytes category="logging,advanced" type="boolean">false
+		</LogVPortBytes>
+		<LogTiming category="logging,advanced" type="boolean">false
+        </LogTiming>
 
 
+		<DeviceType category="device" list="serial,tcp-server,tcp-client,dummy" type="list">tcp-server</DeviceType>
+		<TCPServerPort category="device" max="65535" min="1" type="int">65506</TCPServerPort>
+		<TCPClientPort category="device" max="65535" min="1" type="int"/>
+		<TCPClientHost category="device" type="string"/>
+		<SerialDevice category="device" type="serialdev">COM1</SerialDevice>
+		<DetectDATurbo category="advanced,device" type="boolean">false
+		</DetectDATurbo>
+		<SerialRate category="device" list="38400,57600,115200,230400,460800,921600" type="list">115200</SerialRate>
+		<SerialParity category="device,advanced" list="none,even,odd,mark,space" type="list">none</SerialParity>
+		<SerialStopbits category="device,advanced" list="1,1.5,2" type="list">1</SerialStopbits>
+		<DW3Only category="device,advanced" type="boolean">false</DW3Only>
+		<ProtocolFlipOutputBits category="advanced,device" type="boolean">false</ProtocolFlipOutputBits>
+		<ProtocolResponsePrefix category="advanced,device" type="boolean">false</ProtocolResponsePrefix>
+		<ProtocolDisableReadChecksum category="advanced,device" type="boolean">false</ProtocolDisableReadChecksum>
+		<ProtocolLieAboutCRC category="advanced,device" type="boolean">false</ProtocolLieAboutCRC>
+		<DeviceFailRetryTime category="advanced,device" max="60000" min="1000" type="int"/>
+		<DiskSectorSize category="advanced,disk" max="16384" min="1" type="int"/>
+		<ReadDelay category="advanced,disk" max="16384" min="1" type="int"/>
+		
+		<!--   <WriteByteDelay category="advanced,device" type="int">10</WriteByteDelay> -->
+			
+		<OpTimeSendsDOW category="advanced,device" type="boolean">false
+		</OpTimeSendsDOW>
+		<DWCommandOutputWidth category="advanced,device" max="240" min="1" type="int"/>
+
+		<ListenAddress category="networking,advanced" type="networkinterface"/>
+		<TermPort category="networking" max="65535" min="1" type="int"/>
+		<TelnetBannerFile category="networking" type="file"/>
+		<TelnetNoPortsBannerFile category="networking,advanced" type="file"/>
+
+		<HDBDOSMode category="disk,advanced" type="boolean">false</HDBDOSMode>
+
+        <NamedObjectDir category="disk,advanced" type="directory">E:/cocodisks\named</NamedObjectDir>
+        <NamedObject category="disk,advanced" name="CoCoBoot.isave" path="E:/cocodisks/named/CoCoBoot.isave" type="namedobj"/>
+        <NamedObject category="disk,advanced" name="test" path="E:/cocodisks/named/CoCoBoot.isave" type="namedobj"/>
+        
+        <Drive0Path category="disk,advanced" type="file">file:///E:/cocodisks/fpgauucp.dsk</Drive0Path>
+        <Drive1Path category="disk,advanced" type="file"/>
+        <Drive2Path category="disk,advanced" type="file"/>
+
+
+<SerialDTR>false</SerialDTR>
+<SerialRTS>false</SerialRTS>
+<SerialFlowControl_RTSCTS_IN>false</SerialFlowControl_RTSCTS_IN>
+<SerialFlowControl_RTSCTS_OUT>false</SerialFlowControl_RTSCTS_OUT>
 	</instance>
 <midisynthprofile category="midi" desc="General MIDI / Roland SoundCanvas" name="gm"/>
 <midisynthprofile category="midi" desc="Yamaha PSS-480/680" dev_adjust="1" gm_adjust="-1" name="pss480">
