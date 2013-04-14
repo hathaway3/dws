@@ -71,15 +71,11 @@ public class DWVSerialPorts {
 		
 		if (dwProto.getConfig().getBoolean("UseMIDI", false) && !DriveWireServer.getNoMIDI())
 		{
-			// initialize MIDI device to internal synth
-			logger.debug("initialize internal midi synth");
 			
 			clearGMInstrumentCache();
 		
 			try 
 			{
-				midiSynth = MidiSystem.getSynthesizer();
-				setMIDIDevice(midiSynth);
 				
 				// set default output
 				if (dwProto.getConfig().containsKey("MIDIDefaultOutput"))
@@ -94,10 +90,14 @@ public class DWVSerialPorts {
 					}
 					else
 					{
-						logger.debug("Setting MIDI output to device # " + devno );
 						setMIDIDevice(MidiSystem.getMidiDevice(infos[devno]));
 					}
 				
+				}
+				else
+				{
+					midiSynth = MidiSystem.getSynthesizer();
+					setMIDIDevice(midiSynth);
 				}
 				
 				// soundbank
@@ -814,7 +814,7 @@ public class DWVSerialPorts {
 		{
 			if (this.midiDevice.isOpen())
 			{
-				logger.info("midi: closing " + this.midiDevice.getDeviceInfo().getName());
+				logger.debug("midi: closing " + this.midiDevice.getDeviceInfo().getName());
 				this.midiDevice.close();
 			}
 		}

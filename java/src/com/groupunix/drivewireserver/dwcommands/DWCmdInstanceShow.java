@@ -63,8 +63,10 @@ public class DWCmdInstanceShow extends DWCommand {
 					text += "Dying..";
 				else if (DriveWireServer.getHandler(i).isReady())
 					text += "Ready";
+				else if (DriveWireServer.getHandler(i).isStarted())
+					text += "Starting..";
 				else
-					text += "Not started";
+					text += "Not ready";
 				
 				text += "\r\n";
 			}

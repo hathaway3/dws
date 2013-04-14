@@ -50,7 +50,7 @@ public class DWHelp
 	public void reload()
 	{
 		// load helpfile if possible
-		logger.info("reading help from '" + this.helpfile + "'");
+		logger.debug("reading help from '" + this.helpfile + "'");
 		
 		try 
     	{
@@ -91,15 +91,12 @@ public class DWHelp
 			
 			if (this.hasTopic(lines[i]))
 			{
-				System.out.println("Topic: " + lines[i]);
-				
 				curkey = lines[i];
 				this.clearTopic(lines[i]);
 				blanks = 0;
 			}
 			else
 			{
-				System.out.println("maybe: " + lines[i]);
 				if (lines[i].equals(""))
 				{
 					blanks++;

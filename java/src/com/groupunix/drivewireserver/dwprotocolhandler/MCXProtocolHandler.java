@@ -57,7 +57,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	
 	private boolean wanttodie = false;
 	// private static Thread readerthread;
-
+	private boolean started = false;
 
 	private int handlerno;
 	private HierarchicalConfiguration config;
@@ -105,6 +105,7 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	{
 		int opcodeint = -1;
 		int alertcodeint = -1;
+		this.started = true;
 		
 		Thread.currentThread().setName("mcxproto-" + handlerno + "-" +  Thread.currentThread().getId());
 		
@@ -905,6 +906,13 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+
+	@Override
+	public boolean isStarted() 
+	{
+		return this.started;
 	}
 	
 }

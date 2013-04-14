@@ -1,9 +1,22 @@
 package com.groupunix.drivewireui.instanceman;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.ExpandBar;
@@ -15,18 +28,63 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.wb.swt.SWTResourceManager;
 
+import com.groupunix.drivewireui.DWUIOperationFailedException;
 import com.groupunix.drivewireui.GradientHelper;
 import com.groupunix.drivewireui.MainWin;
+import com.groupunix.drivewireui.UIUtils;
+import org.eclipse.swt.events.SelectionAdapter;
 
 public class InstanceMan extends Shell 
 {
 
 	
-	private ExpandBar expandBar;
+	private static final String IMG_INSTANCE_READY = "/status/completed_16.png";
 
-	public InstanceMan(Display display) {
-		super(display, SWT.CLOSE | SWT.RESIZE | SWT.TITLE);
+
+
+	private static final String IMG_INSTANCE_NOTREADY = "/menu/application-exit-5.png";
+	
+	private static final long UPDATE_DELAY = 500;
+
+	private static final int DEVTYPE_UNKNOWN = 0;
+	private static final int DEVTYPE_SERIAL = 1;
+	private static final int DEVTYPE_TCP_SERVER = 2;
+	private static final int DEVTYPE_TCP_CLIENT = 3;
+	
+	
+	private ExpandBar expandBar;
+	private HashMap<Integer,ExpandItem> expandItems = new HashMap<Integer,ExpandItem>();
+	private HashMap<Integer,List<String>> instanceStatusCache = new HashMap<Integer,List<String>>();
+	
+	private Thread updateT;
+	private boolean sizeset = false;
+
+
+
+	private int lastUpdateInstance = -1;
+	
+	
+	public InstanceMan(final Display display) 
+	{
+		super(display, SWT.CLOSE | SWT.RESIZE | SWT.TITLE | SWT.DOUBLE_BUFFERED);
 		setImage(SWTResourceManager.getImage(InstanceMan.class, "/menu/database-gear.png"));
+		
+		addShellListener(new ShellAdapter() {
+			
+
+			@Override
+			public void shellClosed(ShellEvent e) 
+			{
+				if (updateT != null)
+					updateT.interrupt();
+					try {
+						updateT.join();
+					} catch (InterruptedException e1) {
+					
+					}
+			}
+		});
+		
 		GridLayout gridLayout = new GridLayout(1, false);
 		gridLayout.verticalSpacing = 0;
 		gridLayout.marginWidth = 0;
@@ -34,112 +92,374 @@ public class InstanceMan extends Shell
 		gridLayout.horizontalSpacing = 0;
 		setLayout(gridLayout);
 		
-		
-		
-		final Composite composite_3 = new Composite(this, SWT.NONE);
-		composite_3.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-		composite_3.setLayout(new GridLayout(1, false));
-		
-		GradientHelper.applyVerticalGradientBG(composite_3, MainWin.getDisplay().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT),MainWin.getDisplay().getSystemColor(SWT.COLOR_GRAY));
-		
-		composite_3.addListener(SWT.Resize, new Listener() 
-		{
-
-			@Override
-			public void handleEvent(Event event)
-			{
-				GradientHelper.applyVerticalGradientBG(composite_3 , MainWin.getDisplay().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT),MainWin.getDisplay().getSystemColor(SWT.COLOR_GRAY));
-				
-				
-			} } );
-		
-		composite_3.setBackgroundMode(SWT.INHERIT_FORCE);
-		
-		
-		
-		ToolBar toolBar_1 = new ToolBar(composite_3, SWT.FLAT | SWT.RIGHT);
-			
-		ToolItem tltmNewInstance = new ToolItem(toolBar_1, SWT.NONE);
-		tltmNewInstance.setImage(SWTResourceManager.getImage(InstanceMan.class, "/menu/database-add.png"));
-		tltmNewInstance.setText("New Instance..");
-		
 		expandBar = new ExpandBar(this, SWT.NONE);
 		expandBar.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		
 		
-		
-		ExpandItem xpndtmInstance_1 = new ExpandItem(expandBar, SWT.NONE);
-		xpndtmInstance_1.setExpanded(true);
-		xpndtmInstance_1.setImage(SWTResourceManager.getImage(InstanceMan.class, "/menu/application-exit-5.png"));
-		xpndtmInstance_1.setText("Instance 1");
-		
-		Composite composite_1 = new Composite(expandBar, SWT.NONE);
-		composite_1.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
-		xpndtmInstance_1.setControl(composite_1);
-		xpndtmInstance_1.setHeight(87);
-		composite_1.setLayout(new GridLayout(1, false));
-		
-		ToolBar toolBar_2 = new ToolBar(composite_1, SWT.FLAT | SWT.RIGHT);
-		toolBar_2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-		
-		ToolItem tltmStart = new ToolItem(toolBar_2, SWT.NONE);
-		tltmStart.setImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/media-playback-play-blue.png"));
-		tltmStart.setText("Start");
-		
-		ToolItem toolItem_3 = new ToolItem(toolBar_2, SWT.SEPARATOR);
-		
-		ToolItem tltmDelete = new ToolItem(toolBar_2, SWT.NONE);
-		tltmDelete.setImage(SWTResourceManager.getImage(InstanceMan.class, "/menu/database-delete.png"));
-		tltmDelete.setText("Delete");
-		
-		ToolItem tltmSep1 = new ToolItem(toolBar_2, SWT.SEPARATOR);
-		
-		ToolItem tltmAutostart_1 = new ToolItem(toolBar_2, SWT.NONE);
-		tltmAutostart_1.setImage(SWTResourceManager.getImage(InstanceMan.class, "/menu/inactive.png"));
-		tltmAutostart_1.setText("AutoStart");
-		
-		ToolItem toolItem_4 = new ToolItem(toolBar_2, SWT.SEPARATOR);
-		
-		ToolItem tltmConnect_1 = new ToolItem(toolBar_2, SWT.NONE);
-		tltmConnect_1.setImage(SWTResourceManager.getImage(InstanceMan.class, "/menu/database-go.png"));
-		tltmConnect_1.setText("Connect");
-		
-		Composite composite_2 = new Composite(composite_1, SWT.BORDER);
-		composite_2.setLayout(new GridLayout(3, false));
-		composite_2.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
-		
-		Label label_1 = new Label(composite_2, SWT.NONE);
-		label_1.setImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/network-disconnect-3.png"));
-		GridData gd_label_1 = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 2);
-		gd_label_1.horizontalIndent = 3;
-		label_1.setLayoutData(gd_label_1);
-		
-		Label label_2 = new Label(composite_2, SWT.NONE);
-		label_2.setText(" ");
-		
-		Label lblTcpClientHost = new Label(composite_2, SWT.NONE);
-		lblTcpClientHost.setText("TCP Client, host 192.168.128.50 port 65504");
-		new Label(composite_2, SWT.NONE);
-		
-		Label lblNoConnectionRetrying = new Label(composite_2, SWT.NONE);
-		lblNoConnectionRetrying.setText("No connection, retrying...");
-		
+	
 		
 		
 		setText("Instance Manager");
-		setSize(380, 331);
 		
+		setSize(380, 200);
 		
 		int x = display.getActiveShell().getBounds().x + (display.getActiveShell().getBounds().width / 2) - (getBounds().width / 2);
 		int y = display.getActiveShell().getBounds().y + (display.getActiveShell().getBounds().height / 2) - (getBounds().height / 2);
 		
 		setLocation(x, y);
+	
+		updateT = new Thread(new Runnable(){
+
+			
+
+			@Override
+			public void run() 
+			{
+				boolean wanttodie = false;
+				
+				while (!wanttodie)
+				{
+					if (display.isDisposed())
+						wanttodie = true;
+					else
+					{
+						display.syncExec(new Runnable(){
+	
+							@Override
+							public void run() {
+								updateInstanceDisplay();
+							}});
+						
+						
+						try {
+							Thread.sleep(UPDATE_DELAY);
+						} 
+						catch (InterruptedException e) 
+						{
+							wanttodie = true;
+						}
+					}
+				}
+				
+			}});
 		
-		//pack();
+		updateT.setDaemon(true);
+		updateT.start();
+		
+		
 	}
 
 	
 	
+
+	private void updateInstanceDisplay() 
+	{
+		try 
+		{
+			
+			List<String> instances = UIUtils.loadList("ui server show instances");
+				
+			if (!sizeset )
+				this.setSize(380, instances.size() * 129);
+			
+			for (String inst : instances)
+			{
+				String[] parts = inst.split("\\|");
+				
+				if (parts.length == 2)
+				{
+					int devtype = DEVTYPE_UNKNOWN;
+					boolean connected = false;
+					boolean ready = false;
+					String devname = "Unknown";
+					String devclient = "Unknown";
+					ExpandItem xpndtmInstance;
+					InstanceManComposite composite;
+					boolean started = false;
+					boolean dying = false;
+					
+					int devrate = -1;
+					final int handlerno = Integer.parseInt(parts[0]);
+					
+					List<String> instvars = UIUtils.loadList("ui instance status " + parts[0]);
+					
+					if (instanceStatusHasChanged(instvars, handlerno) || (lastUpdateInstance  != MainWin.getInstance()))
+					{
+						
+						if (this.expandItems.containsKey(handlerno))
+						{
+							xpndtmInstance = this.expandItems.get(handlerno);
+							composite = (InstanceManComposite) xpndtmInstance.getControl();
+						}
+						else
+						{
+							xpndtmInstance = new ExpandItem(expandBar, SWT.NONE);
+							composite = new InstanceManComposite(expandBar, SWT.NONE, handlerno);
+							xpndtmInstance.setControl(composite);
+							xpndtmInstance.setHeight(87);
+							xpndtmInstance.setExpanded(true);
+							this.expandItems.put(handlerno, xpndtmInstance);
+						}
+						
+				
+						
+						if (handlerno == MainWin.getInstance())
+							composite.setCanConnect(false);
+						else
+							composite.setCanConnect(true);
+						 
+											
+						for (int i = 0;i<instvars.size();i++)
+						{
+							Pattern p_item = Pattern.compile("^(.+)\\|(.+)");
+							Matcher m = p_item.matcher(instvars.get(i));
+							
+							if (m.find())
+							{
+								
+								if (m.group(1).equals("name"))
+								{
+									xpndtmInstance.setText("Instance " + parts[0] + ": " + m.group(2));
+								}
+								else if (m.group(1).equals("connected"))
+								{
+									if (m.group(2).equals("true"))
+										connected = true;
+								}
+								else if (m.group(1).equals("started"))
+								{
+									if (m.group(2).equals("true"))
+									{
+										started = true;
+									}
+								}
+								else if (m.group(1).equals("dying"))
+								{
+									if (m.group(2).equals("true"))
+									{
+										dying = true;
+									}
+								}
+								
+								else if (m.group(1).equals("ready"))
+								{
+									if (m.group(2).equals("true"))
+									{
+										xpndtmInstance.setImage(SWTResourceManager.getImage(InstanceMan.class, IMG_INSTANCE_READY));
+										composite.setReady(true);
+										ready = true;
+									}
+									else
+									{
+										xpndtmInstance.setImage(SWTResourceManager.getImage(InstanceMan.class, IMG_INSTANCE_NOTREADY));
+										composite.setReady(false);
+									}
+								}
+								else if (m.group(1).equals("devicetype"))
+								{
+									if (m.group(2).equals("tcp"))
+									{
+										devtype = DEVTYPE_TCP_SERVER;
+									}
+									else if (m.group(2).equals("tcp-client"))
+									{
+										devtype = DEVTYPE_TCP_CLIENT;
+									}
+									else if (m.group(2).equals("serial"))
+									{
+										devtype = DEVTYPE_SERIAL;
+									}
+									
+								}
+								else if (m.group(1).equals("devicename"))
+								{
+									devname = m.group(2);
+								}
+								else if (m.group(1).equals("devicerate"))
+								{
+									try 
+									{
+										devrate = Integer.parseInt(m.group(2));
+									}
+									catch (NumberFormatException ne)
+									{
+									}
+									
+								}
+								else if (m.group(1).equals("deviceclient"))
+								{
+									devclient = m.group(2);
+								}
+								else if (m.group(1).equals("autostart"))
+								{
+									if (m.group(2).equals("true"))
+										composite.setIsAutostart(true);
+									else
+										composite.setIsAutostart(false);
+							
+								}
+								
+								
+							}
+							
+						}
+						
+						String stat2 = "";
+						
+						switch (devtype)
+						{
+								
+							case DEVTYPE_UNKNOWN:
+								if (ready)
+								{
+									composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/unknown.png"));
+									composite.setStatus1("Unknown device type, name " + devname);
+									if (connected)
+										stat2 += "Connected";
+									else
+										stat2 += "Not connected";
+								}
+								else
+								{
+									composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/notready.png"));
+									composite.setStatus1("Instance is not ready");
+								}
+								break;
+										
+									
+							case DEVTYPE_TCP_SERVER:
+								String[] tcpsp = devname.split(":");
+								String stat = "TCP Server listening ";
+								if (tcpsp.length == 2)
+									stat += "on port " + tcpsp[1];
+										
+								composite.setStatus1(stat);
+										
+								if (connected)
+								{
+									composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/network-connect-3.png"));
+									stat2 += "Client at " + devclient + " connected";
+								}
+								else
+								{
+									composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/network-disconnect-3.png"));
+									stat2 += "Waiting for client...";
+								}
+								break;
+										
+									
+							case DEVTYPE_TCP_CLIENT:
+										
+								composite.setStatus1("TCP Client");
+										
+								if (connected)
+								{
+									composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/network-connect-3.png"));
+									stat2 += "Connected to " + devclient;
+								}
+								else
+								{
+									composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/network-disconnect-3.png"));
+									stat2 += "Not connected";
+								}
+								break;	
+								
+							case DEVTYPE_SERIAL:
+								composite.setStatus1("Serial device '" + devname + "' at " + devrate + "bps");
+							
+								if (connected)
+								{
+									composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/serial.png"));
+									stat2 += "Connected";
+								}
+								else
+								{
+									composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/serial-disconnected.png"));
+									stat2 += "Disconnected";
+								}
+								break;
+							
+						}
+						
+						if (dying)
+							composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/dying.png"));
+						else if (!ready && started)
+							composite.setDevImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/starting.png"));
+						
+						if (dying)
+							stat2 = "Dying..";
+						else if (ready)
+							stat2 = "Ready, " + stat2;
+						else if (started)
+							stat2 = "Starting.. ";
+						else 
+							stat2 = "Not started";
+						
+						composite.setStatus2(stat2);
+						
+					
+					}
+				}
+			}
+			
+			lastUpdateInstance = MainWin.getInstance();
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		catch (DWUIOperationFailedException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (NumberFormatException e)
+		{
+			e.printStackTrace();
+		}
+		
+		
+		
+	}
+
+
+
+
+	private boolean instanceStatusHasChanged(List<String> instvars,	int handlerno) 
+	{
+		if (this.instanceStatusCache.containsKey(handlerno))
+		{
+			List<String> oldvars = this.instanceStatusCache.get(handlerno);
+			
+			if (instvars.size() != oldvars.size())
+			{
+				this.instanceStatusCache.put(handlerno, instvars);
+				return true;
+			}
+			
+			for (int i = 0;i < oldvars.size();i++)
+			{
+				if (!instvars.get(i).equals(oldvars.get(i)))
+				{
+					this.instanceStatusCache.put(handlerno, instvars);
+					return true;
+				}
+			}
+			
+		}
+		else
+		{
+			this.instanceStatusCache.put(handlerno, instvars);
+			return true;
+		}
+		
+
+		return false;
+	}
+
+
+
 
 	@Override
 	protected void checkSubclass() {
@@ -147,76 +467,18 @@ public class InstanceMan extends Shell
 	}
 	
 	
-	private void addInstanceDisplay() 
+	
+	
+	private void addInstanceDisplay(int no) 
 	{
 		
-		ExpandItem xpndtmInstance = new ExpandItem(expandBar, SWT.NONE);
-		xpndtmInstance.setExpanded(true);
-		xpndtmInstance.setImage(SWTResourceManager.getImage(InstanceMan.class, "/status/completed_16.png"));
-		xpndtmInstance.setText("Instance 0");
-		
-		Composite composite = new Composite(expandBar, SWT.NONE);
-		composite.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
-		composite.setBackgroundMode(SWT.INHERIT_FORCE);
-		
-		xpndtmInstance.setControl(composite);
-		xpndtmInstance.setHeight(87);
-		composite.setLayout(new GridLayout(2, false));
-		
-		ToolBar toolBar = new ToolBar(composite, SWT.FLAT | SWT.RIGHT);
-		toolBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		
-		ToolItem tltmStop = new ToolItem(toolBar, SWT.NONE);
-		tltmStop.setImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/media-playback-stop-blue.png"));
-		tltmStop.setText("Stop");
-		
-		ToolItem toolItem = new ToolItem(toolBar, SWT.SEPARATOR);
-		toolItem.setText(" ");
-		
-		ToolItem tltmRestart = new ToolItem(toolBar, SWT.NONE);
-		tltmRestart.setImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/media-repeat-blue.png"));
-		tltmRestart.setText("Restart");
-		
-		ToolItem toolItem_1 = new ToolItem(toolBar, SWT.SEPARATOR);
-		
-		ToolItem tltmAutostart = new ToolItem(toolBar, SWT.CHECK);
-		tltmAutostart.setImage(SWTResourceManager.getImage(InstanceMan.class, "/menu/active.png"));
-		tltmAutostart.setText("AutoStart");
-		
-		ToolItem toolItem_2 = new ToolItem(toolBar, SWT.SEPARATOR);
-		
-		ToolItem tltmConnect = new ToolItem(toolBar, SWT.NONE);
-		tltmConnect.setImage(SWTResourceManager.getImage(InstanceMan.class, "/menu/database-go.png"));
-		tltmConnect.setText("Connect ");
-		
-		Composite compositeStatus = new Composite(composite, SWT.BORDER);
-		compositeStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		compositeStatus.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
-		compositeStatus.setLayout(new GridLayout(3, false));
-	
-		
-		Label lblDevImage = new Label(compositeStatus, SWT.NONE);
-		
-		GridData gd_lblDevImage = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 2);
-		gd_lblDevImage.horizontalIndent = 3;
-		lblDevImage.setLayoutData(gd_lblDevImage);
-		lblDevImage.setImage(SWTResourceManager.getImage(InstanceMan.class, "/instman/network-connect-3.png"));
-		
-		Label label = new Label(compositeStatus, SWT.NONE);
-		label.setText(" ");
-		
-		Label lblTcpServer = new Label(compositeStatus, SWT.NONE);
-		
-	
-		lblTcpServer.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
-		lblTcpServer.setText("TCP Server, listening on port 65504");
-		new Label(compositeStatus, SWT.NONE);
-		
-		Label lblClientConnectedFrom = new Label(compositeStatus, SWT.NONE);
-	
 
-		lblClientConnectedFrom.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
-		lblClientConnectedFrom.setText("Client connected from 192.168.128.50");
+	
+		
+			
+		
+		
+		
 		
 		
 	}

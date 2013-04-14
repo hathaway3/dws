@@ -97,8 +97,8 @@ public class MainWin {
 	public static final int DWUIVersionMajor = 4;
 	public static final int DWUIVersionMinor = 3;
 	public static final int DWUIVersionBuild = 3;
-	public static final String DWUIVersionRevision = "f";
-	public static final String DWUIVersionDate = "04/13/2013";
+	public static final String DWUIVersionRevision = "g";
+	public static final String DWUIVersionDate = "04/14/2013";
 	
 	public static final Version DWUIVersion = new Version(DWUIVersionMajor, DWUIVersionMinor, DWUIVersionBuild, DWUIVersionRevision, DWUIVersionDate);
 	
@@ -917,6 +917,7 @@ public class MainWin {
 									public void widgetSelected(SelectionEvent e) 
 									{
 										MainWin.setInstance(fintno);
+										MainWin.restartServerConn();
 									}
 								});
 								
@@ -3244,9 +3245,8 @@ public class MainWin {
 			MainWin.instance = inst;
 		
 			restartServerConn();
+			
 		}
-		else
-			MainWin.instance = inst;
 		
 		config.setProperty("LastInstance", inst);
 		updateTitlebar();
@@ -3430,13 +3430,22 @@ public class MainWin {
 
 	public static void restartServerConn() 
 	{
+		//logger.warn("Restarting server connection..");
 		if (syncObj != null)
 		{
 			MainWin.syncObj.die();
+			syncThread.interrupt();
+			
+			try 
+			{
+				syncThread.join();
+			}
+			catch (InterruptedException e) {
+			}
 		}
 		
-		MainWin.serverLocal = UIUtils.isServerLocal();
-			
+		if (MainWin.table != null)
+			MainWin.table.removeAll();
 		
 		// start threads that talk with server
 		syncObj = new SyncThread();
@@ -3444,26 +3453,11 @@ public class MainWin {
 		syncThread.setDaemon(true);
 		syncThread.start();
 		
-	}
-
-
-	public static void applyConfig() 
-	{
-		display.asyncExec(
-				  new Runnable() {
-					  public void run()
-					  {
-						  
-						  
-						  // hdbdos menu toggle
-						  MainWin.mntmHdbdosTranslation.setSelection(MainWin.getInstanceConfig().getBoolean("HDBDOSMode", false));
-						  
-						  
-					  }
-				  });
+		MainWin.serverLocal = UIUtils.isServerLocal();
 		
 	}
-	
+
+
 	
 	public static void applyDisks() 
 	{

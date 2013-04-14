@@ -6,10 +6,13 @@ import java.util.Set;
 public class DWEvent {
 
 	private byte eventType;
+	private int eventInstance = -1;
+	
 	private HashMap<String, String> params = new HashMap<String, String>();
 	
-	public DWEvent(byte eventType) 
+	public DWEvent(byte eventType, int instance) 
 	{
+		this.setEventInstance(instance);
 		this.setEventType(eventType);
 	}
 	
@@ -41,6 +44,14 @@ public class DWEvent {
 
 	public byte getEventType() {
 		return eventType;
+	}
+
+	public int getEventInstance() {
+		return eventInstance;
+	}
+
+	public void setEventInstance(int eventInstance) {
+		this.eventInstance = eventInstance;
 	}
 
 }

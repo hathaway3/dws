@@ -46,7 +46,7 @@ public class DWVPrinter
 					Constructor<DWVPrinterDriver> pconst = (Constructor<DWVPrinterDriver>) Class.forName(("com.groupunix.drivewireserver.virtualprinter.DWVPrinter" + printer.getString("Driver")), true, this.getClass().getClassLoader()).getConstructor(Class.forName("org.apache.commons.configuration.HierarchicalConfiguration"));
 					this.drivers.add((DWVPrinterDriver) pconst.newInstance(printer));
 					// yes we can
-					logger.info("init printer '" + printer.getString("[@name]") + "' using driver '" + printer.getString("Driver") + "'");
+					logger.debug("init printer '" + printer.getString("[@name]") + "' using driver '" + printer.getString("Driver") + "'");
 					
 				} 
 				// so many ways to fail...
@@ -154,7 +154,6 @@ public class DWVPrinter
 				{	
 					logger.warn("error flushing print buffer: " + e.getMessage());
 				}
-				logger.debug("flush thread exit");
 			}
 		
 		});

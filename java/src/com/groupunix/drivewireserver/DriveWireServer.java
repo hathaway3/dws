@@ -48,8 +48,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 public class DriveWireServer 
 {
 
-	public static final String DWServerVersion = "4.3.3f";
-	public static final String DWServerVersionDate = "04/13/2013";
+	public static final String DWServerVersion = "4.3.3g";
+	public static final String DWServerVersionDate = "04/14/2013";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;
@@ -77,12 +77,12 @@ public class DriveWireServer
 	private static boolean useBackup = false;
 	private static SerialPort testSerialPort;
 	
-	private static DWEvent statusEvent = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+	private static DWEvent statusEvent = new DWEvent(DWDefs.EVENT_TYPE_STATUS, -1);
 	private static long lastMemoryUpdate = 0;
 	private static ArrayList<DWEvent> logcache = new ArrayList<DWEvent>();
 	private static boolean useDebug = false;
 	private static long magic = System.currentTimeMillis();
-	private static DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+	private static DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_STATUS, -1);
 	private static DWEvent fevt;
 	private static boolean noMIDI = false;
 	private static boolean noMount = false;
@@ -214,7 +214,7 @@ public class DriveWireServer
 			}
 			
 			// only send updated vals
-			fevt = new DWEvent(DWDefs.EVENT_TYPE_STATUS);
+			fevt = new DWEvent(DWDefs.EVENT_TYPE_STATUS, -1);
 			
 			for (String key : evt.getParamKeys())
 			{
@@ -410,21 +410,28 @@ public class DriveWireServer
 
 	public static void startHandler(int hno) 
 	{
-		logger.info("Starting handler #" + hno + ": " + dwProtoHandlers.get(hno).getClass().getSimpleName() );
-    	
-    	dwProtoHandlerThreads.get(hno).start();	
-    	
-    	while (!dwProtoHandlers.get(hno).isReady())
-    	{
-    		try 
-    		{
-				Thread.sleep(100);
-			} 
-    		catch (InterruptedException e) 
-    		{
-    			System.out.println("Interrupted while waiting for instance " + hno + "  to become ready.");
-    		}
-    	}
+		if (dwProtoHandlerThreads.get(hno).isAlive())
+		{
+			logger.error("Requested start of already alive handler #" + hno);
+		}
+		else
+		{
+			logger.info("Starting handler #" + hno + ": " + dwProtoHandlers.get(hno).getClass().getSimpleName() );
+	    	
+	    	dwProtoHandlerThreads.get(hno).start();	
+	    	
+	    	while (!dwProtoHandlers.get(hno).isReady())
+	    	{
+	    		try 
+	    		{
+					Thread.sleep(100);
+				} 
+	    		catch (InterruptedException e) 
+	    		{
+	    			logger.warn("Interrupted while waiting for instance " + hno + "  to become ready.");
+	    		}
+	    	}
+		}
 	}
 
 
@@ -1050,7 +1057,7 @@ public class DriveWireServer
 	{
 		if (uiObj != null)
 		{
-			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_SERVERCONFIG);
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_SERVERCONFIG, -1);
 		
 			evt.setParam(DWDefs.EVENT_ITEM_KEY, propertyName);
 			evt.setParam(DWDefs.EVENT_ITEM_VALUE, propertyValue);
@@ -1064,7 +1071,7 @@ public class DriveWireServer
 	{
 		if (uiObj != null)
 		{
-			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_INSTANCECONFIG);
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_INSTANCECONFIG, instance);
 		
 			evt.setParam(DWDefs.EVENT_ITEM_INSTANCE, String.valueOf(instance));
 			evt.setParam(DWDefs.EVENT_ITEM_KEY, propertyName);
@@ -1079,7 +1086,7 @@ public class DriveWireServer
 	{
 		if (uiObj != null)
 		{
-			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_DISK);
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_DISK, instance);
 			
 			evt.setParam(DWDefs.EVENT_ITEM_INSTANCE, String.valueOf(instance));
 			evt.setParam(DWDefs.EVENT_ITEM_DRIVE, String.valueOf(diskno));
@@ -1095,7 +1102,7 @@ public class DriveWireServer
 	{
 		if (uiObj != null)
 		{
-			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_MIDI);
+			DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_MIDI, instance);
 			
 			evt.setParam(DWDefs.EVENT_ITEM_INSTANCE, String.valueOf(instance));
 			evt.setParam(DWDefs.EVENT_ITEM_KEY, key);
@@ -1107,7 +1114,7 @@ public class DriveWireServer
 
 	public static void submitLogEvent(LoggingEvent event) 
 	{
-		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_LOG);
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_LOG, -1);
 		
 		evt.setParam(DWDefs.EVENT_ITEM_LOGLEVEL, event.getLevel().toString());
 		evt.setParam(DWDefs.EVENT_ITEM_TIMESTAMP, event.getTimeStamp()+"");

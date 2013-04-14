@@ -86,7 +86,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	private DWProtocolTimers timers;
 
 	private boolean ready = false;
-
+	private boolean started = false;
 
 	private boolean resetPending = false;
 	
@@ -138,6 +138,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	public void run()
 	{
 		int opcodeint = -1;
+		this.started = true;
 		
 		this.timers = new DWProtocolTimers();
 		this.timers.resetTimer(DWDefs.TIMER_START);
@@ -155,8 +156,6 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		// setup environment and get started
 		if (!wanttodie)
 		{
-			logger.debug("handler #" + handlerno + ": setting up...");
-
 			// setup drives
 			diskDrives = new DWDiskDrives(this);
 			
@@ -196,7 +195,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		long optime = 0;
 		long optook = 0;
 		
-		logger.info("handler #" + handlerno + " is ready");
+		logger.debug("handler #" + handlerno + " is ready");
 		
 		// protocol loop
 		
@@ -1846,6 +1845,13 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 	public DWProtocolTimers getTimers()
 	{
 			return this.timers;
+	}
+
+
+	@Override
+	public boolean isStarted() {
+		
+		return this.started;
 	}
 	
 	

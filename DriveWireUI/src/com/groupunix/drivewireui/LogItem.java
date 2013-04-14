@@ -14,6 +14,20 @@ public class LogItem
 	private String level;
 	private String source;
 	
+	public LogItem()
+	{
+		
+	}
+	
+	public LogItem(String txt)
+	{
+		this.message = txt;
+		this.timestamp = System.currentTimeMillis();
+		this.thread = Thread.currentThread().getName();
+		this.level = "INFO";
+		this.source = Thread.currentThread().getClass().getSimpleName();
+	}
+	
 	public void setMessage(String message)
 	{
 		this.message = message;

@@ -19,5 +19,6 @@ public interface DWProtocolDevice
 	public int getRate();
 	public String getDeviceType();
 	public String getDeviceName();
+	public String getClient();
 
 }

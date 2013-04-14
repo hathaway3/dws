@@ -43,7 +43,7 @@ public class SyncThread implements Runnable
 			try
 			{
 				//System.out.println("sleep");
-				Thread.sleep(200);
+				Thread.sleep(100);
 			} 
 			catch (InterruptedException e)
 			{
@@ -53,6 +53,7 @@ public class SyncThread implements Runnable
 		
 		while (!wanttodie)
 		{
+			
 			// change/establish connection
 			if (!wanttodie && !(MainWin.getHost() == null) && !this.host.equals(MainWin.getHost()) || !(this.port == MainWin.getPort()) || (this.sock == null))		
 			{
@@ -60,7 +61,7 @@ public class SyncThread implements Runnable
 				
 				if (!(sock == null))
 				{
-					// TODO MainWin.addToDisplay("Sync: Disconnecting from server..");
+					MainWin.addToServerLog(new LogItem("Sync: Disconnecting from server.."));
 					try 
 					{
 						sock.close();
@@ -98,10 +99,9 @@ public class SyncThread implements Runnable
 				    
 				    // load full config
 				    MainWin.setServerConfig(UIUtils.getServerConfig());
-				    MainWin.applyConfig();
-				    
 				    
 				    // load all disk info
+				  
 				    MainWin.setDisks(UIUtils.getServerDisks());
 				    MainWin.applyDisks();
 				    
@@ -195,6 +195,7 @@ public class SyncThread implements Runnable
 				
 			}
 		}
+	
 	}
 	
 	
@@ -342,7 +343,7 @@ public class SyncThread implements Runnable
 						MainWin.getInstanceConfig().setProperty(this.params.get("k"), this.params.get("v"));
 					}
 					
-					MainWin.applyConfig();
+					
 				}
 					
 			}
@@ -413,6 +414,7 @@ public class SyncThread implements Runnable
 	public void die()
 	{
 		this.wanttodie = true;
+		
 		if (this.sock != null)
 		{
 			try 

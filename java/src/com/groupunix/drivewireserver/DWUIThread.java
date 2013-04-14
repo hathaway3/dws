@@ -146,25 +146,30 @@ public class DWUIThread implements Runnable {
 			while(itr.hasNext()) 
 			{	
 				DWUIClientThread client = itr.next();
-				LinkedBlockingQueue<DWEvent> queue = (LinkedBlockingQueue<DWEvent>) client.getEventQueue(); 
 				
-				synchronized(queue)
+				// filter for instance
+				if ((client.getInstance() == -1) || (client.getInstance() == evt.getEventInstance()) || (evt.getEventInstance() == -1))
 				{
-					if ((queue != null) && !(client.isDropLog() && (evt.getEventType() == DWDefs.EVENT_TYPE_LOG)))
+					LinkedBlockingQueue<DWEvent> queue = (LinkedBlockingQueue<DWEvent>) client.getEventQueue(); 
+					
+					synchronized(queue)
 					{
-						this.lastQueueSize = queue.size();
-						if (queue.size() < DWDefs.EVENT_QUEUE_LOGDROP_SIZE)
+						if ((queue != null) && !(client.isDropLog() && (evt.getEventType() == DWDefs.EVENT_TYPE_LOG)))
 						{
-							queue.add(evt);
-						}
-						else if ((queue.size() < DWDefs.EVENT_MAX_QUEUE_SIZE) && (evt.getEventType() != DWDefs.EVENT_TYPE_LOG))
-						{
-							queue.add(evt);
-						}
-						else
-						{
-							this.dropppedevents++; 
-							System.out.println("queue drop: " + queue.size() + "/" + this.dropppedevents + "  " + evt.getEventType() + " thr " + client.getThreadName() + " cmd " + client.getCurCmd() + " state " + client.getState() );
+							this.lastQueueSize = queue.size();
+							if (queue.size() < DWDefs.EVENT_QUEUE_LOGDROP_SIZE)
+							{
+								queue.add(evt);
+							}
+							else if ((queue.size() < DWDefs.EVENT_MAX_QUEUE_SIZE) && (evt.getEventType() != DWDefs.EVENT_TYPE_LOG))
+							{
+								queue.add(evt);
+							}
+							else
+							{
+								this.dropppedevents++; 
+								System.out.println("queue drop: " + queue.size() + "/" + this.dropppedevents + "  " + evt.getEventType() + " thr " + client.getThreadName() + " cmd " + client.getCurCmd() + " state " + client.getState() );
+							}
 						}
 					}
 				}

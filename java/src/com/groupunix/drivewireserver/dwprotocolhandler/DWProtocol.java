@@ -16,6 +16,8 @@ public interface DWProtocol extends Runnable
 {
 	void shutdown();
 	boolean isDying();
+	boolean isStarted();
+	boolean isReady();
 	HierarchicalConfiguration getConfig();
 	//DWCommandList getDWCmds();
 	//DWDiskDrives getDiskDrives();
@@ -29,11 +31,12 @@ public interface DWProtocol extends Runnable
 	Logger getLogger();
 	int getCMDCols();
 	DWHelp getHelp();
-	boolean isReady();
+	
 	void submitConfigEvent(String propertyName, String string);
 	long getNumOps();
 	long getNumDiskOps();
 	long getNumVSerialOps();
 	DWProtocolTimers getTimers();
+	
 	
 }

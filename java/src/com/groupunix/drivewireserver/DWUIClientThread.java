@@ -199,6 +199,7 @@ public class DWUIClientThread implements Runnable {
 		
 		
 		// wait for instance ready..
+		/*
 		if (this.instance > -1)
 		{
 			waits = 0;
@@ -224,7 +225,7 @@ public class DWUIClientThread implements Runnable {
 				return;
 			}
 		}
-		
+		*/
 		
 		DWCommandResponse resp = this.commands.parse(cmd);
 		

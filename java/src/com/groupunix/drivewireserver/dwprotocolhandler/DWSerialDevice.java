@@ -286,7 +286,9 @@ public class DWSerialDevice implements DWProtocolDevice
 	
 	public int getRate()
 	{
-		return(this.serialPort.getBaudRate());
+		if (this.serialPort != null)
+			return(this.serialPort.getBaudRate());
+		return -1;
 	}
 	
 
@@ -469,7 +471,10 @@ public class DWSerialDevice implements DWProtocolDevice
 	@Override
 	public String getDeviceName() 
 	{
-		return(this.serialPort.getName());
+		if (this.serialPort != null)
+			return(this.serialPort.getName());
+		
+		return null;
 	}
 
 
@@ -500,5 +505,12 @@ public class DWSerialDevice implements DWProtocolDevice
 	public SerialPort getSerialPort()
 	{
 		return this.serialPort;
+	}
+
+
+	@Override
+	public String getClient() 
+	{
+		return null;
 	}
 }

@@ -18,7 +18,7 @@ public class UICmdSync extends DWCommand {
 	private static final Logger logger = Logger.getLogger("DWServer.DWUtilUIThread");
 	
 	private DWUIClientThread dwuiref;
-	private DWEvent lastevt = new DWEvent((byte) 0);
+	private DWEvent lastevt = new DWEvent((byte) 0, -1);
 	
 	public UICmdSync(DWUIClientThread dwuiClientThread) 
 	{

@@ -196,6 +196,16 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 	}
 
 
+	@Override
+	public String getClient() 
+	{
+		if (this.connected())
+			return this.tcphost + ":" + this.tcpport;
+		
+		return null;
+	}
+
+
 	
 
 

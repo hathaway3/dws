@@ -18,6 +18,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 	private ServerSocket srvr;
 	private Socket skt = null;
 	private boolean bytelog = false;
+	private String client = null;
 	
 	public DWTCPDevice(int handlerno, int tcpport) throws IOException 
 	{
@@ -46,7 +47,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 
 	public void close() 
 	{
-		logger.info("closing tcp device in handler #" + this.handlerno);
+		logger.debug("closing tcp device in handler #" + this.handlerno);
 		
 		closeClient();
 		
@@ -56,7 +57,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 		} 
 		catch (IOException e) 
 		{
-			logger.warn(e.getMessage());
+			logger.debug(e.getMessage());
 		}
 		
 	}
@@ -65,7 +66,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 	
 	private void closeClient() 
 	{
-		logger.info("closing client connection");
+		logger.debug("closing client connection");
 		
 		if ((skt != null) && (!skt.isClosed()))
 		{
@@ -75,10 +76,11 @@ public class DWTCPDevice implements DWProtocolDevice {
 			} 
 			catch (IOException e) 
 			{
-				logger.warn(e.getMessage());
+				logger.debug(e.getMessage());
 			}
 		}
 		
+		client = null;
 		skt = null;
 	}
 
@@ -104,7 +106,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 		
 		if (skt == null)
 		{
-			getClient();
+			getClientConnection();
 		}
 		
 		if (skt != null)
@@ -123,7 +125,7 @@ public class DWTCPDevice implements DWProtocolDevice {
 			{
 				// read problem
 			
-				logger.info("socket error reading device");
+				logger.debug("socket error reading device");
 			
 				closeClient();
 			
@@ -204,20 +206,23 @@ public class DWTCPDevice implements DWProtocolDevice {
 		close();
 	}
 
-	private void getClient()
+	private void getClientConnection()
 	{
-		logger.info("waiting for client...");
+		logger.debug("waiting for client...");
 		try 
 		{
 			skt = srvr.accept();
 		} 
 		catch (IOException e1) 
 		{
-			logger.info("IO error while getting client: " + e1.getMessage());
+			logger.debug("IO error while listening for client: " + e1.getMessage());
 			return;
 		}
 		
-		logger.info("new client connect from " + skt.getInetAddress().getCanonicalHostName());
+		logger.debug("new client connect from " + skt.getInetAddress().getCanonicalHostName());
+		
+		this.client  = skt.getInetAddress().getCanonicalHostName();
+		
 		try 
 		{
 			skt.setTcpNoDelay(true);
@@ -246,6 +251,13 @@ public class DWTCPDevice implements DWProtocolDevice {
 	public String getDeviceType() 
 	{
 		return("tcp");
+	}
+
+
+	@Override
+	public String getClient() 
+	{
+		return this.client;
 	}
 
 
