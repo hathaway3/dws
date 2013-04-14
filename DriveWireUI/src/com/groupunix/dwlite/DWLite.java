@@ -376,7 +376,7 @@ public class DWLite
 			{
 				if ((DriveWireServer.getHandler(handlerno) != null) && (DriveWireServer.getHandler(handlerno).getConfig() != null))
 				{
-					chckbxmntmHdbdosTranslation.setEnabled(false);
+					chckbxmntmHdbdosTranslation.setEnabled(true);
 					chckbxmntmHdbdosTranslation.setSelected(DriveWireServer.getHandler(handlerno).getConfig().getBoolean("HDBDOSMode", false));
 				}
 				else
