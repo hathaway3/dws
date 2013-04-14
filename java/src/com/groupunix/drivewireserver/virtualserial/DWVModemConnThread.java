@@ -23,6 +23,8 @@ public class DWVModemConnThread implements Runnable {
 
 	private DWVModemListenerThread listenerThread = null;
 
+	private boolean wanttodie = false;
+
 	
 	// telnet protocol cmds
 	public static final int IAC = 255;
@@ -76,121 +78,122 @@ public class DWVModemConnThread implements Runnable {
 				
 				
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
 				logger.warn("while making outgoing vmodem connection: " + e.getMessage());
+				wanttodie  = true;
 			} 
 			
 		}
 		
-			
-		try 
+		if (!wanttodie)
 		{
-			
-			if ((sktchan != null) && sktchan.isConnected())
+			try 
 			{
-				vm.getVSerialPorts().markConnected(vport);
-				vm.getVSerialPorts().setUtilMode(vport, DWDefs.UTILMODE_VMODEMOUT);
-				vm.getVSerialPorts().setPortChannel(vport, sktchan);
-				vm.getVSerialPorts().getPortInput(vport).write("CONNECT\r\n".getBytes());
-			}
-			
-			while ((sktchan != null) && sktchan.isConnected())
-			{
-				int data = sktchan.socket().getInputStream().read();
 				
-				if (data >= 0)
+				if ((sktchan != null) && sktchan.isConnected())
 				{
-					// telnet stuff
-					if (telmode == 1)
+					vm.getVSerialPorts().markConnected(vport);
+					vm.getVSerialPorts().setUtilMode(vport, DWDefs.UTILMODE_VMODEMOUT);
+					vm.getVSerialPorts().setPortChannel(vport, sktchan);
+					vm.getVSerialPorts().getPortInput(vport).write("CONNECT\r\n".getBytes());
+				}
+				
+				while ((sktchan != null) && sktchan.isConnected())
+				{
+					int data = sktchan.socket().getInputStream().read();
+					
+					if (data >= 0)
 					{
+						// telnet stuff
+						if (telmode == 1)
+						{
+							switch(data)
+							{
+							  	case SE:
+							  	case NOP:
+							  	case DM:
+							  	case BREAK:
+							  	case IP:
+							  	case AO:
+							  	case AYT:
+							  	case EC:
+							  	case EL:
+							  	case GA:
+							  	case SB:
+							  		
+							  		break;
+							  		
+							  	case WILL:
+							  		data = sktchan.socket().getInputStream().read();
+							  		sktchan.socket().getOutputStream().write(255);
+							  		sktchan.socket().getOutputStream().write(DONT);
+							  		sktchan.socket().getOutputStream().write(data);
+						        	break;
+						        	
+						        case WONT:
+						        case DONT:
+						        	data = sktchan.socket().getInputStream().read();
+						        	break;
+						        	
+						        case DO:
+						        	data = sktchan.socket().getInputStream().read();
+						        	sktchan.socket().getOutputStream().write(255);
+						        	sktchan.socket().getOutputStream().write(WONT);
+						        	sktchan.socket().getOutputStream().write(data);
+						        	break;
+							
+						        	
+							}
+							telmode  = 0;
+						}
 						switch(data)
 						{
-						  	case SE:
-						  	case NOP:
-						  	case DM:
-						  	case BREAK:
-						  	case IP:
-						  	case AO:
-						  	case AYT:
-						  	case EC:
-						  	case EL:
-						  	case GA:
-						  	case SB:
-						  		
-						  		break;
-						  		
-						  	case WILL:
-						  		data = sktchan.socket().getInputStream().read();
-						  		sktchan.socket().getOutputStream().write(255);
-						  		sktchan.socket().getOutputStream().write(DONT);
-						  		sktchan.socket().getOutputStream().write(data);
-					        	break;
-					        	
-					        case WONT:
-					        case DONT:
-					        	data = sktchan.socket().getInputStream().read();
-					        	break;
-					        	
-					        case DO:
-					        	data = sktchan.socket().getInputStream().read();
-					        	sktchan.socket().getOutputStream().write(255);
-					        	sktchan.socket().getOutputStream().write(WONT);
-					        	sktchan.socket().getOutputStream().write(data);
-					        	break;
-						
-					        	
+							case IAC:
+								telmode = 1;
+								break;
+							
+							default:
+								// write it to the serial port
+								vm.write((byte) data);
+				         
 						}
-						telmode  = 0;
 					}
-					switch(data)
+					else
 					{
-						case IAC:
-							telmode = 1;
-							break;
-						
-						default:
-							// write it to the serial port
-							vm.write((byte) data);
-			         
+						logger.info("connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " closed");
+						if (sktchan.isConnected())
+						{
+							logger.debug("closing socket");
+							sktchan.close();
+						}
+							
 					}
 				}
-				else
-				{
-					logger.info("connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " closed");
-					if (sktchan.isConnected())
-					{
-						logger.debug("closing socket");
-						sktchan.close();
-					}
-						
-				}
+				
+			} 
+			catch (IOException e) 
+			{
+				logger.warn("IO error in connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " = " + e.getMessage());
+			} 
+			catch (DWPortNotValidException e)
+			{
+				logger.warn("in connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " = " + e.getMessage());
 			}
-			
-		} 
-		catch (IOException e) 
-		{
-			logger.warn("IO error in connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " = " + e.getMessage());
-		} 
-		catch (DWPortNotValidException e)
-		{
-			logger.warn("in connection to " + this.sktchan.socket().getInetAddress().getCanonicalHostName() + ":" + this.sktchan.socket().getPort() + " = " + e.getMessage());
 		}
 	
-		finally
+		if (this.vport > -1)
 		{
-			if (this.vport > -1)
-			{
-				vm.getVSerialPorts().markDisconnected(this.vport);
-				// TODO: this is all wrong
-				vm.write("\r\n\r\nNO CARRIER\r\n");
+			vm.getVSerialPorts().markDisconnected(this.vport);
+			// TODO: this is all wrong
+			vm.write("\r\n\r\nNO CARRIER\r\n");
 				
-				if (this.listenerThread != null)
-					this.listenerThread.setConnected(false);
-			}	
+			if (this.listenerThread != null)
+				this.listenerThread.setConnected(false);
+		}	
 			
-			logger.debug("thread exiting");
-		}
+		logger.debug("thread exiting");
+		
 	}
 
 }

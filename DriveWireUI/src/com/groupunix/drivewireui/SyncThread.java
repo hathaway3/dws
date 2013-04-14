@@ -82,7 +82,7 @@ public class SyncThread implements Runnable
 					MainWin.debug("Sync: Connecting...");
 					
 				    
-				    // get initial state
+				    // get initial state 
 				    
 				    // cache error meanings
 					try
@@ -97,17 +97,36 @@ public class SyncThread implements Runnable
 				    
 				    
 				    
-				    // load full config
+				    // load full config - required
 				    MainWin.setServerConfig(UIUtils.getServerConfig());
-				    
-				    // load all disk info
 				  
-				    MainWin.setDisks(UIUtils.getServerDisks());
-				    MainWin.applyDisks();
+				    
+				    // optional depending on instance capabilities
+				    // load all disk info
+				    try
+				    {
+				    	MainWin.setDisks(UIUtils.getServerDisks());
+				    	MainWin.applyDisks();
+				    }
+				    catch (DWUIOperationFailedException e)
+					{
+						// don't care
+						MainWin.debug("Sync: loading disk info failed");
+					}
 				    
 				    // load midi status
-				    MainWin.setMidiStatus(UIUtils.getServerMidiStatus());
-				    MainWin.applyMIDIStatus();
+				
+				    try
+				    {
+				    	MainWin.setMidiStatus(UIUtils.getServerMidiStatus());
+				    	MainWin.applyMIDIStatus();
+				    }
+				    catch (DWUIOperationFailedException e)
+					{
+						// don't care
+						MainWin.debug("Sync: loading midi status failed");
+					}
+				    
 				    
 				    sock = new Socket(host, port);
 					

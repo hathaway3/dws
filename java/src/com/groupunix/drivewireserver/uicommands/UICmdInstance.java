@@ -5,6 +5,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class UICmdInstance extends DWCommand {
 
@@ -40,7 +41,7 @@ public class UICmdInstance extends DWCommand {
 			commands.addcommand(new UICmdInstancePrinterStatus((DWProtocolHandler) dwProto));
 		
 		if (dwProto.hasVSerial())
-			commands.addcommand(new UICmdInstancePortStatus((DWProtocolHandler)dwProto));
+			commands.addcommand(new UICmdInstancePortStatus((DWVSerialProtocol)dwProto));
 		
 		commands.addcommand(new UICmdInstanceTimer(dwProto));
 	}

@@ -13,11 +13,13 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwhelp.DWHelp;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolDevice;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolTimers;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWSerialDevice;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
@@ -46,7 +48,6 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 	private DWVSerialPorts vSerialPorts;
 
 	private boolean logdevbytes = false;
-	
 
 	
 	public VModemProtocolHandler(int handlerno, HierarchicalConfiguration hconf )
@@ -70,7 +71,9 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 	@Override
 	public void run() 
 	{
-		int readbyte = -1;
+		
+		Thread.currentThread().setName("vmodemproto-" + handlerno + "-" +  Thread.currentThread().getId());
+		
 		
 		logger.info("VModemHandler #" + this.handlerno + " starting");
 		this.started = true;
@@ -80,57 +83,90 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 		if (this.protodev == null)
 			setupProtocolDevice();
 		
-		
-		this.ready = true;
-		
-		logger.debug("handler #" + handlerno + " is ready");
-		
-		
-		
-		while (!wanttodie)
+		try 
 		{
-	
-			if (protodev != null)
-			{
-				try 
-				{
-					readbyte = protodev.comRead1(false);
-				}				
-				catch (IOException e) 
-				{
-					logger.error("Strange result in proto read loop: "  + e.getMessage());
-				} 
-				catch (DWCommTimeOutException e)
-				{
-					logger.error("Timeout in proto read loop: "  + e.getMessage());
-				}
-			}
-				
-			
-			if ((readbyte > -1) && (this.protodev != null))
-			{
-				if (logdevbytes )
-					logger.debug("input byte: " + readbyte);
-				
-				// take input byte
-				try 
-				{
-					this.vSerialPorts.getPortInput(0).write(readbyte);
-				} 
-				catch (IOException e) 
-				{
-					logger.error(e.getMessage());
-				} 
-				catch (DWPortNotValidException e) 
-				{
-					logger.error(e.getMessage());
-				}
-			
-			}
-			
+			this.vSerialPorts.openPort(0);
+		} 
+		catch (DWPortNotValidException e1) 
+		{
+			logger.error(e1.getMessage());
+			wanttodie = true;
 		}
 		
+		Thread VModemToSerialT = new Thread(new Runnable()
+		{
+			boolean wanttodie = false;
+			
+			@Override
+			public void run() 
+			{
+				while (!wanttodie)
+				{
+					try
+					{
+						int bread = protodev.comRead1(false);
+						vSerialPorts.serWrite(0, bread);
+						
+						if (logdevbytes)
+							logger.debug("read byte from serial device: " + bread);
+					}
+					catch (IOException e) 
+					{
+						wanttodie = true;
+					} 
+					catch (DWPortNotOpenException e) 
+					{
+						wanttodie = true;
+					} 
+					catch (DWPortNotValidException e) 
+					{
+						wanttodie = true;
+					} 
+					catch (DWCommTimeOutException e) 
+					{
+						wanttodie = true;
+						
+					}
+				}
+				
+			}});
 		
+		 VModemToSerialT.start();
+		
+		
+		if (!wanttodie && (this.protodev != null))
+		{
+			this.ready = true;
+			logger.debug("handler #" + handlerno + " is ready");
+		}
+		else
+		{
+			logger.warn("handler #" + handlerno + " failed to get ready");
+		}
+		
+		byte[] buffer = new byte[256];	
+		
+		while (!wanttodie && (this.protodev != null))
+		{
+			
+			try 
+			{
+				int bread = vSerialPorts.getPortOutput(0).read(buffer);
+				this.protodev.comWrite(buffer, bread, false);
+				if (logdevbytes)
+					logger.debug("read " + bread + " bytes from vmodem: " + DWUtils.byteArrayToHexString(buffer, bread));
+			}				
+			catch (IOException e) 
+			{
+				logger.error( e.getMessage());
+			} 
+			catch (DWPortNotValidException e) 
+			{
+				logger.error(e.getMessage());
+				
+			} 
+					
+		}
 		
 		logger.debug("handler #" + handlerno + " is exiting");
 		this.vSerialPorts.shutdown();
@@ -239,7 +275,15 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 	@Override
 	public void resetProtocolDevice() 
 	{
-		// TODO Auto-generated method stub
+		logger.debug("resetting serial port");
+		if (this.protodev != null)
+		{
+			this.protodev.shutdown();
+			this.protodev = null;
+		}
+		
+		setupProtocolDevice();
+		
 		
 	}
 
@@ -345,4 +389,7 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 	{
 		return this.vSerialPorts;
 	}
+
+
+
 }

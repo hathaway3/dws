@@ -1,6 +1,7 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -258,6 +259,13 @@ public class DWTCPDevice implements DWProtocolDevice {
 	public String getClient() 
 	{
 		return this.client;
+	}
+
+
+	@Override
+	public InputStream getInputStream() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

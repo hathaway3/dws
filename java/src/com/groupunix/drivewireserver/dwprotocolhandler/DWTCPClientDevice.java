@@ -1,6 +1,7 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
@@ -202,6 +203,14 @@ public class DWTCPClientDevice implements DWProtocolDevice {
 		if (this.connected())
 			return this.tcphost + ":" + this.tcpport;
 		
+		return null;
+	}
+
+
+	@Override
+	public InputStream getInputStream() 
+	{
+		// TODO Auto-generated method stub
 		return null;
 	}
 

@@ -65,8 +65,8 @@ public class DWUIClientThread implements Runnable {
 		Thread.currentThread().setName(tname);
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
-		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
-			logger.debug("run for client at " + skt.getInetAddress().getHostAddress());
+		// if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+		//	logger.debug("run for client at " + skt.getInetAddress().getHostAddress());
 		
 		
 		try 
@@ -125,8 +125,8 @@ public class DWUIClientThread implements Runnable {
 			this.clientThreads.remove(this);
 		}
 		
-		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
-			logger.debug("exit");
+		//if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+		//	logger.debug("exit");
 		
 		this.state  = "exit";
 	}

@@ -2,6 +2,7 @@ package com.groupunix.drivewireserver.virtualserial;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
@@ -357,6 +358,16 @@ public class DWVSerialPorts {
 		}
 	}
 	
+	public void serWriteM(int port, byte[] data, int bread) throws DWPortNotOpenException, DWPortNotValidException 
+	{
+		for (int i = 0;(i<data.length) && (i<bread);i++)
+		{
+			// inefficient as hell, but serwriteM isn't even implemented in driver anyway
+			serWrite(port, data[i]);
+		}
+	}
+
+	
 
 	public void serWrite(int port, int databyte) throws DWPortNotOpenException, DWPortNotValidException 
 	{
@@ -428,6 +439,12 @@ public class DWVSerialPorts {
 		return (vserialPorts[vport].getPortInput());
 	}
 
+	public InputStream getPortOutput(int vport) throws DWPortNotValidException 
+	{
+		validateport(vport);
+		return (vserialPorts[vport].getPortOutput());
+	}
+	
 	
 	/*
 	
@@ -509,7 +526,7 @@ public class DWVSerialPorts {
 		
 	
 	
-	public void write1(int port, byte data) throws IOException, DWPortNotValidException
+	public void wr3ite1(int port, byte data) throws IOException, DWPortNotValidException
 	{
 		validateport(port);
 		getPortInput(port).write(data);
@@ -1161,6 +1178,16 @@ public class DWVSerialPorts {
 	{
 		return this.MIDIPort;
 	}
+
+
+
+
+
+	
+
+
+
+
 	
 	
 

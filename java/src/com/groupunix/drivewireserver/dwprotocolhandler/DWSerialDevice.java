@@ -8,6 +8,7 @@ import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.TooManyListenersException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -512,5 +513,38 @@ public class DWSerialDevice implements DWProtocolDevice
 	public String getClient() 
 	{
 		return null;
+	}
+
+
+	@Override
+	public InputStream getInputStream() 
+	{
+		 return new InputStream() 
+		 {
+             private boolean endReached = false;
+
+         	@Override
+             public int read() throws IOException 
+             {
+                 try {
+                     if (endReached)
+                         return -1;
+                         
+                     Byte value = queue.take();
+                     if (value == null) 
+                     {
+                    	
+                         throw new IOException(
+                                 "Timeout while reading from the queue-based input stream");
+                     }
+
+                     endReached = (value.intValue() == -1);
+                     return value;
+                 } catch (InterruptedException ie) {
+                     throw new IOException(
+                             "Interruption occurred while writing in the queue");
+                 }
+             }
+         };
 	}
 }

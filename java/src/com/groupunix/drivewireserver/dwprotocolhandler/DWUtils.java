@@ -68,7 +68,13 @@ public class DWUtils
 		return null;
 	}
 	
-	public static String byteArrayToHexString(byte in[]) {
+	public static String byteArrayToHexString(byte in[])
+	{
+		return byteArrayToHexString(in, in.length);
+	}
+	
+	public static String byteArrayToHexString(byte in[], int len) 
+	{
 
 	    byte ch = 0x00;
 
@@ -89,7 +95,7 @@ public class DWUtils
 
 	    
 
-	    while (i < in.length) {
+	    while (i < len) {
 
 	        ch = (byte) (in[i] & 0xF0);
 
@@ -963,6 +969,8 @@ public class DWUtils
 			
 			return res;
 		}
+
+		
 
 		
 		

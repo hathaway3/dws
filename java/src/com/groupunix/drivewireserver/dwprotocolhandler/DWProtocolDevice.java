@@ -1,6 +1,7 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
@@ -20,5 +21,6 @@ public interface DWProtocolDevice
 	public String getDeviceType();
 	public String getDeviceName();
 	public String getClient();
+	public InputStream getInputStream();
 
 }

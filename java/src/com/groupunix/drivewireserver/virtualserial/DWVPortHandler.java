@@ -1,7 +1,5 @@
 package com.groupunix.drivewireserver.virtualserial;
 
-import java.io.IOException;
-
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -44,18 +42,14 @@ public class DWVPortHandler
 		{
 			try
 			{
-				dwVSerialPorts.write1(this.vport, (byte) databyte);
+				dwVSerialPorts.writeToCoco(this.vport, (byte) databyte);
 				
 				// send extra lf on cr, not sure if this is right
 				if (databyte == this.vModem.getCR())
 				{
-					dwVSerialPorts.write1(this.vport,(byte) this.vModem.getLF());
+					dwVSerialPorts.writeToCoco(this.vport,(byte) this.vModem.getLF());
 				} 
 				
-			} 
-			catch (IOException e)
-			{
-				logger.warn("in takeinput: " + e.getMessage());
 			} 
 			catch (DWPortNotValidException e)
 			{

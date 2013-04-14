@@ -366,8 +366,6 @@ public class UIUtils {
 			}
 		}
 		
-		System.out.println("return midi status:  " + st.isEnabled());
-		
 		return(st);
 		
 	}

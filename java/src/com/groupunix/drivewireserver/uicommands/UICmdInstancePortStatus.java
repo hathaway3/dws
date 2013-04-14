@@ -7,15 +7,14 @@ import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class UICmdInstancePortStatus extends DWCommand {
 
 	private DWUIClientThread dwuithread = null;
 	
-	private DWProtocol gproto;
+	private DWVSerialProtocol gproto;
 
 	public UICmdInstancePortStatus(DWUIClientThread dwuiClientThread) 
 	{
@@ -23,7 +22,7 @@ public class UICmdInstancePortStatus extends DWCommand {
 	}
 
 
-	public UICmdInstancePortStatus(DWProtocol dwProto) 
+	public UICmdInstancePortStatus(DWVSerialProtocol dwProto) 
 	{
 		this.gproto = dwProto;
 	}
@@ -53,53 +52,47 @@ public class UICmdInstancePortStatus extends DWCommand {
 		
 		if (this.gproto == null)
 		{
-			if  (DriveWireServer.isValidHandlerNo(this.dwuithread.getInstance()))
+			if  ((DriveWireServer.isValidHandlerNo(this.dwuithread.getInstance()) && (DriveWireServer.getHandler(this.dwuithread.getInstance()).hasVSerial())))
 			{
-				gproto = DriveWireServer.getHandler(this.dwuithread.getInstance());
+				gproto = (DWVSerialProtocol) DriveWireServer.getHandler(this.dwuithread.getInstance());
 			}
 			else
 				return(new DWCommandResponse(false,DWDefs.RC_INSTANCE_WONT ,"The operation is not supported by this instance"));
 		}
+	
 		
-		DWProtocolHandler dwProto = null;
-		
-		if (gproto.getConfig().getString("Protocol", "DriveWire").equals("DriveWire"))
-			dwProto = (DWProtocolHandler)gproto;
-		else
-			return(new DWCommandResponse(false,DWDefs.RC_INSTANCE_WONT ,"The operation is not supported by this instance"));
-		
-		if (!(dwProto == null) && !(dwProto.getVPorts() == null) )
+		if (!(gproto == null) && !(gproto.getVPorts() == null) )
 		{
 			
 			
-			for (int p = 0;p < dwProto.getVPorts().getMaxPorts();p++)
+			for (int p = 0;p < gproto.getVPorts().getMaxPorts();p++)
 			{
-				if (!dwProto.getVPorts().isNull(p))
+				if (!gproto.getVPorts().isNull(p))
 				{
 					try
 					{
-						res += dwProto.getVPorts().prettyPort(p) + "|";
+						res += gproto.getVPorts().prettyPort(p) + "|";
 						
-						if (dwProto.getVPorts().isOpen(p))
+						if (gproto.getVPorts().isOpen(p))
 						{
 							res += "open|";
 							
-							res += dwProto.getVPorts().getOpen(p) + "|";
+							res += gproto.getVPorts().getOpen(p) + "|";
 							
-							res += dwProto.getVPorts().getUtilMode(p) + "|";
+							res += gproto.getVPorts().getUtilMode(p) + "|";
 							
-							res += DWUtils.prettyUtilMode(dwProto.getVPorts().getUtilMode(p)) + "|";
+							res += DWUtils.prettyUtilMode(gproto.getVPorts().getUtilMode(p)) + "|";
 							
-							res += dwProto.getVPorts().bytesWaiting(p)  + "|";
+							res += gproto.getVPorts().bytesWaiting(p)  + "|";
 							
-							res += dwProto.getVPorts().getConn(p) + "|";
+							res += gproto.getVPorts().getConn(p) + "|";
 							
-							if (dwProto.getVPorts().getConn(p) > -1)
+							if (gproto.getVPorts().getConn(p) > -1)
 							{
 								try
 								{
-									res += dwProto.getVPorts().getHostIP(p) + "|";
-									res += dwProto.getVPorts().getHostPort(p) + "|";
+									res += gproto.getVPorts().getHostIP(p) + "|";
+									res += gproto.getVPorts().getHostPort(p) + "|";
 									
 								} 
 								catch (DWConnectionNotValidException e)
@@ -112,7 +105,7 @@ public class UICmdInstancePortStatus extends DWCommand {
 							
 							
 							
-							res += new String(dwProto.getVPorts().getDD(p)) + "|";
+							res += new String(gproto.getVPorts().getDD(p)) + "|";
 							
 							
 						}
