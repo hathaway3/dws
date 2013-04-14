@@ -3,6 +3,7 @@ package com.groupunix.drivewireserver.uicommands;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstance extends DWCommand {
@@ -23,16 +24,24 @@ public class UICmdInstance extends DWCommand {
 	}
 
 	
-	public UICmdInstance(DWProtocolHandler dwProto) 
+	public UICmdInstance(DWProtocol dwProto) 
 	{
 		commands.addcommand(new UICmdInstanceConfig(dwProto) );
-		commands.addcommand(new UICmdInstanceDisk(dwProto));
+		if (dwProto.hasDisks())
+			commands.addcommand(new UICmdInstanceDisk((DWProtocolHandler) dwProto));
+		
 		commands.addcommand(new UICmdInstanceReset(dwProto));
 		commands.addcommand(new UICmdInstanceStatus(dwProto));
-		commands.addcommand(new UICmdInstanceMIDIStatus(dwProto));
-		commands.addcommand(new UICmdInstancePrinterStatus(dwProto));
-		commands.addcommand(new UICmdInstancePortStatus(dwProto));
-		commands.addcommand(new UICmdInstancePortStatus(dwProto));
+		
+		if (dwProto.hasMIDI())
+			commands.addcommand(new UICmdInstanceMIDIStatus(dwProto));
+		
+		if (dwProto.hasPrinters())
+			commands.addcommand(new UICmdInstancePrinterStatus((DWProtocolHandler) dwProto));
+		
+		if (dwProto.hasVSerial())
+			commands.addcommand(new UICmdInstancePortStatus((DWProtocolHandler)dwProto));
+		
 		commands.addcommand(new UICmdInstanceTimer(dwProto));
 	}
 

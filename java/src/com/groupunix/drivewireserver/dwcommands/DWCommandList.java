@@ -20,14 +20,16 @@ public class DWCommandList {
 	
 	public DWCommandList(DWProtocol dwProto, int outputcols)
 	{
-		this.outputcols = outputcols;
+		if (outputcols > 0)
+			this.outputcols = outputcols;
+		
 		this.dwProto = dwProto;
 	}
 	
 	public DWCommandList(DWProtocol dwProto)
 	{
 		this.dwProto = dwProto;
-
+		
 	}
 	
 	

@@ -42,6 +42,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.vmodem.VModemProtocolHandler;
 
 
 
@@ -381,6 +382,10 @@ public class DriveWireServer
 		    	else if (hconf.getString("Protocol").equals("MCX"))
 		    	{
 		    		dwProtoHandlers.add(new MCXProtocolHandler(hno, hconf));
+		    	}
+		    	else if (hconf.getString("Protocol").equals("VModem"))
+		    	{
+		    		dwProtoHandlers.add(new VModemProtocolHandler(hno, hconf));
 		    	}
 		    	else
 		    	{

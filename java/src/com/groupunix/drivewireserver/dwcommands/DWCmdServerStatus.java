@@ -44,29 +44,8 @@ public class DWCmdServerStatus extends DWCommand {
 		
 		text += "Total memory:  " + Runtime.getRuntime().totalMemory() / 1024 + " KB";
 	    text += "\r\nFree memory:   " + Runtime.getRuntime().freeMemory() / 1024 + " KB";
+	    text += "\r\n";
 	    
-	    if (dwProto.getConfig().getString("DeviceType","serial").equalsIgnoreCase("serial"))
-	    {
-	    	if (dwProto.getProtoDev() != null)
-	    	{
-	    		text += "\r\n\nDevice:        " + dwProto.getConfig().getString("SerialDevice","unknown");
-	    		text += " (" + dwProto.getProtoDev().getRate() + " bps)\r\n";
-	    		text += "CoCo Type:     " + dwProto.getConfig().getInt("CocoModel", 0) + "\r\n";
-	    	}
-	    	else
-	    	{
-	    		text += "\r\n\nDevice:        Serial, not started\r\n";
-	    	}
-	    }
-	    else
-	    {
-	    	text += "\r\n\nDevice:        TCP, listening on port " + dwProto.getConfig().getString("TCPDevicePort","unknown");
-			text += "\r\n";
-	    }
-		text += "\r\n";
-	
-		text += dwProto.getStatusText();
-		
 		return(new DWCommandResponse(text));
 		
 	}

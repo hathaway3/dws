@@ -7,12 +7,13 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdServerShowTopics extends DWCommand {
 
 
-	private DWProtocolHandler dwProto;
+	private DWProtocol dwProto;
 	private DWUIClientThread dwuiClientThread;
 
 	public UICmdServerShowTopics(DWUIClientThread dwuiClientThread) 
@@ -21,7 +22,7 @@ public class UICmdServerShowTopics extends DWCommand {
 	}
 
 
-	public UICmdServerShowTopics(DWProtocolHandler dwProto) 
+	public UICmdServerShowTopics(DWProtocol dwProto) 
 	{
 		this.dwProto = dwProto;
 	}
@@ -53,7 +54,7 @@ public class UICmdServerShowTopics extends DWCommand {
 		String txt = new String();
 		
 		if (this.dwProto == null)
-			this.dwProto = (DWProtocolHandler) DriveWireServer.getHandler(dwuiClientThread.getInstance());
+			this.dwProto = DriveWireServer.getHandler(dwuiClientThread.getInstance());
 
 		ArrayList<String> tops = dwProto.getHelp().getTopics(null);
 		

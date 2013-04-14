@@ -4,7 +4,7 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class UICmdInstanceResetProtodev extends DWCommand {
 
@@ -12,7 +12,7 @@ public class UICmdInstanceResetProtodev extends DWCommand {
 	
 	private DWUIClientThread uiref = null;
 
-	private DWProtocolHandler dwProto = null;
+	private DWProtocol dwProto = null;
 
 	public UICmdInstanceResetProtodev(DWUIClientThread dwuiClientThread) 
 	{
@@ -20,7 +20,7 @@ public class UICmdInstanceResetProtodev extends DWCommand {
 		this.uiref = dwuiClientThread;
 	}
 
-	public UICmdInstanceResetProtodev(DWProtocolHandler dwProto) 
+	public UICmdInstanceResetProtodev(DWProtocol dwProto) 
 	{
 		this.dwProto = dwProto;
 	}

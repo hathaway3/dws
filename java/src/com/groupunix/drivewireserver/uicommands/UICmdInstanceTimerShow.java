@@ -44,10 +44,14 @@ public class UICmdInstanceTimerShow extends DWCommand {
 	@Override
 	public DWCommandResponse parse(String cmdline) 
 	{
-		// TODO ASSumes we are using DW protocol
+
 		if (this.dwProto == null)
-			dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
-	
+		{
+			if (DriveWireServer.isValidHandlerNo(this.uiref.getInstance()))
+				dwProto = DriveWireServer.getHandler(this.uiref.getInstance());
+			else
+				return(new DWCommandResponse(false,DWDefs.RC_INSTANCE_WONT ,"The operation is not supported by this instance"));
+		}
 		
 		if (cmdline.length() == 0)
 		{

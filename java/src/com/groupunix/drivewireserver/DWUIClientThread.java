@@ -46,6 +46,7 @@ public class DWUIClientThread implements Runnable {
 		
 		commands = new DWCommandList(null);
 		commands.addcommand(new UICmd(this));
+		
 	}
 
 	
@@ -226,6 +227,8 @@ public class DWUIClientThread implements Runnable {
 			}
 		}
 		*/
+		
+		System.out.println("command '" + cmd + "' for inst " + this.instance);
 		
 		DWCommandResponse resp = this.commands.parse(cmd);
 		

@@ -6,16 +6,15 @@ package com.groupunix.drivewireserver.dwcommands;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class DWCmdInstanceStart extends DWCommand {
 
-	private DWProtocolHandler dwProto;
+
 
 	public DWCmdInstanceStart(DWProtocol dwProto2,DWCommand parent)
 	{
 		setParentCmd(parent);
-		this.dwProto = (DWProtocolHandler) dwProto2;
+
 	}
 	
 	public String getCommand() 

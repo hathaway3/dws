@@ -6,12 +6,12 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class UICmdServerShowHelp extends DWCommand {
 
 
-	private DWProtocolHandler dwProto;
+	private DWProtocol dwProto;
 	private DWUIClientThread dwuiClientThread;
 
 	public UICmdServerShowHelp(DWUIClientThread dwuiClientThread) 
@@ -20,7 +20,7 @@ public class UICmdServerShowHelp extends DWCommand {
 	}
 
 
-	public UICmdServerShowHelp(DWProtocolHandler dwProto) 
+	public UICmdServerShowHelp(DWProtocol dwProto) 
 	{
 		this.dwProto = dwProto;
 	}
@@ -50,7 +50,7 @@ public class UICmdServerShowHelp extends DWCommand {
 	public DWCommandResponse parse(String cmdline) 
 	{
 		if (this.dwProto == null)
-			this.dwProto = (DWProtocolHandler) DriveWireServer.getHandler(dwuiClientThread.getInstance());
+			this.dwProto = DriveWireServer.getHandler(dwuiClientThread.getInstance());
 
 		
 		if (dwProto.getHelp() == null)

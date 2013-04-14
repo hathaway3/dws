@@ -42,11 +42,17 @@ public class UICmdInstanceDiskShow extends DWCommand {
 	{
 		String res = new String();
 		
-		// TODO ASSumes we are using DW protocol
+		// TODO hackish!
 		if (this.dwProto == null)
-			dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
-	
+		{
+			if (DriveWireServer.getHandler(this.uiref.getInstance()).hasDisks())
+				dwProto = (DWProtocolHandler) DriveWireServer.getHandler(this.uiref.getInstance());
+			else
+				return(new DWCommandResponse(false,DWDefs.RC_INSTANCE_WONT ,"This operation is not supported on this type of instance"));
+		}
 			
+		
+		
 		if (cmdline.length() == 0)
 		{
 			if (dwProto.getDiskDrives() == null)

@@ -5,22 +5,23 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class UICmdInstanceStatus extends DWCommand {
 
 	private DWUIClientThread clientref = null;
-	private DWProtocolHandler dwProto = null;
+	private DWProtocol gproto = null;
 	
 	public UICmdInstanceStatus(DWUIClientThread dwuiClientThread) 
 	{
 		clientref = dwuiClientThread;
 	}
 
-	public UICmdInstanceStatus(DWProtocolHandler dwProto) 
+	public UICmdInstanceStatus(DWProtocol dwProto) 
 	{
-		this.dwProto = dwProto;
+		this.gproto = dwProto;
 	}
 
 	@Override
@@ -50,8 +51,9 @@ public class UICmdInstanceStatus extends DWCommand {
 			try
 			{
 				hno = Integer.parseInt(cmdline);
+				
 				if (DriveWireServer.isValidHandlerNo(hno))
-					dwProto = (DWProtocolHandler) DriveWireServer.getHandler(hno);
+					 gproto = DriveWireServer.getHandler(hno);
 				else
 					return(new DWCommandResponse(false,DWDefs.RC_INVALID_HANDLER,"Invalid handler number"));
 			}
@@ -64,45 +66,50 @@ public class UICmdInstanceStatus extends DWCommand {
 		{
 			if (this.clientref != null)
 			{
-				dwProto = (DWProtocolHandler) DriveWireServer.getHandler(clientref.getInstance());
+				gproto = DriveWireServer.getHandler(clientref.getInstance());
 				hno = this.clientref.getInstance();
 			}
 		}
 		
+		
 		txt = "num|" + hno + "\n";
-		txt += "name|" + dwProto.getConfig().getString("[@name]","not set") + "\n";
-		txt += "desc|" + dwProto.getConfig().getString("[@desc]","not set") + "\n";
+		txt += "name|" + gproto.getConfig().getString("[@name]","not set") + "\n";
+		txt += "desc|" + gproto.getConfig().getString("[@desc]","not set") + "\n";
 		
-		txt += "autostart|" + dwProto.getConfig().getBoolean("AutoStart", true) + "\n";
-		txt += "dying|" + dwProto.isDying() + "\n";
-		txt += "started|" + dwProto.isStarted() + "\n";
-		txt += "ready|" + dwProto.isReady() + "\n";
-		txt += "connected|" + dwProto.connected() + "\n";
+		txt += "autostart|" + gproto.getConfig().getBoolean("AutoStart", true) + "\n";
+		txt += "dying|" + gproto.isDying() + "\n";
+		txt += "started|" + gproto.isStarted() + "\n";
+		txt += "ready|" + gproto.isReady() + "\n";
+		txt += "connected|" + gproto.isConnected() + "\n";
 		
-		if (dwProto.getProtoDev() != null)
+		if (gproto.getProtoDev() != null)
 		{
-			txt += "devicetype|" + dwProto.getProtoDev().getDeviceType() + "\n";
+			txt += "devicetype|" + gproto.getProtoDev().getDeviceType() + "\n";
 			
-			txt += "devicename|" + dwProto.getProtoDev().getDeviceName() + "\n";
-			txt += "deviceconnected|" + dwProto.getProtoDev().connected() + "\n";
+			txt += "devicename|" + gproto.getProtoDev().getDeviceName() + "\n";
+			txt += "deviceconnected|" + gproto.getProtoDev().connected() + "\n";
 			
-			if (dwProto.getProtoDev().getRate() > -1)
-				txt += "devicerate|" + dwProto.getProtoDev().getRate() + "\n";
+			if (gproto.getProtoDev().getRate() > -1)
+				txt += "devicerate|" + gproto.getProtoDev().getRate() + "\n";
 			
-			if (dwProto.getProtoDev().getClient() != null)
-				txt += "deviceclient|" + dwProto.getProtoDev().getClient() + "\n";
+			if (gproto.getProtoDev().getClient() != null)
+				txt += "deviceclient|" + gproto.getProtoDev().getClient() + "\n";
 			
 		}
 		
-		txt += "lastopcode|" + DWUtils.prettyOP(dwProto.getLastOpcode()) + "\n";
-		txt += "lastgetstat|" + DWUtils.prettySS(dwProto.getLastGetStat()) + "\n";
-		txt += "lastsetstat|" + DWUtils.prettySS(dwProto.getLastSetStat()) + "\n";
-		txt += "lastlsn|" + DWUtils.int3(dwProto.getLastLSN()) + "\n";
-		txt += "lastdrive|" + dwProto.getLastDrive() +"\n";
-		txt += "lasterror|" + dwProto.getLastError() + "\n";
-		txt += "lastchecksum|" + dwProto.getLastChecksum() + "\n";
+		if (gproto.getConfig().getString("Protocol", "DriveWire").equals("DriveWire"))
+		{
 		
-		
+			DWProtocolHandler dwProto = (DWProtocolHandler) gproto;
+			txt += "lastopcode|" + DWUtils.prettyOP(dwProto.getLastOpcode()) + "\n";
+			txt += "lastgetstat|" + DWUtils.prettySS(dwProto.getLastGetStat()) + "\n";
+			txt += "lastsetstat|" + DWUtils.prettySS(dwProto.getLastSetStat()) + "\n";
+			txt += "lastlsn|" + DWUtils.int3(dwProto.getLastLSN()) + "\n";
+			txt += "lastdrive|" + dwProto.getLastDrive() +"\n";
+			txt += "lasterror|" + dwProto.getLastError() + "\n";
+			txt += "lastchecksum|" + dwProto.getLastChecksum() + "\n";
+			
+		}
 		
 		return(new DWCommandResponse(txt));
 	

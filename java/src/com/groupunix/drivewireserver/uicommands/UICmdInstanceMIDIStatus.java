@@ -13,22 +13,24 @@ import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 
 public class UICmdInstanceMIDIStatus extends DWCommand {
 
 	private DWUIClientThread dwuithread = null;
-	private DWProtocolHandler dwProto = null;
+	private DWProtocol gproto = null;
 
 	public UICmdInstanceMIDIStatus(DWUIClientThread dwuiClientThread) 
 	{
 		this.dwuithread = dwuiClientThread;
+		
 	}
 
 
-	public UICmdInstanceMIDIStatus(DWProtocolHandler dwProto) 
+	public UICmdInstanceMIDIStatus(DWProtocol dwProto) 
 	{
-		this.dwProto = dwProto;
+		this.gproto = dwProto;
 	}
 
 
@@ -52,46 +54,59 @@ public class UICmdInstanceMIDIStatus extends DWCommand {
 	@Override
 	public DWCommandResponse parse(String cmdline) 
 	{
-		String res = "enabled|false";
 		
-		if (this.dwProto == null)
-			dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
+		String res = "enabled|false\n\n";
 		
-	
-		
-		
-		if (!(dwProto == null) && !(dwProto.getVPorts() == null) &&  !(dwProto.getVPorts().getMidiDeviceInfo() == null) )
+		if (this.gproto == null)
 		{
-			try
+			if (DriveWireServer.isValidHandlerNo(this.dwuithread.getInstance()))
 			{
-				res = "enabled|" + dwProto.getConfig().getBoolean("UseMIDI", false) + "\r\n";
-				res += "cdevice|" + dwProto.getVPorts().getMidiDeviceInfo().getName() + "\r\n";
-				res += "cprofile|" +dwProto.getVPorts().getMidiProfileName() + "\r\n";
-			
-				MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
-	
-				for (int j = 0;j<infos.length;j++)
-				{
-					MidiDevice.Info i = infos[j];
-					MidiDevice dev = MidiSystem.getMidiDevice(i);
-					
-					res += "device|" + j + "|" + dev.getClass().getSimpleName() + "|" + i.getName() +"|"+ i.getDescription() +"|" + i.getVendor() + "|" + i.getVersion() +"\r\n";
-					
-				}
-
-				@SuppressWarnings("unchecked")
-				List<HierarchicalConfiguration> profiles = DriveWireServer.serverconfig.configurationsAt("midisynthprofile");
-		    	
-				for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
-				{
-				    HierarchicalConfiguration mprof = it.next();
-				    
-				    res += "profile|" + mprof.getString("[@name]") +"|" + mprof.getString("[@desc]") + "\r\n";
-				}
+				this.gproto = DriveWireServer.getHandler(this.dwuithread.getInstance());
 			}
-			catch (MidiUnavailableException e)
+			else
 			{
-				res = "enabled|false\n\n";
+				return(new DWCommandResponse(res));
+			}
+		}
+			
+		
+		if (this.gproto.hasMIDI())
+		{
+			DWProtocolHandler dwProto = (DWProtocolHandler)gproto;
+		
+			if (!(dwProto == null) && !(dwProto.getVPorts() == null) &&  !(dwProto.getVPorts().getMidiDeviceInfo() == null) )
+			{
+				try
+				{
+					res = "enabled|" + dwProto.getConfig().getBoolean("UseMIDI", false) + "\r\n";
+					res += "cdevice|" + dwProto.getVPorts().getMidiDeviceInfo().getName() + "\r\n";
+					res += "cprofile|" +dwProto.getVPorts().getMidiProfileName() + "\r\n";
+				
+					MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+		
+					for (int j = 0;j<infos.length;j++)
+					{
+						MidiDevice.Info i = infos[j];
+						MidiDevice dev = MidiSystem.getMidiDevice(i);
+						
+						res += "device|" + j + "|" + dev.getClass().getSimpleName() + "|" + i.getName() +"|"+ i.getDescription() +"|" + i.getVendor() + "|" + i.getVersion() +"\r\n";
+						
+					}
+	
+					@SuppressWarnings("unchecked")
+					List<HierarchicalConfiguration> profiles = DriveWireServer.serverconfig.configurationsAt("midisynthprofile");
+			    	
+					for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
+					{
+					    HierarchicalConfiguration mprof = it.next();
+					    
+					    res += "profile|" + mprof.getString("[@name]") +"|" + mprof.getString("[@desc]") + "\r\n";
+					}
+				}
+				catch (MidiUnavailableException e)
+				{
+					res = "enabled|false\n\n";
+				}
 			}
 		}
 		

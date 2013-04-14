@@ -18,6 +18,13 @@ public interface DWProtocol extends Runnable
 	boolean isDying();
 	boolean isStarted();
 	boolean isReady();
+	boolean isConnected();
+	
+	boolean hasPrinters();
+	boolean hasDisks();
+	boolean hasMIDI();
+	boolean hasVSerial();
+	
 	HierarchicalConfiguration getConfig();
 	//DWCommandList getDWCmds();
 	//DWDiskDrives getDiskDrives();
@@ -37,6 +44,8 @@ public interface DWProtocol extends Runnable
 	long getNumDiskOps();
 	long getNumVSerialOps();
 	DWProtocolTimers getTimers();
+	
+	
 	
 	
 }

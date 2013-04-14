@@ -1,11 +1,13 @@
 package com.groupunix.drivewireserver.uicommands;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
@@ -13,7 +15,8 @@ import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 public class UICmdInstancePortStatus extends DWCommand {
 
 	private DWUIClientThread dwuithread = null;
-	private DWProtocolHandler dwProto = null;
+	
+	private DWProtocol gproto;
 
 	public UICmdInstancePortStatus(DWUIClientThread dwuiClientThread) 
 	{
@@ -21,9 +24,9 @@ public class UICmdInstancePortStatus extends DWCommand {
 	}
 
 
-	public UICmdInstancePortStatus(DWProtocolHandler dwProto) 
+	public UICmdInstancePortStatus(DWProtocol dwProto) 
 	{
-		this.dwProto = dwProto;
+		this.gproto = dwProto;
 	}
 
 
@@ -49,9 +52,23 @@ public class UICmdInstancePortStatus extends DWCommand {
 	{
 		String res = "";
 		
-		if (this.dwProto == null)
-			dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
-			
+		if (this.gproto == null)
+		{
+			if  (DriveWireServer.isValidHandlerNo(this.dwuithread.getInstance()))
+			{
+				gproto = DriveWireServer.getHandler(this.dwuithread.getInstance());
+			}
+			else
+				return(new DWCommandResponse(false,DWDefs.RC_INSTANCE_WONT ,"The operation is not supported by this instance"));
+		}
+		
+		DWProtocolHandler dwProto = null;
+		
+		if (gproto.getConfig().getString("Protocol", "DriveWire").equals("DriveWire"))
+			dwProto = (DWProtocolHandler)gproto;
+		else
+			return(new DWCommandResponse(false,DWDefs.RC_INSTANCE_WONT ,"The operation is not supported by this instance"));
+		
 		if (!(dwProto == null) && !(dwProto.getVPorts() == null) )
 		{
 			dwProto.getVPorts();

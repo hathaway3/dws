@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class DWHelp 
 {
@@ -31,7 +31,7 @@ public class DWHelp
 	}
 
 	
-	public DWHelp(DWProtocolHandler dwProto) 
+	public DWHelp(DWProtocol dwProto) 
 	{
 		//try 
 		//{

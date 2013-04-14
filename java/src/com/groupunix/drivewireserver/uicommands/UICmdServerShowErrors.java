@@ -8,21 +8,21 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWHelpTopicNotFoundException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class UICmdServerShowErrors extends DWCommand 
 {
 
 	
-	private DWProtocolHandler dwProto;
+	private DWProtocol dwProto;
 
 	public UICmdServerShowErrors(DWUIClientThread dwuiClientThread) 
 	{
-		this.dwProto = (DWProtocolHandler) DriveWireServer.getHandler(dwuiClientThread.getInstance());
+		this.dwProto = DriveWireServer.getHandler(dwuiClientThread.getInstance());
 	}
 
 
-	public UICmdServerShowErrors(DWProtocolHandler dwProto) 
+	public UICmdServerShowErrors(DWProtocol dwProto) 
 	{
 		this.dwProto = dwProto;
 	}

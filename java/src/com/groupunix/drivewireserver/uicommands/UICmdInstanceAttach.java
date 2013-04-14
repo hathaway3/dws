@@ -15,6 +15,8 @@ public class UICmdInstanceAttach extends DWCommand {
 		clientref = dwuiClientThread;
 	}
 
+	
+
 	@Override
 	public String getCommand() 
 	{

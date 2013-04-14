@@ -914,7 +914,38 @@ public class MCXProtocolHandler implements Runnable, DWProtocol
 	{
 		return this.started;
 	}
+
+
+	@Override
+	public boolean isConnected() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 	
+	@Override
+	public boolean hasPrinters() 
+	{
+		
+		return true;
+	}
+	
+	@Override
+	public boolean hasDisks() {
+		
+		return true;
+	}
+	
+	@Override
+	public boolean hasMIDI() {
+		
+		return false;
+	}
+	
+	@Override
+	public boolean hasVSerial() {
+		
+		return false;
+	}
 }
 	
 

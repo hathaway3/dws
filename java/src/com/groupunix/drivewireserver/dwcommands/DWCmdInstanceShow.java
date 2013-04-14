@@ -37,24 +37,30 @@ public class DWCmdInstanceShow extends DWCommand {
 		
 		for (int i = 0;i<DriveWireServer.getNumHandlers();i++)
 		{
-			if (DriveWireServer.getHandler(i) != null)
+			text += "Instance #" + i + ":  ";
+			
+			if (DriveWireServer.getHandler(i) == null)
 			{
-				String dtype = DriveWireServer.getHandler(i).getConfig().getString("DeviceType");
+				text += " Null (?)\r\n";
+			}
+			else
+			{
+				text += "Protocol: " + DriveWireServer.getHandler(i).getConfig().getString("Protocol", "DriveWire") + "  ";
+				String dtype = DriveWireServer.getHandler(i).getConfig().getString("DeviceType", "Unknown");
 				
-				text += "\r\nInstance #" + i + ":  Type " + dtype;
+				text += "Type " + dtype + "  ";
 				
-				if (DriveWireServer.getHandler(i).getConfig().getString("DeviceType").equals("serial") )
+				if (dtype.equals("serial") )
 				{
-					text += " Device " + DriveWireServer.getHandler(i).getConfig().getString("SerialDevice");
+					text += "Device " + DriveWireServer.getHandler(i).getConfig().getString("SerialDevice", "Unknown");
 				}
-				else if (DriveWireServer.getHandler(i).getConfig().getString("DeviceType").equals("tcp-server") )
+				else if (dtype.equals("tcp-server") )
 				{
-					text += " Port " + DriveWireServer.getHandler(i).getConfig().getString("TCPServerPort");
+					text += "Port " + DriveWireServer.getHandler(i).getConfig().getString("TCPServerPort","Unknown");
 				}
-				else if (DriveWireServer.getHandler(i).getConfig().getString("DeviceType").equals("tcp-client") )
+				else if (dtype.equals("tcp-client") )
 				{
-					text += " Client " + DriveWireServer.getHandler(i).getConfig().getString("TCPClientHost");
-					text += " Port " + DriveWireServer.getHandler(i).getConfig().getString("TCPClientPort");
+					text += "Client " + DriveWireServer.getHandler(i).getConfig().getString("TCPClientHost", "Unknown") + ":" + DriveWireServer.getHandler(i).getConfig().getString("TCPClientPort","Unknown");
 				}
 				
 				text += " Status: ";

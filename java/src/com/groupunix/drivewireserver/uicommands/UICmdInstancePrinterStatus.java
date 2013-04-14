@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DWUIClientThread;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommand;
@@ -51,7 +52,16 @@ public class UICmdInstancePrinterStatus extends DWCommand {
 		String res = "";
 		
 		if (dwProto == null)
-			dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
+		{
+			if (DriveWireServer.getHandler(this.dwuithread.getInstance()).hasPrinters())
+			{
+				dwProto = (DWProtocolHandler)DriveWireServer.getHandler(this.dwuithread.getInstance());
+			}
+			else
+			{
+				return(new DWCommandResponse(false,DWDefs.RC_INSTANCE_WONT ,"This operation is not supported on this type of instance"));
+			}
+		}
 			
 			
 		res = "currentprinter|" + dwProto.getConfig().getString("CurrentPrinter","none") + "\r\n";

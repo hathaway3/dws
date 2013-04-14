@@ -18,14 +18,24 @@ public class DWCmd extends DWCommand
 		this.dwProto = dwProtocol;
 		
 		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
-		commands.addcommand(new DWCmdDisk((DWProtocolHandler) dwProtocol, this));
+		
 		commands.addcommand(new DWCmdServer(dwProtocol, this));
 		commands.addcommand(new DWCmdConfig(dwProtocol, this));
-		commands.addcommand(new DWCmdPort((DWProtocolHandler) dwProtocol, this));
 		commands.addcommand(new DWCmdLog(dwProtocol, this));
-		commands.addcommand(new DWCmdNet((DWProtocolHandler) dwProtocol, this));
-		commands.addcommand(new DWCmdMidi((DWProtocolHandler) dwProtocol, this));
-		commands.addcommand(new DWCmdInstance((DWProtocolHandler) dwProtocol, this));
+		commands.addcommand(new DWCmdInstance(dwProtocol, this));
+		
+		if (this.dwProto.hasDisks())
+			commands.addcommand(new DWCmdDisk((DWProtocolHandler) dwProtocol, this));
+		
+		if (this.dwProto.hasVSerial())
+		{
+			commands.addcommand(new DWCmdPort((DWProtocolHandler) dwProtocol, this));
+			commands.addcommand(new DWCmdNet((DWProtocolHandler) dwProtocol, this));
+		}
+		
+		if (this.dwProto.hasMIDI())
+			commands.addcommand(new DWCmdMidi((DWProtocolHandler) dwProtocol, this));
+		
 	} 
 
 	
