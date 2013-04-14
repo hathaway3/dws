@@ -1017,23 +1017,9 @@ public class MainWin {
 		mntmTimers.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/constatus/user-away.png"));
 		
 		
-		/*
-		new MenuItem(menu_tools, SWT.SEPARATOR);
-		
-		MenuItem mntmInstMan = new MenuItem(menu_tools, SWT.NONE);
-		mntmInstMan.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				InstanceMan im = new InstanceMan(display);
-				im.open();
 	
-			}
-		});
-		mntmInstMan.setText("Instance Manager..");
-		mntmInstMan.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/database-gear.png"));
 		
-		*/
+		
 		
 		new MenuItem(menu_tools, SWT.SEPARATOR);
 		
@@ -1302,6 +1288,19 @@ public class MainWin {
 		});
 		
 		new MenuItem(menu_config, SWT.SEPARATOR);
+		
+		MenuItem mntmInstMan = new MenuItem(menu_config, SWT.NONE);
+		mntmInstMan.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				InstanceMan im = new InstanceMan(display);
+				im.open();
+	
+			}
+		});
+		mntmInstMan.setText("Instance Manager..");
+		mntmInstMan.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/database-gear.png"));
 		
 		
 		MenuItem mntmResetInstanceDevice = new MenuItem(menu_config, SWT.NONE);

@@ -43,6 +43,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireui.MainWin;
+import java.awt.GridLayout;
 
 public class DWLite 
 {
@@ -64,6 +65,18 @@ public class DWLite
 	private final JSpinner spinnerDriveX = new JSpinner();
 
 	private String lastDir = ".";
+	private JLabel lblDisk0Path;
+	private JLabel lblDisk1Path;
+	private JPanel panelDrives;
+	private JLabel lblDisk3Path;
+	private JLabel lblDisk2Path;
+	private JLabel lblDiskXPath;
+
+	protected boolean showDriveX = false;
+	private JButton btnEjectX;
+
+	private JCheckBoxMenuItem chckbxmntmShowDriveX;
+	private JButton button_X;
 
 	/**
 	 * Launch the application.
@@ -163,18 +176,27 @@ public class DWLite
 		
 		
 		frmDwlite.setTitle("DW4Lite");
-		frmDwlite.setBounds(100, 100, 480, 364);
+		frmDwlite.setBounds(100, 100, 382, 381);
 		frmDwlite.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmDwlite.getContentPane().setLayout(new MigLayout("", "[70px:70px,grow]", "[grow]"));
+		frmDwlite.getContentPane().setLayout(new MigLayout("", "[366px,grow,fill]", "[312px,grow,fill]"));
+		
+		JScrollPane sp = new JScrollPane();
+		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		
+		frmDwlite.getContentPane().add(sp, "cell 0 0,grow");
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		frmDwlite.getContentPane().add(tabbedPane, "cell 0 0,grow");
 		
-		JPanel panel = new JPanel();
-		tabbedPane.addTab(" Drives ", new ImageIcon(DWLite.class.getResource("/fs/unknown.png")), panel, null);
-		panel.setLayout(new MigLayout("", "[][][grow,fill][]", "[][][][][][]"));
+		sp.setViewportView(tabbedPane);
+		
+		//frmDwlite.getContentPane().add(tabbedPane, "cell 0 1,grow");
+		
+		panelDrives = new JPanel();
+		tabbedPane.addTab(" Drives ", new ImageIcon(DWLite.class.getResource("/fs/unknown.png")), panelDrives, null);
+		panelDrives.setLayout(new MigLayout("", "[][grow,fill][]", "[20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][]"));
 		
 		JButton btnDrive = new JButton("");
+		btnDrive.setToolTipText("Load Drive 0");
 		btnDrive.addActionListener(new ActionListener() 
 		{
 			public void actionPerformed(ActionEvent e) 
@@ -182,24 +204,30 @@ public class DWLite
 				  doDiskInsert(0);
 			}
 		});
-		panel.add(btnDrive, "cell 0 0");
+		panelDrives.add(btnDrive, "cell 0 0 1 2");
 		btnDrive.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk0.png")));
 		
 		lblDisk0 = new JLabel("Not loaded");
-		panel.add(lblDisk0, "cell 1 0 2 1");
+		lblDisk0.setFont(new Font("Tahoma", Font.BOLD, 11));
+		panelDrives.add(lblDisk0, "cell 1 0,alignx left,aligny bottom");
 		
 		JButton button = new JButton("");
+		button.setToolTipText("Eject Drive 0");
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
 				doCommand("dw disk eject 0");
 			}
 		});
-		panel.add(button, "cell 3 0");
+		panelDrives.add(button, "cell 2 0 1 2,alignx right,aligny center");
 		button.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
 		
+		lblDisk0Path = new JLabel(" ");
+		panelDrives.add(lblDisk0Path, "cell 1 1,alignx left,growy");
+		
 		JButton btnDrive_1 = new JButton("");
-		panel.add(btnDrive_1, "cell 0 1");
+		btnDrive_1.setToolTipText("Load Drive 1");
+		panelDrives.add(btnDrive_1, "cell 0 2 1 2");
 		btnDrive_1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk1.png")));
 		btnDrive_1.addActionListener(new ActionListener() 
 		{
@@ -211,10 +239,12 @@ public class DWLite
 		
 		
 		lblDisk1 = new JLabel("Not loaded");
-		panel.add(lblDisk1, "cell 1 1 2 1");
+		lblDisk1.setFont(new Font("Tahoma", Font.BOLD, 11));
+		panelDrives.add(lblDisk1, "cell 1 2,aligny bottom");
 		
 		JButton button_1 = new JButton("");
-		panel.add(button_1, "cell 3 1");
+		button_1.setToolTipText("Eject Drive 1");
+		panelDrives.add(button_1, "cell 2 2 1 2");
 		button_1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
 		button_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
@@ -223,8 +253,12 @@ public class DWLite
 			}
 		});
 		
+		lblDisk1Path = new JLabel(" ");
+		panelDrives.add(lblDisk1Path, "cell 1 3,growx,aligny top");
+		
 		JButton btnDrive_2 = new JButton("");
-		panel.add(btnDrive_2, "cell 0 2");
+		btnDrive_2.setToolTipText("Load Drive 2");
+		panelDrives.add(btnDrive_2, "cell 0 4 1 2");
 		btnDrive_2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk2.png")));
 		btnDrive_2.addActionListener(new ActionListener() 
 		{
@@ -235,10 +269,12 @@ public class DWLite
 		});
 		
 		lblDisk2 = new JLabel("Not loaded");
-		panel.add(lblDisk2, "cell 1 2 2 1");
+		lblDisk2.setFont(new Font("Tahoma", Font.BOLD, 11));
+		panelDrives.add(lblDisk2, "cell 1 4,aligny bottom");
 		
 		JButton button_2 = new JButton("");
-		panel.add(button_2, "cell 3 2");
+		button_2.setToolTipText("Eject Drive 2");
+		panelDrives.add(button_2, "cell 2 4 1 2");
 		button_2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
 		button_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
@@ -247,8 +283,12 @@ public class DWLite
 			}
 		});
 		
+		lblDisk2Path = new JLabel(" ");
+		panelDrives.add(lblDisk2Path, "cell 1 5,growx,aligny top");
+		
 		JButton btnDrive_3 = new JButton("");
-		panel.add(btnDrive_3, "cell 0 3");
+		btnDrive_3.setToolTipText("Load Drive 3");
+		panelDrives.add(btnDrive_3, "cell 0 6 1 2");
 		btnDrive_3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk3.png")));
 		btnDrive_3.addActionListener(new ActionListener() 
 		{
@@ -259,16 +299,23 @@ public class DWLite
 		});
 		
 		lblDisk3 = new JLabel("Not loaded");
-		panel.add(lblDisk3, "cell 1 3 2 1");
+		lblDisk3.setFont(new Font("Tahoma", Font.BOLD, 11));
+		panelDrives.add(lblDisk3, "cell 1 6");
 		
 		JButton button_3 = new JButton("");
-		panel.add(button_3, "cell 3 3");
+		button_3.setToolTipText("Eject Drive 3");
+		panelDrives.add(button_3, "cell 2 6 1 2");
 		button_3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
+		
+		lblDisk3Path = new JLabel(" ");
+		panelDrives.add(lblDisk3Path, "cell 1 7,growx,aligny top");
 		
 	
 		
 		lblDiskX = new JLabel("Not loaded");
-		panel.add(lblDiskX, "cell 2 4");
+		lblDiskX.setFont(new Font("Tahoma", Font.BOLD, 11));
+		panelDrives.add(lblDiskX, "cell 1 8,aligny bottom");
+		spinnerDriveX.setToolTipText("Choose which drive 4 through 255 to display in Drive X slot");
 		
 		
 		spinnerDriveX.addChangeListener(new ChangeListener() {
@@ -277,20 +324,25 @@ public class DWLite
 				updateDriveDisplay();
 			}
 		});
-		spinnerDriveX.setModel(new SpinnerNumberModel(4, 4, 255, 1));
-		panel.add(spinnerDriveX, "cell 0 5,growx");
 		
-		JButton button_4 = new JButton("");
-		button_4.addActionListener(new ActionListener() {
+		lblDiskXPath = new JLabel(" ");
+		panelDrives.add(lblDiskXPath, "cell 1 9,growx,aligny top");
+		spinnerDriveX.setModel(new SpinnerNumberModel(4, 4, 255, 1));
+		panelDrives.add(spinnerDriveX, "cell 0 10,growx");
+		
+		button_X = new JButton("");
+		button_X.setToolTipText(" Load Drive X (choose number below)");
+		button_X.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
 				doDiskInsert((Integer) spinnerDriveX.getValue());
 			}
 		});
-		button_4.setIcon(new ImageIcon(DWLite.class.getResource("/lite/diskX.png")));
-		panel.add(button_4, "cell 0 4");
+		button_X.setIcon(new ImageIcon(DWLite.class.getResource("/lite/diskX.png")));
+		panelDrives.add(button_X, "cell 0 8 1 2");
 		
-		JButton btnEjectX = new JButton("");
+		btnEjectX = new JButton("");
+		btnEjectX.setToolTipText("Eject Drive X");
 		btnEjectX.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
@@ -298,7 +350,7 @@ public class DWLite
 			}
 		});
 		btnEjectX.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
-		panel.add(btnEjectX, "cell 3 4");
+		panelDrives.add(btnEjectX, "cell 2 8 1 2");
 		
 		
 		
@@ -310,9 +362,9 @@ public class DWLite
 		});
 		
 		
-		JPanel panel_2 = new JPanel();
-		tabbedPane.addTab("CLI", new ImageIcon(DWLite.class.getResource("/menu/preferences-system-network-2.png")), panel_2, null);
-		panel_2.setLayout(new MigLayout("", "[grow,left]", "[grow][]"));
+		JPanel panelCLI = new JPanel();
+		tabbedPane.addTab("CLI", new ImageIcon(DWLite.class.getResource("/menu/preferences-system-network-2.png")), panelCLI, null);
+		panelCLI.setLayout(new MigLayout("", "[grow,left]", "[grow][]"));
 		
 		textFieldCLIInput = new JTextField();
 		textFieldCLIInput.addActionListener(new ActionListener() {
@@ -324,23 +376,23 @@ public class DWLite
 		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		panel_2.add(scrollPane, "cell 0 0,grow");
+		panelCLI.add(scrollPane, "cell 0 0,grow");
 		
 		textAreaCLIOutput = new JTextArea();
 		textAreaCLIOutput.setFont(new Font("Monospaced", Font.PLAIN, 11));
 		textAreaCLIOutput.setForeground(Color.WHITE);
 		textAreaCLIOutput.setBackground(Color.DARK_GRAY);
 		scrollPane.setViewportView(textAreaCLIOutput);
-		panel_2.add(textFieldCLIInput, "cell 0 1,growx");
+		panelCLI.add(textFieldCLIInput, "cell 0 1,growx");
 		textFieldCLIInput.setColumns(10);
 		
-		JPanel panel_1 = new JPanel();
-		tabbedPane.addTab(" Log ", new ImageIcon(DWLite.class.getResource("/menu/accessories-text-editor-3.png")), panel_1, null);
-		panel_1.setLayout(new MigLayout("", "[4px,grow,fill]", "[grow]"));
+		JPanel panelLog = new JPanel();
+		tabbedPane.addTab(" Log ", new ImageIcon(DWLite.class.getResource("/menu/accessories-text-editor-3.png")), panelLog, null);
+		panelLog.setLayout(new MigLayout("", "[4px,grow,fill]", "[grow]"));
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		panel_1.add(scrollPane_1, "cell 0 0,grow");
+		panelLog.add(scrollPane_1, "cell 0 0,grow");
 		
 		textAreaLog = new JTextArea();
 		scrollPane_1.setViewportView(textAreaLog);
@@ -382,6 +434,9 @@ public class DWLite
 				else
 					chckbxmntmHdbdosTranslation.setEnabled(false);
 				
+				chckbxmntmShowDriveX.setSelected(showDriveX);
+					
+				
 			}
 		});
 		menuBar.add(mnOptions);
@@ -398,6 +453,19 @@ public class DWLite
 			}
 		});
 		mnOptions.add(chckbxmntmHdbdosTranslation);
+		
+		chckbxmntmShowDriveX = new JCheckBoxMenuItem("Show Drive X ");
+		chckbxmntmShowDriveX.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (showDriveX )
+					showDriveX = false;
+				else
+					showDriveX = true;
+				updateDriveDisplay();
+				
+			}
+		});
+		mnOptions.add(chckbxmntmShowDriveX);
 		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
@@ -463,31 +531,65 @@ public class DWLite
 			try 
 			{
 				if (dw.getDiskDrives().isLoaded(0))
-					this.lblDisk0.setText(prettyPath(dw.getDiskDrives().getDisk(0).getFilePath()));
+				{
+					this.lblDisk0.setText(prettyFile(dw.getDiskDrives().getDisk(0).getFilePath()));
+					this.lblDisk0Path.setText(prettyPath(dw.getDiskDrives().getDisk(0).getFilePath()));
+				}
 				else
+				{
 					this.lblDisk0.setText("Not loaded");
+					this.lblDisk0Path.setText("");
+				}
 				
 				if (dw.getDiskDrives().isLoaded(1))
-					this.lblDisk1.setText(prettyPath(dw.getDiskDrives().getDisk(1).getFilePath()));
+				{
+					this.lblDisk1.setText(prettyFile(dw.getDiskDrives().getDisk(1).getFilePath()));
+					this.lblDisk1Path.setText(prettyPath(dw.getDiskDrives().getDisk(1).getFilePath()));
+				}
 				else
+				{
 					this.lblDisk1.setText("Not loaded");
+					this.lblDisk1Path.setText("");
+				}
 				
 				if (dw.getDiskDrives().isLoaded(2))
-					this.lblDisk2.setText(prettyPath(dw.getDiskDrives().getDisk(2).getFilePath()));
+				{
+					this.lblDisk2.setText(prettyFile(dw.getDiskDrives().getDisk(2).getFilePath()));
+					this.lblDisk2Path.setText(prettyPath(dw.getDiskDrives().getDisk(2).getFilePath()));
+				}
 				else
+				{
 					this.lblDisk2.setText("Not loaded");
+					this.lblDisk2Path.setText("");
+				}
 				
 				if (dw.getDiskDrives().isLoaded(3))
-					this.lblDisk3.setText(prettyPath(dw.getDiskDrives().getDisk(3).getFilePath()));
+				{
+					this.lblDisk3.setText(prettyFile(dw.getDiskDrives().getDisk(3).getFilePath()));
+					this.lblDisk3Path.setText(prettyPath(dw.getDiskDrives().getDisk(3).getFilePath()));
+				}
 				else
+				{
 					this.lblDisk3.setText("Not loaded");
+					this.lblDisk3Path.setText("");
+				}
 				
-				if (dw.getDiskDrives().isLoaded((Integer)spinnerDriveX.getValue()))
-					this.lblDiskX.setText(prettyPath(dw.getDiskDrives().getDisk((Integer)spinnerDriveX.getValue()).getFilePath()));
-				else
-					this.lblDiskX.setText("Not loaded");
+				setDriveXVisible(showDriveX);
 				
-				
+				if (showDriveX)
+				{
+					if (dw.getDiskDrives().isLoaded((Integer)spinnerDriveX.getValue()))
+					{
+						this.lblDiskX.setText(prettyFile(dw.getDiskDrives().getDisk((Integer)spinnerDriveX.getValue()).getFilePath()));
+						this.lblDiskXPath.setText(prettyPath(dw.getDiskDrives().getDisk((Integer)spinnerDriveX.getValue()).getFilePath()));
+					}
+					else
+					{
+						this.lblDiskX.setText("Not loaded");
+						this.lblDiskXPath.setText("");
+					}
+					
+				}
 			
 			} 
 			catch (DWDriveNotLoadedException e) 
@@ -505,12 +607,51 @@ public class DWLite
 	}
 
 
+	private void setDriveXVisible(boolean vis) 
+	{
+		this.btnEjectX.setVisible(vis);
+		this.lblDiskX.setVisible(vis);
+		this.lblDiskXPath.setVisible(vis);
+		this.spinnerDriveX.setVisible(vis);
+		this.button_X.setVisible(vis);
+		
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	private String prettyPath(String path) 
 	{
 		String res = path;
 		
-		if (path.startsWith("file://"))
-			res = path.substring(7);
+		if (path.startsWith("file:///"))
+			res = path.substring(8);
+		
+		if (res.indexOf("/") > -1)
+			res = res.substring(0, res.lastIndexOf("/"));
+		
+		
+		
+		return res;
+	}
+
+	private String prettyFile(String path) 
+	{
+		String res = path;
+		
+		res = res.substring(res.lastIndexOf("/")+1);
+		
 		
 		return res;
 	}
@@ -526,16 +667,13 @@ public class DWLite
 
 
 
-
-
-
-	protected JTextArea getTextAreaLog() {
-		return textAreaLog;
+	protected JButton getBtnEjectX() {
+		return btnEjectX;
 	}
-	protected JTextArea getTextAreaCLIOutput() {
-		return textAreaCLIOutput;
+	protected JSpinner getSpinnerDriveX() {
+		return spinnerDriveX;
 	}
-	protected JTextField getTextFieldCLIInput() {
-		return textFieldCLIInput;
+	protected JButton getButton_4() {
+		return button_X;
 	}
 }
