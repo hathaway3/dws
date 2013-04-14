@@ -7,7 +7,7 @@ import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 
 
@@ -24,7 +24,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 		private boolean wanttodie = false;
 		
 		private static int BACKLOG = 20;
-		private DWProtocolHandler dwProto;
+		private DWVSerialProtocol dwProto;
 
 		private DWVSerialPorts dwVSerialPorts;
 		private Boolean clientConnected = false;

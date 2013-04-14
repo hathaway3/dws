@@ -3,6 +3,7 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWCmd extends DWCommand
 {
@@ -29,8 +30,8 @@ public class DWCmd extends DWCommand
 		
 		if (this.dwProto.hasVSerial())
 		{
-			commands.addcommand(new DWCmdPort((DWProtocolHandler) dwProtocol, this));
-			commands.addcommand(new DWCmdNet((DWProtocolHandler) dwProtocol, this));
+			commands.addcommand(new DWCmdPort((DWVSerialProtocol) dwProtocol, this));
+			commands.addcommand(new DWCmdNet((DWVSerialProtocol) dwProtocol, this));
 		}
 		
 		if (this.dwProto.hasMIDI())

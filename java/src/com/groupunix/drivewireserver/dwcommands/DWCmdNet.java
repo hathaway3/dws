@@ -1,20 +1,20 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWCmdNet extends DWCommand {
 
 	static final String command = "net";
 	private DWCommandList commands;
-	private DWProtocolHandler dwProto;	
+	private DWVSerialProtocol dwProto;	
 	
-	public DWCmdNet(DWProtocolHandler dwProto,DWCommand parent)
+	public DWCmdNet(DWVSerialProtocol dwProtocol,DWCommand parent)
 	{
 		setParentCmd(parent);
-		this.dwProto = dwProto;
+		this.dwProto = dwProtocol;
 		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
-		commands.addcommand(new DWCmdNetShow(dwProto,this));
+		commands.addcommand(new DWCmdNetShow(dwProtocol,this));
 		
 	}
 

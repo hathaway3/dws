@@ -5,7 +5,9 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 
 
@@ -55,12 +57,12 @@ public class DWVModem {
 
 	private DWVSerialPorts dwVSerialPorts;
 
-	private DWProtocolHandler dwProto;
+	private DWVSerialProtocol dwProto;
 
 	private Thread listenThread;
 	
 	
-	public DWVModem(DWProtocolHandler dwProto, int port) 
+	public DWVModem(DWVSerialProtocol dwProto, int port) 
 	{
 		this.vport = port;
 		this.dwProto = dwProto;
@@ -771,7 +773,7 @@ public class DWVModem {
 	}
 
 
-	public DWProtocolHandler getVProto()
+	public DWVSerialProtocol getVProto()
 	{
 		return this.dwProto;
 	}

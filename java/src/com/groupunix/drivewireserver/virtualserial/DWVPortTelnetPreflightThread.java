@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWVPortTelnetPreflightThread implements Runnable
 {
@@ -28,20 +28,20 @@ public class DWVPortTelnetPreflightThread implements Runnable
 	
 
 	private DWVSerialPorts dwVSerialPorts;
-	private DWProtocolHandler dwProto;
+	private DWVSerialProtocol dwProto;
 
 
 	private SocketChannel sktchan;
 	
-	public DWVPortTelnetPreflightThread(DWProtocolHandler dwProto, int vport, SocketChannel sktchan, boolean doTelnet, boolean doBanner)
+	public DWVPortTelnetPreflightThread(DWVSerialProtocol dwProto2, int vport, SocketChannel sktchan, boolean doTelnet, boolean doBanner)
 	{
 		this.vport = vport;
 		this.sktchan = sktchan;
 
 		this.banner = doBanner;
 		this.telnet = doTelnet;
-		this.dwProto = dwProto;
-		this.dwVSerialPorts = dwProto.getVPorts();
+		this.dwProto = dwProto2;
+		this.dwVSerialPorts = dwProto2.getVPorts();
 		
 	}
 

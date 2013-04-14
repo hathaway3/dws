@@ -1,17 +1,17 @@
 package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 import com.groupunix.drivewireserver.virtualserial.DWVPortListenerPool;
 
 public class DWCmdNetShow extends DWCommand {
 
-	private DWProtocolHandler dwProto;
+	private DWVSerialProtocol dwProto;
 
-	public DWCmdNetShow(DWProtocolHandler dwProto,DWCommand parent)
+	public DWCmdNetShow(DWVSerialProtocol dwProtocol,DWCommand parent)
 	{
 		setParentCmd(parent);
-		this.dwProto = dwProto;
+		this.dwProto = dwProtocol;
 	}
 	
 	public String getCommand() 

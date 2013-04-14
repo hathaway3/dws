@@ -32,7 +32,7 @@ import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 
 
-public class DWProtocolHandler implements Runnable, DWProtocol
+public class DWProtocolHandler implements Runnable, DWVSerialProtocol
 {
 
 	private final Logger logger = Logger.getLogger("DWServer.DWProtocolHandler");
@@ -243,7 +243,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 						
 						
 						// fast writes
-						if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_PORTS - 1)))
+						if ((lastOpcode >= DWDefs.OP_FASTWRITE_BASE) && (lastOpcode <= (DWDefs.OP_FASTWRITE_BASE + this.dwVSerialPorts.getMaxPorts() - 1)))
 						{
 							DoOP_FASTSERWRITE(lastOpcode);
 							this.timers.resetTimer(DWDefs.TIMER_NP_OP, optime);
@@ -1225,7 +1225,7 @@ public class DWProtocolHandler implements Runnable, DWProtocol
 		
 		
 		// Z
-		if ((responsebuf[0] >= DWVSerialPorts.MAX_NDEV_PORTS) && (responsebuf[0] < DWVSerialPorts.MAX_ZDEV_PORTS))
+		if ((responsebuf[0] >= this.dwVSerialPorts.getMaxNPorts()) && (responsebuf[0] < this.dwVSerialPorts.getMaxZPorts()))
 		{
 			switch (responsebuf[1])
 			{

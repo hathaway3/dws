@@ -364,7 +364,7 @@ public class DWUtils
 	{
 		String res = "Unknown";
 
-		if ((opcode >= DWDefs.OP_FASTWRITE_BASE) && (opcode <= (DWDefs.OP_FASTWRITE_BASE + DWVSerialPorts.MAX_PORTS - 1)))
+		if ((opcode >= DWDefs.OP_FASTWRITE_BASE) && (opcode <= (DWDefs.OP_FASTWRITE_BASE + 31)))
 		{
 			res = "OP_FASTWRITE_" + (opcode - DWDefs.OP_FASTWRITE_BASE);
 		}

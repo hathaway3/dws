@@ -7,7 +7,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 import com.groupunix.drivewireserver.uicommands.UICmd;
 
 public class DWUtilDWThread implements Runnable 
@@ -22,13 +22,13 @@ public class DWUtilDWThread implements Runnable
 	
 	private DWCommandList commands;
 	
-	public DWUtilDWThread(DWProtocolHandler dwProto, int vport, String args)
+	public DWUtilDWThread(DWVSerialProtocol dwProto, int vport, String args)
 	{
 		this.vport = vport;
 		this.strargs = args;
 		this.dwVSerialPorts = dwProto.getVPorts();
 		
-		if (vport <= DWVSerialPorts.MAX_PORTS)
+		if (vport <= this.dwVSerialPorts.getMaxPorts())
 		{
 			this.protect = dwProto.getConfig().getBoolean("ProtectedMode", false); 
 		}
@@ -81,7 +81,7 @@ public class DWUtilDWThread implements Runnable
 				Thread.sleep(100);
 			}
 			
-			if (this.vport < DWVSerialPorts.MAX_PORTS)
+			if (this.vport < this.dwVSerialPorts.getMaxPorts())
 			{
 				dwVSerialPorts.closePort(this.vport);
 			}	

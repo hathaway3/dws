@@ -25,34 +25,24 @@ import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWVSerialPorts {
 
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialPorts");
 	
-	// should move multiread toggle and max ports to config file
-	public static final int MULTIREAD_LIMIT = 3;
+
 	public static final int MODE_TERM = 3;
 	
 	
-	public static final int MAX_NDEV_PORTS = 16;
-	public static final int MAX_ZDEV_PORTS = 16;
-	public static final int MAX_PORTS = MAX_NDEV_PORTS + MAX_ZDEV_PORTS;
-	
-	public static final int NTERM_PORT = 0;
-	public static final int ZTERM_PORT = 16;
-	public static final int MIDI_PORT = 14;
-	
-	
-	private DWProtocolHandler dwProto;
+	private DWVSerialProtocol dwProto;
 	private boolean bytelog = false;
 	
 	
-	private DWVSerialPort[] vserialPorts = new DWVSerialPort[MAX_PORTS];
+	private DWVSerialPort[] vserialPorts;
 	private DWVPortListenerPool listenerpool = new DWVPortListenerPool();
 	
-	private int[] dataWait = new int[MAX_PORTS];
+	private int[] dataWait;
 	
 	// midi stuff
 	private MidiDevice midiDevice;
@@ -61,12 +51,30 @@ public class DWVSerialPorts {
 	private boolean midiVoicelock = false;
 	private  HierarchicalConfiguration midiProfConf = null;
 	private int[] GMInstrumentCache;
+	private int maxNports = 0;
+	private int maxZports = 0;
+	private int maxports = 0;
+	private int nTermPort = 0;
+	private int zTermPort = 0;
+	private int MIDIPort = 0;
+	private int multiReadLimit = 0;
 	
-	
-	public DWVSerialPorts(DWProtocolHandler dwProto)
+	public DWVSerialPorts(DWVSerialProtocol dwProto)
 	{
 		this.dwProto = dwProto;
 		bytelog = dwProto.getConfig().getBoolean("LogVPortBytes", false);
+		
+		maxNports = dwProto.getConfig().getInt("VSerial_MaxNDevPorts", 16);
+		maxZports = dwProto.getConfig().getInt("VSerial_MaxZDevPorts", 16);
+		nTermPort = dwProto.getConfig().getInt("VSerial_NTermPort", 0);
+		zTermPort = dwProto.getConfig().getInt("VSerial_ZTermPort", 16);
+		MIDIPort = dwProto.getConfig().getInt("VSerial_MIDIPort", 14);
+		this.multiReadLimit = dwProto.getConfig().getInt("VSerial_MultiReadLimit", 3);
+		
+		maxports = maxNports + maxZports;
+		
+		dataWait = new int[maxports];
+		vserialPorts = new DWVSerialPort[maxports];
 		
 		
 		if (dwProto.getConfig().getBoolean("UseMIDI", false) && !DriveWireServer.getNoMIDI())
@@ -142,25 +150,25 @@ public class DWVSerialPorts {
 
 	public String prettyPort(int port) 
 	{
-		if (port == NTERM_PORT)
+		if (port == this.nTermPort)
 		{
 			return("NTerm");
 		}
-		else if (port == ZTERM_PORT)
+		else if (port == this.zTermPort)
 		{
 			return("ZTerm");
 		}
-		else if (port == MIDI_PORT)
+		else if (port == this.MIDIPort)
 		{
 			return("MIDI");
 		}
-		else if (port < MAX_NDEV_PORTS)
+		else if (port < this.maxNports)
 		{
 			return("N" + port);
 		}
-		else if (port < MAX_NDEV_PORTS + MAX_ZDEV_PORTS)
+		else if (port < this.maxNports + this.maxZports)
 		{
-			return("Z" + (port - MAX_NDEV_PORTS));
+			return("Z" + (port - this.maxNports));
 		}
 		else
 		{
@@ -193,7 +201,7 @@ public class DWVSerialPorts {
 		
 		// Z devices go first...
 		
-		for (int i = MAX_NDEV_PORTS;i < MAX_NDEV_PORTS+MAX_ZDEV_PORTS;i++)
+		for (int i = this.maxNports;i < this.maxNports+this.maxZports;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -212,7 +220,7 @@ public class DWVSerialPorts {
 		int oldestZ = 0;
 		int oldestZport = -1;
 		
-		for (int i = MAX_NDEV_PORTS;i< MAX_NDEV_PORTS+MAX_ZDEV_PORTS;i++)
+		for (int i = this.maxNports;i < this.maxNports+this.maxZports;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -230,7 +238,7 @@ public class DWVSerialPorts {
 			// if we have a small byte waiter, send serread for it
 			
 			dataWait[oldestZport] = 0;
-			response[0] = (byte) (  (DWDefs.POLL_RESP_MODE_WINDOW << 6)  + (oldestZport) -  MAX_NDEV_PORTS );
+			response[0] = (byte) (  (DWDefs.POLL_RESP_MODE_WINDOW << 6)  + (oldestZport) -  this.maxNports );
 			response[1] = vserialPorts[oldestZport].read1();
 				
 			logger.debug("Z poll response " + response[0] + "," + response[1]);
@@ -246,7 +254,7 @@ public class DWVSerialPorts {
 		
 		
 		// first look for termed ports
-		for (int i = 0;i<MAX_NDEV_PORTS;i++)
+		for (int i = 0;i<this.maxNports;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -257,7 +265,7 @@ public class DWVSerialPorts {
 					
 					logger.debug("sending terminated status to coco for port " + i);
 					
-					vserialPorts[i] = new DWVSerialPort(this.dwProto, i);
+					vserialPorts[i] = new DWVSerialPort(this,this.dwProto, i);
 					
 					return(response);
 				}
@@ -266,7 +274,7 @@ public class DWVSerialPorts {
 		
 		// first data pass, increment data waiters
 		
-		for (int i = 0;i<MAX_NDEV_PORTS;i++)
+		for (int i = 0;i<this.maxNports;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
@@ -285,11 +293,11 @@ public class DWVSerialPorts {
 		int oldestM = 0;
 		int oldestMport = -1;
 		
-		for (int i = 0;i<MAX_NDEV_PORTS;i++)
+		for (int i = 0;i<this.maxNports;i++)
 		{
 			if (vserialPorts[i] != null)
 			{
-				if (vserialPorts[i].bytesWaiting() < MULTIREAD_LIMIT)
+				if (vserialPorts[i].bytesWaiting() < this.multiReadLimit)
 				{
 					if (dataWait[i] > oldest1)
 					{
@@ -354,7 +362,7 @@ public class DWVSerialPorts {
 	{
 		
 		
-		if ((port < MAX_PORTS) && (port >= 0))
+		if ((port < this.maxports) && (port >= 0))
 		{
 			if (vserialPorts[port] != null)
 			{
@@ -393,7 +401,7 @@ public class DWVSerialPorts {
 	{
 		
 
-		if ((port < MAX_PORTS) && (port >= 0))
+		if ((port < this.maxports) && (port >= 0))
 		{
 			if (vserialPorts[port].isOpen())
 			{
@@ -597,7 +605,7 @@ public class DWVSerialPorts {
 		logger.debug("Resetting all virtual serial ports - part 1, close all sockets");
 		
 		
-		for (int i = 0;i<MAX_PORTS;i++)
+		for (int i = 0;i<this.maxports;i++)
 		{
 			this.listenerpool.closePortConnectionSockets(i);
 			this.listenerpool.closePortServerSockets(i);
@@ -606,10 +614,10 @@ public class DWVSerialPorts {
 		logger.debug("Resetting all virtual serial ports - part 2, init all ports");
 		
 		//vserialPorts = new DWVSerialPort[MAX_PORTS];
-		for (int i = 0;i<MAX_PORTS;i++)
+		for (int i = 0;i<this.maxports;i++)
 		{
 			// dont reset term
-			if (i != NTERM_PORT)
+			if (i != this.nTermPort)
 			{
 				try
 				{
@@ -623,11 +631,11 @@ public class DWVSerialPorts {
 		}
 		
 		// if term is null, init
-		if (this.vserialPorts[NTERM_PORT] == null)
+		if ((this.nTermPort > -1) && (this.vserialPorts[this.nTermPort] == null))
 		{
 			try
 			{
-				resetPort(NTERM_PORT);
+				resetPort(this.nTermPort);
 			} 
 			catch (DWPortNotValidException e)
 			{
@@ -641,7 +649,7 @@ public class DWVSerialPorts {
 	{
 		if ((i >= 0) && (i < vserialPorts.length))
 		{
-			vserialPorts[i] = new DWVSerialPort(this.dwProto, i);
+			vserialPorts[i] = new DWVSerialPort(this, this.dwProto, i);
 		}
 		else
 		{
@@ -723,7 +731,7 @@ public class DWVSerialPorts {
 
 	public boolean isValid(int vport)
 	{
-	  if ((vport >= 0) && (vport < MAX_PORTS))
+	  if ((vport >= 0) && (vport < this.maxports))
 		  return(true);
 	  
 	  return(false);
@@ -732,10 +740,12 @@ public class DWVSerialPorts {
 	
 	private void validateport(int vport) throws DWPortNotValidException 
 	{
-		if (!isValid(vport) || isNull(vport) )
-		{
+		if (!isValid(vport))
 			throw(new DWPortNotValidException("Invalid port #" + vport));
-		}
+				
+		if (isNull(vport) )
+			throw(new DWPortNotValidException("Null port #" + vport));
+		
 	}	
 
 
@@ -784,7 +794,7 @@ public class DWVSerialPorts {
 	{
 		logger.debug("shutting down");
 		
-		for (int i = 0;i<MAX_PORTS;i++)
+		for (int i = 0;i<this.maxports;i++)
 		{
 			this.listenerpool.closePortConnectionSockets(i);
 			this.listenerpool.closePortServerSockets(i);
@@ -1121,10 +1131,38 @@ public class DWVSerialPorts {
 
 
 
+	public int getMaxPorts()
+	{
+		return this.maxports;
+	}
 
 
+	public int getMaxNPorts()
+	{
+		return this.maxNports;
+	}
 
-
+	public int getMaxZPorts()
+	{
+		return this.maxZports;
+	}
+	
+	public int getNTermPort()
+	{
+		return this.nTermPort;
+	}
+	
+	public int getZTermPort()
+	{
+		return this.zTermPort;
+	}
+	
+	public int getMIDIPort()
+	{
+		return this.MIDIPort;
+	}
+	
+	
 
 
 }

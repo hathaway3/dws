@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 
 // this replaces the separate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
@@ -21,11 +21,11 @@ public class DWVPortHandler
 	private DWVModem vModem;
 	private Thread utilthread;
 	private DWVSerialPorts dwVSerialPorts;
-	private	DWVSerialCircularBuffer inputBuffer = new DWVSerialCircularBuffer(1024, true);
-	private DWProtocolHandler dwProto;
+//	private	DWVSerialCircularBuffer inputBuffer = new DWVSerialCircularBuffer(1024, true);
+	private DWVSerialProtocol dwProto;
 
 	
-	public DWVPortHandler(DWProtocolHandler dwProto, int port) 
+	public DWVPortHandler(DWVSerialProtocol dwProto, int port) 
 	{
 		this.vport = port;	
 		this.vModem = new DWVModem(dwProto, port);
@@ -94,33 +94,6 @@ public class DWVPortHandler
 				// check for os9 window wcreate:1b 20 + (valid screen type: ff,0,1,2,5,6,7,8)   
 				
 				
-				
-				// check for MIDI header
-				if (this.port_command.equals("MThd"))
-				{
-					// seems we have a MIDI file headed our way
-					
-					// immediately capture to buffer
-					try 
-					{
-						this.inputBuffer.getOutputStream().write("MThd".getBytes());
-					} 
-					catch (IOException e) 
-					{
-						logger.warn(e.getMessage());
-					}
-					
-					// TODO
-					//dwProto.getVPorts().setPortOutput(vport, this.inputBuffer.getOutputStream());
-					dwProto.getVPorts().markConnected(vport);
-					
-					logger.info("MIDI file detected on handler # " + this.dwProto.getHandlerNo() + " port " + this.vport);
-					
-					this.utilthread = new Thread(new DWVPortMIDIPlayerThread(this.dwProto, this.vport, this.inputBuffer));
-					this.utilthread.start();
-					
-					this.port_command = new String();
-				}
 			}
 				
 		}

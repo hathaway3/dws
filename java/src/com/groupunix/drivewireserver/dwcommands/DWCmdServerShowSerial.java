@@ -1,24 +1,19 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import gnu.io.CommPort;
 import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 
-import java.util.ArrayList;
-
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 
 public class DWCmdServerShowSerial extends DWCommand {
 
-	private DWProtocol dwProto;
+
 
 	DWCmdServerShowSerial(DWProtocol dwProto, DWCommand parent)
 	{
-		this.dwProto = dwProto;
+
 		setParentCmd(parent);
 	}
 	
@@ -46,7 +41,8 @@ public class DWCmdServerShowSerial extends DWCommand {
 		
 		text += "Server serial devices:\r\n\r\n";
 		
-		 java.util.Enumeration<gnu.io.CommPortIdentifier> thePorts =  gnu.io.CommPortIdentifier.getPortIdentifiers();
+		 @SuppressWarnings("unchecked")
+		java.util.Enumeration<gnu.io.CommPortIdentifier> thePorts =  gnu.io.CommPortIdentifier.getPortIdentifiers();
 	        
 		 while (thePorts.hasMoreElements()) 
 	     {

@@ -5,12 +5,12 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
 public class DWCmdServerStatus extends DWCommand {
 
-	private DWProtocol dwProto;
+	
 	
 	public DWCmdServerStatus(DWProtocol dwProto,DWCommand parent)
 	{
 		setParentCmd(parent);
-		this.dwProto = dwProto;
+	
 	}
 	
 	public String getCommand() 

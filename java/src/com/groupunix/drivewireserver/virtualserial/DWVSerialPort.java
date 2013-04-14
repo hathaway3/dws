@@ -12,8 +12,8 @@ import javax.sound.midi.ShortMessage;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWVSerialPort {
 
@@ -23,13 +23,13 @@ public class DWVSerialPort {
 	private static final int OUTPUT_BUFFER_SIZE = 256000; // huge
 	
 	private int port = -1;
-	private DWProtocolHandler dwProto;
+	private DWVSerialProtocol dwProto;
 	
 	private boolean connected = false;
 	private int opens = 0;
 
 	private DWVPortHandler porthandler = null;
-
+	private DWVSerialPorts vports;
 	
 	private byte PD_INT = 0;
 	private byte PD_QUT = 0;
@@ -63,15 +63,15 @@ public class DWVSerialPort {
 
 	private SocketChannel sktchan;
 	
-	public DWVSerialPort(DWProtocolHandler dwProto, int port)
+	public DWVSerialPort(DWVSerialPorts vps, DWVSerialProtocol dwProto, int port)
 	{
-		logger.debug("New DWVSerialPort for port " + port + " in handler '" + dwProto.getName() +"'");
+		logger.debug("New DWVSerialPort for port " + port + " in handler #" + dwProto.getHandlerNo());
+		this.vports = vps;
 		this.port = port;
 		this.dwProto = dwProto;
 		
-	
 		
-		if ((port != DWVSerialPorts.NTERM_PORT) && (port < (DWVSerialPorts.MAX_NDEV_PORTS + DWVSerialPorts.MAX_NDEV_PORTS)))
+		if ((port != vps.getNTermPort()) && (port < (vps.getMaxPorts())))
 		{
 			this.porthandler = new DWVPortHandler(dwProto, port);
 		
@@ -102,7 +102,7 @@ public class DWVSerialPort {
 	public void write(int databyte) 
 	{
 		
-		if (this.port == DWVSerialPorts.MIDI_PORT)
+		if (this.port == vports.getMIDIPort())
 		{
 			if (!midi_seen)
 			{
@@ -214,7 +214,7 @@ public class DWVSerialPort {
 		else
 		{	
 			// if we are connected, pass the data
-			if ((this.connected) || (this.port == DWVSerialPorts.NTERM_PORT) ||  ((this.port >= DWVSerialPorts.MAX_NDEV_PORTS) && (this.port < (DWVSerialPorts.MAX_NDEV_PORTS + DWVSerialPorts.MAX_ZDEV_PORTS))))
+			if ((this.connected) || (this.port == vports.getNTermPort()) ||  ((this.port >= vports.getMaxNPorts()) && (this.port < vports.getMaxPorts())))
 			{
 				if (sktchan == null)
 				{
@@ -469,7 +469,7 @@ public class DWVSerialPort {
 		
 		// fire off NineServer thread if we are a window device
 		
-		if ((this.port >= DWVSerialPorts.MAX_NDEV_PORTS) && (this.port < (DWVSerialPorts.MAX_NDEV_PORTS + DWVSerialPorts.MAX_ZDEV_PORTS)))
+		if ((this.port >= vports.getMaxNPorts()) && (this.port < vports.getMaxPorts()))
 		{
 			String tcphost = this.dwProto.getConfig().getString("NineServer"+this.port,  this.dwProto.getConfig().getString("NineServer", "127.0.0.1"));
 			int tcpport = this.dwProto.getConfig().getInt("NineServerPort"+this.port,  this.dwProto.getConfig().getInt("NineServerPort", 6309));

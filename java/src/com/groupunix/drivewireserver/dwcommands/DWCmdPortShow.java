@@ -2,18 +2,17 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
-import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWCmdPortShow extends DWCommand {
 
-	private DWProtocolHandler dwProto;
+	private DWVSerialProtocol dwProto;
 
-	public DWCmdPortShow(DWProtocolHandler dwProto,DWCommand parent)
+	public DWCmdPortShow(DWVSerialProtocol dwProtocol,DWCommand parent)
 	{
 		setParentCmd(parent);
-		this.dwProto = dwProto;
+		this.dwProto = dwProtocol;
 	}
 	
 	public String getCommand() 
@@ -45,7 +44,7 @@ public class DWCmdPortShow extends DWCommand {
 		
 		text += "\r\nCurrent port status:\r\n\n";
 		
-		for (int i = 0;i<DWVSerialPorts.MAX_PORTS;i++)
+		for (int i = 0;i<dwProto.getVPorts().getMaxPorts();i++)
 		{
 			
 			text += String.format("%6s", dwProto.getVPorts().prettyPort(i));

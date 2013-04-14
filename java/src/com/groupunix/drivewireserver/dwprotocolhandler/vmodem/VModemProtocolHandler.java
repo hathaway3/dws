@@ -12,13 +12,16 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
+import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwhelp.DWHelp;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolDevice;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolTimers;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWSerialDevice;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
+import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
-public class VModemProtocolHandler implements Runnable, DWProtocol
+public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 {
 
 	private final Logger logger = Logger.getLogger("DWServer.VModemProtocolHandler");
@@ -40,7 +43,7 @@ public class VModemProtocolHandler implements Runnable, DWProtocol
 	private DWProtocolTimers timers = new DWProtocolTimers();
 
 	private DWHelp dwhelp = new DWHelp(this);
-
+	private DWVSerialPorts vSerialPorts;
 	
 
 	
@@ -48,7 +51,14 @@ public class VModemProtocolHandler implements Runnable, DWProtocol
 	{
 		this.handlerno = handlerno;
 		this.config = hconf;
+		this.vSerialPorts = new DWVSerialPorts(this);
+		this.vSerialPorts.resetAllPorts();
 		
+		if (config.containsKey("HelpFile"))
+    	{
+    		this.dwhelp = new DWHelp(config.getString("HelpFile"));
+    	}
+    	
 		
 	}
 	
@@ -57,6 +67,8 @@ public class VModemProtocolHandler implements Runnable, DWProtocol
 	@Override
 	public void run() 
 	{
+		int readbyte = -1;
+		
 		logger.info("VModemHandler #" + this.handlerno + " starting");
 		this.started = true;
 		
@@ -70,12 +82,52 @@ public class VModemProtocolHandler implements Runnable, DWProtocol
 		
 		logger.debug("handler #" + handlerno + " is ready");
 		
+		
+		
 		while (!wanttodie)
 		{
+	
+			if (protodev != null)
+			{
+				try 
+				{
+					readbyte = protodev.comRead1(false);
+				}				
+				catch (IOException e) 
+				{
+					logger.error("Strange result in proto read loop: "  + e.getMessage());
+				} 
+				catch (DWCommTimeOutException e)
+				{
+					logger.error("Timeout in proto read loop: "  + e.getMessage());
+				}
+			}
+				
+			
+			if ((readbyte > -1) && (this.protodev != null))
+			{
+				// take input byte
+				try 
+				{
+					this.vSerialPorts.getPortInput(0).write(readbyte);
+				} 
+				catch (IOException e) 
+				{
+					logger.error(e.getMessage());
+				} 
+				catch (DWPortNotValidException e) 
+				{
+					logger.error(e.getMessage());
+				}
+			
+			}
 			
 		}
 		
+		
+		
 		logger.debug("handler #" + handlerno + " is exiting");
+		this.vSerialPorts.shutdown();
 	}
 	
 	
@@ -277,6 +329,14 @@ public class VModemProtocolHandler implements Runnable, DWProtocol
 	@Override
 	public boolean hasVSerial() {
 		
-		return false;
+		return true;
+	}
+
+
+
+	@Override
+	public DWVSerialPorts getVPorts() 
+	{
+		return this.vSerialPorts;
 	}
 }

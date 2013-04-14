@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWVPortTCPConnectionThread implements Runnable {
 
@@ -33,7 +33,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 	private InetSocketAddress sktaddr;
 	
 	
-	public DWVPortTCPConnectionThread(DWProtocolHandler dwProto, int vport, String tcphostin, int tcpportin)
+	public DWVPortTCPConnectionThread(DWVSerialProtocol dwProto, int vport, String tcphostin, int tcpportin)
 	{
 		logger.debug("init tcp connection thread");	
 		this.vport = vport;
@@ -45,7 +45,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 	}
 	
 
-	public DWVPortTCPConnectionThread(DWProtocolHandler dwProto, int vport, String tcphostin, int tcpportin, boolean rc)
+	public DWVPortTCPConnectionThread(DWVSerialProtocol dwProto, int vport, String tcphostin, int tcpportin, boolean rc)
 	{
 		logger.debug("init tcp connection thread");	
 		this.vport = vport;
@@ -58,7 +58,7 @@ public class DWVPortTCPConnectionThread implements Runnable {
 	}
 
 
-	public DWVPortTCPConnectionThread(DWProtocolHandler dwProto, int vport, String tcphostin, int tcpportin, boolean rc, byte[] wcdata)
+	public DWVPortTCPConnectionThread(DWVSerialProtocol dwProto, int vport, String tcphostin, int tcpportin, boolean rc, byte[] wcdata)
 	{
 		logger.debug("init NineServer connection thread");	
 		this.vport = vport;

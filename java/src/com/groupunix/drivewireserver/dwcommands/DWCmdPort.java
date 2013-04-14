@@ -1,21 +1,21 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWCmdPort extends DWCommand {
 
 	static final String command = "port";
 	private DWCommandList commands;
-	private DWProtocolHandler dwProto;	
+	private DWVSerialProtocol dwProto;	
 	
-	public DWCmdPort(DWProtocolHandler dwProto,DWCommand parent)
+	public DWCmdPort(DWVSerialProtocol dwProtocol,DWCommand parent)
 	{
 		setParentCmd(parent);
-		this.dwProto = dwProto;
+		this.dwProto = dwProtocol;
 		commands = new DWCommandList(this.dwProto, this.dwProto.getCMDCols());
-		commands.addcommand(new DWCmdPortShow(dwProto,this));
-		commands.addcommand(new DWCmdPortClose(dwProto,this));
-		commands.addcommand(new DWCmdPortOpen(dwProto,this));
+		commands.addcommand(new DWCmdPortShow(dwProtocol,this));
+		commands.addcommand(new DWCmdPortClose(dwProtocol,this));
+		commands.addcommand(new DWCmdPortOpen(dwProtocol,this));
 	}
 
 	

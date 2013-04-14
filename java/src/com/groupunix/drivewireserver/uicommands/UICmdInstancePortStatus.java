@@ -71,9 +71,9 @@ public class UICmdInstancePortStatus extends DWCommand {
 		
 		if (!(dwProto == null) && !(dwProto.getVPorts() == null) )
 		{
-			dwProto.getVPorts();
 			
-			for (int p = 0;p < DWVSerialPorts.MAX_PORTS;p++)
+			
+			for (int p = 0;p < dwProto.getVPorts().getMaxPorts();p++)
 			{
 				if (!dwProto.getVPorts().isNull(p))
 				{

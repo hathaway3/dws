@@ -2,17 +2,17 @@ package com.groupunix.drivewireserver.dwcommands;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 import com.groupunix.drivewireserver.virtualserial.DWVPortTCPConnectionThread;
 
 public class DWCmdPortOpen extends DWCommand {
 
-	private DWProtocolHandler dwProto;
+	private DWVSerialProtocol dwProto;
 
-	public DWCmdPortOpen(DWProtocolHandler dwProto,DWCommand parent)
+	public DWCmdPortOpen(DWVSerialProtocol dwProtocol,DWCommand parent)
 	{
 		setParentCmd(parent);
-		this.dwProto = dwProto;
+		this.dwProto = dwProtocol;
 	}
 	
 	public String getCommand() 

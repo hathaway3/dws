@@ -2,7 +2,6 @@ package com.groupunix.drivewireserver.dwdisk;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -11,9 +10,7 @@ import org.apache.commons.configuration.event.ConfigurationListener;
 import org.apache.commons.vfs.Capability;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.RandomAccessContent;
 import org.apache.commons.vfs.VFS;
-import org.apache.commons.vfs.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;

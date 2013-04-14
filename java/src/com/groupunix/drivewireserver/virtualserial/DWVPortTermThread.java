@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 public class DWVPortTermThread implements Runnable 
 {
@@ -27,12 +27,12 @@ public class DWVPortTermThread implements Runnable
 	private Thread connthread;
 	private DWVPortTCPServerThread connobj;
 	private int conno;
-	private DWProtocolHandler dwProto;
+	private DWVSerialProtocol dwProto;
 	private DWVSerialPorts dwVSerialPorts;
 	private ServerSocketChannel srvr;
 	
 	
-	public DWVPortTermThread(DWProtocolHandler dwProto, int tcpport)
+	public DWVPortTermThread(DWVSerialProtocol dwProto, int tcpport)
 	{
 		logger.debug("init term device thread on port "+ tcpport);	
 		this.tcpport = tcpport;
