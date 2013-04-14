@@ -2507,6 +2507,8 @@ public class MainWin {
 
 		// much more complicated than necessary so that changes are reflected in real time
 		
+		System.out.println("update midi menus");
+		
 		if (MainWin.midiStatus.isEnabled())
 		{
 			mntmMidi.setEnabled(true);
@@ -3496,12 +3498,14 @@ public class MainWin {
 
 	public static void setMidiStatus(MIDIStatus serverMidiStatus) 
 	{
+		System.out.println("set midi status");
 		MainWin.midiStatus = serverMidiStatus;
 	}
 
 
 	public static void applyMIDIStatus() 
 	{
+		System.out.println("apply midid statyus");
 		display.asyncExec(
 				  new Runnable() {
 					  public void run()
