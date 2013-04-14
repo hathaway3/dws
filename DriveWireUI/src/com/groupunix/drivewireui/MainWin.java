@@ -73,6 +73,7 @@ import org.eclipse.swt.widgets.Text;
 import swing2swt.layout.BorderLayout;
 
 import com.groupunix.drivewireserver.DriveWireServer;
+import com.groupunix.drivewireui.instanceman.InstanceMan;
 import com.groupunix.drivewireui.library.CloudLibraryItem;
 import com.groupunix.drivewireui.library.FolderLibraryItem;
 import com.groupunix.drivewireui.library.LibraryItem;
@@ -83,6 +84,7 @@ import com.groupunix.drivewireui.plugins.DWBrowser;
 import com.groupunix.drivewireui.simplewizard.SimpleWizard;
 import com.groupunix.drivewireui.updatewizard.NoUpdateDialog;
 import com.groupunix.drivewireui.updatewizard.UpdateWizard;
+import com.groupunix.dwlite.DWLite;
 import com.swtdesigner.SWTResourceManager;
 
 
@@ -95,8 +97,8 @@ public class MainWin {
 	public static final int DWUIVersionMajor = 4;
 	public static final int DWUIVersionMinor = 3;
 	public static final int DWUIVersionBuild = 3;
-	public static final String DWUIVersionRevision = "e";
-	public static final String DWUIVersionDate = "04/12/2013";
+	public static final String DWUIVersionRevision = "f";
+	public static final String DWUIVersionDate = "04/13/2013";
 	
 	public static final Version DWUIVersion = new Version(DWUIVersionMajor, DWUIVersionMinor, DWUIVersionBuild, DWUIVersionRevision, DWUIVersionDate);
 	
@@ -351,6 +353,11 @@ public class MainWin {
 		{
 			logger.info("UI disabled (with --noui)");
 		}
+		else if (UIUtils.hasArg(args, "liteui"))
+		{
+			
+			DWLite.main(args);
+		}
 		else
 		{
 			
@@ -500,7 +507,7 @@ public class MainWin {
 		dwThread.start();
 	}
 
-	private static void stopDWServer()
+	public static void stopDWServer()
 	{
 		if ((dwThread != null) && (!dwThread.isInterrupted()))
 		{
@@ -1013,6 +1020,22 @@ public class MainWin {
 		
 		new MenuItem(menu_tools, SWT.SEPARATOR);
 		
+		MenuItem mntmInstMan = new MenuItem(menu_tools, SWT.NONE);
+		mntmInstMan.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				InstanceMan im = new InstanceMan(display);
+				im.open();
+	
+			}
+		});
+		mntmInstMan.setText("Instance Manager..");
+		mntmInstMan.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/database-gear.png"));
+		
+		
+		
+		new MenuItem(menu_tools, SWT.SEPARATOR);
 		
 		
 		final MenuItem mntmCheckUpdates = new MenuItem(menu_tools, SWT.NONE);
