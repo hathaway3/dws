@@ -372,8 +372,15 @@ public class DWLite
 			}
 			public void menuDeselected(MenuEvent arg0) {
 			}
-			public void menuSelected(MenuEvent arg0) {
-				chckbxmntmHdbdosTranslation.setSelected(DriveWireServer.getHandler(handlerno).getConfig().getBoolean("HDBDOSMode", false));
+			public void menuSelected(MenuEvent arg0) 
+			{
+				if ((DriveWireServer.getHandler(handlerno) != null) && (DriveWireServer.getHandler(handlerno).getConfig() != null))
+				{
+					chckbxmntmHdbdosTranslation.setEnabled(false);
+					chckbxmntmHdbdosTranslation.setSelected(DriveWireServer.getHandler(handlerno).getConfig().getBoolean("HDBDOSMode", false));
+				}
+				else
+					chckbxmntmHdbdosTranslation.setEnabled(false);
 				
 			}
 		});

@@ -1017,7 +1017,7 @@ public class MainWin {
 		mntmTimers.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/constatus/user-away.png"));
 		
 		
-		
+		/*
 		new MenuItem(menu_tools, SWT.SEPARATOR);
 		
 		MenuItem mntmInstMan = new MenuItem(menu_tools, SWT.NONE);
@@ -1033,7 +1033,7 @@ public class MainWin {
 		mntmInstMan.setText("Instance Manager..");
 		mntmInstMan.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/database-gear.png"));
 		
-		
+		*/
 		
 		new MenuItem(menu_tools, SWT.SEPARATOR);
 		
