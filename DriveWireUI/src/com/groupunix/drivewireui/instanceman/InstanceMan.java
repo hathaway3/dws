@@ -160,7 +160,10 @@ public class InstanceMan extends Shell
 			List<String> instances = UIUtils.loadList("ui server show instances");
 				
 			if (!sizeset )
-				this.setSize(380, instances.size() * 129);
+			{
+				this.setSize(380, 38 + instances.size() * 116);
+				sizeset = true;
+			}
 			
 			for (String inst : instances)
 			{
