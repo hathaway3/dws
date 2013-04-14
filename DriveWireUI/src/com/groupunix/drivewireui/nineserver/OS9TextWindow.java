@@ -472,9 +472,9 @@ public class OS9TextWindow implements OS9Window
 			case CHRMODE_CURSOR:
 				this.chrmode = CHRMODE_NONE;
 				if (chr == OS9Defs.CTL_CursorOnOff_Off)
-					this.textCursorVisible = false;
+					this.setTextCursorVisible(false);
 				else
-					this.textCursorVisible = true;
+					this.setTextCursorVisible(true);
 				break;
 			
 			case CHRMODE_EXTENDED:
@@ -605,6 +605,7 @@ public class OS9TextWindow implements OS9Window
 
 
 
+	@SuppressWarnings("unused")
 	private Rectangle doLF() 
 	{
 		this.cursorY++;
@@ -936,6 +937,18 @@ public class OS9TextWindow implements OS9Window
 	{
 
 		return ch;
+	}
+
+
+
+	public boolean isTextCursorVisible() {
+		return textCursorVisible;
+	}
+
+
+
+	public void setTextCursorVisible(boolean textCursorVisible) {
+		this.textCursorVisible = textCursorVisible;
 	}
 
 

@@ -61,7 +61,7 @@ public class NIBImageViewer extends FileViewer
 
 		setLayout(new BorderLayout(0, 0));
 		
-		color_box = new Color(getDisplay(), 128,128,128);
+		setColor_box(new Color(getDisplay(), 128,128,128));
 		
 		palette = getDefaultPalette();
 		
@@ -394,6 +394,7 @@ public class NIBImageViewer extends FileViewer
 
 
 
+	@SuppressWarnings("unused")
 	public void viewFile(DWFileSystemDirEntry direntry, byte[] fc)
 	{
 		this.lastDirEntry = direntry;
@@ -478,6 +479,7 @@ public class NIBImageViewer extends FileViewer
 	}
 
 
+	@SuppressWarnings("unused")
 	private int colorsFor(int pm)
 	{
 		if (pm % 2 == 0)
@@ -486,6 +488,7 @@ public class NIBImageViewer extends FileViewer
 		return 4;
 	}
 	
+	@SuppressWarnings("unused")
 	private int pagesFor(int pm)
 	{
 		if (pm == 2)
@@ -512,6 +515,54 @@ public class NIBImageViewer extends FileViewer
 	{
 		
 		return TYPEIMAGE;
+	}
+
+
+
+
+
+	public Color[] getCoco_cols() {
+		return coco_cols;
+	}
+
+
+
+
+
+	public void setCoco_cols(Color[] coco_cols) {
+		this.coco_cols = coco_cols;
+	}
+
+
+
+
+
+	public Image[] getImagec() {
+		return imagec;
+	}
+
+
+
+
+
+	public void setImagec(Image[] imagec) {
+		this.imagec = imagec;
+	}
+
+
+
+
+
+	public Color getColor_box() {
+		return color_box;
+	}
+
+
+
+
+
+	public void setColor_box(Color color_box) {
+		this.color_box = color_box;
 	}
 
 	

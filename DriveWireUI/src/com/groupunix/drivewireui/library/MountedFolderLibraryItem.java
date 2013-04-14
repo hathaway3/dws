@@ -2,13 +2,11 @@ package com.groupunix.drivewireui.library;
 
 import java.util.Vector;
 
-import org.apache.commons.configuration.HierarchicalConfiguration.Node;
 import org.eclipse.swt.graphics.Image;
 
 import com.groupunix.drivewireui.DWLibrary;
 import com.groupunix.drivewireui.DiskDef;
 import com.groupunix.drivewireui.MainWin;
-import com.groupunix.drivewireui.UIUtils;
 
 public class MountedFolderLibraryItem extends LibraryItem
 {

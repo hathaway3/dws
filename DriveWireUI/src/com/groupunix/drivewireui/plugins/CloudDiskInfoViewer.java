@@ -31,20 +31,23 @@ public class CloudDiskInfoViewer extends Composite
 {
 	
 
+	@SuppressWarnings("unused")
 	private DWDisk disk;
 
 
+	@SuppressWarnings("unused")
 	private PathLibraryItem pitem;
 	private Text textDescription;
 
 
+	@SuppressWarnings("unused")
 	private int diskID;
 
 
 	private Label lblImg;
 	
 	
-	@SuppressWarnings("unused")
+	
 	public CloudDiskInfoViewer(Composite parent, int style)
 	{
 		super(parent, style);

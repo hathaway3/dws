@@ -191,4 +191,14 @@ public class NodeViewer extends FileViewer
 		btnUndo.setEnabled(false);
 		btnSave.setEnabled(false);
 	}
+
+
+	public Composite getCompositeToolbar() {
+		return compositeToolbar;
+	}
+
+
+	public void setCompositeToolbar(Composite compositeToolbar) {
+		this.compositeToolbar = compositeToolbar;
+	}
 }

@@ -178,6 +178,7 @@ public class PathInfoViewer extends Composite
 	private TreeColumn trclmnDateModified;
 	private RBFFileSystemIDSector currentRBFIDSec;
 	private PathLibraryItem pitem;
+	@SuppressWarnings("unused")
 	private DWLibrary library = null;
 	
 	@SuppressWarnings("unused")

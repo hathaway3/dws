@@ -238,6 +238,7 @@ public class CoCoMaxImageViewer extends FileViewer
 
 
 
+	@SuppressWarnings("unused")
 	public void viewFile(DWFileSystemDirEntry direntry, byte[] fc)
 	{
 		this.lastDirEntry = direntry;
@@ -300,6 +301,8 @@ public class CoCoMaxImageViewer extends FileViewer
 							post = pix[x+1][y];
 						
 						int cur = pix[x][y];
+						
+						
 						
 						// leading black
 						if ((pre == 0) || (pre == 128)) 

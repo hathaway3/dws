@@ -44,6 +44,8 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 
 	private DWHelp dwhelp = new DWHelp(this);
 	private DWVSerialPorts vSerialPorts;
+
+	private boolean logdevbytes = false;
 	
 
 	
@@ -51,6 +53,7 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 	{
 		this.handlerno = handlerno;
 		this.config = hconf;
+		this.logdevbytes = config.getBoolean("LogDeviceBytes", false);
 		this.vSerialPorts = new DWVSerialPorts(this);
 		this.vSerialPorts.resetAllPorts();
 		
@@ -106,6 +109,9 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 			
 			if ((readbyte > -1) && (this.protodev != null))
 			{
+				if (logdevbytes )
+					logger.debug("input byte: " + readbyte);
+				
 				// take input byte
 				try 
 				{

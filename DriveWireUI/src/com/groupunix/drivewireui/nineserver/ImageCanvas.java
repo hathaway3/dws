@@ -44,6 +44,7 @@ class ImageCanvas extends GLCanvas {
 		buffer.rewind();
 	}
 
+	@SuppressWarnings("unused")
 	private void updateImageBuffer() {
 		// ImageData fullImageData = makeTransparent(bufferedImage, 0);
 		System.out.println("1");

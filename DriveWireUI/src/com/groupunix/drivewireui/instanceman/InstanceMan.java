@@ -1,38 +1,25 @@
 package com.groupunix.drivewireui.instanceman;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.ExpandBar;
 import org.eclipse.swt.widgets.ExpandItem;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 import com.groupunix.drivewireui.DWUIOperationFailedException;
-import com.groupunix.drivewireui.GradientHelper;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.UIUtils;
-import org.eclipse.swt.events.SelectionAdapter;
 
 public class InstanceMan extends Shell 
 {
@@ -407,19 +394,18 @@ public class InstanceMan extends Shell
 			
 			lastUpdateInstance = MainWin.getInstance();
 		} 
+		// silent death for all
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		} 
 		catch (DWUIOperationFailedException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		}
 		catch (NumberFormatException e)
 		{
-			e.printStackTrace();
+			
 		}
 		
 		
@@ -472,19 +458,6 @@ public class InstanceMan extends Shell
 	
 	
 	
-	private void addInstanceDisplay(int no) 
-	{
-		
-
-	
-		
-			
-		
-		
-		
-		
-		
-	}
 	
 	
 	

@@ -10,7 +10,6 @@ import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
-import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class UICmdInstancePortStatus extends DWCommand {
 

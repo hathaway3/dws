@@ -1,4 +1,4 @@
-package com.groupunix.drivewireui;
+package com.groupunix.drivewireui.configeditor;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;

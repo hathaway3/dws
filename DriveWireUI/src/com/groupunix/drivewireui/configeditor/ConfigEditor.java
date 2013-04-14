@@ -1,4 +1,4 @@
-package com.groupunix.drivewireui;
+package com.groupunix.drivewireui.configeditor;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -40,6 +40,13 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.wb.swt.SWTResourceManager;
+
+import com.groupunix.drivewireui.ConfigItem;
+import com.groupunix.drivewireui.Connection;
+import com.groupunix.drivewireui.DWUIOperationFailedException;
+import com.groupunix.drivewireui.MainWin;
+import com.groupunix.drivewireui.UIUtils;
+import com.groupunix.drivewireui.configeditor.SortTreeListener;
 
 public class ConfigEditor extends Shell
 {
@@ -440,10 +447,9 @@ public class ConfigEditor extends Shell
 			
 			StringReader sr = new StringReader(sw.getBuffer().toString());
 			
-			
 			temp.load(sr);
-			
-		} catch (ConfigurationException e)
+		} 
+		catch (ConfigurationException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -819,8 +825,8 @@ public class ConfigEditor extends Shell
 			{
 				
 				
-				System.out.println("n: " + node.getName());
-				System.out.println("v: " + node.getValue());
+				//System.out.println("n: " + node.getName());
+				//System.out.println("v: " + node.getValue());
 			}
 			
 
@@ -1265,7 +1271,7 @@ public class ConfigEditor extends Shell
 			}
 			
 			// apply master
-			applyMaster(item.node);
+			applyMaster(item.getNode());
 			
 			if (getAttributeVal(item.getNode().getAttributes(),"name") == null)
 				tmp.setText(0,item.getNode().getName());

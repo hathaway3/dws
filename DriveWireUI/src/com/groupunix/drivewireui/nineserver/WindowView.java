@@ -24,7 +24,7 @@ public class WindowView extends Dialog
 	{
 		super(parent, style);
 		setText("SWT Dialog");
-		this.body = body;
+		
 	}
 
 	/**
@@ -69,5 +69,13 @@ public class WindowView extends Dialog
 	}
 	public Composite getCompositeContent() {
 		return compositeContent;
+	}
+
+	public Composite getBody() {
+		return body;
+	}
+
+	public void setBody(Composite body) {
+		this.body = body;
 	}
 }

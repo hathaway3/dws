@@ -1,4 +1,4 @@
-package com.groupunix.drivewireui;
+package com.groupunix.drivewireui.configeditor;
 
 import java.text.Collator;
 import java.util.Locale;

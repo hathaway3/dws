@@ -3,11 +3,7 @@ package com.groupunix.drivewireui.plugins;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.HierarchicalConfiguration.Node;
-import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.VFS;
@@ -22,6 +18,8 @@ import org.eclipse.swt.browser.TitleListener;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -46,12 +44,6 @@ import swing2swt.layout.BorderLayout;
 import com.groupunix.drivewireui.GradientHelper;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.SendCommandWin;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackAdapter;
-import org.eclipse.swt.widgets.ProgressBar;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.GridData;
 
 public class DWBrowser extends Composite
 {
@@ -89,10 +81,10 @@ public class DWBrowser extends Composite
 	public DWBrowser(final Composite parent, String url, final CTabItem ourtab)
 	{
 		super(parent, SWT.BORDER);
-		this.ourtab = ourtab;
+		this.setOurtab(ourtab);
 		
 		handcursor = new Cursor( MainWin.getDisplay(), SWT.CURSOR_HAND);
-		normcursor = new Cursor( MainWin.getDisplay(), SWT.CURSOR_ARROW);
+		setNormcursor(new Cursor( MainWin.getDisplay(), SWT.CURSOR_ARROW));
 		
 		setLayout(new BorderLayout(0, 0));
 		
@@ -425,8 +417,10 @@ public class DWBrowser extends Composite
 	}
 
 
+	@SuppressWarnings("unchecked")
 	protected void addBookmark(String url) 
 	{
+		
 		List<String> bm = MainWin.config.getList("Bookmark");
 		
 		if (!bm.contains(url))
@@ -475,6 +469,7 @@ public class DWBrowser extends Composite
 
 
 
+	@SuppressWarnings("unchecked")
 	private void loadBookmarkList() 
 	{
 		String tmp = comboURL.getText();
@@ -489,6 +484,7 @@ public class DWBrowser extends Composite
 	}
 
 
+	@SuppressWarnings("unchecked")
 	protected boolean isBookmark(String url) 
 	{
 		List<String> bm = MainWin.config.getList("Bookmark");
@@ -819,6 +815,26 @@ public class DWBrowser extends Composite
 		
 					  }
 				  });
+	}
+
+
+	public CTabItem getOurtab() {
+		return ourtab;
+	}
+
+
+	public void setOurtab(CTabItem ourtab) {
+		this.ourtab = ourtab;
+	}
+
+
+	public Cursor getNormcursor() {
+		return normcursor;
+	}
+
+
+	public void setNormcursor(Cursor normcursor) {
+		this.normcursor = normcursor;
 	}
 	
 	

@@ -1,14 +1,11 @@
 package com.groupunix.drivewireui.updatewizard;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
 import com.groupunix.drivewireui.MainWin;
-import com.groupunix.drivewireui.UIUtils;
 import com.groupunix.drivewireui.Updater;
 
 
@@ -23,7 +20,7 @@ public class FileUpdater implements Runnable
 	public FileUpdater(String fn, String sha, UpdatePage updatePage) 
 	{
 		this.filename = fn;
-		this.targetsha = sha;
+		this.setTargetsha(sha);
 		this.updatePage = updatePage;
 	}
 
@@ -51,6 +48,14 @@ public class FileUpdater implements Runnable
 		
 		this.updatePage.removeThreadStatus();
 		
+	}
+
+	public String getTargetsha() {
+		return targetsha;
+	}
+
+	public void setTargetsha(String targetsha) {
+		this.targetsha = targetsha;
 	}
 
 }

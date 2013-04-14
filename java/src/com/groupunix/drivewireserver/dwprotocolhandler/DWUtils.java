@@ -11,7 +11,6 @@ import java.util.Date;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
-import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 public class DWUtils
 {

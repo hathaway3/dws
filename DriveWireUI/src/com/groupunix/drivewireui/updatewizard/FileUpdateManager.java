@@ -3,14 +3,10 @@ package com.groupunix.drivewireui.updatewizard;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
 
-import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.UIUtils;
 
 public class FileUpdateManager implements Runnable {

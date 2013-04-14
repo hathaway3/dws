@@ -480,7 +480,7 @@ public class NineScreen extends Composite
 						}
 						else
 						{ 
-							Rectangle rarea = (Rectangle) e.data;
+							//Rectangle rarea = (Rectangle) e.data;
 							
 							//System.out.println("redraw " + rarea.x + "," + rarea.y + " " + rarea.width + "x" + rarea.height + "  to  " + e.x + "," + e.y + " " + e.width + "x" + e.height);
 							
@@ -1931,6 +1931,48 @@ public class NineScreen extends Composite
 			}});
 		
 		
+	}
+
+
+
+
+	public boolean isNeedsUpdate() {
+		return needsUpdate;
+	}
+
+
+
+
+	public void setNeedsUpdate(boolean needsUpdate) {
+		this.needsUpdate = needsUpdate;
+	}
+
+
+
+
+	public Boolean getRedrawInProgress() {
+		return redrawInProgress;
+	}
+
+
+
+
+	public void setRedrawInProgress(Boolean redrawInProgress) {
+		this.redrawInProgress = redrawInProgress;
+	}
+
+
+
+
+	public boolean isDoAntiAlias() {
+		return doAntiAlias;
+	}
+
+
+
+
+	public void setDoAntiAlias(boolean doAntiAlias) {
+		this.doAntiAlias = doAntiAlias;
 	}
 
 

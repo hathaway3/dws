@@ -78,6 +78,7 @@ public class DECBTokenize
 			
 		}
 		
+		@SuppressWarnings("unused")
 		int startaddr;
 		int nextaddr = startaddr = ((in_buffer[in_pos++] & 0xFF) << 8) + (in_buffer[in_pos++] & 0xFF);
 		

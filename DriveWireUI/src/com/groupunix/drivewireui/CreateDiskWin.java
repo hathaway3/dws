@@ -1,7 +1,5 @@
 package com.groupunix.drivewireui;
 
-import javax.swing.SwingUtilities;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;

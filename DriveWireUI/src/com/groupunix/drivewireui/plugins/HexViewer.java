@@ -184,6 +184,7 @@ public class HexViewer extends FileViewer
 	
 	
 
+	@SuppressWarnings("unused")
 	@Override
 	public void viewFile(DWFileSystemDirEntry direntry, byte[] bytes)
 	{

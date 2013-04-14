@@ -63,7 +63,7 @@ public class DWLiteLogAppender implements Appender
 	@Override
 	public Layout getLayout() 
 	{
-		return this.layout;
+		return DWLiteLogAppender.layout;
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class DWLiteLogAppender implements Appender
 	@Override
 	public void setLayout(Layout arg0) 
 	{
-		this.layout = arg0;
+		DWLiteLogAppender.layout = arg0;
 	}
 
 	@Override

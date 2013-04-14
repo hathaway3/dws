@@ -42,7 +42,7 @@ public class RestartDialog extends Dialog {
 		new Label(container, SWT.NONE);
 		new Label(container, SWT.NONE);
 		
-		Label label_2 = new Label(container, SWT.NONE);
+		new Label(container, SWT.NONE);
 		
 		Label label = new Label(container, SWT.NONE);
 		label.setImage(SWTResourceManager.getImage(RestartDialog.class, "/status/appointment-recurring.png"));
