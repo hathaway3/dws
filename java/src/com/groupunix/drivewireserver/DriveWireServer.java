@@ -48,8 +48,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 public class DriveWireServer 
 {
 
-	public static final String DWServerVersion = "4.3.3e";
-	public static final String DWServerVersionDate = "04/12/2013";
+	public static final String DWServerVersion = "4.3.3f";
+	public static final String DWServerVersionDate = "04/13/2013";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;
@@ -595,7 +595,7 @@ public class DriveWireServer
 		cmdoptions.addOption("nomount", false, "do not remount disks from last run");
 		cmdoptions.addOption("noui", false, "do not start user interface");
 		cmdoptions.addOption("noserver", false, "do not start server");
-		
+		cmdoptions.addOption("liteui", false, "use lite user interface");
 		
 		
 		
@@ -1325,6 +1325,11 @@ public class DriveWireServer
 	public static void setUIRestart()
 	{
 		DriveWireServer.restart_ui = true;
+	}
+	
+	public static Logger getLogger()
+	{
+		return logger;
 	}
 	
 }
