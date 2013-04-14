@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -44,6 +45,7 @@ import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireui.MainWin;
 import java.awt.GridLayout;
+import java.awt.Dimension;
 
 public class DWLite 
 {
@@ -77,6 +79,8 @@ public class DWLite
 
 	private JCheckBoxMenuItem chckbxmntmShowDriveX;
 	private JButton button_X;
+
+	private JScrollPane sp;
 
 	/**
 	 * Launch the application.
@@ -176,11 +180,11 @@ public class DWLite
 		
 		
 		frmDwlite.setTitle("DW4Lite");
-		frmDwlite.setBounds(100, 100, 382, 381);
+		frmDwlite.setBounds(100, 100, 382, 403);
 		frmDwlite.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmDwlite.getContentPane().setLayout(new MigLayout("", "[366px,grow,fill]", "[312px,grow,fill]"));
 		
-		JScrollPane sp = new JScrollPane();
+		sp = new JScrollPane();
 		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		
 		frmDwlite.getContentPane().add(sp, "cell 0 0,grow");
@@ -196,6 +200,8 @@ public class DWLite
 		panelDrives.setLayout(new MigLayout("", "[][grow,fill][]", "[20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][]"));
 		
 		JButton btnDrive = new JButton("");
+		btnDrive.setMinimumSize(new Dimension(24, 9));
+		btnDrive.setMaximumSize(new Dimension(35, 35));
 		btnDrive.setToolTipText("Load Drive 0");
 		btnDrive.addActionListener(new ActionListener() 
 		{
@@ -212,6 +218,7 @@ public class DWLite
 		panelDrives.add(lblDisk0, "cell 1 0,alignx left,aligny bottom");
 		
 		JButton button = new JButton("");
+		button.setMaximumSize(new Dimension(35, 35));
 		button.setToolTipText("Eject Drive 0");
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
@@ -223,9 +230,10 @@ public class DWLite
 		button.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
 		
 		lblDisk0Path = new JLabel(" ");
-		panelDrives.add(lblDisk0Path, "cell 1 1,alignx left,growy");
+		panelDrives.add(lblDisk0Path, "cell 1 1,alignx left,aligny top");
 		
 		JButton btnDrive_1 = new JButton("");
+		btnDrive_1.setMaximumSize(new Dimension(35, 35));
 		btnDrive_1.setToolTipText("Load Drive 1");
 		panelDrives.add(btnDrive_1, "cell 0 2 1 2");
 		btnDrive_1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk1.png")));
@@ -243,8 +251,9 @@ public class DWLite
 		panelDrives.add(lblDisk1, "cell 1 2,aligny bottom");
 		
 		JButton button_1 = new JButton("");
+		button_1.setMaximumSize(new Dimension(35, 35));
 		button_1.setToolTipText("Eject Drive 1");
-		panelDrives.add(button_1, "cell 2 2 1 2");
+		panelDrives.add(button_1, "cell 2 2 1 2,alignx right");
 		button_1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
 		button_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
@@ -257,6 +266,7 @@ public class DWLite
 		panelDrives.add(lblDisk1Path, "cell 1 3,growx,aligny top");
 		
 		JButton btnDrive_2 = new JButton("");
+		btnDrive_2.setMaximumSize(new Dimension(35, 35));
 		btnDrive_2.setToolTipText("Load Drive 2");
 		panelDrives.add(btnDrive_2, "cell 0 4 1 2");
 		btnDrive_2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk2.png")));
@@ -273,6 +283,7 @@ public class DWLite
 		panelDrives.add(lblDisk2, "cell 1 4,aligny bottom");
 		
 		JButton button_2 = new JButton("");
+		button_2.setMaximumSize(new Dimension(35, 35));
 		button_2.setToolTipText("Eject Drive 2");
 		panelDrives.add(button_2, "cell 2 4 1 2");
 		button_2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
@@ -287,6 +298,7 @@ public class DWLite
 		panelDrives.add(lblDisk2Path, "cell 1 5,growx,aligny top");
 		
 		JButton btnDrive_3 = new JButton("");
+		btnDrive_3.setMaximumSize(new Dimension(35, 35));
 		btnDrive_3.setToolTipText("Load Drive 3");
 		panelDrives.add(btnDrive_3, "cell 0 6 1 2");
 		btnDrive_3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk3.png")));
@@ -300,9 +312,10 @@ public class DWLite
 		
 		lblDisk3 = new JLabel("Not loaded");
 		lblDisk3.setFont(new Font("Tahoma", Font.BOLD, 11));
-		panelDrives.add(lblDisk3, "cell 1 6");
+		panelDrives.add(lblDisk3, "cell 1 6,aligny bottom");
 		
 		JButton button_3 = new JButton("");
+		button_3.setMaximumSize(new Dimension(35, 35));
 		button_3.setToolTipText("Eject Drive 3");
 		panelDrives.add(button_3, "cell 2 6 1 2");
 		button_3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
@@ -315,6 +328,7 @@ public class DWLite
 		lblDiskX = new JLabel("Not loaded");
 		lblDiskX.setFont(new Font("Tahoma", Font.BOLD, 11));
 		panelDrives.add(lblDiskX, "cell 1 8,aligny bottom");
+		spinnerDriveX.setMaximumSize(new Dimension(40, 20));
 		spinnerDriveX.setToolTipText("Choose which drive 4 through 255 to display in Drive X slot");
 		
 		
@@ -331,6 +345,7 @@ public class DWLite
 		panelDrives.add(spinnerDriveX, "cell 0 10,growx");
 		
 		button_X = new JButton("");
+		button_X.setMaximumSize(new Dimension(35, 35));
 		button_X.setToolTipText(" Load Drive X (choose number below)");
 		button_X.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
@@ -342,6 +357,7 @@ public class DWLite
 		panelDrives.add(button_X, "cell 0 8 1 2");
 		
 		btnEjectX = new JButton("");
+		btnEjectX.setMaximumSize(new Dimension(35, 35));
 		btnEjectX.setToolTipText("Eject Drive X");
 		btnEjectX.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
@@ -483,6 +499,16 @@ public class DWLite
 		
 		
 		DriveWireServer.getLogger().addAppender(new DWLiteLogAppender(textAreaLog));
+		
+		
+		this.btnEjectX.setVisible(false);
+		this.lblDiskX.setVisible(false);
+		this.lblDiskXPath.setVisible(false);
+		this.spinnerDriveX.setVisible(false);
+		this.button_X.setVisible(false);
+		
+		frmDwlite.pack();
+		
 	}
 	
 
