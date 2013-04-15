@@ -21,9 +21,8 @@ public class DWCLI
 	
 	private static final int BUFFER_SIZE = 2048;
 
-	/**
-	 * @param args
-	 */
+	
+	
 	public static void main(String[] args) 
 	{
 		// defaults
@@ -45,7 +44,8 @@ public class DWCLI
 		CommandLineParser parser = new GnuParser();
 		
 		try 
-		{
+		{ 
+			
 			CommandLine line = parser.parse( cmdoptions, args );
 		    
 			if (!line.hasOption("command") || line.hasOption("help"))
@@ -93,9 +93,14 @@ public class DWCLI
 			
 			
 		}
-		catch( ParseException | NumberFormatException e ) 
+		catch( ParseException e)
 		{
-		    handleException(e);
+			
+		}
+		catch (NumberFormatException e1) 
+		
+		{
+		    handleException(e1);
 		}
 		
 		System.exit(0);
@@ -104,7 +109,7 @@ public class DWCLI
 
 	private static void handleException(Exception e) 
 	{
-		System.err.println(System.lineSeparator() + "Error:" + System.lineSeparator() + System.lineSeparator() + e.getMessage() );
+		System.err.println(System.getProperty("line.separator") + "Error:" + System.getProperty("line.separator") + System.getProperty("line.separator") + e.getMessage() );
 	    System.exit(-1);
 	}
 
