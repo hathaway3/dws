@@ -777,6 +777,25 @@ public class DWVModem {
 	}
 
 
+	public void setEcho(boolean b)
+	{
+		if (b)
+			this.vmodem_registers[REG_ECHO] = 1;
+		else
+			this.vmodem_registers[REG_ECHO] = 0;
+		
+	}
+
+
+	public void setVerbose(boolean b) 
+	{
+		if (b)
+			this.vmodem_registers[REG_VERBOSE] = 1;
+		else
+			this.vmodem_registers[REG_VERBOSE] = 0;
+			
+	}
+
 		
 	
 	

@@ -680,6 +680,13 @@ public class DWVSerialPort {
 	}
 
 
+
+	public DWVModem getVModem() 
+	{
+		return this.porthandler.getVModem();
+	}
+
+
 	
 }
 

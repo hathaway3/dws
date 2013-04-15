@@ -86,6 +86,8 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 		try 
 		{
 			this.vSerialPorts.openPort(0);
+			this.vSerialPorts.getPortVModem(0).setEcho(true);
+			this.vSerialPorts.getPortVModem(0).setVerbose(true);
 		} 
 		catch (DWPortNotValidException e1) 
 		{

@@ -1183,6 +1183,16 @@ public class DWVSerialPorts {
 
 
 
+	public DWVModem getPortVModem(int port) throws DWPortNotValidException 
+	{
+		validateport(port);
+		return this.vserialPorts[port].getVModem();
+	}
+
+
+
+
+
 	
 
 

@@ -3,9 +3,12 @@ package com.groupunix.drivewireserver.virtualserial;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
+import com.groupunix.drivewireserver.virtualserial.api.DWAPISerial;
+import com.groupunix.drivewireserver.virtualserial.api.DWAPITCP;
 
 
 // this replaces the separate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
@@ -128,32 +131,11 @@ public class DWVPortHandler
 		{
 			if (cmdparts[0].equalsIgnoreCase("tcp"))
 			{
-				
-				if ((cmdparts.length == 4) && (cmdparts[1].equalsIgnoreCase("connect"))) 
-				{
-					doTCPConnect(cmdparts[2],cmdparts[3]);
-				}
-				else if ((cmdparts.length >= 3) && (cmdparts[1].equalsIgnoreCase("listen"))) 
-				{
-					doTCPListen(cmdparts);
-				}
-				// old
-				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("listentelnet"))) 
-				{
-					doTCPListen(cmdparts[2],1);
-				}
-				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("join"))) 
-				{
-					doTCPJoin(cmdparts[2]);
-				}
-				else if ((cmdparts.length == 3) && (cmdparts[1].equalsIgnoreCase("kill"))) 
-				{
-					doTCPKill(cmdparts[2]);
-				}
-				else
-				{
-					respondFail(DWDefs.RC_SYNTAX_ERROR,"Syntax error in TCP command");
-				}
+				respond(new DWAPITCP(cmdparts, this.dwProto, this.vport).process());
+			}
+			else if (cmdparts[0].equalsIgnoreCase("ser"))
+			{
+				respond(new DWAPISerial(cmdparts).process());
 			}
 
 
@@ -173,6 +155,7 @@ public class DWVPortHandler
 			else
 			{
 				logger.warn("Unknown API command: '" + cmd + "'");
+				respondFail(DWDefs.RC_SYNTAX_ERROR, "Unknown API '" + cmdparts[0] + "'");
 			}
 		}
 		else
@@ -184,174 +167,20 @@ public class DWVPortHandler
 	}
 
 
-
 	
-	private void doTCPJoin(String constr) 
-	{
-		int conno;
-		
-		try
-		{
-			conno = Integer.parseInt(constr);
-		}
-		catch (NumberFormatException e)
-		{
-			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp join command");
-			return;
-		}
-		
-
-		try 
-		{
-			this.dwVSerialPorts.getListenerPool().validateConn(conno);
-			respondOk("attaching to connection " + conno);
-			
-			// start TCP thread
-			this.utilthread = new Thread(new DWVPortTCPServerThread(this.dwProto, this.vport, conno));
-			this.utilthread.start();
-		} 
-		catch (DWConnectionNotValidException e) 
-		{
-			respondFail(DWDefs.RC_NET_INVALID_CONNECTION,"invalid connection number");
-		}
-		
-		
-		
-	}
 	
-	private void doTCPKill(String constr) 
+	public void respond(DWCommandResponse cr) 
 	{
-		int conno;
-		
-		try
-		{
-			conno = Integer.parseInt(constr);
-		}
-		catch (NumberFormatException e)
-		{
-			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp kill command");
-			return;
-		}
-		
-		
-		logger.warn("Killing connection " + conno);
-		
-		// close socket
-		try 
-		{
-			this.dwVSerialPorts.getListenerPool().killConn(conno);
-			respondOk("killed connection " + conno);
-		} 
-		catch (DWConnectionNotValidException e) 
-		{
-			respondFail(DWDefs.RC_NET_INVALID_CONNECTION,"invalid connection number");
-		}
-		
-		
+		if (cr.getSuccess())
+			respondOk(cr.getResponseText());
+		else
+			respondFail(cr.getResponseCode(), cr.getResponseText());
 	}
-	
 
-
-
-	private void doTCPConnect(String tcphost, String tcpportstr) 
-	{
-		int tcpport;
-		
-		// get port #
-		try
-		{
-			tcpport = Integer.parseInt(tcpportstr);
-		}
-		catch (NumberFormatException e)
-		{
-			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp connect command");
-			return;
-		}
-		
-		// respondOk("connecting");
-		
-		// start TCP thread
-		this.utilthread = new Thread(new DWVPortTCPConnectionThread(this.dwProto, this.vport, tcphost, tcpport));
-		this.utilthread.start();
-		
-	}
-	
-	private void doTCPListen(String strport, int mode)
-	{
-		int tcpport;
-		
-		// get port #
-		try
-		{
-			tcpport = Integer.parseInt(strport);
-		}
-		catch (NumberFormatException e)
-		{
-			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp listen command");
-			return;
-		}
-		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.dwProto, this.vport, tcpport);
-		
-		
-		// simulate old behavior
-		listener.setMode(mode);
-		listener.setDo_banner(true);
-		listener.setDo_telnet(true);
-		
-		// start TCP listener thread
-		Thread listenThread = new Thread(listener);
-		listenThread.start();
-		
-	}
-	
-	private void doTCPListen(String[] cmdparts) 
-	{
-		int tcpport;
-		
-		// get port #
-		try
-		{
-			tcpport = Integer.parseInt(cmdparts[2]);
-		}
-		catch (NumberFormatException e)
-		{
-			respondFail(DWDefs.RC_SYNTAX_ERROR,"non-numeric port in tcp listen command");
-			return;
-		}
-		DWVPortTCPListenerThread listener = new DWVPortTCPListenerThread(this.dwProto, this.vport, tcpport);
-				
-		// parse options
-		if (cmdparts.length > 3)
-		{
-			for (int i = 3;i<cmdparts.length;i++)
-			{
-				if (cmdparts[i].equalsIgnoreCase("telnet"))
-				{
-					listener.setDo_telnet(true);
-				}
-				else if (cmdparts[i].equalsIgnoreCase("httpd"))
-				{
-					listener.setMode(2);
-				}
-				else if (cmdparts[i].equalsIgnoreCase("banner"))
-				{
-					listener.setDo_banner(true);
-				}
-				
-			}
-				
-		}
-		
-		// start TCP listener thread
-		Thread listenThread = new Thread(listener);
-		listenThread.start();
-		
-	}
 	
 
 	public void respondOk(String txt) 
 	{
-		logger.debug("command ok: " + txt);
 		try 
 		{
 			dwVSerialPorts.writeToCoco(this.vport, "OK " + txt + (char) 13);
@@ -388,6 +217,11 @@ public class DWVPortHandler
 		
 			logger.error(e.getMessage());
 		}		
+	}
+
+	public DWVModem getVModem() 
+	{
+		return this.vModem;
 	}
 	
 }
