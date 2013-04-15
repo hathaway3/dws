@@ -33,11 +33,21 @@ public class DWCmdInstanceShow extends DWCommand {
 	{
 		String text = new String();
 		
-		text += "DriveWire protocol handler instances:\r\n";
+		text += "DriveWire protocol handler instances:\r\n\n";
 		
 		for (int i = 0;i<DriveWireServer.getNumHandlers();i++)
 		{
-			text += "Instance #" + i + ":  ";
+			text += "#" + i + "  (";
+			
+			
+			if (DriveWireServer.getHandler(i).isDying())
+				text += "Dying..)   ";
+			else if (DriveWireServer.getHandler(i).isReady())
+				text += "Ready)     ";
+			else if (DriveWireServer.getHandler(i).isStarted())
+				text += "Starting)  ";
+			else
+				text += "Not ready) ";
 			
 			if (DriveWireServer.getHandler(i) == null)
 			{
@@ -45,34 +55,29 @@ public class DWCmdInstanceShow extends DWCommand {
 			}
 			else
 			{
-				text += "Protocol: " + DriveWireServer.getHandler(i).getConfig().getString("Protocol", "DriveWire") + "  ";
+				String proto = DriveWireServer.getHandler(i).getConfig().getString("Protocol", "DriveWire");
+				text += String.format("Proto: %-11s", proto);
+				
 				String dtype = DriveWireServer.getHandler(i).getConfig().getString("DeviceType", "Unknown");
 				
-				text += "Type " + dtype + "  ";
 				
-				if (dtype.equals("serial") )
+				if (dtype.equals("serial") ||  proto.equals("VModem") )
 				{
-					text += "Device " + DriveWireServer.getHandler(i).getConfig().getString("SerialDevice", "Unknown");
+					text += String.format("Type: %-11s", "serial");
+					text += " Dev: " + DriveWireServer.getHandler(i).getConfig().getString("SerialDevice", "Unknown");
 				}
 				else if (dtype.equals("tcp-server") )
 				{
-					text += "Port " + DriveWireServer.getHandler(i).getConfig().getString("TCPServerPort","Unknown");
+					text += String.format("Type: %-11s", "tcp-server");
+					text += "Port: " + DriveWireServer.getHandler(i).getConfig().getString("TCPServerPort","Unknown");
 				}
 				else if (dtype.equals("tcp-client") )
 				{
-					text += "Client " + DriveWireServer.getHandler(i).getConfig().getString("TCPClientHost", "Unknown") + ":" + DriveWireServer.getHandler(i).getConfig().getString("TCPClientPort","Unknown");
+					text += String.format("Type: %-11s", dtype);
+					text += "Host: " + DriveWireServer.getHandler(i).getConfig().getString("TCPClientHost", "Unknown") + ":" + DriveWireServer.getHandler(i).getConfig().getString("TCPClientPort","Unknown");
 				}
 				
-				text += " Status: ";
 				
-				if (DriveWireServer.getHandler(i).isDying())
-					text += "Dying..";
-				else if (DriveWireServer.getHandler(i).isReady())
-					text += "Ready";
-				else if (DriveWireServer.getHandler(i).isStarted())
-					text += "Starting..";
-				else
-					text += "Not ready";
 				
 				text += "\r\n";
 			}

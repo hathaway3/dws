@@ -76,6 +76,8 @@ public class UICmdInstanceStatus extends DWCommand {
 		txt += "name|" + gproto.getConfig().getString("[@name]","not set") + "\n";
 		txt += "desc|" + gproto.getConfig().getString("[@desc]","not set") + "\n";
 		
+		txt += "proto|" + gproto.getConfig().getString("Protocol","DriveWire") + "\n";
+		
 		txt += "autostart|" + gproto.getConfig().getBoolean("AutoStart", true) + "\n";
 		txt += "dying|" + gproto.isDying() + "\n";
 		txt += "started|" + gproto.isStarted() + "\n";
