@@ -80,6 +80,14 @@ public class DWLite
 
 	private JScrollPane sp;
 
+	private int[] lastreads = new int[5];
+	private JButton btnDrive0;
+
+	private int[] lastwrites = new int[5];
+	private JButton btnDrive1;
+	private JButton btnDrive2;
+	private JButton btnDrive3;
+
 	/**
 	 * Launch the application.
 	 */
@@ -197,19 +205,19 @@ public class DWLite
 		tabbedPane.addTab(" Drives ", new ImageIcon(DWLite.class.getResource("/fs/unknown.png")), panelDrives, null);
 		panelDrives.setLayout(new MigLayout("", "[][grow,fill][]", "[20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][]"));
 		
-		JButton btnDrive = new JButton("");
-		btnDrive.setMinimumSize(new Dimension(24, 9));
-		btnDrive.setMaximumSize(new Dimension(35, 35));
-		btnDrive.setToolTipText("Load Drive 0");
-		btnDrive.addActionListener(new ActionListener() 
+		btnDrive0 = new JButton("");
+		btnDrive0.setMinimumSize(new Dimension(24, 9));
+		btnDrive0.setMaximumSize(new Dimension(35, 35));
+		btnDrive0.setToolTipText("Load Drive 0");
+		btnDrive0.addActionListener(new ActionListener() 
 		{
 			public void actionPerformed(ActionEvent e) 
 			{
 				  doDiskInsert(0);
 			}
 		});
-		panelDrives.add(btnDrive, "cell 0 0 1 2");
-		btnDrive.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk0.png")));
+		panelDrives.add(btnDrive0, "cell 0 0 1 2");
+		btnDrive0.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk0.png")));
 		
 		lblDisk0 = new JLabel("Not loaded");
 		lblDisk0.setFont(new Font("Tahoma", Font.BOLD, 11));
@@ -230,12 +238,12 @@ public class DWLite
 		lblDisk0Path = new JLabel(" ");
 		panelDrives.add(lblDisk0Path, "cell 1 1,alignx left,aligny top");
 		
-		JButton btnDrive_1 = new JButton("");
-		btnDrive_1.setMaximumSize(new Dimension(35, 35));
-		btnDrive_1.setToolTipText("Load Drive 1");
-		panelDrives.add(btnDrive_1, "cell 0 2 1 2");
-		btnDrive_1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk1.png")));
-		btnDrive_1.addActionListener(new ActionListener() 
+		btnDrive1 = new JButton("");
+		btnDrive1.setMaximumSize(new Dimension(35, 35));
+		btnDrive1.setToolTipText("Load Drive 1");
+		panelDrives.add(btnDrive1, "cell 0 2 1 2");
+		btnDrive1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk1.png")));
+		btnDrive1.addActionListener(new ActionListener() 
 		{
 			public void actionPerformed(ActionEvent e) 
 			{
@@ -263,12 +271,12 @@ public class DWLite
 		lblDisk1Path = new JLabel(" ");
 		panelDrives.add(lblDisk1Path, "cell 1 3,growx,aligny top");
 		
-		JButton btnDrive_2 = new JButton("");
-		btnDrive_2.setMaximumSize(new Dimension(35, 35));
-		btnDrive_2.setToolTipText("Load Drive 2");
-		panelDrives.add(btnDrive_2, "cell 0 4 1 2");
-		btnDrive_2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk2.png")));
-		btnDrive_2.addActionListener(new ActionListener() 
+		btnDrive2 = new JButton("");
+		btnDrive2.setMaximumSize(new Dimension(35, 35));
+		btnDrive2.setToolTipText("Load Drive 2");
+		panelDrives.add(btnDrive2, "cell 0 4 1 2");
+		btnDrive2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk2.png")));
+		btnDrive2.addActionListener(new ActionListener() 
 		{
 			public void actionPerformed(ActionEvent e) 
 			{
@@ -295,12 +303,12 @@ public class DWLite
 		lblDisk2Path = new JLabel(" ");
 		panelDrives.add(lblDisk2Path, "cell 1 5,growx,aligny top");
 		
-		JButton btnDrive_3 = new JButton("");
-		btnDrive_3.setMaximumSize(new Dimension(35, 35));
-		btnDrive_3.setToolTipText("Load Drive 3");
-		panelDrives.add(btnDrive_3, "cell 0 6 1 2");
-		btnDrive_3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk3.png")));
-		btnDrive_3.addActionListener(new ActionListener() 
+		btnDrive3 = new JButton("");
+		btnDrive3.setMaximumSize(new Dimension(35, 35));
+		btnDrive3.setToolTipText("Load Drive 3");
+		panelDrives.add(btnDrive3, "cell 0 6 1 2");
+		btnDrive3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk3.png")));
+		btnDrive3.addActionListener(new ActionListener() 
 		{
 			public void actionPerformed(ActionEvent e) 
 			{
@@ -558,6 +566,24 @@ public class DWLite
 				{
 					this.lblDisk0.setText(prettyFile(dw.getDiskDrives().getDisk(0).getFilePath()));
 					this.lblDisk0Path.setText(prettyPath(dw.getDiskDrives().getDisk(0).getFilePath()));
+					
+					int r = dw.getDiskDrives().getDisk(0).getParams().getInt("_reads", 0);
+					int w = dw.getDiskDrives().getDisk(0).getParams().getInt("_writes", 0);
+					
+					if (w != lastwrites[0])
+					{
+						btnDrive0.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk0-w.png")));
+					}
+					else if (r != lastreads[0])
+					{
+						btnDrive0.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk0-r.png")));
+					}
+					else
+						btnDrive0.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk0.png")));
+					
+					lastreads[0] = r;
+					lastwrites[0] = w;
+					
 				}
 				else
 				{
@@ -569,6 +595,25 @@ public class DWLite
 				{
 					this.lblDisk1.setText(prettyFile(dw.getDiskDrives().getDisk(1).getFilePath()));
 					this.lblDisk1Path.setText(prettyPath(dw.getDiskDrives().getDisk(1).getFilePath()));
+					
+					int r = dw.getDiskDrives().getDisk(1).getParams().getInt("_reads", 0);
+					int w = dw.getDiskDrives().getDisk(1).getParams().getInt("_writes", 0);
+					
+					if (w != lastwrites[1])
+					{
+						btnDrive1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk1-w.png")));
+					}
+					else if (r != lastreads[1])
+					{
+						btnDrive1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk1-r.png")));
+					}
+					else
+						btnDrive1.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk1.png")));
+					
+					lastreads[1] = r;
+					lastwrites[1] = w;
+					
+					
 				}
 				else
 				{
@@ -580,6 +625,24 @@ public class DWLite
 				{
 					this.lblDisk2.setText(prettyFile(dw.getDiskDrives().getDisk(2).getFilePath()));
 					this.lblDisk2Path.setText(prettyPath(dw.getDiskDrives().getDisk(2).getFilePath()));
+					
+					int r = dw.getDiskDrives().getDisk(2).getParams().getInt("_reads", 0);
+					int w = dw.getDiskDrives().getDisk(2).getParams().getInt("_writes", 0);
+					
+					if (w != lastwrites[2])
+					{
+						btnDrive2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk2-w.png")));
+					}
+					else if (r != lastreads[2])
+					{
+						btnDrive2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk2-r.png")));
+					}
+					else
+						btnDrive2.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk2.png")));
+					
+					lastreads[2] = r;
+					lastwrites[2] = w;
+					
 				}
 				else
 				{
@@ -591,6 +654,24 @@ public class DWLite
 				{
 					this.lblDisk3.setText(prettyFile(dw.getDiskDrives().getDisk(3).getFilePath()));
 					this.lblDisk3Path.setText(prettyPath(dw.getDiskDrives().getDisk(3).getFilePath()));
+					
+					int r = dw.getDiskDrives().getDisk(3).getParams().getInt("_reads", 0);
+					int w = dw.getDiskDrives().getDisk(3).getParams().getInt("_writes", 0);
+					
+					if (w != lastwrites[3])
+					{
+						btnDrive3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk3-w.png")));
+					}
+					else if (r != lastreads[3])
+					{
+						btnDrive3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk3-r.png")));
+					}
+					else
+						btnDrive3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/disk3.png")));
+					
+					lastreads[3] = r;
+					lastwrites[3] = w;
+					
 				}
 				else
 				{
@@ -604,8 +685,28 @@ public class DWLite
 				{
 					if (dw.getDiskDrives().isLoaded((Integer)spinnerDriveX.getValue()))
 					{
-						this.lblDiskX.setText(prettyFile(dw.getDiskDrives().getDisk((Integer)spinnerDriveX.getValue()).getFilePath()));
-						this.lblDiskXPath.setText(prettyPath(dw.getDiskDrives().getDisk((Integer)spinnerDriveX.getValue()).getFilePath()));
+						int dn = (Integer)spinnerDriveX.getValue();
+						this.lblDiskX.setText(prettyFile(dw.getDiskDrives().getDisk(dn).getFilePath()));
+						this.lblDiskXPath.setText(prettyPath(dw.getDiskDrives().getDisk(dn).getFilePath()));
+						
+						int r = dw.getDiskDrives().getDisk(dn).getParams().getInt("_reads", 0);
+						int w = dw.getDiskDrives().getDisk(dn).getParams().getInt("_writes", 0);
+						
+						if (w != lastwrites[4])
+						{
+							
+							button_X.setIcon(new ImageIcon(DWLite.class.getResource("/lite/diskX-w.png")));
+						}
+						else if (r != lastreads[4])
+						{
+							button_X.setIcon(new ImageIcon(DWLite.class.getResource("/lite/diskX-r.png")));
+						}
+						else
+							button_X.setIcon(new ImageIcon(DWLite.class.getResource("/lite/diskX.png")));
+						
+						lastreads[4] = r;
+						lastwrites[4] = w;
+						
 					}
 					else
 					{
@@ -699,5 +800,17 @@ public class DWLite
 	}
 	protected JButton getButton_4() {
 		return button_X;
+	}
+	protected JButton getBtnDrive0() {
+		return btnDrive0;
+	}
+	protected JButton getBtnDrive1() {
+		return btnDrive1;
+	}
+	protected JButton getBtnDrive2() {
+		return btnDrive2;
+	}
+	protected JButton getBtnDrive3() {
+		return btnDrive3;
 	}
 }

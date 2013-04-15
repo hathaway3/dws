@@ -4,7 +4,7 @@ public class DiskViewUpdater implements Runnable {
 
 	
 	
-	private static final long UPDATE_DELAY = 1000;
+	private static final long UPDATE_DELAY = 200;
 	private DWLite window;
 	private boolean wanttodie = false;
 	
