@@ -1,6 +1,5 @@
 package com.groupunix.dwlite;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -22,9 +21,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
@@ -39,11 +35,11 @@ import net.miginfocom.swing.MigLayout;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
-import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireui.MainWin;
+import javax.swing.JTextField;
 
 public class DWLite 
 {
@@ -52,9 +48,6 @@ public class DWLite
 	private JFrame frmDwlite;
 
 	protected static long servermagic;
-	private JTextField textFieldCLIInput;
-	private JTextArea textAreaLog;
-	private JTextArea textAreaCLIOutput;
 	private int handlerno = 0;
 	private JCheckBoxMenuItem chckbxmntmHdbdosTranslation;
 	private JLabel lblDisk0;
@@ -64,13 +57,8 @@ public class DWLite
 	private JLabel lblDiskX;
 	private final JSpinner spinnerDriveX = new JSpinner();
 
-	private String lastDir = ".";
-	private JLabel lblDisk0Path;
-	private JLabel lblDisk1Path;
+	private static String lastDir = ".";
 	private JPanel panelDrives;
-	private JLabel lblDisk3Path;
-	private JLabel lblDisk2Path;
-	private JLabel lblDiskXPath;
 
 	protected boolean showDriveX = false;
 	private JButton btnEjectX;
@@ -87,6 +75,14 @@ public class DWLite
 	private JButton btnDrive1;
 	private JButton btnDrive2;
 	private JButton btnDrive3;
+	private JMenuItem mntmLockWindow;
+	public JTextField lblDisk1Path;
+	public JTextField lblDisk0Path;
+	public JTextField lblDisk2Path;
+	public JTextField lblDisk3Path;
+	public JTextField lblDiskXPath;
+
+	protected static DWLite window;
 
 	/**
 	 * Launch the application.
@@ -95,7 +91,16 @@ public class DWLite
 	{
 		EventQueue.invokeLater(new Runnable() 
 		{
-			public void run() {
+			public void run() 
+			{
+				String theme = "Windows";
+				
+				if (MainWin.config != null)
+				{
+					theme = MainWin.config.getString("DWLiteTheme", "Windows");
+					lastDir = MainWin.config.getString("DWLiteLastDir", ".");
+				}
+				
 				try {
 					
 					
@@ -103,12 +108,11 @@ public class DWLite
 					{
 					    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) 
 					    {
-					       if ("Windows".equals(info.getName())) {
+					       if (theme.equals(info.getName())) {
 					            UIManager.setLookAndFeel(info.getClassName());
 					            break;
 					       }
-					    	
-					    	
+
 					    }
 					} 
 					catch (Exception e) 
@@ -124,7 +128,7 @@ public class DWLite
 					    }
 					}
 					
-					DWLite window = new DWLite();
+					window = new DWLite();
 					
 					Thread diskUpdate = new Thread(new DiskViewUpdater(window));
 					diskUpdate.setDaemon(true);
@@ -145,32 +149,21 @@ public class DWLite
 	
 	
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
-	/**
-	 * Create the application.
-	 * @param args 
-	 */
 	public DWLite() 
 	{
 		
 		initialize();
 	}
 
-	/**
-	 * Initialize the contents of the frame.
-	 */
+	
 	private void initialize() 
 	{
 		frmDwlite = new JFrame();
+		
+		if (MainWin.config != null)
+			frmDwlite.setUndecorated(MainWin.config.getBoolean("DWLiteUndecorated", false));
+		
 		frmDwlite.setIconImage(Toolkit.getDefaultToolkit().getImage(DWLite.class.getResource("/dw/dw4square.jpg")));
 		
 		frmDwlite.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -186,7 +179,8 @@ public class DWLite
 		
 		
 		frmDwlite.setTitle("DW4Lite");
-		frmDwlite.setBounds(100, 100, 382, 403);
+		frmDwlite.setBounds(100, 100, 372, 385);
+		
 		frmDwlite.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmDwlite.getContentPane().setLayout(new MigLayout("", "[366px,grow,fill]", "[312px,grow,fill]"));
 		
@@ -194,16 +188,13 @@ public class DWLite
 		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		
 		frmDwlite.getContentPane().add(sp, "cell 0 0,grow");
-		
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		
-		sp.setViewportView(tabbedPane);
-		
-		//frmDwlite.getContentPane().add(tabbedPane, "cell 0 1,grow");
-		
+	
 		panelDrives = new JPanel();
-		tabbedPane.addTab(" Drives ", new ImageIcon(DWLite.class.getResource("/fs/unknown.png")), panelDrives, null);
+		sp.setViewportView(panelDrives);
+		
 		panelDrives.setLayout(new MigLayout("", "[][grow,fill][]", "[20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][20px:20px][]"));
+		
+		
 		
 		btnDrive0 = new JButton("");
 		btnDrive0.setMinimumSize(new Dimension(24, 9));
@@ -235,8 +226,13 @@ public class DWLite
 		panelDrives.add(button, "cell 2 0 1 2,alignx right,aligny center");
 		button.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
 		
-		lblDisk0Path = new JLabel(" ");
-		panelDrives.add(lblDisk0Path, "cell 1 1,alignx left,aligny top");
+		lblDisk0Path = new JTextField();
+		lblDisk0Path.setFont(new Font("Tahoma", Font.PLAIN, 9));
+		lblDisk0Path.setEditable(false);
+		lblDisk0Path.setBorder(null);
+		
+		panelDrives.add(lblDisk0Path, "cell 1 1,alignx left");
+		lblDisk0Path.setColumns(10);
 		
 		btnDrive1 = new JButton("");
 		btnDrive1.setMaximumSize(new Dimension(35, 35));
@@ -253,6 +249,7 @@ public class DWLite
 		
 		
 		lblDisk1 = new JLabel("Not loaded");
+		
 		lblDisk1.setFont(new Font("Tahoma", Font.BOLD, 11));
 		panelDrives.add(lblDisk1, "cell 1 2,aligny bottom");
 		
@@ -268,8 +265,12 @@ public class DWLite
 			}
 		});
 		
-		lblDisk1Path = new JLabel(" ");
-		panelDrives.add(lblDisk1Path, "cell 1 3,growx,aligny top");
+		lblDisk1Path = new JTextField();
+		lblDisk1Path.setFont(new Font("Tahoma", Font.PLAIN, 9));
+		lblDisk1Path.setBorder(null);
+		lblDisk1Path.setEditable(false);
+		panelDrives.add(lblDisk1Path, "cell 1 3,growx");
+		lblDisk1Path.setColumns(10);
 		
 		btnDrive2 = new JButton("");
 		btnDrive2.setMaximumSize(new Dimension(35, 35));
@@ -300,8 +301,12 @@ public class DWLite
 			}
 		});
 		
-		lblDisk2Path = new JLabel(" ");
-		panelDrives.add(lblDisk2Path, "cell 1 5,growx,aligny top");
+		lblDisk2Path = new JTextField();
+		lblDisk2Path.setFont(new Font("Tahoma", Font.PLAIN, 9));
+		lblDisk2Path.setBorder(null);
+		lblDisk2Path.setEditable(false);
+		panelDrives.add(lblDisk2Path, "cell 1 5,growx");
+		lblDisk2Path.setColumns(10);
 		
 		btnDrive3 = new JButton("");
 		btnDrive3.setMaximumSize(new Dimension(35, 35));
@@ -326,8 +331,12 @@ public class DWLite
 		panelDrives.add(button_3, "cell 2 6 1 2");
 		button_3.setIcon(new ImageIcon(DWLite.class.getResource("/lite/eject.png")));
 		
-		lblDisk3Path = new JLabel(" ");
-		panelDrives.add(lblDisk3Path, "cell 1 7,growx,aligny top");
+		lblDisk3Path = new JTextField();
+		lblDisk3Path.setFont(new Font("Tahoma", Font.PLAIN, 9));
+		lblDisk3Path.setEditable(false);
+		lblDisk3Path.setBorder(null);
+		panelDrives.add(lblDisk3Path, "cell 1 7,growx");
+		lblDisk3Path.setColumns(10);
 		
 	
 		
@@ -345,8 +354,12 @@ public class DWLite
 			}
 		});
 		
-		lblDiskXPath = new JLabel(" ");
-		panelDrives.add(lblDiskXPath, "cell 1 9,growx,aligny top");
+		lblDiskXPath = new JTextField();
+		lblDiskXPath.setFont(new Font("Tahoma", Font.PLAIN, 9));
+		lblDiskXPath.setBorder(null);
+		lblDiskXPath.setEditable(false);
+		panelDrives.add(lblDiskXPath, "cell 1 9,growx");
+		lblDiskXPath.setColumns(10);
 		spinnerDriveX.setModel(new SpinnerNumberModel(4, 4, 255, 1));
 		panelDrives.add(spinnerDriveX, "cell 0 10,growx");
 		
@@ -382,44 +395,6 @@ public class DWLite
 				doCommand("dw disk eject 3");
 			}
 		});
-		
-		
-		JPanel panelCLI = new JPanel();
-		tabbedPane.addTab("CLI", new ImageIcon(DWLite.class.getResource("/menu/preferences-system-network-2.png")), panelCLI, null);
-		panelCLI.setLayout(new MigLayout("", "[grow,left]", "[grow][]"));
-		
-		textFieldCLIInput = new JTextField();
-		textFieldCLIInput.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				doCommand(textFieldCLIInput.getText());
-				textFieldCLIInput.setText("");
-			}
-		});
-		
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		panelCLI.add(scrollPane, "cell 0 0,grow");
-		
-		textAreaCLIOutput = new JTextArea();
-		textAreaCLIOutput.setFont(new Font("Monospaced", Font.PLAIN, 11));
-		textAreaCLIOutput.setForeground(Color.WHITE);
-		textAreaCLIOutput.setBackground(Color.DARK_GRAY);
-		scrollPane.setViewportView(textAreaCLIOutput);
-		panelCLI.add(textFieldCLIInput, "cell 0 1,growx");
-		textFieldCLIInput.setColumns(10);
-		
-		JPanel panelLog = new JPanel();
-		tabbedPane.addTab(" Log ", new ImageIcon(DWLite.class.getResource("/menu/accessories-text-editor-3.png")), panelLog, null);
-		panelLog.setLayout(new MigLayout("", "[4px,grow,fill]", "[grow]"));
-		
-		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		panelLog.add(scrollPane_1, "cell 0 0,grow");
-		
-		textAreaLog = new JTextArea();
-		scrollPane_1.setViewportView(textAreaLog);
-		textAreaLog.setFont(new Font("Monospaced", Font.PLAIN, 11));
-		textAreaLog.setEditable(false);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmDwlite.setJMenuBar(menuBar);
@@ -489,6 +464,17 @@ public class DWLite
 		});
 		mnOptions.add(chckbxmntmShowDriveX);
 		
+		mntmLockWindow = new JMenuItem("Window Preferences..");
+		mntmLockWindow.setIcon(new ImageIcon(DWLite.class.getResource("/menu/cog-edit.png")));
+		mntmLockWindow.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				WindowPrefs wp = new WindowPrefs(window, sp);
+				wp.setVisible(true);
+			}
+		});
+		mnOptions.add(mntmLockWindow);
+		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
 		
@@ -504,19 +490,45 @@ public class DWLite
 		mnHelp.add(mntmAbout);
 		
 		
-		DriveWireServer.getLogger().addAppender(new DWLiteLogAppender(textAreaLog));
-		
-		
 		this.btnEjectX.setVisible(false);
 		this.lblDiskX.setVisible(false);
-		this.lblDiskXPath.setVisible(false);
 		this.spinnerDriveX.setVisible(false);
 		this.button_X.setVisible(false);
 		
 		frmDwlite.pack();
 		
+		if (MainWin.config != null)
+		{
+			frmDwlite.setBounds(MainWin.config.getInt("DWLiteX", 100), MainWin.config.getInt("DWLiteY", 100), MainWin.config.getInt("DWLiteW", 382), MainWin.config.getInt("DWLiteH", 403));
+			
+			frmDwlite.setAlwaysOnTop(MainWin.config.getBoolean("DWLiteOnTop", false));
+			frmDwlite.setResizable(MainWin.config.getBoolean("DWLiteResize", false));
+			
+			if (MainWin.config.getBoolean("DWLiteVScroll", true))
+				sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+			else
+				sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+			
+			
+		}
+		
 	}
 	
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	protected void doDiskInsert(int diskno) 
@@ -528,6 +540,10 @@ public class DWLite
 	      if (rVal == JFileChooser.APPROVE_OPTION) 
 	      {
 	    	  lastDir  = c.getCurrentDirectory().toString();
+	    	  
+	    	  if (MainWin.config != null)
+	    		  MainWin.config.setProperty("DWLiteLastDir", lastDir);
+	    	  
 	    	  doCommand("dw disk insert " + diskno + " " + c.getSelectedFile().getAbsolutePath());
 	      }
 	}
@@ -541,12 +557,7 @@ public class DWLite
 		DWCommandList commands = new DWCommandList(DriveWireServer.getHandler(0));
 		commands.addcommand(new DWCmd(DriveWireServer.getHandler(0)));	
 		
-		DWCommandResponse response = commands.parse(cmd);
-		
-		this.textAreaCLIOutput.append(response.getResponseText());
-		
-		if (!response.getResponseText().endsWith(System.getProperty("line.separator")))
-			this.textAreaCLIOutput.append(System.getProperty("line.separator"));
+		commands.parse(cmd);
 		
 		updateDriveDisplay();
 	}
@@ -812,5 +823,15 @@ public class DWLite
 	}
 	protected JButton getBtnDrive3() {
 		return btnDrive3;
+	}
+
+
+
+
+
+
+	public JFrame getFrame() 
+	{
+		return this.frmDwlite;
 	}
 }
