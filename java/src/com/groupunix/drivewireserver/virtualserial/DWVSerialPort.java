@@ -20,7 +20,7 @@ public class DWVSerialPort {
 	private static final Logger logger = Logger.getLogger("DWServer.DWVSerialPort");
 	
 	private static final int INPUT_BUFFER_SIZE = -1;  //infinite
-	private static final int OUTPUT_BUFFER_SIZE = 256000; // huge
+	private static final int OUTPUT_BUFFER_SIZE = 10240; // huge
 	
 	private int port = -1;
 	private DWVSerialProtocol dwProto;

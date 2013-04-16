@@ -129,6 +129,10 @@ public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
 						wanttodie = true;
 						
 					}
+					catch (NullPointerException e)
+					{
+						wanttodie = true;
+					}
 				}
 				
 			}});
