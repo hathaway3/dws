@@ -44,8 +44,10 @@ public class WindowPrefs extends JDialog {
 	private JCheckBox chckbxAlwaysOnTop;
 	private JCheckBox chckbxVerticalScrollbar;
 	private JScrollPane sp;
-	private JComboBox comboBoxTheme;
+	private JComboBox<String> comboBoxTheme;
 	private JCheckBox chckbxUndecorated;
+	private JCheckBox chckbxShowFilePath;
+	private JCheckBox chckbxShowDriveX;
 	
 	public WindowPrefs(DWLite Dwlite, JScrollPane sp) 
 	{
@@ -55,76 +57,84 @@ public class WindowPrefs extends JDialog {
 		
 		setTitle("DW Lite Window Preferences");
 		setIconImage(Toolkit.getDefaultToolkit().getImage(WindowPrefs.class.getResource("/dw/dw4square.jpg")));
-		setBounds(100, 100, 450, 266);
+		setBounds(100, 100, 450, 322);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new MigLayout("", "[grow][][grow][][][][grow]", "[10px:10px][][10px:10px][][][10px:10px][][]"));
+		contentPanel.setLayout(new MigLayout("", "[grow][][grow][][][][grow]", "[10px:10px][][10px:10px][][10px:10px][][][10px:10px][][]"));
 		{
 			JLabel lblTheme = new JLabel("Theme:");
 			contentPanel.add(lblTheme, "cell 1 1,alignx trailing");
 		}
 		{
-			comboBoxTheme = new JComboBox();
+			comboBoxTheme = new JComboBox<String>();
 			
-			contentPanel.add(comboBoxTheme, "cell 2 1 4 1,alignx left");
+			contentPanel.add(comboBoxTheme, "cell 2 1 2 1,growx");
+		}
+		{
+			chckbxShowDriveX = new JCheckBox("Show drive X");
+			contentPanel.add(chckbxShowDriveX, "cell 1 3");
+		}
+		{
+			chckbxShowFilePath = new JCheckBox("Show disk image paths");
+			contentPanel.add(chckbxShowFilePath, "cell 2 3 3 1");
 		}
 		{
 			JLabel lblScreenPositionX = new JLabel("Screen position X:");
-			contentPanel.add(lblScreenPositionX, "cell 0 3 2 1,alignx right");
+			contentPanel.add(lblScreenPositionX, "cell 0 5 2 1,alignx right");
 		}
 		{
 			spinnerPosX = new JSpinner();
 			spinnerPosX.setModel(new SpinnerNumberModel(0, 0, 1000, 1));
-			contentPanel.add(spinnerPosX, "cell 2 3,alignx left");
+			contentPanel.add(spinnerPosX, "cell 2 5,alignx left");
 		}
 		
 		{
 			JLabel lblWindowWidth = new JLabel("Window width:");
-			contentPanel.add(lblWindowWidth, "cell 4 3,alignx right");
+			contentPanel.add(lblWindowWidth, "cell 4 5,alignx right");
 		}
 		{
 			spinnerWidth = new JSpinner();
 			spinnerWidth.setModel(new SpinnerNumberModel(0, 0, 1000, 1));
-			contentPanel.add(spinnerWidth, "cell 5 3,alignx left");
+			contentPanel.add(spinnerWidth, "cell 5 5,alignx left");
 		}
 		{
 			JLabel lblScreenPositionY = new JLabel("Screen position Y:");
-			contentPanel.add(lblScreenPositionY, "cell 0 4 2 1,alignx right");
+			contentPanel.add(lblScreenPositionY, "cell 0 6 2 1,alignx right");
 		}
 		{
 			spinnerPosY = new JSpinner();
 			spinnerPosY.setModel(new SpinnerNumberModel(0, 0, 1000, 1));
-			contentPanel.add(spinnerPosY, "cell 2 4,alignx left");
+			contentPanel.add(spinnerPosY, "cell 2 6,alignx left");
 		}
 		{
 			JLabel lblNewLabel = new JLabel("Window height:");
-			contentPanel.add(lblNewLabel, "cell 4 4,alignx right");
+			contentPanel.add(lblNewLabel, "cell 4 6,alignx right");
 		}
 		{
 			spinnerHeight = new JSpinner();
 			
 			spinnerHeight.setModel(new SpinnerNumberModel(0, 0, 1000, 1));
-			contentPanel.add(spinnerHeight, "cell 5 4,alignx left");
+			contentPanel.add(spinnerHeight, "cell 5 6,alignx left");
 		}
 		{
 			chckbxResizable = new JCheckBox("Resizable");
-			contentPanel.add(chckbxResizable, "cell 1 6");
+			contentPanel.add(chckbxResizable, "cell 1 8");
 		}
 		{
 			chckbxVerticalScrollbar = new JCheckBox("Vertical scrollbar");
-			contentPanel.add(chckbxVerticalScrollbar, "cell 2 6 2 1");
+			contentPanel.add(chckbxVerticalScrollbar, "cell 2 8 2 1");
 		}
 		
 		
 		
 		{
 			chckbxAlwaysOnTop = new JCheckBox("Always on top");
-			contentPanel.add(chckbxAlwaysOnTop, "cell 4 6");
+			contentPanel.add(chckbxAlwaysOnTop, "cell 4 8");
 		}
 		{
 			chckbxUndecorated = new JCheckBox("Hide window decorations (requires restart to take effect)");
-			contentPanel.add(chckbxUndecorated, "cell 1 7 5 1");
+			contentPanel.add(chckbxUndecorated, "cell 1 9 5 1");
 		}
 		{
 			JPanel buttonPane = new JPanel();
@@ -212,6 +222,18 @@ public class WindowPrefs extends JDialog {
 			}
 		});
 		
+		chckbxShowDriveX.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				applySettings();
+			}
+		});
+		
+		chckbxShowFilePath.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				applySettings();
+			}
+		});
+		
 	}
 
 	
@@ -229,6 +251,8 @@ public class WindowPrefs extends JDialog {
 		MainWin.config.setProperty("DWLiteUndecorated", this.chckbxUndecorated.isSelected());
 		MainWin.config.setProperty("DWLiteTheme", this.comboBoxTheme.getSelectedItem().toString());	
 		
+		MainWin.config.setProperty("DWLiteShowDriveX", this.chckbxShowDriveX.isSelected());
+		MainWin.config.setProperty("DWLiteShowPaths", this.chckbxShowFilePath.isSelected());
 		
 		
 		dispose();
@@ -285,6 +309,9 @@ public class WindowPrefs extends JDialog {
 		dwlite.lblDisk3Path.setBackground(UIManager.getColor("Panel.background"));
 		dwlite.lblDiskXPath.setBorder(null);
 		dwlite.lblDiskXPath.setBackground(UIManager.getColor("Panel.background"));
+		
+		dwlite.setDriveXVisible(this.chckbxShowDriveX.isSelected());
+		dwlite.showPaths = this.chckbxShowFilePath.isSelected();
 	}
 
 
@@ -325,6 +352,8 @@ public class WindowPrefs extends JDialog {
 		    	 this.comboBoxTheme.setSelectedItem(info.getName());
 		}
 		
+		this.chckbxShowDriveX.setSelected(dwlite.showDriveX);
+		this.chckbxShowFilePath.setSelected(dwlite.showPaths);
 	}
 
 	protected JSpinner getSpinnerPosX() {
@@ -340,10 +369,14 @@ public class WindowPrefs extends JDialog {
 		return spinnerHeight;
 	}
 	
-	protected JComboBox getComboBoxTheme() {
-		return comboBoxTheme;
-	}
+	
 	protected JCheckBox getChckbxUndecorated() {
 		return chckbxUndecorated;
+	}
+	protected JCheckBox getChckbxShowDriveX() {
+		return chckbxShowDriveX;
+	}
+	protected JCheckBox getChckbxShowFilePath() {
+		return chckbxShowFilePath;
 	}
 }

@@ -21,6 +21,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
@@ -35,11 +36,8 @@ import net.miginfocom.swing.MigLayout;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
-import com.groupunix.drivewireserver.dwexceptions.DWDriveNotLoadedException;
-import com.groupunix.drivewireserver.dwexceptions.DWDriveNotValidException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireui.MainWin;
-import javax.swing.JTextField;
 
 public class DWLite 
 {
@@ -61,9 +59,8 @@ public class DWLite
 	private JPanel panelDrives;
 
 	protected boolean showDriveX = false;
+	protected boolean showPaths = true;
 	private JButton btnEjectX;
-
-	private JCheckBoxMenuItem chckbxmntmShowDriveX;
 	private JButton button_X;
 
 	private JScrollPane sp;
@@ -83,6 +80,8 @@ public class DWLite
 	public JTextField lblDiskXPath;
 
 	protected static DWLite window;
+	private JMenuItem mntmNewMenuItem;
+
 
 	/**
 	 * Launch the application.
@@ -162,7 +161,11 @@ public class DWLite
 		frmDwlite = new JFrame();
 		
 		if (MainWin.config != null)
+		{
 			frmDwlite.setUndecorated(MainWin.config.getBoolean("DWLiteUndecorated", false));
+			showDriveX = (MainWin.config.getBoolean("DWLiteShowDriveX", false));
+			showPaths = (MainWin.config.getBoolean("DWLiteShowPaths", true));
+		}
 		
 		frmDwlite.setIconImage(Toolkit.getDefaultToolkit().getImage(DWLite.class.getResource("/dw/dw4square.jpg")));
 		
@@ -172,7 +175,13 @@ public class DWLite
 		{
 		    public void windowClosing(WindowEvent e)
 		    {
+		    	ExitDialog ed = new ExitDialog();
+		    	ed.setBounds(frmDwlite.getBounds());
+		    	ed.setVisible(true);
+		    	ed.update(ed.getGraphics());
+		    	
 		    	MainWin.stopDWServer();
+					    	
 		    }
 		});
 		
@@ -182,9 +191,11 @@ public class DWLite
 		frmDwlite.setBounds(100, 100, 372, 385);
 		
 		frmDwlite.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmDwlite.getContentPane().setLayout(new MigLayout("", "[366px,grow,fill]", "[312px,grow,fill]"));
+		frmDwlite.getContentPane().setLayout(new MigLayout("", "[366px,grow,fill]", "[grow]"));
+		
 		
 		sp = new JScrollPane();
+		
 		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		
 		frmDwlite.getContentPane().add(sp, "cell 0 0,grow");
@@ -431,9 +442,6 @@ public class DWLite
 				else
 					chckbxmntmHdbdosTranslation.setEnabled(false);
 				
-				chckbxmntmShowDriveX.setSelected(showDriveX);
-					
-				
 			}
 		});
 		menuBar.add(mnOptions);
@@ -451,19 +459,6 @@ public class DWLite
 		});
 		mnOptions.add(chckbxmntmHdbdosTranslation);
 		
-		chckbxmntmShowDriveX = new JCheckBoxMenuItem("Show Drive X ");
-		chckbxmntmShowDriveX.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (showDriveX )
-					showDriveX = false;
-				else
-					showDriveX = true;
-				updateDriveDisplay();
-				
-			}
-		});
-		mnOptions.add(chckbxmntmShowDriveX);
-		
 		mntmLockWindow = new JMenuItem("Window Preferences..");
 		mntmLockWindow.setIcon(new ImageIcon(DWLite.class.getResource("/menu/cog-edit.png")));
 		mntmLockWindow.addActionListener(new ActionListener() {
@@ -473,21 +468,10 @@ public class DWLite
 				wp.setVisible(true);
 			}
 		});
+		
+	
+		mnOptions.add(mntmNewMenuItem);
 		mnOptions.add(mntmLockWindow);
-		
-		JMenu mnHelp = new JMenu("Help");
-		menuBar.add(mnHelp);
-		
-		JMenuItem mntmAbout = new JMenuItem("About..");
-		mntmAbout.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) 
-			{
-				AboutDWLite a = new AboutDWLite();
-				a.setVisible(true);
-			}
-		});
-		mntmAbout.setIcon(new ImageIcon(DWLite.class.getResource("/menu/help-about-3.png")));
-		mnHelp.add(mntmAbout);
 		
 		
 		this.btnEjectX.setVisible(false);
@@ -569,14 +553,25 @@ public class DWLite
 	{
 		DWProtocolHandler dw = (DWProtocolHandler) DriveWireServer.getHandler(handlerno);
 		
-		if (dw != null)
+		if ((dw != null) && (frmDwlite != null))
 		{
 			try 
 			{
-				if (dw.getDiskDrives().isLoaded(0))
+				if (dw.getDiskDrives().isLoaded(0) && (frmDwlite != null))
 				{
+					
 					this.lblDisk0.setText(prettyFile(dw.getDiskDrives().getDisk(0).getFilePath()));
-					this.lblDisk0Path.setText(prettyPath(dw.getDiskDrives().getDisk(0).getFilePath()));
+					
+					if (showPaths)
+					{
+						this.lblDisk0Path.setText(prettyPath(dw.getDiskDrives().getDisk(0).getFilePath()));
+						this.lblDisk0Path.setVisible(true);
+					}
+					else
+					{
+						this.lblDisk0Path.setText("");
+						this.lblDisk0Path.setVisible(false);
+					}
 					
 					int r = dw.getDiskDrives().getDisk(0).getParams().getInt("_reads", 0);
 					int w = dw.getDiskDrives().getDisk(0).getParams().getInt("_writes", 0);
@@ -602,10 +597,20 @@ public class DWLite
 					this.lblDisk0Path.setText("");
 				}
 				
-				if (dw.getDiskDrives().isLoaded(1))
+				if (dw.getDiskDrives().isLoaded(1) && (frmDwlite != null))
 				{
 					this.lblDisk1.setText(prettyFile(dw.getDiskDrives().getDisk(1).getFilePath()));
-					this.lblDisk1Path.setText(prettyPath(dw.getDiskDrives().getDisk(1).getFilePath()));
+					
+					if (showPaths)
+					{
+						this.lblDisk1Path.setText(prettyPath(dw.getDiskDrives().getDisk(1).getFilePath()));
+						this.lblDisk1Path.setVisible(true);
+					}
+					else
+					{
+						this.lblDisk1Path.setText("");
+						this.lblDisk1Path.setVisible(false);
+					}
 					
 					int r = dw.getDiskDrives().getDisk(1).getParams().getInt("_reads", 0);
 					int w = dw.getDiskDrives().getDisk(1).getParams().getInt("_writes", 0);
@@ -632,10 +637,20 @@ public class DWLite
 					this.lblDisk1Path.setText("");
 				}
 				
-				if (dw.getDiskDrives().isLoaded(2))
+				if (dw.getDiskDrives().isLoaded(2) && (frmDwlite != null))
 				{
 					this.lblDisk2.setText(prettyFile(dw.getDiskDrives().getDisk(2).getFilePath()));
-					this.lblDisk2Path.setText(prettyPath(dw.getDiskDrives().getDisk(2).getFilePath()));
+					
+					if (showPaths)
+					{
+						this.lblDisk2Path.setText(prettyPath(dw.getDiskDrives().getDisk(2).getFilePath()));
+						this.lblDisk2Path.setVisible(true);
+					}
+					else
+					{
+						this.lblDisk2Path.setText("");
+						this.lblDisk2Path.setVisible(false);
+					}
 					
 					int r = dw.getDiskDrives().getDisk(2).getParams().getInt("_reads", 0);
 					int w = dw.getDiskDrives().getDisk(2).getParams().getInt("_writes", 0);
@@ -661,10 +676,20 @@ public class DWLite
 					this.lblDisk2Path.setText("");
 				}
 				
-				if (dw.getDiskDrives().isLoaded(3))
+				if (dw.getDiskDrives().isLoaded(3) && (frmDwlite != null))
 				{
 					this.lblDisk3.setText(prettyFile(dw.getDiskDrives().getDisk(3).getFilePath()));
-					this.lblDisk3Path.setText(prettyPath(dw.getDiskDrives().getDisk(3).getFilePath()));
+					
+					if (showPaths)
+					{
+						this.lblDisk3Path.setText(prettyPath(dw.getDiskDrives().getDisk(3).getFilePath()));
+						this.lblDisk3Path.setVisible(true);
+					}
+					else
+					{
+						this.lblDisk3Path.setText("");
+						this.lblDisk3Path.setVisible(false);
+					}
 					
 					int r = dw.getDiskDrives().getDisk(3).getParams().getInt("_reads", 0);
 					int w = dw.getDiskDrives().getDisk(3).getParams().getInt("_writes", 0);
@@ -690,15 +715,26 @@ public class DWLite
 					this.lblDisk3Path.setText("");
 				}
 				
+				
 				setDriveXVisible(showDriveX);
 				
-				if (showDriveX)
+				if (showDriveX  && (frmDwlite != null))
 				{
 					if (dw.getDiskDrives().isLoaded((Integer)spinnerDriveX.getValue()))
 					{
 						int dn = (Integer)spinnerDriveX.getValue();
 						this.lblDiskX.setText(prettyFile(dw.getDiskDrives().getDisk(dn).getFilePath()));
-						this.lblDiskXPath.setText(prettyPath(dw.getDiskDrives().getDisk(dn).getFilePath()));
+						
+						if (showPaths)
+						{
+							this.lblDiskXPath.setText(prettyPath(dw.getDiskDrives().getDisk(dn).getFilePath()));
+							this.lblDiskXPath.setVisible(true);
+						}
+						else
+						{
+							this.lblDiskXPath.setText("");
+							this.lblDiskXPath.setVisible(false);
+						}
 						
 						int r = dw.getDiskDrives().getDisk(dn).getParams().getInt("_reads", 0);
 						int w = dw.getDiskDrives().getDisk(dn).getParams().getInt("_writes", 0);
@@ -728,22 +764,16 @@ public class DWLite
 				}
 			
 			} 
-			catch (DWDriveNotLoadedException e) 
+			catch (Exception e) 
 			{
-					e.printStackTrace();
-				
-			} 
-			catch (DWDriveNotValidException e) 
-			{
-					e.printStackTrace();
-				
+				// whatever
 			}
 		}
 			
 	}
 
 
-	private void setDriveXVisible(boolean vis) 
+	public void setDriveXVisible(boolean vis) 
 	{
 		this.btnEjectX.setVisible(vis);
 		this.lblDiskX.setVisible(vis);
@@ -751,6 +781,7 @@ public class DWLite
 		this.spinnerDriveX.setVisible(vis);
 		this.button_X.setVisible(vis);
 		
+		this.showDriveX = vis;
 	}
 
 
@@ -834,4 +865,5 @@ public class DWLite
 	{
 		return this.frmDwlite;
 	}
+
 }
