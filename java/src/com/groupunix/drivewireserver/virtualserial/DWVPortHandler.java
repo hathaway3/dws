@@ -11,7 +11,6 @@ import com.groupunix.drivewireserver.virtualserial.api.DWAPISerial;
 import com.groupunix.drivewireserver.virtualserial.api.DWAPITCP;
 
 
-// this replaces the separate mode handlers with a single API consisting of both hayes AT commands and the TCP API commands
 
 public class DWVPortHandler 
 {
@@ -135,7 +134,7 @@ public class DWVPortHandler
 			}
 			else if (cmdparts[0].equalsIgnoreCase("ser"))
 			{
-				respond(new DWAPISerial(cmdparts).process());
+				respond(new DWAPISerial(cmdparts, this.dwVSerialPorts, this.vport).process());
 			}
 
 

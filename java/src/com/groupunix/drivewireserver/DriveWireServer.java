@@ -49,8 +49,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.vmodem.VModemProtocolHand
 public class DriveWireServer 
 {
 
-	public static final String DWServerVersion = "4.3.3i";
-	public static final String DWServerVersionDate = "04/16/2013";
+	public static final String DWServerVersion = "4.3.3j";
+	public static final String DWServerVersionDate = "05/05/2013";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;

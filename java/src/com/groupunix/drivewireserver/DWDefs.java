@@ -141,6 +141,11 @@ public class DWDefs
 	public static final byte RC_MIDI_SOUNDBANK_NOT_SUPPORTED 	= (byte) 155;
 	public static final byte RC_MIDI_INVALID_PROFILE 			= (byte) 156;
 	
+	public static final byte RC_SERIAL_PORTINUSE 				= (byte) 180;
+	public static final byte RC_SERIAL_PORTINVALID 				= (byte) 181;
+	public static final byte RC_SERIAL_PORTERROR 				= (byte) 182;
+	
+	
 	public static final byte RC_SERVER_ERROR					= (byte) 200;
 	public static final byte RC_SERVER_FILESYSTEM_EXCEPTION 	= (byte) 201;
 	public static final byte RC_SERVER_IO_EXCEPTION 			= (byte) 202;
@@ -287,6 +292,8 @@ public class DWDefs
 	public static final byte TIMER_WRITE	= (byte) 10; 
 	
 	public static final byte TIMER_USER			= (byte) 128; // start of user timers 
+
+	
 	
 
 	
