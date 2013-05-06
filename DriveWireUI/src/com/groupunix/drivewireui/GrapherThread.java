@@ -313,69 +313,71 @@ public class GrapherThread implements Runnable
 	
 	private void drawMemGraph()
 	{
-		GC gc = new GC(MainWin.graphMemUse);
-		int width = MainWin.graphMemUse.getImageData().width - xlabel;
-		int height = MainWin.graphMemUse.getImageData().height - ylabel - topgap;
-	
-		// get scale
-		long maxmem = 0;
-		
-		for (int i = 0;i<samples;i++)
+		if ((MainWin.getDisplay() != null) && !MainWin.getDisplay().isDisposed())
 		{
-			if (memtsamp[i] > maxmem)
-				maxmem = memtsamp[i];
-		}
+			GC gc = new GC(MainWin.graphMemUse);
+			int width = MainWin.graphMemUse.getImageData().width - xlabel;
+			int height = MainWin.graphMemUse.getImageData().height - ylabel - topgap;
 		
-		double vscale = Double.valueOf(height) / Double.valueOf(maxmem);
-		double hscale = width / samples;
-		
-		// background
-		gc.setForeground(colorGraphBGH);
-		gc.setBackground(colorGraphBGL);
-		gc.fillGradientRectangle(0,0,width + xlabel,height + ylabel + topgap,true);
-		
-		for (int i = 0; i< samples; i++)
-		{
-			// latest sample always last line
-			int samp = pos + 1 + i;
-			if (samp > (samples-1))
-				samp = samp - samples;
+			// get scale
+			long maxmem = 0;
 			
-			if (memtsamp[samp] > 0)
+			for (int i = 0;i<samples;i++)
 			{
-				gc.setBackground(colorMemGraphTotal);
-				
-				double top = (memtsamp[samp] * vscale);
-				gc.fillRectangle(i, height - (int)top + topgap, 1, 2);
-				
-				gc.setBackground(colorMemGraphUsed);
-				top = (memtsamp[samp] - memfsamp[samp]) * vscale;
-				gc.fillRectangle(i, height - (int)top + topgap, (int)hscale, (int)top);
+				if (memtsamp[i] > maxmem)
+					maxmem = memtsamp[i];
 			}
-			//MainWin.debug("Pos " + i + " Samp: " + samp + " rawT: " + memtsamp[samp] + "  Top: " +  top + "  vscale: " + vscale);
-		}
-		
-		// labels
-		gc.setFont(MainWin.fontGraphLabel);
-		gc.setForeground(colorLabel);
-		
-		for (int i = 0; i<5; i++)
-		{
-			int y = i * (height / 5);
-			double mb = (Double.valueOf(height - y) / vscale / 1024.0);
+			
+			double vscale = Double.valueOf(height) / Double.valueOf(maxmem);
+			double hscale = width / samples;
+			
+			// background
+			gc.setForeground(colorGraphBGH);
+			gc.setBackground(colorGraphBGL);
+			gc.fillGradientRectangle(0,0,width + xlabel,height + ylabel + topgap,true);
+			
+			for (int i = 0; i< samples; i++)
+			{
+				// latest sample always last line
+				int samp = pos + 1 + i;
+				if (samp > (samples-1))
+					samp = samp - samples;
+				
+				if (memtsamp[samp] > 0)
+				{
+					gc.setBackground(colorMemGraphTotal);
+					
+					double top = (memtsamp[samp] * vscale);
+					gc.fillRectangle(i, height - (int)top + topgap, 1, 2);
+					
+					gc.setBackground(colorMemGraphUsed);
+					top = (memtsamp[samp] - memfsamp[samp]) * vscale;
+					gc.fillRectangle(i, height - (int)top + topgap, (int)hscale, (int)top);
+				}
+				//MainWin.debug("Pos " + i + " Samp: " + samp + " rawT: " + memtsamp[samp] + "  Top: " +  top + "  vscale: " + vscale);
+			}
+			
+			// labels
+			gc.setFont(MainWin.fontGraphLabel);
 			gc.setForeground(colorLabel);
-			gc.drawString(((int)Math.rint(mb)) + " MB", width+4, y-5 + topgap, true);
 			
-			gc.setLineStyle(SWT.LINE_DOT);
-			gc.setForeground(colorGraphBGL);
-			gc.drawLine(0, y+topgap, width, y+topgap);
+			for (int i = 0; i<5; i++)
+			{
+				int y = i * (height / 5);
+				double mb = (Double.valueOf(height - y) / vscale / 1024.0);
+				gc.setForeground(colorLabel);
+				gc.drawString(((int)Math.rint(mb)) + " MB", width+4, y-5 + topgap, true);
+				
+				gc.setLineStyle(SWT.LINE_DOT);
+				gc.setForeground(colorGraphBGL);
+				gc.drawLine(0, y+topgap, width, y+topgap);
+				
+			}
+			gc.setForeground(colorLabel);
+			gc.drawString(String.format("Total: %.1f MB   Used: %.1f MB   Free: %.1f MB",(this.memtsamp[pos] /1024.0), ((this.memtsamp[pos] - this.memfsamp[pos]) / 1024.0) , (this.memfsamp[pos] / 1024.0)   ), 5, height+5+topgap, true);
 			
-		}
-		gc.setForeground(colorLabel);
-		gc.drawString(String.format("Total: %.1f MB   Used: %.1f MB   Free: %.1f MB",(this.memtsamp[pos] /1024.0), ((this.memtsamp[pos] - this.memfsamp[pos]) / 1024.0) , (this.memfsamp[pos] / 1024.0)   ), 5, height+5+topgap, true);
-		
-		gc.dispose();
-		
+			gc.dispose();
+		}		
 	}
 
 }

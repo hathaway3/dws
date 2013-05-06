@@ -55,6 +55,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -69,6 +70,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolTip;
+import org.eclipse.swt.widgets.Tray;
 
 import swing2swt.layout.BorderLayout;
 
@@ -87,6 +90,7 @@ import com.groupunix.drivewireui.updatewizard.NoUpdateDialog;
 import com.groupunix.drivewireui.updatewizard.UpdateWizard;
 import com.groupunix.dwlite.DWLite;
 import com.swtdesigner.SWTResourceManager;
+import org.eclipse.swt.widgets.TrayItem;
 
 
 
@@ -98,8 +102,8 @@ public class MainWin {
 	public static final int DWUIVersionMajor = 4;
 	public static final int DWUIVersionMinor = 3;
 	public static final int DWUIVersionBuild = 3;
-	public static final String DWUIVersionRevision = "i";
-	public static final String DWUIVersionDate = "04/16/2013";
+	public static final String DWUIVersionRevision = "j";
+	public static final String DWUIVersionDate = "05/05/2013";
 	
 	public static final Version DWUIVersion = new Version(DWUIVersionMajor, DWUIVersionMinor, DWUIVersionBuild, DWUIVersionRevision, DWUIVersionDate);
 	
@@ -1727,6 +1731,45 @@ public class MainWin {
 				}
 			}
 		});
+		
+		/*  Tray... doesn't work so well
+		
+	    Tray tray = display.getSystemTray();
+	    if (tray != null) {
+	      TrayItem item = new TrayItem(tray, SWT.NONE);
+	      
+	      item.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/dw/dw4square.jpg"));
+	      
+	      final Menu traymenu = new Menu (shell, SWT.POP_UP);
+			for (int i = 0; i < 4; i++) {
+				
+				MenuItem mi = new MenuItem (traymenu, SWT.CASCADE);
+				mi.setText ("Drive " + i);
+				
+				Menu dmenu = new Menu(mi);
+				mi.setMenu(dmenu);
+				MenuItem mins = new MenuItem(dmenu, SWT.PUSH);
+				mins.setText("Insert..");
+				final int dno = i;
+				mins.addListener (SWT.Selection, new Listener () {
+					public void handleEvent (Event event) 
+					{
+						quickInDisk(dno);
+					}
+				});
+				//if (i == 0) traymenu.setDefaultItem(mi);
+			}
+			item.addListener (SWT.MenuDetect, new Listener () {
+				public void handleEvent (Event event) {
+					traymenu.setVisible (true);
+				}
+			});
+	      
+	      
+	    } 
+		
+		*/
+		
 	}
 
 	
@@ -2910,9 +2953,11 @@ public class MainWin {
 		else
 		{
 			LocalFileBrowser lfb = new LocalFileBrowser(save,dir,startpath,title,buttontext,fileext);
+			
 			display.syncExec(lfb);
 			
 			return (lfb.getSelected());
+			
 		}
 		
 		
@@ -3698,7 +3743,7 @@ public class MainWin {
 	public static void updateDiskTableItem(final int item, final String key, final Object object)
 	{
 		
-		if (disks[item].isLoaded())
+		if (disks[item].isLoaded() && (display != null) && !display.isDisposed())
 		{
 			display.syncExec(new Runnable() {
 					  public void run()

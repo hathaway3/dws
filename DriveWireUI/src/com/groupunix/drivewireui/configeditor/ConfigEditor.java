@@ -202,8 +202,6 @@ public class ConfigEditor extends Shell
 		
 
 		
-		
-		
 		tree = new Tree(this, SWT.BORDER | SWT.FULL_SELECTION);
 		tree.setLayoutData(new RowData(663, SWT.DEFAULT));
 		tree.addSelectionListener(new SelectionAdapter() {

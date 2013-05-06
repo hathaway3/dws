@@ -389,7 +389,10 @@ public class CoCoView extends Composite
 		} 
 		);
 		
-		coco.setBackground(MainWin.colorGreen);
+		// weird bug report from GH.. ?
+		if ((MainWin.colorGreen != null) && (coco != null))
+			coco.setBackground(MainWin.colorGreen);
+		
 		cocoimg = new Image(null, width, height);
 		this.cocogc = new GC(cocoimg);
 		

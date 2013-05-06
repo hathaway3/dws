@@ -64,11 +64,14 @@ public class InstanceMan extends Shell
 			{
 				if (updateT != null)
 					updateT.interrupt();
+				
+				/*
 					try {
 						updateT.join();
 					} catch (InterruptedException e1) {
 					
 					}
+					*/
 			}
 		});
 		
