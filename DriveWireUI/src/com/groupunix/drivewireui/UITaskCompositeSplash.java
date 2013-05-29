@@ -99,6 +99,7 @@ public class UITaskCompositeSplash extends UITaskComposite
 	public void setBottom(int y)
 	{
 		this.setBounds(0, this.getBounds().y, this.getBounds().width, y - this.getBounds().y);
+		
 	}
 	
 	

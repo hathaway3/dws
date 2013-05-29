@@ -42,6 +42,7 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MenuAdapter;
 import org.eclipse.swt.events.MenuEvent;
+import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
@@ -102,8 +103,8 @@ public class MainWin {
 	public static final int DWUIVersionMajor = 4;
 	public static final int DWUIVersionMinor = 3;
 	public static final int DWUIVersionBuild = 3;
-	public static final String DWUIVersionRevision = "j";
-	public static final String DWUIVersionDate = "05/05/2013";
+	public static final String DWUIVersionRevision = "k";
+	public static final String DWUIVersionDate = "05/28/2013";
 	
 	public static final Version DWUIVersion = new Version(DWUIVersionMajor, DWUIVersionMinor, DWUIVersionBuild, DWUIVersionRevision, DWUIVersionDate);
 	
@@ -270,6 +271,7 @@ public class MainWin {
 	protected static ServerStatusItem serverStatus = new ServerStatusItem();
 	protected static long servermagic;
 	private Menu menu_1;
+	private MenuItem mntmRestartClientsOnOpen;
 	private static CTabItem tbtmUi;
 	private static boolean logscroll = true;
 	private static MenuItem mntmCopy;
@@ -972,6 +974,23 @@ public class MainWin {
 		menu_tools = new Menu(mntmTools);
 		mntmTools.setMenu(menu_tools);
 		
+		menu_tools.addMenuListener(new MenuListener() {
+
+			@Override
+			public void menuHidden(MenuEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void menuShown(MenuEvent arg0) 
+			{
+				// set menu toggles
+				mntmHdbdosTranslation.setSelection(MainWin.getInstanceConfig().getBoolean("HDBDOSMode", false));
+				mntmRestartClientsOnOpen.setSelection(MainWin.getInstanceConfig().getBoolean("RestartClientsOnOpen", false));
+			}
+			
+		});
 		
 		MenuItem mntmEjectAllDisks = new MenuItem(menu_tools, SWT.NONE);
 		mntmEjectAllDisks.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/media-eject.png"));
@@ -1023,7 +1042,41 @@ public class MainWin {
 		mntmTimers.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/constatus/user-away.png"));
 		
 		
+		new MenuItem(menu_tools, SWT.SEPARATOR);
+		
+		MenuItem mntmRestart = new MenuItem(menu_tools, SWT.NONE);
+		mntmRestart.addSelectionListener(new SelectionAdapter() 
+		{
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				MainWin.sendCommand("dw client restart");
+			}
+		});
+		mntmRestart.setText("Send restart request to client device");
+		mntmRestart.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(MainWin.class, "/menu/document-quick_restart.png"));
+		
+		
+		mntmRestartClientsOnOpen = new MenuItem(menu_tools, SWT.CHECK);
+		mntmRestartClientsOnOpen.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				if (mntmRestartClientsOnOpen.getSelection())
+				{
+					MainWin.sendCommand("dw config set RestartClientsOnOpen true");
+				}
+				else
+				{
+					MainWin.sendCommand("dw config set RestartClientsOnOpen false");
+				}
+				
 	
+			}
+		});
+		
+		mntmRestartClientsOnOpen.setText("Restart clients when server starts");
+		
 		
 		
 		

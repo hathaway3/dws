@@ -32,6 +32,7 @@ public class DWCmd extends DWCommand
 		{
 			commands.addcommand(new DWCmdPort((DWVSerialProtocol) dwProtocol, this));
 			commands.addcommand(new DWCmdNet((DWVSerialProtocol) dwProtocol, this));
+			commands.addcommand(new DWCmdClient( (DWVSerialProtocol) dwProtocol, this ));
 		}
 		
 		if (this.dwProto.hasMIDI())

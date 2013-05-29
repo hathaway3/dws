@@ -59,6 +59,7 @@ public class DWVSerialPorts {
 	private int zTermPort = 0;
 	private int MIDIPort = 0;
 	private int multiReadLimit = 0;
+	private boolean rebootRequested = false;
 	
 	public DWVSerialPorts(DWVSerialProtocol dwProto)
 	{
@@ -199,6 +200,19 @@ public class DWVSerialPorts {
 	{
 		byte[] response = new byte[2];
 		
+		// reboot req takes absolute priority
+		
+		if (this.isRebootRequested())
+		{
+			response[0] = (byte) 16;
+			response[1] = (byte) 255;
+				
+			logger.debug("reboot request pending, sending response " + response[0] + "," + response[1]);
+			
+			this.setRebootRequested(false);
+			return(response);
+		}
+			
 		
 		// Z devices go first...
 		
@@ -252,6 +266,8 @@ public class DWVSerialPorts {
 		
 		
 		// N devices
+		
+		
 		
 		
 		// first look for termed ports
@@ -1187,6 +1203,22 @@ public class DWVSerialPorts {
 	{
 		validateport(port);
 		return this.vserialPorts[port].getVModem();
+	}
+
+
+
+
+
+	public boolean isRebootRequested() {
+		return rebootRequested;
+	}
+
+
+
+
+
+	public void setRebootRequested(boolean rebootRequested) {
+		this.rebootRequested = rebootRequested;
 	}
 
 

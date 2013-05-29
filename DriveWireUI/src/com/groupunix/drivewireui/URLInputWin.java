@@ -60,10 +60,13 @@ public class URLInputWin extends Dialog {
 
 	private void loadURLHistory()
 	{
-		List<String> dhist = MainWin.getDiskHistory();
-		for (String d : dhist)
+		if (MainWin.getDiskHistory() != null)
 		{
-			cmbURL.add(d, 0);
+			List<String> dhist = MainWin.getDiskHistory();
+			for (String d : dhist)
+			{
+				cmbURL.add(d, 0);
+			}
 		}
 	}
 

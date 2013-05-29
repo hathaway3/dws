@@ -163,6 +163,9 @@ public class DWProtocolHandler implements Runnable, DWVSerialProtocol
 			this.dwVSerialPorts = new DWVSerialPorts(this);	
 			dwVSerialPorts.resetAllPorts();
 
+			if (this.config.getBoolean("RestartClientsOnOpen", false))
+				dwVSerialPorts.setRebootRequested(true);
+			
 			// setup printer
 			vprinter = new DWVPrinter(this);
 				
