@@ -44,7 +44,8 @@ public class WindowPrefs extends JDialog {
 	private JCheckBox chckbxAlwaysOnTop;
 	private JCheckBox chckbxVerticalScrollbar;
 	private JScrollPane sp;
-	private JComboBox<String> comboBoxTheme;
+	@SuppressWarnings("rawtypes")
+	private JComboBox comboBoxTheme;
 	private JCheckBox chckbxUndecorated;
 	private JCheckBox chckbxShowFilePath;
 	private JCheckBox chckbxShowDriveX;
@@ -67,7 +68,7 @@ public class WindowPrefs extends JDialog {
 			contentPanel.add(lblTheme, "cell 1 1,alignx trailing");
 		}
 		{
-			comboBoxTheme = new JComboBox<String>();
+			comboBoxTheme = new JComboBox();
 			
 			contentPanel.add(comboBoxTheme, "cell 2 1 2 1,growx");
 		}
