@@ -470,7 +470,7 @@ public class DWLite
 		});
 		
 	
-		mnOptions.add(mntmNewMenuItem);
+		//mnOptions.add(mntmNewMenuItem);
 		mnOptions.add(mntmLockWindow);
 		
 		

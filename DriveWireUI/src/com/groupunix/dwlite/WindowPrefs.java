@@ -241,20 +241,23 @@ public class WindowPrefs extends JDialog {
 	
 	protected void saveSettings() 
 	{
-		MainWin.config.setProperty("DWLiteX", (Integer)this.spinnerPosX.getValue());
-		MainWin.config.setProperty("DWLiteY", (Integer)this.spinnerPosY.getValue());
-		MainWin.config.setProperty("DWLiteH", (Integer)this.spinnerHeight.getValue());
-		MainWin.config.setProperty("DWLiteW", (Integer)this.spinnerWidth.getValue());
-		
-		MainWin.config.setProperty("DWLiteVScroll", this.chckbxVerticalScrollbar.isSelected());
-		MainWin.config.setProperty("DWLiteResize", this.chckbxResizable.isSelected());
-		MainWin.config.setProperty("DWLiteOnTop", this.chckbxAlwaysOnTop.isSelected());
-		MainWin.config.setProperty("DWLiteUndecorated", this.chckbxUndecorated.isSelected());
-		MainWin.config.setProperty("DWLiteTheme", this.comboBoxTheme.getSelectedItem().toString());	
-		
-		MainWin.config.setProperty("DWLiteShowDriveX", this.chckbxShowDriveX.isSelected());
-		MainWin.config.setProperty("DWLiteShowPaths", this.chckbxShowFilePath.isSelected());
-		
+		if (MainWin.config != null)
+		{
+			MainWin.config.setProperty("DWLiteX", (Integer)this.spinnerPosX.getValue());
+			MainWin.config.setProperty("DWLiteY", (Integer)this.spinnerPosY.getValue());
+			MainWin.config.setProperty("DWLiteH", (Integer)this.spinnerHeight.getValue());
+			MainWin.config.setProperty("DWLiteW", (Integer)this.spinnerWidth.getValue());
+			
+			MainWin.config.setProperty("DWLiteVScroll", this.chckbxVerticalScrollbar.isSelected());
+			MainWin.config.setProperty("DWLiteResize", this.chckbxResizable.isSelected());
+			MainWin.config.setProperty("DWLiteOnTop", this.chckbxAlwaysOnTop.isSelected());
+			MainWin.config.setProperty("DWLiteUndecorated", this.chckbxUndecorated.isSelected());
+			MainWin.config.setProperty("DWLiteTheme", this.comboBoxTheme.getSelectedItem().toString());	
+			
+			MainWin.config.setProperty("DWLiteShowDriveX", this.chckbxShowDriveX.isSelected());
+			MainWin.config.setProperty("DWLiteShowPaths", this.chckbxShowFilePath.isSelected());
+			
+		}
 		
 		dispose();
 	}
@@ -349,7 +352,7 @@ public class WindowPrefs extends JDialog {
 		for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) 
 		{
 		     this.comboBoxTheme.addItem(info.getName());
-		     if (info.getName().equals(MainWin.config.getString("DWLiteTheme", "Windows")))
+		     if ((info != null) && (info.getName() != null) && (MainWin.config != null) && (info.getName().equals(MainWin.config.getString("DWLiteTheme", "Windows"))))
 		    	 this.comboBoxTheme.setSelectedItem(info.getName());
 		}
 		
