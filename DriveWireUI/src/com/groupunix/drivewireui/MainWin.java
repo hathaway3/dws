@@ -56,7 +56,6 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -71,8 +70,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolTip;
-import org.eclipse.swt.widgets.Tray;
 
 import swing2swt.layout.BorderLayout;
 
@@ -91,7 +88,6 @@ import com.groupunix.drivewireui.updatewizard.NoUpdateDialog;
 import com.groupunix.drivewireui.updatewizard.UpdateWizard;
 import com.groupunix.dwlite.DWLite;
 import com.swtdesigner.SWTResourceManager;
-import org.eclipse.swt.widgets.TrayItem;
 
 
 

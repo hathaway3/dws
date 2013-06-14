@@ -80,7 +80,7 @@ public class DWLite
 	public JTextField lblDiskXPath;
 
 	protected static DWLite window;
-	private JMenuItem mntmNewMenuItem;
+
 
 
 	/**
