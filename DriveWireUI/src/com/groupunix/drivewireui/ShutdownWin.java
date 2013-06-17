@@ -55,7 +55,7 @@ public class ShutdownWin
 	private void createContents()
 	{
 		shlShuttingDown = new Shell(Display.getCurrent(), SWT.NO_TRIM);
-		shlShuttingDown.setSize(348, 159);
+		shlShuttingDown.setSize(421, 173);
 		shlShuttingDown.setText("Shutting down...");
 		shlShuttingDown.setLayout(new FillLayout(SWT.HORIZONTAL));
 		

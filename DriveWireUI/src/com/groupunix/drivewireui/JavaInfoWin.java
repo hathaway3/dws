@@ -13,6 +13,8 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class JavaInfoWin extends Dialog {
 
@@ -68,22 +70,15 @@ public class JavaInfoWin extends Dialog {
 		shell = new Shell(getParent(), getStyle());
 		shell.setSize(606, 517);
 		shell.setText(getText());
-		shell.setLayout(null);
+		shell.setLayout(new GridLayout(2, false));
 		
 		textInfo = new Text(shell, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
-		textInfo.setBounds(10, 10, 580, 432);
-		
-		Button btnClose = new Button(shell, SWT.NONE);
-		btnClose.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				e.display.getActiveShell().close();
-			}
-		});
-		btnClose.setBounds(258, 454, 75, 25);
-		btnClose.setText("Close");
+		GridData gd_textInfo = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
+		gd_textInfo.widthHint = 121;
+		textInfo.setLayoutData(gd_textInfo);
 		
 		Button btnNewButton = new Button(shell, SWT.NONE);
+		btnNewButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -98,8 +93,16 @@ public class JavaInfoWin extends Dialog {
 				
 			}
 		});
-		btnNewButton.setBounds(10, 454, 157, 25);
 		btnNewButton.setText("Copy to clipboard");
+		
+		Button btnClose = new Button(shell, SWT.NONE);
+		btnClose.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				e.display.getActiveShell().close();
+			}
+		});
+		btnClose.setText("Close");
 
 	}
 	protected Text getTextInfo() {

@@ -11,6 +11,8 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class ChooseServerWin extends Dialog {
 
@@ -73,10 +75,20 @@ public class ChooseServerWin extends Dialog {
 	 */
 	private void createContents() {
 		shlChooseServer = new Shell(getParent(), getStyle());
-		shlChooseServer.setSize(325, 151);
+		shlChooseServer.setSize(362, 151);
 		shlChooseServer.setText("Choose Server...");
+		shlChooseServer.setLayout(new GridLayout(2, false));
+		
+		Label lblEnterServerAddress = new Label(shlChooseServer, SWT.NONE);
+		lblEnterServerAddress.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
+		lblEnterServerAddress.setText("Enter server address in the form host:port");
+		
+		cmbHost = new Combo(shlChooseServer, SWT.NONE);
+		cmbHost.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		cmbHost.setText(MainWin.getHost() + ":" + MainWin.getPort());
 		
 		Button btnOk = new Button(shlChooseServer, SWT.NONE);
+		btnOk.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
 		btnOk.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -107,7 +119,6 @@ public class ChooseServerWin extends Dialog {
 			
 			}
 		});
-		btnOk.setBounds(120, 91, 82, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlChooseServer, SWT.NONE);
@@ -119,17 +130,7 @@ public class ChooseServerWin extends Dialog {
 			
 			}
 		});
-		btnCancel.setBounds(222, 91, 75, 25);
 		btnCancel.setText("Cancel");
-		
-		cmbHost = new Combo(shlChooseServer, SWT.NONE);
-
-		cmbHost.setBounds(22, 40, 275, 23);
-		cmbHost.setText(MainWin.getHost() + ":" + MainWin.getPort());
-		
-		Label lblEnterServerAddress = new Label(shlChooseServer, SWT.NONE);
-		lblEnterServerAddress.setBounds(22, 19, 275, 15);
-		lblEnterServerAddress.setText("Enter server address in the form host:port");
 
 	}
 }

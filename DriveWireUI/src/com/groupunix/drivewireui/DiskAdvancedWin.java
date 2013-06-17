@@ -26,6 +26,8 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class DiskAdvancedWin extends Dialog {
 
@@ -100,275 +102,6 @@ public class DiskAdvancedWin extends Dialog {
 		shell.layout();
 		
 		
-		tableParams = new Table(shell, SWT.BORDER | SWT.FULL_SELECTION);
-				
-		tableParams.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				displayItem(tableParams.getItem(tableParams.getSelectionIndex()).getText(0), tableParams.getSelectionIndex());
-			}
-
-			
-		});
-		tableParams.setBounds(10, 10, 496, 284);
-		tableParams.setHeaderVisible(true);
-		tableParams.setLinesVisible(true);
-		
-		TableColumn tblclmnParameter = new TableColumn(tableParams, SWT.NONE);
-		tblclmnParameter.setWidth(100);
-		tblclmnParameter.setText("Parameter");
-		
-		TableColumn tblclmnValue = new TableColumn(tableParams, SWT.NONE);
-		tblclmnValue.setWidth(289);
-		tblclmnValue.setText("Current Value");
-		
-		tblclmnNewValue = new TableColumn(tableParams, SWT.NONE);
-		
-		tblclmnNewValue.setWidth(83);
-		tblclmnNewValue.setText("New Value");
-		
-		Menu menu = new Menu(tableParams);
-		menu.addMenuListener(new MenuAdapter() {
-			@Override
-			public void menuShown(MenuEvent e) {
-				
-				mntmAddToTable.setEnabled(false);
-				mntmRemoveFromTable.setEnabled(false);
-				mntmSetToDefault.setEnabled(false);
-				mntmWikiHelp.setEnabled(false);
-				mntmWikiHelp.setText("Wiki help...");
-				mntmAddToTable.setText("Add item to main display");
-				
-				if (MainWin.getTPIndex(tableParams.getItem(tableParams.getSelectionIndex()).getText(0)) > -1)
-				{
-					mntmRemoveFromTable.setEnabled(true);
-				}
-				else
-				{
-					mntmAddToTable.setEnabled(true);
-				}
-				
-				if (tableParams.getItem(tableParams.getSelectionIndex()).getText(0) != null)
-				{
-					mntmAddToTable.setText("Add " + tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + " to main display");
-					if (!tableParams.getItem(tableParams.getSelectionIndex()).getText(0).startsWith("_") && paramDefs.containsKey(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]"))
-					{
-						if ((! tableParams.getItem(tableParams.getSelectionIndex()).getText(1).equals(paramDefs.getString(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]") )) || !(tableParams.getItem(tableParams.getSelectionIndex()).getText(2).equals("") ))   
-						{
-							mntmSetToDefault.setEnabled(true);
-						}
-					}
-				}
-				
-				if (tableParams.getItem(tableParams.getSelectionIndex()).getText(0) != null)
-				{
-					if (paramDefs.containsKey(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@wikiurl]"))
-					{
-						mntmWikiHelp.setText("Wiki help for " + tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "...");
-						mntmWikiHelp.setEnabled(true);
-					}
-				}
-				
-			}
-		});
-		tableParams.setMenu(menu);
-		
-		
-		
-		
-		mntmSetToDefault = new MenuItem(menu, SWT.NONE);
-		mntmSetToDefault.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				
-				doToggle(tableParams.getSelectionIndex(), paramDefs.getString(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]" , ""));
-				displayItem(tableParams.getItem(tableParams.getSelectionIndex()).getText(0),tableParams.getSelectionIndex());
-			}
-		});
-		mntmSetToDefault.setText("Set to default value");
-		
-		@SuppressWarnings("unused")
-		MenuItem spacer = new MenuItem(menu, SWT.SEPARATOR);
-				
-		mntmWikiHelp = new MenuItem(menu, SWT.NONE);
-		mntmWikiHelp.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				
-				MainWin.openURL(this.getClass(), paramDefs.getString( tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@wikiurl]" , "")  );
-				
-			}
-		});
-		mntmWikiHelp.setText("Wiki help...");
-		
-		
-		@SuppressWarnings("unused")
-		MenuItem spacer2 = new MenuItem(menu, SWT.SEPARATOR);
-		
-		mntmAddToTable = new MenuItem(menu, SWT.NONE);
-		mntmAddToTable.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				
-				MainWin.addDiskTableColumn(tableParams.getItem(tableParams.getSelectionIndex()).getText(0));
-				
-			}
-		});
-		mntmAddToTable.setText("Add item to main display");
-		
-		mntmRemoveFromTable = new MenuItem(menu, SWT.NONE);
-		mntmRemoveFromTable.setText("Remove from main display");
-		mntmRemoveFromTable.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				
-				MainWin.removeDiskTableColumn(tableParams.getItem(tableParams.getSelectionIndex()).getText(0));
-				
-			}
-		});
-		
-		
-		textItemTitle = new Text(shell, SWT.READ_ONLY);
-		textItemTitle.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		textItemTitle.setFont(SWTResourceManager.getBoldFont(display.getSystemFont()));
-		textItemTitle.setBounds(10, 311, 335, 21);
-		
-		textDescription = new Text(shell, SWT.READ_ONLY | SWT.WRAP | SWT.MULTI);
-		textDescription.setText("Select an option above to view details or make changes.");
-		textDescription.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		textDescription.setBounds(10, 332, 496, 60);
-		
-		linkWiki = new Link(shell, SWT.NONE);
-		linkWiki.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				MainWin.doDisplayAsync(new Runnable() {
-
-					
-
-					@Override
-					public void run() 
-					{
-						MainWin.openURL(this.getClass(),wikiurl);
-					}
-					
-				});
-			}
-		});
-		linkWiki.setBounds(14, 430, 70, 15);
-		linkWiki.setText("<a>Wiki Help..</a>");
-		linkWiki.setVisible(false);
-		
-		btnToggle = new Button(shell, SWT.CHECK);
-		btnToggle.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-				doToggle(tableParams.getSelectionIndex(), btnToggle.getSelection()+"");
-			}
-		});
-		btnToggle.setBounds(14, 395, 297, 18);
-		btnToggle.setText("toggle");
-		btnToggle.setVisible(false);
-		
-		btnApply = new Button(shell, SWT.NONE);
-		btnApply.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				saveChanges();
-			}
-		});
-		btnApply.setEnabled(false);
-		btnApply.setBounds(431, 425, 75, 25);
-		btnApply.setText("Apply");
-		
-		textInt = new Text(shell, SWT.BORDER);
-		textInt.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				doToggle(tableParams.getSelectionIndex(), textInt.getText());
-				if (!whoa)
-					setHexFromInt(((Text) e.getSource()).getText());
-			}
-		});
-		textInt.addVerifyListener(new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-				 String string = e.text;
-			        char[] chars = new char[string.length()];
-			        string.getChars(0, chars.length, chars, 0);
-			        for (int i = 0; i < chars.length; i++) {
-			          if (!(chars[i] >= '0' && chars[i] <= '9')) 
-			          {
-			         	
-			        	if (! ( (i == 0) && (chars[0] == '-') && (e.start == 0) ) )
-			        	{
-			        		e.doit = false;
-			            	return;
-			        	}
-			          }
-			        }
-			        
-			        
-			        
-			}
-		});
-		textInt.setBounds(10, 395, 76, 21);
-		textInt.setVisible(false);
-		
-		lblInt = new Label(shell, SWT.NONE);
-		lblInt.setBounds(217, 397, 289, 18);
-		lblInt.setText("Value");
-		lblInt.setVisible(false);
-		
-		spinner = new Spinner(shell, SWT.BORDER);
-		spinner.setBounds(119, 393, 76, 22);
-		spinner.setVisible(false);
-		
-		textIntHex = new Text(shell, SWT.BORDER);
-		textIntHex.setBounds(112, 395, 76, 21);
-		textIntHex.setVisible(false);
-		
-		textIntHex.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				if (!whoa)
-					setIntFromHex(((Text) e.getSource()).getText());
-			}
-		});
-		textIntHex.addVerifyListener(new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-					e.text = e.text.toLowerCase();
-				    char[] chars = new char[e.text.length()];
-			        e.text.getChars(0, chars.length, chars, 0);
-			        for (int i = 0; i < chars.length; i++) {
-			          if (!(chars[i] >= '0' && chars[i] <= '9') && !(chars[i] >= 'a' && chars[i] <= 'f')) 
-			          {
-			        	  if (! ( (i == 0) && (chars[0] == '-') && (e.start == 0) ) )
-			        	  {
-			        		  e.doit = false;
-			        		  return;
-			        	  }
-			        	
-			          }
-			        }
-			}
-		});
-		
-		
-		lblD = new Label(shell, SWT.NONE);
-		lblD.setBounds(89, 397, 17, 18);
-		lblD.setText("d");
-		lblD.setVisible(false);
-		
-		lblH = new Label(shell, SWT.NONE);
-		lblH.setBounds(192, 397, 18, 21);
-		lblH.setText("h");
-		lblH.setVisible(false);
-		
-		spinner.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				doToggle(tableParams.getSelectionIndex(), spinner.getSelection() + "");
-		        	
-			}
-		});
 		
 		applySettings();
 		applyToggle();
@@ -614,10 +347,296 @@ public class DiskAdvancedWin extends Dialog {
 	 */
 	private void createContents() {
 		shell = new Shell(getParent(), getStyle());
-		shell.setSize(522, 487);
+		shell.setSize(528, 501);
 		shell.setText(getText());
+		GridLayout gl_shell = new GridLayout(8, false);
+		gl_shell.marginTop = 5;
+		gl_shell.marginRight = 5;
+		gl_shell.marginLeft = 5;
+		gl_shell.marginBottom = 5;
+		shell.setLayout(gl_shell);
+		
+		
+		
+		tableParams = new Table(shell, SWT.BORDER | SWT.FULL_SELECTION);
+		tableParams.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, true, 8, 1));
+				
+		tableParams.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				displayItem(tableParams.getItem(tableParams.getSelectionIndex()).getText(0), tableParams.getSelectionIndex());
+			}
+
+			
+		});
+		tableParams.setHeaderVisible(true);
+		tableParams.setLinesVisible(true);
+		
+		TableColumn tblclmnParameter = new TableColumn(tableParams, SWT.NONE);
+		tblclmnParameter.setWidth(100);
+		tblclmnParameter.setText("Parameter");
+		
+		TableColumn tblclmnValue = new TableColumn(tableParams, SWT.NONE);
+		tblclmnValue.setWidth(289);
+		tblclmnValue.setText("Current Value");
+		
+		tblclmnNewValue = new TableColumn(tableParams, SWT.NONE);
+		
+		tblclmnNewValue.setWidth(83);
+		tblclmnNewValue.setText("New Value");
+		
+		Menu menu = new Menu(tableParams);
+		menu.addMenuListener(new MenuAdapter() {
+			@Override
+			public void menuShown(MenuEvent e) {
+				
+				mntmAddToTable.setEnabled(false);
+				mntmRemoveFromTable.setEnabled(false);
+				mntmSetToDefault.setEnabled(false);
+				mntmWikiHelp.setEnabled(false);
+				mntmWikiHelp.setText("Wiki help...");
+				mntmAddToTable.setText("Add item to main display");
+				
+				if (MainWin.getTPIndex(tableParams.getItem(tableParams.getSelectionIndex()).getText(0)) > -1)
+				{
+					mntmRemoveFromTable.setEnabled(true);
+				}
+				else
+				{
+					mntmAddToTable.setEnabled(true);
+				}
+				
+				if (tableParams.getItem(tableParams.getSelectionIndex()).getText(0) != null)
+				{
+					mntmAddToTable.setText("Add " + tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + " to main display");
+					if (!tableParams.getItem(tableParams.getSelectionIndex()).getText(0).startsWith("_") && paramDefs.containsKey(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]"))
+					{
+						if ((! tableParams.getItem(tableParams.getSelectionIndex()).getText(1).equals(paramDefs.getString(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]") )) || !(tableParams.getItem(tableParams.getSelectionIndex()).getText(2).equals("") ))   
+						{
+							mntmSetToDefault.setEnabled(true);
+						}
+					}
+				}
+				
+				if (tableParams.getItem(tableParams.getSelectionIndex()).getText(0) != null)
+				{
+					if (paramDefs.containsKey(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@wikiurl]"))
+					{
+						mntmWikiHelp.setText("Wiki help for " + tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "...");
+						mntmWikiHelp.setEnabled(true);
+					}
+				}
+				
+			}
+		});
+		tableParams.setMenu(menu);
+		
+		
+		
+		
+		mntmSetToDefault = new MenuItem(menu, SWT.NONE);
+		mntmSetToDefault.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				doToggle(tableParams.getSelectionIndex(), paramDefs.getString(tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@default]" , ""));
+				displayItem(tableParams.getItem(tableParams.getSelectionIndex()).getText(0),tableParams.getSelectionIndex());
+			}
+		});
+		mntmSetToDefault.setText("Set to default value");
+		
+		@SuppressWarnings("unused")
+		MenuItem spacer = new MenuItem(menu, SWT.SEPARATOR);
+				
+		mntmWikiHelp = new MenuItem(menu, SWT.NONE);
+		mntmWikiHelp.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				MainWin.openURL(this.getClass(), paramDefs.getString( tableParams.getItem(tableParams.getSelectionIndex()).getText(0) + "[@wikiurl]" , "")  );
+				
+			}
+		});
+		mntmWikiHelp.setText("Wiki help...");
+		
+		
+		@SuppressWarnings("unused")
+		MenuItem spacer2 = new MenuItem(menu, SWT.SEPARATOR);
+		
+		mntmAddToTable = new MenuItem(menu, SWT.NONE);
+		mntmAddToTable.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				MainWin.addDiskTableColumn(tableParams.getItem(tableParams.getSelectionIndex()).getText(0));
+				
+			}
+		});
+		mntmAddToTable.setText("Add item to main display");
+		
+		mntmRemoveFromTable = new MenuItem(menu, SWT.NONE);
+		mntmRemoveFromTable.setText("Remove from main display");
+		mntmRemoveFromTable.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				
+				MainWin.removeDiskTableColumn(tableParams.getItem(tableParams.getSelectionIndex()).getText(0));
+				
+			}
+		});
+		
+		
+		textItemTitle = new Text(shell, SWT.READ_ONLY);
+		textItemTitle.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
+		textItemTitle.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 6, 1));
+		textItemTitle.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
+		//textItemTitle.setFont(SWTResourceManager.getBoldFont(display.getSystemFont()));
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
+		
+		textDescription = new Text(shell, SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		textDescription.setFont(SWTResourceManager.getFont("Segoe UI", 8, SWT.NORMAL));
+		GridData gd_textDescription = new GridData(SWT.FILL, SWT.FILL, false, false, 8, 1);
+		gd_textDescription.heightHint = 51;
+		textDescription.setLayoutData(gd_textDescription);
+		textDescription.setText("Select an option above to view details or make changes.");
+		textDescription.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
+		
+		btnToggle = new Button(shell, SWT.CHECK);
+		GridData gd_btnToggle = new GridData(SWT.FILL, SWT.CENTER, false, false, 8, 1);
+		gd_btnToggle.horizontalIndent = 5;
+		btnToggle.setLayoutData(gd_btnToggle);
+		btnToggle.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				doToggle(tableParams.getSelectionIndex(), btnToggle.getSelection()+"");
+			}
+		});
+		btnToggle.setText("toggle");
+		btnToggle.setVisible(false);
+		
+		textInt = new Text(shell, SWT.BORDER);
+		textInt.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		textInt.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				doToggle(tableParams.getSelectionIndex(), textInt.getText());
+				if (!whoa)
+					setHexFromInt(((Text) e.getSource()).getText());
+			}
+		});
+		textInt.addVerifyListener(new VerifyListener() {
+			public void verifyText(VerifyEvent e) {
+				 String string = e.text;
+			        char[] chars = new char[string.length()];
+			        string.getChars(0, chars.length, chars, 0);
+			        for (int i = 0; i < chars.length; i++) {
+			          if (!(chars[i] >= '0' && chars[i] <= '9')) 
+			          {
+			         	
+			        	if (! ( (i == 0) && (chars[0] == '-') && (e.start == 0) ) )
+			        	{
+			        		e.doit = false;
+			            	return;
+			        	}
+			          }
+			        }
+			        
+			        
+			        
+			}
+		});
+		textInt.setVisible(false);
+		
+		
+		lblD = new Label(shell, SWT.NONE);
+		lblD.setText("d");
+		lblD.setVisible(false);
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
+		
+		textIntHex = new Text(shell, SWT.BORDER);
+		textIntHex.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		textIntHex.setVisible(false);
+		
+		textIntHex.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				if (!whoa)
+					setIntFromHex(((Text) e.getSource()).getText());
+			}
+		});
+		textIntHex.addVerifyListener(new VerifyListener() {
+			public void verifyText(VerifyEvent e) {
+					e.text = e.text.toLowerCase();
+				    char[] chars = new char[e.text.length()];
+			        e.text.getChars(0, chars.length, chars, 0);
+			        for (int i = 0; i < chars.length; i++) {
+			          if (!(chars[i] >= '0' && chars[i] <= '9') && !(chars[i] >= 'a' && chars[i] <= 'f')) 
+			          {
+			        	  if (! ( (i == 0) && (chars[0] == '-') && (e.start == 0) ) )
+			        	  {
+			        		  e.doit = false;
+			        		  return;
+			        	  }
+			        	
+			          }
+			        }
+			}
+		});
+		
+		lblH = new Label(shell, SWT.NONE);
+		lblH.setText("h");
+		lblH.setVisible(false);
+		
+		spinner = new Spinner(shell, SWT.BORDER);
+		spinner.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		spinner.setVisible(false);
+		
+		spinner.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				doToggle(tableParams.getSelectionIndex(), spinner.getSelection() + "");
+		        	
+			}
+		});
+		
+		lblInt = new Label(shell, SWT.NONE);
+		lblInt.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
+		lblInt.setText("Value");
+		lblInt.setVisible(false);
+		
+		linkWiki = new Link(shell, SWT.NONE);
+		GridData gd_linkWiki = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_linkWiki.verticalIndent = 25;
+		linkWiki.setLayoutData(gd_linkWiki);
+		linkWiki.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				MainWin.doDisplayAsync(new Runnable() {
+
+					
+
+					@Override
+					public void run() 
+					{
+						MainWin.openURL(this.getClass(),wikiurl);
+					}
+					
+				});
+			}
+		});
+		linkWiki.setText("<a>Wiki Help..</a>");
+		linkWiki.setVisible(true);
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
+		new Label(shell, SWT.NONE);
 		
 		Button btnOk = new Button(shell, SWT.NONE);
+		btnOk.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, true, false, 1, 1));
 		btnOk.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -626,10 +645,10 @@ public class DiskAdvancedWin extends Dialog {
 				e.display.getActiveShell().close();
 			}
 		});
-		btnOk.setBounds(270, 425, 75, 25);
-		btnOk.setText("Ok");
+		btnOk.setText(" Ok ");
 		
 		Button btnCancel = new Button(shell, SWT.NONE);
+		btnCancel.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1));
 		btnCancel.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -637,8 +656,21 @@ public class DiskAdvancedWin extends Dialog {
 				e.display.getActiveShell().close();
 			}
 		});
-		btnCancel.setBounds(350, 425, 75, 25);
 		btnCancel.setText("Cancel");
+		
+		btnApply = new Button(shell, SWT.NONE);
+		btnApply.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1));
+		btnApply.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				saveChanges();
+			}
+		});
+		btnApply.setEnabled(false);
+		btnApply.setText("Apply");
+		
+		
+		
 
 	}
 

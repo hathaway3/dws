@@ -90,12 +90,12 @@ public class InstanceManComposite extends Composite
 		
 		compositeStatus = new Composite(this, SWT.BORDER);
 		compositeStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		compositeStatus.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+		compositeStatus.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 2, 1));
 		compositeStatus.setLayout(new GridLayout(3, false));
 		
 		lblDevImage = new Label(compositeStatus, SWT.NONE);
 		
-		GridData gd_lblDevImage = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 2);
+		GridData gd_lblDevImage = new GridData(SWT.CENTER, SWT.TOP, false, false, 1, 2);
 		gd_lblDevImage.horizontalIndent = 3;
 		lblDevImage.setLayoutData(gd_lblDevImage);
 		

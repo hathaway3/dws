@@ -47,6 +47,8 @@ import com.groupunix.drivewireui.DWUIOperationFailedException;
 import com.groupunix.drivewireui.MainWin;
 import com.groupunix.drivewireui.UIUtils;
 import com.groupunix.drivewireui.configeditor.SortTreeListener;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class ConfigEditor extends Shell
 {
@@ -133,10 +135,10 @@ public class ConfigEditor extends Shell
 	protected void createContents()
 	{
 		setText("Configuration Editor");
-		setSize(684, 634);
+		setSize(830, 634);
 	
 		
-		
+		/*
 		addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(ControlEvent e) {
@@ -148,11 +150,12 @@ public class ConfigEditor extends Shell
 				setRedraw(true);
 			}
 		});
+		*/
 		
-		
-		setLayout(new RowLayout(SWT.HORIZONTAL));
+		setLayout(new GridLayout(1, false));
 		
 		toolBar = new ToolBar(this, SWT.FLAT | SWT.RIGHT);
+		toolBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 		toolBar.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("unchecked")
 			@Override
@@ -162,7 +165,6 @@ public class ConfigEditor extends Shell
 				loadConfig(null, wc.getRootNode().getChildren());
 			}
 		});
-		toolBar.setLayoutData(new RowData(664, SWT.DEFAULT));
 		
 		tltmAll= new ToolItem(toolBar, SWT.RADIO);
 		tltmAll.setImage(SWTResourceManager.getImage(ConfigEditor.class, "/menu/view-list-tree-4.png"));
@@ -203,7 +205,7 @@ public class ConfigEditor extends Shell
 
 		
 		tree = new Tree(this, SWT.BORDER | SWT.FULL_SELECTION);
-		tree.setLayoutData(new RowData(663, SWT.DEFAULT));
+		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 1, 1));
 		tree.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -226,6 +228,7 @@ public class ConfigEditor extends Shell
 		trclmnValue.setText("Value");
 		
 		scrolledComposite = new Composite(this, SWT.NONE);
+		scrolledComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
 		
 		lblItemTitle = new Label(scrolledComposite, SWT.NONE);
 		lblItemTitle.setBounds(10, 10, 239, 24);
@@ -242,14 +245,14 @@ public class ConfigEditor extends Shell
 		textNameS1.setBounds(10,60,137,24);
 		
 		lblNameS1 = new Label(scrolledComposite, SWT.NONE);
-		lblNameS1.setBounds(10, 40, 137, 20);
+		lblNameS1.setBounds(10, 40, 137, 24);
 		
 		
 		textDescriptS1 = new Text(scrolledComposite, SWT.BORDER);
 		textDescriptS1.setBounds(155,60,502,24);
 		
 		lblDescriptS1 = new Label(scrolledComposite, SWT.NONE);
-		lblDescriptS1.setBounds(155, 40, 502, 20);
+		lblDescriptS1.setBounds(155, 40, 502, 24);
 		
 		btnToggle = new Button(scrolledComposite, SWT.CHECK);
 		btnToggle.addSelectionListener(new SelectionAdapter() {
@@ -261,6 +264,7 @@ public class ConfigEditor extends Shell
 		btnToggle.setBounds(10,113, 300, 24);
 		
 		composite_1 = new Composite(this, SWT.NONE);
+		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 		FillLayout fl_composite_1 = new FillLayout(SWT.HORIZONTAL);
 		fl_composite_1.spacing = 10;
 		fl_composite_1.marginWidth = 5;
@@ -310,11 +314,9 @@ public class ConfigEditor extends Shell
 		});
 		btnCancel.setText("Close");
 		
-		scrolledComposite.setLayoutData(new RowData(667, 200));
-		
 		spinnerInt = new Spinner(scrolledComposite, SWT.BORDER);
 		
-		spinnerInt.setBounds(10, 114, 70, 22);
+		spinnerInt.setBounds(10, 114, 100, 28);
 		
 		
 		this.spinnerModifyListener = new ModifyListener() {
@@ -325,17 +327,17 @@ public class ConfigEditor extends Shell
 		
 		
 		lblIntText = new Label(scrolledComposite, SWT.NONE);
-		lblIntText.setBounds(86, 116, 398, 18);
+		lblIntText.setBounds(116, 116, 398, 24);
 		
 		lblIntTextS1 = new Label(scrolledComposite, SWT.NONE);
-		lblIntTextS1.setBounds(86, 116, 198, 18);
+		lblIntTextS1.setBounds(86, 116, 198, 24);
 		
 		
 		spinnerIntS2 = new Spinner(scrolledComposite, SWT.BORDER);
-		spinnerIntS2.setBounds(200, 114, 70, 22);
+		spinnerIntS2.setBounds(200, 114, 70, 24);
 		
 		lblIntTextS2 = new Label(scrolledComposite, SWT.NONE);
-		lblIntTextS2.setBounds(276, 116, 198, 18);
+		lblIntTextS2.setBounds(276, 116, 198, 24);
 		
 		
 		
@@ -349,7 +351,7 @@ public class ConfigEditor extends Shell
 		};
 		
 		lblList = new Label(scrolledComposite, SWT.NONE);
-		lblList.setBounds(150, 116, 357, 18);
+		lblList.setBounds(150, 116, 357, 24);
 		
 		textString = new Text(scrolledComposite, SWT.BORDER);
 		textString.addModifyListener(new ModifyListener() {
@@ -357,7 +359,7 @@ public class ConfigEditor extends Shell
 				updateString(selected, textString.getText());
 			}
 		});
-		textString.setBounds(20, 116, 383, 21);
+		textString.setBounds(20, 112, 383, 28);
 		
 		btnFileDir = new Button(scrolledComposite, SWT.NONE);
 		btnFileDir.addSelectionListener(new SelectionAdapter() {
@@ -376,12 +378,11 @@ public class ConfigEditor extends Shell
 					textString.setText(res);
 			}
 		});
-		btnFileDir.setBounds(409, 113, 98, 25);
+		btnFileDir.setBounds(409, 111, 98, 30);
 		btnFileDir.setText("Choose...");
 		
 		lblString = new Label(scrolledComposite, SWT.NONE);
-		lblString.setBounds(20, 98, 248, 18);
-		composite_1.setLayoutData(new RowData(this.getSize().x, 100));
+		lblString.setBounds(20, 81, 290, 33);
 		
 	}
 	

@@ -91,7 +91,7 @@ public class InstanceMan extends Shell
 		
 		setText("Instance Manager");
 		
-		setSize(380, 200);
+		setSize(412, 221);
 		
 		int x = display.getActiveShell().getBounds().x + (display.getActiveShell().getBounds().width / 2) - (getBounds().width / 2);
 		int y = display.getActiveShell().getBounds().y + (display.getActiveShell().getBounds().height / 2) - (getBounds().height / 2);

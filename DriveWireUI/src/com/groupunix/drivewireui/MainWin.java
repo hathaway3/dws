@@ -99,8 +99,8 @@ public class MainWin {
 	public static final int DWUIVersionMajor = 4;
 	public static final int DWUIVersionMinor = 3;
 	public static final int DWUIVersionBuild = 3;
-	public static final String DWUIVersionRevision = "l";
-	public static final String DWUIVersionDate = "06/14/2013";
+	public static final String DWUIVersionRevision = "m";
+	public static final String DWUIVersionDate = "06/17/2013";
 	
 	public static final Version DWUIVersion = new Version(DWUIVersionMajor, DWUIVersionMinor, DWUIVersionBuild, DWUIVersionRevision, DWUIVersionDate);
 	
@@ -305,16 +305,18 @@ public class MainWin {
 		lowMemLogItem.setThread(Thread.currentThread().getName());
 		lowMemLogItem.setMessage("Due to low free memory, display of non-critical log events and some UI functions have been disabled.");
 	
+		
 		// attempt to maintain control in times of insanity
 		Thread.currentThread().setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
 
 			@Override
 			public void uncaughtException(Thread t, final Throwable e)
 			{
-				
 				System.out.println("Yikes!");
 				System.out.println();
 				System.out.println(UIUtils.getStackTrace(e));
+				
+				logger.warn(e.getClass().getSimpleName() + " in UI thread " + t.getName() + " " + t.getId());
 				
 				if ((MainWin.shell != null) && (!MainWin.shell.isDisposed()))
 				{
@@ -325,16 +327,20 @@ public class MainWin {
 						@Override
 						public void run()
 						{
-							ErrorWin ew = new ErrorWin(MainWin.shell, SWT.DIALOG_TRIM, e.getClass().getSimpleName() + " in UI", "Well this is embarassing.. please submit a bug report with as much detail as possible.", "DriveWire will attempt to cleanly exit when this dialog is closed.  Please finish up anything important quickly (if the program is working well enough to allow that). " + "\r\n\r\n" + UIUtils.getStackTrace(e));
+							BugDialog ew = new BugDialog(MainWin.shell, SWT.DIALOG_TRIM, e);
 							ew.open();
 							
 						}
 					});
 				}
 				
-				logger.fatal(e.getClass().getSimpleName() + " in UI thread " + t.getName() + " " + t.getId());
 				
-				MainWin.stopDWServer();
+				if ((config != null) && (config.getBoolean("TermServerOnExit",false) || config.getBoolean("LocalServer",false) ))
+				{
+					if (MainWin.dwThread.isAlive())
+						stopDWServer();
+				}
+				
 				System.exit(1);
 			}
 		
@@ -974,7 +980,6 @@ public class MainWin {
 
 			@Override
 			public void menuHidden(MenuEvent arg0) {
-				// TODO Auto-generated method stub
 				
 			}
 
@@ -2051,29 +2056,57 @@ public class MainWin {
 	public static void doShutdown() 
 	{
 	  
-	
-		  ShutdownWin sdwin = new ShutdownWin(shell, SWT.DIALOG_TRIM);
+		// remove gui error trap
+				
+		Thread.currentThread().setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+
+					
+			@Override
+			public void uncaughtException(Thread t, final Throwable e)
+			{
+			
+				System.out.println("Error while exiting:");
+				System.out.println();
+				System.out.println(UIUtils.getStackTrace(e));
+				
+				if (config.getBoolean("TermServerOnExit",false) || config.getBoolean("LocalServer",false) )
+				{
+					System.out.println("Trying to terminate server..");
+					stopDWServer();
+				}
+				
+				System.out.println("Checking for updated files..");
+				UIUtils.replaceFiles(".", "");
+				
+				System.exit(1);
 		
-		  // open progress dialog
-		  sdwin.open();
+			}
+				
+		});
+		 
+		
+		// display progress..
+		ShutdownWin sdwin = new ShutdownWin(shell, SWT.DIALOG_TRIM);
+		
+		sdwin.open();
 		  
-		  // yeah right
-		  sdwin.setStatus("Encouraging consistency...",10);
+	  
+		// yeah right
+		sdwin.setStatus("Encouraging consistency...",10);
 		  
 		// kill sync
-		  MainWin.host = null;
-		  MainWin.ready = false;
-		  MainWin.syncObj.die();
+		MainWin.host = null;
+		MainWin.ready = false;
+		MainWin.syncObj.die();
 		
 		  
 		  
-		  if (config.getBoolean("TermServerOnExit",false) || config.getBoolean("LocalServer",false) )
-		  {
-			  
-			  sdwin.setStatus("Stopping DriveWire server...",25);
-			  // sendCommand("ui server terminate");
-			  stopDWServer();
-		  }
+		if (config.getBoolean("TermServerOnExit",false) || config.getBoolean("LocalServer",false) )
+		{
+			sdwin.setStatus("Stopping DriveWire server...",25);
+			// sendCommand("ui server terminate");
+			stopDWServer();
+		}
 
 		  
 		  
@@ -2153,7 +2186,7 @@ public class MainWin {
 			try
 			{
 				waits++;
-				Thread.sleep(20);
+				Thread.sleep(10);
 			} catch (InterruptedException e)
 			{
 				//dont care, just catching a few redraws
@@ -2162,7 +2195,15 @@ public class MainWin {
 			}
 		  
 		  // do updated file replacement on the way out..
-		  UIUtils.replaceFiles(".", "");
+		  try
+		  {
+			  UIUtils.replaceFiles(".", "");
+		  }
+		  catch (Exception e)
+		  {
+			  System.err.println(e.getMessage());
+			  System.exit(1);
+		  }
 		  
 		  System.exit(0);
 	}
@@ -3204,6 +3245,16 @@ public class MainWin {
 						  public void run()
 						  {  
 							  MainWin.taskman.updateTask(tid, statint, UIUtils.dumpMIDIStatus(MainWin.midiStatus));
+						  }
+					  });
+		  }
+		  else if (cmd.equals("/bugout"))
+		  {
+			  display.asyncExec(
+					  new Runnable() {
+						  public void run()
+						  {  
+							  Integer.parseInt("not an int");
 						  }
 					  });
 		  }

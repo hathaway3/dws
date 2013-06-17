@@ -11,6 +11,8 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class URLInputWin extends Dialog {
 
@@ -75,10 +77,26 @@ public class URLInputWin extends Dialog {
 	 */
 	private void createContents() {
 		shlEnterURL = new Shell(getParent(), getStyle());
-		shlEnterURL.setSize(452, 151);
+		shlEnterURL.setSize(452, 170);
 		shlEnterURL.setText("Enter URL for disk image...");
+		GridLayout gl_shlEnterURL = new GridLayout(2, false);
+		gl_shlEnterURL.marginTop = 5;
+		gl_shlEnterURL.marginRight = 5;
+		gl_shlEnterURL.marginLeft = 5;
+		gl_shlEnterURL.marginBottom = 5;
+		shlEnterURL.setLayout(gl_shlEnterURL);
+		
+		Label lblEnterURL = new Label(shlEnterURL, SWT.NONE);
+		lblEnterURL.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
+		lblEnterURL.setText("Enter a URL to load image for drive " + diskno + " from:");
+		
+		cmbURL = new Combo(shlEnterURL, SWT.NONE);
+		cmbURL.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		
 		Button btnOk = new Button(shlEnterURL, SWT.NONE);
+		GridData gd_btnOk = new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1);
+		gd_btnOk.verticalIndent = 10;
+		btnOk.setLayoutData(gd_btnOk);
 		btnOk.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -87,10 +105,12 @@ public class URLInputWin extends Dialog {
 				e.display.getActiveShell().close();
 			}
 		});
-		btnOk.setBounds(248, 88, 82, 25);
 		btnOk.setText("Ok");
 		
 		Button btnCancel = new Button(shlEnterURL, SWT.NONE);
+		GridData gd_btnCancel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_btnCancel.verticalIndent = 10;
+		btnCancel.setLayoutData(gd_btnCancel);
 		btnCancel.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -99,16 +119,7 @@ public class URLInputWin extends Dialog {
 			
 			}
 		});
-		btnCancel.setBounds(350, 88, 75, 25);
 		btnCancel.setText("Cancel");
-		
-		cmbURL = new Combo(shlEnterURL, SWT.NONE);
-
-		cmbURL.setBounds(22, 40, 403, 23);
-		
-		Label lblEnterURL = new Label(shlEnterURL, SWT.NONE);
-		lblEnterURL.setBounds(22, 19, 275, 15);
-		lblEnterURL.setText("Enter a URL to load image for drive " + diskno + " from:");
 		
 	}
 }

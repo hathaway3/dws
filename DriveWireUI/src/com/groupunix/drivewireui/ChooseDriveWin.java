@@ -11,6 +11,8 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class ChooseDriveWin extends Dialog
 {
@@ -78,10 +80,20 @@ public class ChooseDriveWin extends Dialog
 	private void createContents()
 	{
 		shlChooseDriveFor = new Shell(getParent(), getStyle());
-		shlChooseDriveFor.setSize(295, 131);
+		shlChooseDriveFor.setSize(329, 130);
 		shlChooseDriveFor.setText("Choose drive for insert...");
+		GridLayout gl_shlChooseDriveFor = new GridLayout(3, false);
+		gl_shlChooseDriveFor.marginTop = 5;
+		gl_shlChooseDriveFor.marginRight = 5;
+		gl_shlChooseDriveFor.marginLeft = 5;
+		gl_shlChooseDriveFor.marginBottom = 5;
+		shlChooseDriveFor.setLayout(gl_shlChooseDriveFor);
+		
+		Label lblDrive = new Label(shlChooseDriveFor, SWT.NONE);
+		lblDrive.setText("Drive:");
 		
 		comboDrive = new Combo(shlChooseDriveFor, SWT.NONE);
+		comboDrive.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		comboDrive.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -92,13 +104,10 @@ public class ChooseDriveWin extends Dialog
 				
 			}
 		});
-		comboDrive.setBounds(55, 22, 217, 23);
-		
-		Label lblDrive = new Label(shlChooseDriveFor, SWT.NONE);
-		lblDrive.setBounds(10, 25, 39, 15);
-		lblDrive.setText("Drive:");
+		new Label(shlChooseDriveFor, SWT.NONE);
 		
 		Button btnInsert = new Button(shlChooseDriveFor, SWT.NONE);
+		btnInsert.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
 		btnInsert.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -106,7 +115,6 @@ public class ChooseDriveWin extends Dialog
 				doReturn();
 			}
 		});
-		btnInsert.setBounds(102, 70, 90, 25);
 		btnInsert.setText("Insert");
 		
 		Button btnCancel = new Button(shlChooseDriveFor, SWT.NONE);
@@ -118,7 +126,6 @@ public class ChooseDriveWin extends Dialog
 				e.display.getActiveShell().close();
 			}
 		});
-		btnCancel.setBounds(207, 70, 65, 25);
 		btnCancel.setText("Cancel");
 
 	}

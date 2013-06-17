@@ -28,6 +28,9 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.graphics.Point;
 
 public class BugReportWin extends Dialog {
 
@@ -48,6 +51,7 @@ public class BugReportWin extends Dialog {
 	private Button btnJavaInfo;
 	private Button btnUIText;
 	private Button btnServerText;
+	private Label label;
 
 	
 	/**
@@ -79,13 +83,6 @@ public class BugReportWin extends Dialog {
 		
 		shlBugReport.setLocation(x, y);
 		
-		btnUIText = new Button(shlBugReport, SWT.CHECK);
-		btnUIText.setBounds(25, 192, 543, 16);
-		btnUIText.setText("The contents of the 'UI' pane (output from dw commands, etc)");
-		
-		btnServerText = new Button(shlBugReport, SWT.CHECK);
-		btnServerText.setBounds(25, 214, 543, 16);
-		btnServerText.setText("The contents of the 'Server' pane (server log entries)");
 		
 		while (!shlBugReport.isDisposed()) {
 			if (!display.readAndDispatch()) {
@@ -102,70 +99,64 @@ public class BugReportWin extends Dialog {
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
-		shlBugReport = new Shell(getParent(), getStyle());
-		
-		shlBugReport.setSize(581, 491);
+		shlBugReport = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE);
+		shlBugReport.setSize(776, 700);
 		shlBugReport.setText("Bug Report for '" + title + "'");
+		GridLayout gl_shlBugReport = new GridLayout(3, false);
+		gl_shlBugReport.marginRight = 5;
+		gl_shlBugReport.marginLeft = 5;
+		gl_shlBugReport.marginTop = 5;
+		gl_shlBugReport.marginBottom = 5;
+		shlBugReport.setLayout(gl_shlBugReport);
 		
+		Label lblIfYouBelieve = new Label(shlBugReport, SWT.WRAP);
+		lblIfYouBelieve.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		lblIfYouBelieve.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
+		lblIfYouBelieve.setText("Please submit as much information as you can about this problem. ");
+		new Label(shlBugReport, SWT.NONE);
+		new Label(shlBugReport, SWT.NONE);
+		new Label(shlBugReport, SWT.NONE);
 		
-		//FontData f = MainWin.getDialogFont();
+		Label lblDataToInclude = new Label(shlBugReport, SWT.NONE);
+		lblDataToInclude.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		lblDataToInclude.setText("What data would you like to include in this bug report?");
+		new Label(shlBugReport, SWT.NONE);
+		new Label(shlBugReport, SWT.NONE);
 		
-		btnClose = new Button(shlBugReport, SWT.NONE);
-		btnClose.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) 
-			{
-			
-				shlBugReport.close();
-			
-			}
-		});
-		btnClose.setBounds(464, 421, 85, 32);
-		btnClose.setText("Cancel");
+		label = new Label(shlBugReport, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+		new Label(shlBugReport, SWT.NONE);
 		
 		btnErrMsg = new Button(shlBugReport, SWT.CHECK);
+		btnErrMsg.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
 		btnErrMsg.setSelection(true);
-		btnErrMsg.setBounds(25, 84, 543, 16);
 		btnErrMsg.setText("The error message itself, if any");
 		
 		btnErrDetails = new Button(shlBugReport, SWT.CHECK);
+		btnErrDetails.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
 		btnErrDetails.setSelection(true);
 		btnErrDetails.setText("The extended error details, as seen in the lower pane of the error dialog");
-		btnErrDetails.setBounds(25, 106, 543, 16);
 		
 		btnUIConf = new Button(shlBugReport, SWT.CHECK);
+		btnUIConf.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		btnUIConf.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+			}
+		});
 		btnUIConf.setSelection(true);
-		btnUIConf.setBounds(25, 128, 543, 16);
 		btnUIConf.setText("The DriveWire UI configuration (the contents of drivewireUI.xml on the client)");
 		
 		btnServerConf = new Button(shlBugReport, SWT.CHECK);
+		btnServerConf.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
 		btnServerConf.setSelection(true);
 		btnServerConf.setText("The DriveWire server configuration (the contents of config.xml on the server)");
-		btnServerConf.setBounds(25, 149, 543, 16);
 		
-		textAdditionalInfo = new Text(shlBugReport, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
-		
-		textAdditionalInfo.setBounds(25, 267, 525, 60);
-		
-		Button btnNewButton = new Button(shlBugReport, SWT.NONE);
-		btnNewButton.setImage(SWTResourceManager.getImage(BugReportWin.class, "/constatus/network-transmit-2.png"));
-		btnNewButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (doSubmit())
-				{
-					shlBugReport.close();
-				}
-				
-			}
-		});
-		btnNewButton.setBounds(216, 421, 153, 32);
-		btnNewButton.setText(" Submit via Internet");
-		
-		textEmail = new Text(shlBugReport, SWT.BORDER);
-		textEmail.setBounds(25, 359, 288, 21);
+		btnJavaInfo = new Button(shlBugReport, SWT.CHECK);
+		btnJavaInfo.setSelection(true);
 		
 		Link link = new Link(shlBugReport, SWT.NONE);
+		link.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
 		link.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -183,31 +174,72 @@ public class BugReportWin extends Dialog {
 				
 			}
 		});
-		link.setBounds(43, 171, 525, 15);
 		link.setText("Information about your Java environment  (<a>click here to see what is included</a>)");
 		
-		btnJavaInfo = new Button(shlBugReport, SWT.CHECK);
-		btnJavaInfo.setSelection(true);
-		btnJavaInfo.setBounds(25, 171, 20, 16);
+		btnUIText = new Button(shlBugReport, SWT.CHECK);
+		btnUIText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		btnUIText.setText("The contents of the 'UI' pane (output from dw commands, etc)");
 		
-		Label lblIfYouBelieve = new Label(shlBugReport, SWT.WRAP);
-		lblIfYouBelieve.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
-		lblIfYouBelieve.setBounds(25, 10, 543, 25);
-		lblIfYouBelieve.setText("Please submit as much information as you can about this problem. ");
-		
-		Label lblEmailAddressoptional = new Label(shlBugReport, SWT.NONE);
-		lblEmailAddressoptional.setBounds(25, 338, 388, 15);
-		lblEmailAddressoptional.setText("Email address (if you wish to be contacted regarding this problem):");
+		btnServerText = new Button(shlBugReport, SWT.CHECK);
+		btnServerText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		btnServerText.setText("The contents of the 'Server' pane (server log entries)");
+		new Label(shlBugReport, SWT.NONE);
+		new Label(shlBugReport, SWT.NONE);
+		new Label(shlBugReport, SWT.NONE);
 		
 		Label lblAdditionalInformationbe = new Label(shlBugReport, SWT.NONE);
-		lblAdditionalInformationbe.setBounds(25, 246, 393, 15);
+		lblAdditionalInformationbe.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
 		lblAdditionalInformationbe.setText("Additional information (please be verbose):");
 		
-		Label lblDataToInclude = new Label(shlBugReport, SWT.NONE);
-		lblDataToInclude.setBounds(25, 53, 543, 25);
-		lblDataToInclude.setText("What data would you like to include in this bug report?");
+		textAdditionalInfo = new Text(shlBugReport, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		textAdditionalInfo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 3, 1));
 		
-	
+		Label lblEmailAddressoptional = new Label(shlBugReport, SWT.NONE);
+		lblEmailAddressoptional.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		lblEmailAddressoptional.setText("Email address (if you wish to be contacted regarding this problem):");
+		
+		textEmail = new Text(shlBugReport, SWT.BORDER);
+		textEmail.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+		
+		new Label(shlBugReport, SWT.NONE);
+		
+		
+		Button btnNewButton = new Button(shlBugReport, SWT.NONE);
+		GridData gd_btnNewButton = new GridData(SWT.CENTER, SWT.FILL, true, false, 1, 1);
+		gd_btnNewButton.heightHint = 32;
+		btnNewButton.setLayoutData(gd_btnNewButton);
+		btnNewButton.setImage(SWTResourceManager.getImage(BugReportWin.class, "/constatus/network-transmit-2.png"));
+		btnNewButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (doSubmit())
+				{
+					shlBugReport.close();
+				}
+				
+			}
+		});
+		btnNewButton.setText(" Submit via Internet");
+		
+		
+		//FontData f = MainWin.getDialogFont();
+		
+		btnClose = new Button(shlBugReport, SWT.NONE);
+		btnClose.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false, 1, 1));
+		btnClose.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+			
+				shlBugReport.close();
+			
+			}
+		});
+		btnClose.setText("Cancel");
+		
+		
+		
+		
 	}
 
 	

@@ -16,41 +16,23 @@ import com.swtdesigner.SWTResourceManager;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.GridData;
 
-public class ErrorWin extends Dialog {
+public class BugDialog extends Dialog {
 
 	protected Object result;
 	protected Shell shlAnErrorHas;
 
-	private Text txtSummary;
-
 	private Button btnClose;
 	
-	private String title;
-	private String summary;
-	private String detail;
 	private Text textDetail;
+	private Throwable throwed;
 	
-	/**
-	 * Create the dialog.
-	 * @param parent
-	 * @param style
-	 * @wbp.parser.constructor
-	 */
-	public ErrorWin(Shell parent, int style, String title, String summary, String detail) {
-		super(parent, style);
-		this.title = title;
-		this.summary = summary;
-		this.detail = detail;
-		
-	}
+	
+	
 
-	public ErrorWin(Shell parent, int style, DWError dwerror)
+	public BugDialog(Shell parent, int style, Throwable e)
 	{
 		super(parent, style);
-		this.title = dwerror.getTitle();
-		this.summary = dwerror.getSummary();
-		this.detail = dwerror.getDetail();
-
+		this.throwed = e;
 	}
 
 	/**
@@ -59,8 +41,7 @@ public class ErrorWin extends Dialog {
 	 */
 	public Object open() {
 		createContents();
-		
-		
+
 		Display display = getParent().getDisplay();
 		
 		int x = getParent().getBounds().x + (getParent().getBounds().width / 2) - (shlAnErrorHas.getBounds().width / 2);
@@ -82,50 +63,48 @@ public class ErrorWin extends Dialog {
 	
 
 	
-	/**
-	 * Create contents of the dialog.
-	 */
-	private void createContents() {
-		Random rand = new Random();
-		
+	private void createContents() 
+	{
 		shlAnErrorHas = new Shell(getParent(), getStyle());
-		shlAnErrorHas.setSize(487, 320);
-		shlAnErrorHas.setText(title);
-		GridLayout gl_shlAnErrorHas = new GridLayout(3, false);
+		shlAnErrorHas.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(BugDialog.class, "/logging/error.png"));
+		shlAnErrorHas.setText("DW4UI has thrown an exception");
+		shlAnErrorHas.setSize(600, 387);
+		GridLayout gl_shlAnErrorHas = new GridLayout(2, false);
 		gl_shlAnErrorHas.marginTop = 5;
 		gl_shlAnErrorHas.marginRight = 5;
 		gl_shlAnErrorHas.marginLeft = 5;
 		gl_shlAnErrorHas.marginBottom = 5;
 		shlAnErrorHas.setLayout(gl_shlAnErrorHas);
 		
-		
-		
-		txtSummary = new Text(shlAnErrorHas, SWT.READ_ONLY | SWT.WRAP);
-		txtSummary.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
-		txtSummary.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		txtSummary.setEditable(false);
-		txtSummary.setText(summary);
-		
-		Label lblNewLabel = new Label(shlAnErrorHas, SWT.NONE);
-		lblNewLabel.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(ErrorWin.class, "/animals/a" + rand.nextInt(22) + ".png"));
+		Label lblStackTrace = new Label(shlAnErrorHas, SWT.NONE);
+		GridData gd_lblStackTrace = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
+		gd_lblStackTrace.horizontalIndent = 5;
+		lblStackTrace.setLayoutData(gd_lblStackTrace);
+		lblStackTrace.setText("Stack Trace:");
+		new Label(shlAnErrorHas, SWT.NONE);
 		
 		textDetail = new Text(shlAnErrorHas, SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
-		GridData gd_textDetail = new GridData(SWT.FILL, SWT.FILL, false, true, 3, 1);
-		gd_textDetail.verticalIndent = 10;
-		textDetail.setLayoutData(gd_textDetail);
+		textDetail.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+		textDetail.setBackground(org.eclipse.wb.swt.SWTResourceManager.getColor(SWT.COLOR_WHITE));
 		textDetail.setEditable(false);
-		textDetail.setText(detail);
+		textDetail.setText(UIUtils.getStackTrace(this.throwed));
+		
+		Label lblItMayBe = new Label(shlAnErrorHas, SWT.NONE);
+		GridData gd_lblItMayBe = new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1);
+		gd_lblItMayBe.verticalIndent = 5;
+		lblItMayBe.setLayoutData(gd_lblItMayBe);
+		lblItMayBe.setText("This is probably a bug.  Please consider submitting a bug report.\r\nDriveWire will attempt a clean shutdown when you close this dialog.");
 		
 		Button btnSubmitABug = new Button(shlAnErrorHas, SWT.NONE);
-		GridData gd_btnSubmitABug = new GridData(SWT.LEFT, SWT.BOTTOM, false, false, 1, 1);
+		GridData gd_btnSubmitABug = new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1);
 		gd_btnSubmitABug.verticalIndent = 10;
 		btnSubmitABug.setLayoutData(gd_btnSubmitABug);
-		btnSubmitABug.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(ErrorWin.class, "/menu/bug.png"));
+		btnSubmitABug.setImage(org.eclipse.wb.swt.SWTResourceManager.getImage(BugDialog.class, "/menu/bug.png"));
 		btnSubmitABug.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				BugReportWin brwin = new BugReportWin(shlAnErrorHas,SWT.DIALOG_TRIM,title,summary,detail);
+				BugReportWin brwin = new BugReportWin(shlAnErrorHas,SWT.DIALOG_TRIM,"UI Exception",throwed.getMessage(),UIUtils.getStackTrace(throwed));
 				brwin.open();
 			
 			}
@@ -135,7 +114,7 @@ public class ErrorWin extends Dialog {
 		
 		
 		btnClose = new Button(shlAnErrorHas, SWT.NONE);
-		GridData gd_btnClose = new GridData(SWT.RIGHT, SWT.BOTTOM, false, false, 2, 1);
+		GridData gd_btnClose = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_btnClose.verticalIndent = 10;
 		btnClose.setLayoutData(gd_btnClose);
 		btnClose.addSelectionListener(new SelectionAdapter() {
@@ -148,6 +127,6 @@ public class ErrorWin extends Dialog {
 			}
 		});
 		btnClose.setText("Close");
-		
+		Random rand = new Random();
 	}
 }

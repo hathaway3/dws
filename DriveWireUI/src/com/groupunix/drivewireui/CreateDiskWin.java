@@ -11,6 +11,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class CreateDiskWin extends Dialog {
 
@@ -48,10 +50,6 @@ public class CreateDiskWin extends Dialog {
 		
 		shlCreateANew.setLocation(x, y);
 		
-		Label lblNewLabel = new Label(shlCreateANew, SWT.NONE);
-		lblNewLabel.setImage(SWTResourceManager.getImage(CreateDiskWin.class, "/wizard/new-disk-32.png"));
-		lblNewLabel.setBounds(319, 18, 32, 32);
-		
 		if (MainWin.getCurrentDiskNo() > -1)
 		{
 			this.spinnerDrive.setSelection(MainWin.getCurrentDiskNo());
@@ -88,30 +86,40 @@ public class CreateDiskWin extends Dialog {
 	
 	private void createContents() {
 		shlCreateANew = new Shell(getParent(), getStyle());
-		shlCreateANew.setSize(380, 206);
+		shlCreateANew.setSize(375, 210);
 		shlCreateANew.setText("Create a new disk image...");
-		shlCreateANew.setLayout(null);
-		
-		spinnerDrive = new Spinner(shlCreateANew, SWT.BORDER);
-		spinnerDrive.setBounds(202, 26, 47, 22);
-		spinnerDrive.setMaximum(255);
+		GridLayout gl_shlCreateANew = new GridLayout(4, false);
+		gl_shlCreateANew.marginTop = 5;
+		gl_shlCreateANew.marginRight = 5;
+		gl_shlCreateANew.marginLeft = 5;
+		gl_shlCreateANew.marginBottom = 5;
+		shlCreateANew.setLayout(gl_shlCreateANew);
 		
 		Label lblInsertNewDisk = new Label(shlCreateANew, SWT.NONE);
-		lblInsertNewDisk.setBounds(22, 29, 174, 19);
+		lblInsertNewDisk.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 		lblInsertNewDisk.setAlignment(SWT.RIGHT);
 		lblInsertNewDisk.setText("Create new disk for drive:");
 		
+		spinnerDrive = new Spinner(shlCreateANew, SWT.BORDER);
+		spinnerDrive.setMaximum(255);
+		new Label(shlCreateANew, SWT.NONE);
+		
+		Label lblNewLabel = new Label(shlCreateANew, SWT.NONE);
+		lblNewLabel.setImage(SWTResourceManager.getImage(CreateDiskWin.class, "/wizard/new-disk-32.png"));
+		
 		Label lblPath = new Label(shlCreateANew, SWT.NONE);
-		lblPath.setBounds(22, 68, 277, 19);
+		lblPath.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, true, true, 3, 1));
 		lblPath.setText("File for new disk image (optional):");
+		new Label(shlCreateANew, SWT.NONE);
 		
 		textPath = new Text(shlCreateANew, SWT.BORDER);
-		textPath.setBounds(21, 89, 298, 21);
+		textPath.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		
 		if (MainWin.getInstanceConfig().containsKey("LocalDiskDir"))
 			textPath.setText(MainWin.getInstanceConfig().getString("LocalDiskDir") + System.getProperty("file.separator"));
 		
 		btnFile = new Button(shlCreateANew, SWT.NONE);
+		btnFile.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 		btnFile.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -145,10 +153,10 @@ public class CreateDiskWin extends Dialog {
 			
 			}
 		});
-		btnFile.setBounds(322, 88, 29, 23);
 		btnFile.setText("...");
 		
 		Button btnCreate = new Button(shlCreateANew, SWT.NONE);
+		btnCreate.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 2, 1));
 		btnCreate.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -159,10 +167,10 @@ public class CreateDiskWin extends Dialog {
 				
 			}
 		});
-		btnCreate.setBounds(141, 137, 90, 30);
 		btnCreate.setText("Create");
 		
 		Button btnCancel = new Button(shlCreateANew, SWT.NONE);
+		btnCancel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
 		btnCancel.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -170,7 +178,6 @@ public class CreateDiskWin extends Dialog {
 				e.display.getActiveShell().close();
 			}
 		});
-		btnCancel.setBounds(276, 137, 75, 30);
 		btnCancel.setText("Cancel");
 
 	}
