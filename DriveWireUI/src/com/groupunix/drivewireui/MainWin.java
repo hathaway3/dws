@@ -2181,7 +2181,7 @@ public class MainWin {
 		// finish drawing..?
 		  int waits = 0;
 	
-		  while (display.readAndDispatch() && waits < 150) {
+		  while (display.readAndDispatch() && waits < 10) {
 					
 			try
 			{
