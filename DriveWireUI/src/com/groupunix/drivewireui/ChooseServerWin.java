@@ -75,7 +75,7 @@ public class ChooseServerWin extends Dialog {
 	 */
 	private void createContents() {
 		shlChooseServer = new Shell(getParent(), getStyle());
-		shlChooseServer.setSize(362, 151);
+		shlChooseServer.setSize(362, 149);
 		shlChooseServer.setText("Choose Server...");
 		shlChooseServer.setLayout(new GridLayout(2, false));
 		
@@ -84,7 +84,7 @@ public class ChooseServerWin extends Dialog {
 		lblEnterServerAddress.setText("Enter server address in the form host:port");
 		
 		cmbHost = new Combo(shlChooseServer, SWT.NONE);
-		cmbHost.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		cmbHost.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
 		cmbHost.setText(MainWin.getHost() + ":" + MainWin.getPort());
 		
 		Button btnOk = new Button(shlChooseServer, SWT.NONE);

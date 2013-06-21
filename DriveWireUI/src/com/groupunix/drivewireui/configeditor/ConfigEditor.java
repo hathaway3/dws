@@ -155,7 +155,7 @@ public class ConfigEditor extends Shell
 		setLayout(new GridLayout(1, false));
 		
 		toolBar = new ToolBar(this, SWT.FLAT | SWT.RIGHT);
-		toolBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		toolBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		toolBar.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("unchecked")
 			@Override
@@ -205,7 +205,7 @@ public class ConfigEditor extends Shell
 
 		
 		tree = new Tree(this, SWT.BORDER | SWT.FULL_SELECTION);
-		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 1, 1));
+		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		tree.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) 
@@ -228,7 +228,7 @@ public class ConfigEditor extends Shell
 		trclmnValue.setText("Value");
 		
 		scrolledComposite = new Composite(this, SWT.NONE);
-		scrolledComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
+		scrolledComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
 		lblItemTitle = new Label(scrolledComposite, SWT.NONE);
 		lblItemTitle.setBounds(10, 10, 239, 24);
@@ -264,7 +264,7 @@ public class ConfigEditor extends Shell
 		btnToggle.setBounds(10,113, 300, 24);
 		
 		composite_1 = new Composite(this, SWT.NONE);
-		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		FillLayout fl_composite_1 = new FillLayout(SWT.HORIZONTAL);
 		fl_composite_1.spacing = 10;
 		fl_composite_1.marginWidth = 5;

@@ -77,7 +77,7 @@ public class URLInputWin extends Dialog {
 	 */
 	private void createContents() {
 		shlEnterURL = new Shell(getParent(), getStyle());
-		shlEnterURL.setSize(452, 170);
+		shlEnterURL.setSize(445, 165);
 		shlEnterURL.setText("Enter URL for disk image...");
 		GridLayout gl_shlEnterURL = new GridLayout(2, false);
 		gl_shlEnterURL.marginTop = 5;
@@ -91,7 +91,7 @@ public class URLInputWin extends Dialog {
 		lblEnterURL.setText("Enter a URL to load image for drive " + diskno + " from:");
 		
 		cmbURL = new Combo(shlEnterURL, SWT.NONE);
-		cmbURL.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		cmbURL.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
 		
 		Button btnOk = new Button(shlEnterURL, SWT.NONE);
 		GridData gd_btnOk = new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1);

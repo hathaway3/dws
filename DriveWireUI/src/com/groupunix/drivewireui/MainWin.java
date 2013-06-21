@@ -99,8 +99,8 @@ public class MainWin {
 	public static final int DWUIVersionMajor = 4;
 	public static final int DWUIVersionMinor = 3;
 	public static final int DWUIVersionBuild = 3;
-	public static final String DWUIVersionRevision = "m";
-	public static final String DWUIVersionDate = "06/17/2013";
+	public static final String DWUIVersionRevision = "o";
+	public static final String DWUIVersionDate = "06/21/2013";
 	
 	public static final Version DWUIVersion = new Version(DWUIVersionMajor, DWUIVersionMinor, DWUIVersionBuild, DWUIVersionRevision, DWUIVersionDate);
 	
