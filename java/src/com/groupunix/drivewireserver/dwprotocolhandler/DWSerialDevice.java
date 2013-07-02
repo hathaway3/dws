@@ -303,7 +303,7 @@ public class DWSerialDevice implements DWProtocolDevice
 				data = DWUtils.reverseByteArray(data);
 				
 			
-			if (this.dwProto.getConfig().containsKey("WriteByteDelay"))
+			if (this.dwProto.getConfig().getLong("WriteByteDelay", 0) > 0)
 			{
 				for (int i = 0;i< len;i++)
 				{
