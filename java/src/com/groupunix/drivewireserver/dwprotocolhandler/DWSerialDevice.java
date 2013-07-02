@@ -362,11 +362,11 @@ public class DWSerialDevice implements DWProtocolDevice
 			if (dwProto.getConfig().getBoolean("ProtocolFlipOutputBits", false) || this.DATurboMode) 
 				data = DWUtils.reverseByte(data);
 				
-			if (this.dwProto.getConfig().containsKey("WriteByteDelay"))
+			if (this.dwProto.getConfig().getLong("WriteByteDelay", 0) > 0)
 			{
 				try
 				{
-					Thread.sleep(this.dwProto.getConfig().getLong("WriteByteDelay"));
+					Thread.sleep(this.dwProto.getConfig().getLong("WriteByteDelay", 0));
 				} 
 				catch (InterruptedException e)
 				{
