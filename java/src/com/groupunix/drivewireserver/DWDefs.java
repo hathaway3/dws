@@ -293,45 +293,9 @@ public class DWDefs
 	
 	public static final byte TIMER_USER			= (byte) 128; // start of user timers 
 
-	
-	
-
-	
-
+	public static final int COM_MIN_DATURBO_RATE = 57600;
+	public static final int COM_MAX_DATURBO_RATE = 115200;
 	
 
-	
-
-	
-
-
-	
-	
-	
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-	
-	
-
-	
-
-	
-
-	
-
-	
-	
-	
-	
-	
 
 }

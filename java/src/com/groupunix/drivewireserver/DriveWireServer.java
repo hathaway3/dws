@@ -49,8 +49,8 @@ import com.groupunix.drivewireserver.dwprotocolhandler.vmodem.VModemProtocolHand
 public class DriveWireServer 
 {
 
-	public static final String DWServerVersion = "4.3.3o";
-	public static final String DWServerVersionDate = "06/21/2013";
+	public static final String DWServerVersion = "4.3.3p";
+	public static final String DWServerVersionDate = "09/17/2013";
 	
 	private static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
 	private static ConsoleAppender consoleAppender;
@@ -485,15 +485,21 @@ public class DriveWireServer
 		
 		for (String l : rxtxbaes.toString().trim().split("\n"))
 		{
+			System.out.println(l);
+			
 			if (!l.equals(""))
 				logger.warn(l);
 		}
 		
 		for (String l : rxtxbaos.toString().trim().split("\n"))
 		{
+			System.out.println(l);
 			// ignore pesky version warning that doesn't ever seem to matter
 			if (!l.equals("WARNING:  RXTX Version mismatch") && !l.equals(""))
+			{
+				
 				logger.debug(l);
+			}
 		}
 	
 		System.setOut(ops);
