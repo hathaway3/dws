@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
+import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWCommTimeOutException;
 
 public class DWSerialDevice implements DWProtocolDevice
@@ -28,13 +29,18 @@ public class DWSerialDevice implements DWProtocolDevice
 	private DWProtocol dwProto;
 	private boolean DATurboMode = false; 
 	private boolean xorinput = false;
-	
+	private long WriteByteDelay = 0;
+	private long ReadByteWait = 200;
 	private byte[] prefix;
 	private long readtime;
 
 	private ArrayBlockingQueue<Byte> queue;
 
 	private DWSerialReader evtlistener;
+
+	private boolean ProtocolFlipOutputBits;
+
+	private boolean ProtocolResponsePrefix;
 
 	
 	public DWSerialDevice(DWProtocol dwProto) throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException, IOException, TooManyListenersException
@@ -47,10 +53,6 @@ public class DWSerialDevice implements DWProtocolDevice
 		prefix = new byte[1];
 		//prefix[0] = (byte) 0xFF;
 		prefix[0] = (byte) 0xC0;
-
-		xorinput = dwProto.getConfig().getBoolean("ProtocolXORInputBits", false);
-			
-		bytelog = dwProto.getConfig().getBoolean("LogDeviceBytes", false);
 		
 		logger.debug("init " + device + " for handler #" + dwProto.getHandlerNo() + " (logging bytes: " + bytelog + "  xorinput: " + xorinput +")");
 		
@@ -157,7 +159,7 @@ public class DWSerialDevice implements DWProtocolDevice
 		if (this.serialPort != null)
 		{
 			setSerialParams(serialPort);               
-        	
+ 			
 			if (this.evtlistener != null)
 			{
 				this.serialPort.removeEventListener();
@@ -215,9 +217,24 @@ public class DWSerialDevice implements DWProtocolDevice
 		int stopbits = 1;
 		int databits = 8;
 		
-		rate = dwProto.getConfig().getInt("SerialRate", 115200);
+		// mode vars
+		
+		this.WriteByteDelay = this.dwProto.getConfig().getLong("WriteByteDelay", 0);
+		this.ReadByteWait = this.dwProto.getConfig().getLong("ReadByteWait", 200);
+		this.ProtocolFlipOutputBits = this.dwProto.getConfig().getBoolean("ProtocolFlipOutputBits", false);
+		this.ProtocolResponsePrefix = dwProto.getConfig().getBoolean("ProtocolResponsePrefix", false);
+		this.xorinput = dwProto.getConfig().getBoolean("ProtocolXORInputBits", false);
+		this.bytelog = dwProto.getConfig().getBoolean("LogDeviceBytes", false);
+		
+		// serial port tweaks
 		
 		serialPort.enableReceiveThreshold(1);
+		
+		
+		// serial params
+		
+		rate = dwProto.getConfig().getInt("SerialRate", 115200);
+		
 		
 		if (dwProto.getConfig().containsKey("SerialStopbits"))
 		{
@@ -299,11 +316,11 @@ public class DWSerialDevice implements DWProtocolDevice
 	{	
 		try 
 		{
-			if (dwProto.getConfig().getBoolean("ProtocolFlipOutputBits", false)  || this.DATurboMode) 
+			if (this.ProtocolFlipOutputBits || this.DATurboMode) 
 				data = DWUtils.reverseByteArray(data);
 				
 			
-			if (this.dwProto.getConfig().getLong("WriteByteDelay", 0) > 0)
+			if (this.WriteByteDelay > 0)
 			{
 				for (int i = 0;i< len;i++)
 				{
@@ -312,7 +329,7 @@ public class DWSerialDevice implements DWProtocolDevice
 			}
 			else
 			{
-				if (pfix && (dwProto.getConfig().getBoolean("ProtocolResponsePrefix", false)  || this.DATurboMode))
+				if (pfix && (this.ProtocolResponsePrefix || this.DATurboMode))
 				{
 					byte[] out = new byte[this.prefix.length + len];
 					System.arraycopy(this.prefix, 0, out, 0, this.prefix.length);
@@ -359,14 +376,14 @@ public class DWSerialDevice implements DWProtocolDevice
 		
 		try 
 		{
-			if (dwProto.getConfig().getBoolean("ProtocolFlipOutputBits", false) || this.DATurboMode) 
+			if (this.ProtocolFlipOutputBits || this.DATurboMode) 
 				data = DWUtils.reverseByte(data);
 				
-			if (this.dwProto.getConfig().getLong("WriteByteDelay", 0) > 0)
+			if (this.WriteByteDelay > 0)
 			{
 				try
 				{
-					Thread.sleep(this.dwProto.getConfig().getLong("WriteByteDelay", 0));
+					Thread.sleep(this.WriteByteDelay);
 				} 
 				catch (InterruptedException e)
 				{
@@ -374,7 +391,7 @@ public class DWSerialDevice implements DWProtocolDevice
 				}
 			}
 			
-			if (pfix && (dwProto.getConfig().getBoolean("ProtocolResponsePrefix", false)  || this.DATurboMode))
+			if (pfix && (this.ProtocolResponsePrefix || this.DATurboMode))
 			{
 				byte[] out = new byte[this.prefix.length + 1];
 				out[out.length - 1] = (byte)data;
@@ -442,14 +459,14 @@ public class DWSerialDevice implements DWProtocolDevice
 			while ((res == -1) && (this.serialPort != null)) 
 			{
 				long starttime = System.currentTimeMillis();
-				Byte read = queue.poll(200, TimeUnit.MILLISECONDS);
+				Byte read = queue.poll(this.ReadByteWait, TimeUnit.MILLISECONDS);
 				this.readtime += System.currentTimeMillis() - starttime;
 				
 				if (read != null)
 					res = 0xFF & read;
 				else if (timeout)
 				{
-					throw (new DWCommTimeOutException("No data in 200 ms"));
+					throw (new DWCommTimeOutException("No data in " + this.ReadByteWait + " ms"));
 				}
 				
 			}
@@ -488,8 +505,16 @@ public class DWSerialDevice implements DWProtocolDevice
 
 	public void enableDATurbo() throws UnsupportedCommOperationException
 	{
-		this.serialPort.setSerialPortParams(230400, 8, 2, 0);
-		this.DATurboMode = true;
+		// valid port, not already turbo
+		if ((this.serialPort != null) && !this.DATurboMode)
+		{
+			// change to 2x instead of hardcoded
+			if ((this.serialPort.getBaudRate() >= DWDefs.COM_MIN_DATURBO_RATE) && ((this.serialPort.getBaudRate() <= DWDefs.COM_MAX_DATURBO_RATE)))
+			{
+				this.serialPort.setSerialPortParams(this.serialPort.getBaudRate() * 2, 8, 2, 0);
+				this.DATurboMode = true;
+			}
+		}
 	}
 	
 	public long getReadtime()
