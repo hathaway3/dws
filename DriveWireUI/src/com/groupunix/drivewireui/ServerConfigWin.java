@@ -26,6 +26,8 @@ import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 
+import com.groupunix.drivewireui.exceptions.DWUIOperationFailedException;
+
 public class ServerConfigWin extends Dialog {
 
 	protected Object result;
@@ -262,7 +264,7 @@ public class ServerConfigWin extends Dialog {
 				
 				SwingUtilities.invokeLater(new Runnable() 
 				{
-					@Override
+					
 					public void run() 
 					{
 						final String fname = fc.getFile();
@@ -272,7 +274,7 @@ public class ServerConfigWin extends Dialog {
 							Display.getDefault().asyncExec(new Runnable() 
 							{
 
-								@Override
+								
 								public void run() 
 								{
 									textLogFile.setText(fname);	
@@ -382,7 +384,7 @@ public class ServerConfigWin extends Dialog {
 				
 				SwingUtilities.invokeLater(new Runnable() 
 				{
-				@Override
+				
 					public void run() 
 					{
 						final String fname = fc.getFile();
@@ -391,7 +393,7 @@ public class ServerConfigWin extends Dialog {
 							Display.getDefault().asyncExec(new Runnable() 
 							{
 
-								@Override
+								
 								public void run() 
 								{
 									textLocalDiskDir.setText(fname);	

@@ -34,10 +34,12 @@ public abstract class DWDisk
 
 	
 	
+	
 	// required for format implementation:
-
 	public abstract void seekSector(int lsn) throws DWInvalidSectorException, DWSeekPastEndOfDeviceException;
-	public abstract void writeSector(byte[] data) throws DWDriveWriteProtectedException, IOException;
+	public abstract void writeSector(byte[] data, boolean update) throws DWDriveWriteProtectedException, IOException;
+
+	
 	public abstract byte[] readSector() throws IOException, DWImageFormatException;
 	protected abstract void load() throws IOException, DWImageFormatException;
 	
@@ -405,9 +407,11 @@ public abstract class DWDisk
 		return this.sectors;
 	}
 	
-	
 
-
+	public void writeSector(byte[] data) throws DWDriveWriteProtectedException, IOException
+	{
+		writeSector(data, true);
+	}
 
 	
 }

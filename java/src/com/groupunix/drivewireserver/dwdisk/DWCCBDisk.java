@@ -120,7 +120,7 @@ public class DWCCBDisk extends DWDisk
 	
 
 	
-	public void writeSector(byte[] data) throws DWDriveWriteProtectedException,	IOException
+	public void writeSector(byte[] data, boolean update) throws DWDriveWriteProtectedException, IOException
 	{
 		if (this.getWriteProtect())
 		{
@@ -131,7 +131,8 @@ public class DWCCBDisk extends DWDisk
 			
 			this.sectors.get(this.getLSN()).setData(data);
 			
-			this.incParam("_writes");
+			if (update)
+				this.incParam("_writes");
 			
 		}
 	}
@@ -173,5 +174,10 @@ public class DWCCBDisk extends DWDisk
 		
 		return DWDefs.DISK_CONSIDER_NO;
 	}
+
+
+
+	
+	
 
 }

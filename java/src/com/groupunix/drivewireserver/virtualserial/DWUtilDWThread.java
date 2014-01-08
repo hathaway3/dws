@@ -49,12 +49,19 @@ public class DWUtilDWThread implements Runnable
 		Thread.currentThread().setName("dwutil-" + Thread.currentThread().getId());
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 		
-		logger.debug("run for port " + vport);
+		//logger.debug("run for port " + vport);
 		
 		try
 		{
 			this.dwVSerialPorts.markConnected(vport);
-			this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_DWCMD);
+			
+			if (this.strargs.toLowerCase().startsWith("dw"))
+				this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_DWCMD);
+			else if (this.strargs.toLowerCase().startsWith("ui"))
+				this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_UICMD);
+			else
+				this.dwVSerialPorts.setUtilMode(this.vport, DWDefs.UTILMODE_UNSET);
+				
 			
 			DWCommandResponse resp = commands.parse(this.strargs);
 			
@@ -77,8 +84,8 @@ public class DWUtilDWThread implements Runnable
 		// wait for output to flush
 			while ((dwVSerialPorts.bytesWaiting(this.vport) > 0) && (dwVSerialPorts.isOpen(this.vport)))
 			{
-				logger.debug("pause for the cause: " + dwVSerialPorts.bytesWaiting(this.vport) + " bytes left" );
-				Thread.sleep(100);
+				//logger.debug("pause for the cause: " + dwVSerialPorts.bytesWaiting(this.vport) + " bytes left" );
+				Thread.sleep(250);
 			}
 			
 			if (this.vport < this.dwVSerialPorts.getMaxPorts())

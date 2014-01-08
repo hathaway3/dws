@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
+import com.groupunix.drivewireui.exceptions.DWUIOperationFailedException;
+
 public class DWServerFile extends File {
 
 

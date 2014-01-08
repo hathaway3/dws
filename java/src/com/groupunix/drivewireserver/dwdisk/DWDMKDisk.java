@@ -266,10 +266,9 @@ public class DWDMKDisk extends DWDisk
 		}
 	}
 
-	
 
 	
-	public void writeSector(byte[] data) throws DWDriveWriteProtectedException,	IOException
+	public void writeSector(byte[] data, boolean update) throws DWDriveWriteProtectedException,	IOException
 	{
 		if (this.getWriteProtect())
 		{
@@ -280,7 +279,8 @@ public class DWDMKDisk extends DWDisk
 			
 			this.sectors.get(this.getLSN()).setData(data);
 			
-			this.incParam("_writes");
+			if (update)
+				this.incParam("_writes");
 			
 			// logger.debug("write sector " + this.LSN + "\r" + DWProtocolHandler.byteArrayToHexString(this.sectors[this.LSN].getData()));
 		}

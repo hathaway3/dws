@@ -15,7 +15,7 @@ public class DWUIThread implements Runnable {
 
 	private static final Logger logger = Logger.getLogger("DWUIThread");
 
-	private int tcpport;
+
 	private boolean wanttodie = false;
 	private ServerSocket srvr = null;
 	
@@ -25,9 +25,9 @@ public class DWUIThread implements Runnable {
 
 	private int lastQueueSize;
 	
-	public DWUIThread(int port) 
+	public DWUIThread(ServerSocket ss) 
 	{
-		this.tcpport = port;
+		this.srvr = ss;
 	}
 
 	
@@ -67,25 +67,7 @@ public class DWUIThread implements Runnable {
 		
 		// open server socket
 		
-		try 
-		{
-			// check for listen address
-			
-			srvr = new ServerSocket(this.tcpport);
-			logger.info("UI listening on port " + srvr.getLocalPort());
-
-		} 
-		catch (IOException e2) 
-		{
-			logger.error("Error opening UI socket: " + e2.getClass().getSimpleName() + " " + e2.getMessage());
-			wanttodie = true;
-			
-			// hrmmmm
-			if (DriveWireServer.serverconfig.getBoolean("UIorBust",true))
-			{
-				DriveWireServer.shutdown();
-			}
-		}
+		
 				
 		while ((wanttodie == false) && (srvr.isClosed() == false))
 		{
@@ -147,32 +129,37 @@ public class DWUIThread implements Runnable {
 			{	
 				DWUIClientThread client = itr.next();
 				
-				// filter for instance
-				if ((client.getInstance() == -1) || (client.getInstance() == evt.getEventInstance()) || (evt.getEventInstance() == -1))
-				{
-					LinkedBlockingQueue<DWEvent> queue = (LinkedBlockingQueue<DWEvent>) client.getEventQueue(); 
-					
-					synchronized(queue)
+				// filter event
+				if (client.wantsEvent(evt.getEventType()))
+				
+					// filter for instance
+					if ((client.getInstance() == -1) || (client.getInstance() == evt.getEventInstance()) || (evt.getEventInstance() == -1))
 					{
-						if ((queue != null) && !(client.isDropLog() && (evt.getEventType() == DWDefs.EVENT_TYPE_LOG)))
+						
+						LinkedBlockingQueue<DWEvent> queue = (LinkedBlockingQueue<DWEvent>) client.getEventQueue(); 
+						
+						if (queue != null)
 						{
-							this.lastQueueSize = queue.size();
-							if (queue.size() < DWDefs.EVENT_QUEUE_LOGDROP_SIZE)
+							synchronized(queue)
 							{
-								queue.add(evt);
-							}
-							else if ((queue.size() < DWDefs.EVENT_MAX_QUEUE_SIZE) && (evt.getEventType() != DWDefs.EVENT_TYPE_LOG))
-							{
-								queue.add(evt);
-							}
-							else
-							{
-								this.dropppedevents++; 
-								System.out.println("queue drop: " + queue.size() + "/" + this.dropppedevents + "  " + evt.getEventType() + " thr " + client.getThreadName() + " cmd " + client.getCurCmd() + " state " + client.getState() );
+							
+								this.lastQueueSize = queue.size();
+								if (queue.size() < DWDefs.EVENT_QUEUE_LOGDROP_SIZE)
+								{
+									queue.add(evt);
+								}
+								else if ((queue.size() < DWDefs.EVENT_MAX_QUEUE_SIZE) && (evt.getEventType() != DWDefs.EVENT_TYPE_LOG))
+								{
+									queue.add(evt);
+								}
+								else
+								{
+									this.dropppedevents++; 
+									//System.out.println("queue drop: " + queue.size() + "/" + this.dropppedevents + "  " + evt.getEventType() + " thr " + client.getThreadName() + " cmd " + client.getCurCmd() + " state " + client.getState() );
+								}
 							}
 						}
 					}
-				}
 			}
 
 		} 
@@ -192,6 +179,16 @@ public class DWUIThread implements Runnable {
 		return lastQueueSize;
 	}
 	
+	public LinkedList<DWUIClientThread> getUIClientThreads()
+	{
+		return this.clientThreads;
+	}
+
+
+	public int getDropppedevents() {
+		return dropppedevents;
+	}
+
 
 	
 }

@@ -12,7 +12,10 @@ import org.apache.log4j.Logger;
 import com.groupunix.drivewireserver.dwcommands.DWCmd;
 import com.groupunix.drivewireserver.dwcommands.DWCommandList;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.uicommands.UICmd;
+import com.groupunix.drivewireserver.xcommands.XCommandList;
+import com.groupunix.drivewireserver.xcommands.XCommandResponse;
 
 public class DWUIClientThread implements Runnable {
 
@@ -29,14 +32,16 @@ public class DWUIClientThread implements Runnable {
 	private LinkedList<DWUIClientThread> clientThreads;
 
 	private BufferedOutputStream bufferedout;
-	
-	private boolean droplog = true;
 
 	private String tname = "not set";
 
 	private String curcmd = "not set";
 
 	private String state = "not set";
+
+	private XCommandList xcommands;
+
+	private byte[] eventFilter = new byte[] { };
 
 	
 	public DWUIClientThread(Socket skt, LinkedList<DWUIClientThread> clientThreads) 
@@ -47,6 +52,7 @@ public class DWUIClientThread implements Runnable {
 		commands = new DWCommandList(null);
 		commands.addcommand(new UICmd(this));
 		
+		xcommands = new XCommandList(null);
 	}
 
 	
@@ -171,8 +177,6 @@ public class DWUIClientThread implements Runnable {
 		// strip instance 
 		cmd = cmd.substring(div+1);
 		
-		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
-			logger.debug("UI command '" + cmd + "' for instance " + this.instance);
 		
 		// wait for server/instance ready
 		int waits = 0;
@@ -228,10 +232,22 @@ public class DWUIClientThread implements Runnable {
 		}
 		*/
 		
-		DWCommandResponse resp = this.commands.parse(cmd);
+		if (this.xcommands.validate(cmd))
+		{
+			if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+				logger.debug("XCommand '" + cmd + "' for instance " + this.instance);
+			
+			sendXresponse(this.xcommands.parse(cmd));
+			
+		}
+		else
+		{
+			if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+				logger.debug("Command '" + cmd + "' for instance " + this.instance);
+			
+			sendUIresponse(this.commands.parse(cmd));
+		}
 		
-		sendUIresponse(resp);
-
 		this.bufferedout.flush();
 	}
 
@@ -243,7 +259,7 @@ public class DWUIClientThread implements Runnable {
 			if (resp.getResponseCode() == 0)
 				logger.debug("UI command success");
 			else
-				logger.debug("UI command failed: #" + (0xFF + resp.getResponseCode()) + ": " + resp.getResponseText() );
+				logger.debug("UI command failed: #" + (0xFF & resp.getResponseCode()) + ": " + resp.getResponseText() );
 		}
 		
 		// response header 0, (single byte RC), 0
@@ -259,6 +275,28 @@ public class DWUIClientThread implements Runnable {
 	}
 
 
+	private void sendXresponse(XCommandResponse resp) throws IOException 
+	{
+		if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+		{
+			if (resp.getResponseCode() == 0)
+				logger.debug("X command success: " + DWUtils.byteArrayToHexString(resp.getResponseBytes()));
+			else
+				logger.debug("X command failed: #" + (0xFF & resp.getResponseCode()) + ": " + DWUtils.byteArrayToHexString(resp.getResponseBytes()));
+		}
+
+		// TODO = old style UI response for now - response header 0, (single byte RC), 0
+				
+		
+		this.bufferedout.write(0);
+		this.bufferedout.write(resp.getResponseCode() & 0xff);
+		this.bufferedout.write(0);
+		this.bufferedout.write(resp.getResponseBytes());
+	
+	}
+	
+	
+	
 
 	public void setInstance(int handler) 
 	{
@@ -269,6 +307,8 @@ public class DWUIClientThread implements Runnable {
 		{
 			if (!this.commands.validate("dw"))
 				this.commands.addcommand(new DWCmd(DriveWireServer.getHandler(handler)));
+			
+			this.xcommands = new XCommandList(DriveWireServer.getHandler(handler));
 		}
 	}
 
@@ -317,19 +357,6 @@ public class DWUIClientThread implements Runnable {
 
 
 
-	public boolean isDropLog()
-	{
-	
-		return this.droplog;
-	}
-	
-	public void setDropLog(boolean b)
-	{
-		this.droplog = b;
-	}
-
-
-
 	public String getThreadName()
 	{
 		return this.tname;
@@ -343,6 +370,28 @@ public class DWUIClientThread implements Runnable {
 	public String getState()
 	{
 		return this.state;
+	}
+
+
+	public void setEventFilter(byte[] bs) 
+	{
+		this.eventFilter = bs;
+	}
+	
+	public byte[] getEventFilter()
+	{
+		return this.eventFilter;
+	}
+
+
+
+	public boolean wantsEvent(byte eventType) 
+	{
+		for (byte e : this.eventFilter)
+			if (e == eventType)
+				return true;
+		
+		return false;
 	}
 	
 	

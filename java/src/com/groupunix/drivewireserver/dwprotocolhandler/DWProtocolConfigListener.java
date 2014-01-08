@@ -15,7 +15,6 @@ public class DWProtocolConfigListener implements ConfigurationListener
 		this.dwProto = dwProto;
 	}
 	
-	@Override
 	public void configurationChanged(ConfigurationEvent event) 
 	{
 		if (!event.isBeforeUpdate())

@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 
+import com.groupunix.drivewireui.exceptions.DWUIOperationFailedException;
+
 
 public class SyncThread implements Runnable 
 {
@@ -21,15 +23,15 @@ public class SyncThread implements Runnable
 	
 	private HashMap<String, String> params = new HashMap<String, String>();
 	private StringBuilder buffer = new StringBuilder(READ_BUFFER_SIZE * 2);
-	private LogItem logbuf = new LogItem();
-	private ServerStatusItem ssbuf = new ServerStatusItem();
+
+
 	
 	public SyncThread()
 	{
 		
 	}
 	
-	@Override
+
 	public void run() 
 	{
 		Thread.currentThread().setName("dwuiSync-" + Thread.currentThread().getId());
@@ -61,7 +63,6 @@ public class SyncThread implements Runnable
 				
 				if (!(sock == null))
 				{
-					MainWin.addToServerLog(new LogItem("Sync: Disconnecting from server.."));
 					try 
 					{
 						sock.close();
@@ -84,49 +85,13 @@ public class SyncThread implements Runnable
 				    
 				    // get initial state 
 				    
-				    // cache error meanings
-					try
-					{
-						MainWin.errorHelpCache.load();
-					}
-					catch (DWUIOperationFailedException e)
-					{
-						// don't care
-						MainWin.debug("Sync: caching error descriptions failed");
-					}
-				    
+				  
 				    
 				    
 				    // load full config - required
 				    MainWin.setServerConfig(UIUtils.getServerConfig());
 				  
-				    
-				    // optional depending on instance capabilities
-				    // load all disk info
-				    try
-				    {
-				    	MainWin.setDisks(UIUtils.getServerDisks());
-				    	MainWin.applyDisks();
-				    }
-				    catch (DWUIOperationFailedException e)
-					{
-						// don't care
-						MainWin.debug("Sync: loading disk info failed");
-					}
-				    
-				    // load midi status
-				
-				    try
-				    {
-				    	MainWin.setMidiStatus(UIUtils.getServerMidiStatus());
-				    	MainWin.applyMIDIStatus();
-				    }
-				    catch (DWUIOperationFailedException e)
-					{
-						// don't care
-						MainWin.debug("Sync: loading midi status failed");
-					}
-				    
+				 
 				    
 				    sock = new Socket(host, port);
 					
@@ -260,6 +225,7 @@ public class SyncThread implements Runnable
 		{
 			try
 			{
+				/*
 				if (this.params.containsKey("0"))
 				{
 					this.ssbuf.setInterval(Integer.parseInt(params.get("0")));
@@ -316,16 +282,21 @@ public class SyncThread implements Runnable
 				}
 				
 				MainWin.submitServerStatusEvent(ssbuf);
+				*/
+				
 			}
 			catch (NumberFormatException e)
 			{
 				
 			}
 			
+			
+			
 		}
 		// logging
 		else if (line.equals("L"))
 		{
+			/*
 			if (this.params.containsKey("l"))
 				logbuf.setLevel(this.params.get("l"));
 			
@@ -342,6 +313,7 @@ public class SyncThread implements Runnable
 				logbuf.setSource(this.params.get("s"));
 			
 			MainWin.addToServerLog(logbuf.clone());
+			*/
 				
 		}
 		// instance config
@@ -385,7 +357,7 @@ public class SyncThread implements Runnable
 		// MIDI
 		else if (line.equals("M"))
 		{
-
+			/*
 			if (this.params.containsKey("k") && (this.params.get("k") != null))
 			{
 				if (this.params.get("k").equals("device") )
@@ -408,6 +380,7 @@ public class SyncThread implements Runnable
 				
 				MainWin.applyMIDIStatus();
 			}
+			*/
 		}
 		
 		

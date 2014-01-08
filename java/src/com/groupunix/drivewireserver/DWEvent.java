@@ -20,6 +20,25 @@ public class DWEvent {
 	{
 		this.params.put(key,val);
 	}
+
+	public void setParam(String key, byte val) 
+	{
+		this.params.put(key, String.format("%02x", (0xff & val)));
+	}
+
+	public void setParam(String key, byte[] val) 
+	{
+		String bytes = "";
+		
+		for (byte b : val)
+		{
+			bytes += String.format("%02x", (0xff & b));
+		}
+		
+		this.params.put(key, bytes);
+			
+	}
+	
 	
 	public boolean hasParam(String key)
 	{
@@ -53,5 +72,8 @@ public class DWEvent {
 	public void setEventInstance(int eventInstance) {
 		this.eventInstance = eventInstance;
 	}
+
+	
+
 
 }

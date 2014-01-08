@@ -301,7 +301,7 @@ public class AboutWin extends Dialog {
 	ArrayList<String >folks = new ArrayList<String>(Arrays.asList( "Special thanks to:", "", "Cloud-9", "#coco_chat", "Malted Media", 
 			"The Glenside Color Computer Club", "Darren Atkinson", "Boisy Pitre", 
 			"John Linville", "RandomRodder", "lorddragon", "lostwizard", "beretta",  "Gary Becker", "Jim Hathaway",
-			"Gene Heskett", "Wayne Campbell", "Stephen Fischer", "Christopher Hawks", "John Orwen", "And apologies to any I forgot!"));
+			"Gene Heskett", "Wayne Campbell", "Stephen Fischer", "Christopher Hawks", "Bill Pierce", "John Orwen", "And apologies to any I forgot!"));
 	
 	protected boolean fullscreen = false;
 	
@@ -377,7 +377,6 @@ public class AboutWin extends Dialog {
 		coco.addKeyListener(new KeyListener() 
 		{
 
-			@Override
 			public void keyPressed(KeyEvent e)
 			{
 			
@@ -414,10 +413,8 @@ public class AboutWin extends Dialog {
 				}
 			}
 
-			@Override
 			public void keyReleased(KeyEvent e)
 			{
-				// TODO Auto-generated method stub
 				
 			}
 			
@@ -438,8 +435,6 @@ public class AboutWin extends Dialog {
 			long start;
 			int wx;
 			int hx;
-			
-			@Override
 			
 			public void paintControl(PaintEvent e)
 			{
@@ -538,7 +533,7 @@ public class AboutWin extends Dialog {
 							}	
 							
 							
-							dpos = dpos - 5;
+							dpos = dpos - 10;
 						}
 						else
 						{
@@ -572,7 +567,6 @@ public class AboutWin extends Dialog {
 		Runnable cursor = new Runnable()
 		{
 						
-			@Override
 			public void run()
 			{
 				if (!shell.isDisposed())
@@ -597,7 +591,7 @@ public class AboutWin extends Dialog {
 					
 					}
 					else
-						shell.getDisplay().timerExec(50, this);
+						shell.getDisplay().timerExec(25, this);
 				}
 				
 			}
@@ -618,7 +612,6 @@ public class AboutWin extends Dialog {
 			int curline = 3;
 			boolean wanttodie = false;
 			
-			@Override
 			public void run()
 			{
 				while (!shell.isDisposed() && !wanttodie && !ssmode)
@@ -714,11 +707,11 @@ public class AboutWin extends Dialog {
 								
 								try
 								{
-									Thread.sleep(3000);
+									Thread.sleep(1000);
 								} 
 								catch (InterruptedException e)
 								{
-									// TODO Auto-generated catch block
+									
 									e.printStackTrace();
 								}
 								
@@ -764,7 +757,7 @@ public class AboutWin extends Dialog {
 					if (!wanttodie && !ssmode && toggles[9])
 					try
 					{
-						Thread.sleep(1200);
+						Thread.sleep(1000);
 					} catch (InterruptedException e)
 					{
 						wanttodie = true;

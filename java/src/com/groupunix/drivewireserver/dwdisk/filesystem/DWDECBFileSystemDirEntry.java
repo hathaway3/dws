@@ -142,5 +142,11 @@ public class DWDECBFileSystemDirEntry extends DWFileSystemDirEntry
 		return false;
 	}
 	
-	
+	@Override
+	public String toString()
+	{
+		int bls = (0xFF & this.data[14])*256 + (0xFF & this.data[15]);
+		return getFileName() + "|" + getFileExt() + "|" + getFileType() + "|" + isAscii() + "|" + (0xff & getFirstGranule()) + "|" + bls;
+		
+	}
 }

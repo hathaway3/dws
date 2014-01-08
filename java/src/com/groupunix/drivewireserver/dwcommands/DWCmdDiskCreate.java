@@ -102,7 +102,7 @@ public class DWCmdDiskCreate extends DWCommand {
 			if (dwProto.getDiskDrives().isLoaded(driveno))
 				dwProto.getDiskDrives().EjectDisk(driveno);
 				
-			dwProto.getDiskDrives().LoadDiskFromFile(driveno, filepath);
+			dwProto.getDiskDrives().LoadDiskFromFile(driveno, fileobj.getName().getURI());
 					
 			return(new DWCommandResponse("New disk image created for drive " + driveno + "."));
 

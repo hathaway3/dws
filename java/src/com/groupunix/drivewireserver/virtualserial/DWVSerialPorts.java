@@ -22,6 +22,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
+import com.groupunix.drivewireserver.DWEvent;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwexceptions.DWConnectionNotValidException;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotOpenException;
@@ -448,7 +449,6 @@ public class DWVSerialPorts {
 		
 	}
 	
-	
 	public OutputStream getPortInput(int vport) throws DWPortNotValidException 
 	{
 		validateport(vport);
@@ -605,7 +605,7 @@ public class DWVSerialPorts {
 		validateport(vport);
 		logger.debug("API OK: port " + vport + ": command successful");
 		vserialPorts[vport].sendUtilityOKResponse("command successful");
-		vserialPorts[vport].writeToCoco(txt);	
+		writeToCoco(vport, txt);	
 	}
 
 	
@@ -614,7 +614,7 @@ public class DWVSerialPorts {
 		validateport(vport);
 		logger.debug("API OK: port " + vport + ": command successful (byte mode)");
 		vserialPorts[vport].sendUtilityOKResponse("command successful");
-		vserialPorts[vport].writeToCoco(responseBytes);
+		writeToCoco(vport, responseBytes);
 		
 	}
 
@@ -723,23 +723,50 @@ public class DWVSerialPorts {
 	//}
 
 
+	
 	public void writeToCoco(int i, byte databyte) throws DWPortNotValidException 
 	{
 		validateport(i);
+		
 		vserialPorts[i].writeToCoco(databyte);
+		
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_VSERIAL, this.dwProto.getHandlerNo());
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT_ACTION, DWDefs.EVENT_ACTION_READ + "");
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT, i + "");
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT_DATA,  databyte );
+		
+		//DriveWireServer.submitEvent(evt);
 	}
 	
 	public void writeToCoco(int vport, String str) throws DWPortNotValidException 
 	{
 		validateport(vport);
+		
 		vserialPorts[vport].writeToCoco(str);
+		
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_VSERIAL, this.dwProto.getHandlerNo());
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT_ACTION, DWDefs.EVENT_ACTION_READ + "");
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT, vport + "");
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT_DATA, str.getBytes() );
+		
+		//DriveWireServer.submitEvent(evt);
+		
 		
 	}
 	
 	public void writeToCoco(int vport, byte[] b) throws DWPortNotValidException 
 	{
 		validateport(vport);
+				
 		vserialPorts[vport].writeToCoco(b);
+		
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_VSERIAL, this.dwProto.getHandlerNo());
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT_ACTION, DWDefs.EVENT_ACTION_READ + "");
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT, vport + "");
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT_DATA, b );
+		
+		//DriveWireServer.submitEvent(evt);
+		
 		
 	}
 
@@ -747,7 +774,19 @@ public class DWVSerialPorts {
 	public void writeToCoco(int vport, byte[] b, int offset, int length) throws DWPortNotValidException 
 	{
 		validateport(vport);
-		vserialPorts[vport].writeToCoco(b, offset, length);
+		
+		byte[] buf = new byte[length];
+		
+		System.arraycopy(b, offset, buf, 0, length);
+		
+		vserialPorts[vport].writeToCoco(buf);
+		
+		DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_VSERIAL, this.dwProto.getHandlerNo());
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT_ACTION, DWDefs.EVENT_ACTION_READ + "");
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT, vport + "");
+		evt.setParam(DWDefs.EVENT_ITEM_VPORT_DATA, buf );
+		
+		//DriveWireServer.submitEvent(evt);
 		
 	}
 
@@ -831,7 +870,7 @@ public class DWVSerialPorts {
 		{
 			this.listenerpool.closePortConnectionSockets(i);
 			this.listenerpool.closePortServerSockets(i);
-			if (this.vserialPorts[i] != null)
+			if ((this.vserialPorts[i] != null) && (i != MIDIPort))
 			{
 				this.vserialPorts[i].shutdown();
 			}

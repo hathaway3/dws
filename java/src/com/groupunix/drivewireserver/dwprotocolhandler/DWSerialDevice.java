@@ -1,9 +1,10 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
-import gnu.io.CommPort;
+
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
+import gnu.io.RXTXPort;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
@@ -106,7 +107,7 @@ public class DWSerialDevice implements DWProtocolDevice
 			service.callWithTimeout(
 			        new Callable<Boolean>() 
 			        {
-			          @Override
+			          
 			          public Boolean call() throws InterruptedException, IOException 
 			          {
 			        	  if (serialPort != null)
@@ -188,7 +189,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	//	}
 	//	else
 		{
-			CommPort commPort = portIdentifier.open("DriveWire",2000);
+			RXTXPort commPort = portIdentifier.open("DriveWire",2000);
             
 				if ( commPort instanceof SerialPort )
 				{
@@ -486,7 +487,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	}
 
 
-	@Override
+	
 	public String getDeviceName() 
 	{
 		if (this.serialPort != null)
@@ -496,7 +497,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	}
 
 
-	@Override
+	
 	public String getDeviceType() 
 	{
 		return("serial");
@@ -534,21 +535,21 @@ public class DWSerialDevice implements DWProtocolDevice
 	}
 
 
-	@Override
+	
 	public String getClient() 
 	{
 		return null;
 	}
 
 
-	@Override
+	
 	public InputStream getInputStream() 
 	{
 		 return new InputStream() 
 		 {
              private boolean endReached = false;
 
-         	@Override
+         	
              public int read() throws IOException 
              {
                  try {

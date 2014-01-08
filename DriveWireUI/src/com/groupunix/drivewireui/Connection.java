@@ -9,6 +9,8 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
+import com.groupunix.drivewireui.exceptions.DWUIOperationFailedException;
+
 
 public class Connection 
 {
@@ -72,13 +74,10 @@ public class Connection
 
 	
 	
-	public void sendCommand(int tid, String cmd, int instance) throws IOException, DWUIOperationFailedException
-	{
-		sendCommand(tid, cmd, instance, true);
-	}
+	
 	
 
-	public void sendCommand(int tid, String cmd, int instance, boolean markComplete) throws IOException, DWUIOperationFailedException 
+	public void sendCommand(String cmd, int instance) throws IOException, DWUIOperationFailedException 
 	{
 		
 		// send command
@@ -89,21 +88,6 @@ public class Connection
 			throw new DWUIOperationFailedException(resp.get(0).trim());
 			
 		}
-		else
-		{
-				String txt = "";
-				for (int i = 0;i<resp.size();i++)
-				{
-					txt += resp.get(i) + "\n";
-				}
-				
-				if (markComplete)
-					MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_COMPLETE, txt);
-				else
-					MainWin.taskman.updateTask(tid, UITaskMaster.TASK_STATUS_ACTIVE, txt);
-			
-		}
-		
 		
 				
 	}
@@ -184,7 +168,10 @@ public class Connection
 	}
 
 
-
+	public Socket getSocket()
+	{
+		return this.sock;
+	}
 
 	
 

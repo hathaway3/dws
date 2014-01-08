@@ -27,7 +27,6 @@ public class LocalFileBrowser implements Runnable
 	}
 	
 	
-	@Override
 	public void run() 
 	{
 		if (!dir)

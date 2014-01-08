@@ -1,7 +1,10 @@
 package com.groupunix.drivewireserver.virtualserial;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
@@ -29,7 +32,7 @@ public class DWVPortTermThread implements Runnable
 	private int conno;
 	private DWVSerialProtocol dwProto;
 	private DWVSerialPorts dwVSerialPorts;
-	private ServerSocketChannel srvr;
+	private ServerSocket srvr;
 	
 	
 	public DWVPortTermThread(DWVSerialProtocol dwProto, int tcpport)
@@ -66,7 +69,7 @@ public class DWVPortTermThread implements Runnable
 			dwVSerialPorts.openPort(TERM_PORT);
 			
 			
-			/* check for listen address
+			
 			
 			if (dwProto.getConfig().containsKey("ListenAddress"))
 			{
@@ -76,16 +79,15 @@ public class DWVPortTermThread implements Runnable
 			{
 				srvr = new ServerSocket(this.tcpport, BACKLOG);
 			}
-			*/
 			
 			
 			InetSocketAddress sktaddr = new InetSocketAddress(this.tcpport);
 			
-			srvr.socket().setReuseAddress(true);
-			srvr.socket().bind(sktaddr, BACKLOG);
+			srvr.setReuseAddress(true);
+			srvr.bind(sktaddr, BACKLOG);
 			
 			
-			logger.info("listening on port " + srvr.socket().getLocalPort());
+			logger.info("listening on port " + srvr.getLocalPort());
 		} 
 		
 		catch (IOException e2) 
@@ -99,12 +101,12 @@ public class DWVPortTermThread implements Runnable
 			return;
 		}
 		
-		while ((wanttodie == false) && (srvr.isOpen()))
+		while ((wanttodie == false) && (!srvr.isClosed()))
 		{
 			logger.debug("waiting for connection");
 			
 			
-			SocketChannel skt;
+			Socket skt;
 			try 
 			{
 				skt = srvr.accept();
@@ -117,7 +119,7 @@ public class DWVPortTermThread implements Runnable
 			}
 			
 			
-			logger.info("new connection from " + skt.socket().getInetAddress().getHostAddress());
+			logger.info("new connection from " + skt.getInetAddress().getHostAddress());
 			
 			if (this.connthread != null)
 			{	
@@ -127,7 +129,7 @@ public class DWVPortTermThread implements Runnable
 					logger.debug("term connection already in use");
 					try
 					{
-						skt.socket().getOutputStream().write(("The term device is already connected to a session (from " + this.dwVSerialPorts.getListenerPool().getConn(conno).socket().getInetAddress().getHostName() + ")\r\n" ).getBytes());
+						skt.getOutputStream().write(("The term device is already connected to a session (from " + this.dwVSerialPorts.getListenerPool().getConn(conno).socket().getInetAddress().getHostName() + ")\r\n" ).getBytes());
 						skt.close();
 					} 
 					catch (IOException e)
@@ -165,7 +167,7 @@ public class DWVPortTermThread implements Runnable
 		logger.debug("exiting");
 	}
 
-	private void startConn(SocketChannel skt)
+	private void startConn(Socket skt)
 	{
 		// do telnet init stuff
 		byte[] buf = new byte[9];
@@ -183,10 +185,10 @@ public class DWVPortTermThread implements Runnable
 	
 		try
 		{
-			skt.socket().getOutputStream().write(buf, 0, 9);
+			skt.getOutputStream().write(buf, 0, 9);
 			for (int i = 0; i<9; i++)
 			{
-				skt.socket().getInputStream().read();
+				skt.getInputStream().read();
 			}
 		} 
 		catch (IOException e)
@@ -197,7 +199,7 @@ public class DWVPortTermThread implements Runnable
 			
 		try 
 		{
-			conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt,MODE_TERM);
+			conno = this.dwVSerialPorts.getListenerPool().addConn(this.vport, skt.getChannel(),MODE_TERM);
 			connobj = new DWVPortTCPServerThread(dwProto,TERM_PORT, conno);
 			connthread = new Thread(connobj);
 			connthread.start();
