@@ -39,7 +39,7 @@
 	// Remove observer of log messages
 	[nc removeObserver:logView name:@"DWStats" object:dwModel];
 	
-	for (i = 0; i < DRIVE_COUNT; i++)
+	for (i = 0; i < [driveArray count]; i++)
 	{
 		// Remove ourself as an observer of cartridge insert/eject messages for each drive
 		[nc removeObserver:self name:@"cartridgeWasInserted" object:[driveArray objectAtIndex:i]];
@@ -127,7 +127,7 @@
 	
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	
-	for (i = 0; i < DRIVE_COUNT; i++)
+	for (i = 0; i < [driveArray count]; i++)
 	{
 		[driveView addSubview:[[driveArray objectAtIndex:i] view]];
 

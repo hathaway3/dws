@@ -48,8 +48,7 @@ static TBSerialManager *fSerialManager = nil;
 #ifdef DEBUG
 		NSLog(@"About to allocate drives");
 #endif
-		
-		for (i = 0; i < DRIVE_COUNT; i++)
+		for (i = 0; i < 4; i++)
 		{
 			TBVirtualDriveController *drive;
 		
@@ -156,7 +155,7 @@ static TBSerialManager *fSerialManager = nil;
 		nil];
 				
 	// Set drive numbers.
-	for (i = 0; i < DRIVE_COUNT; i++)
+	for (i = 0; i < [driveArray count]; i++)
 	{
 		[[driveArray objectAtIndex:i] setDriveID:i];
 	}
@@ -188,7 +187,7 @@ static TBSerialManager *fSerialManager = nil;
 	fSerialPortNames = [[TBSerialManager availablePorts] retain];
    
    // Set up state variables
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
    startOfData = inputBuffer;
    currentLocation = 0;
    
@@ -427,7 +426,8 @@ static TBSerialManager *fSerialManager = nil;
    // Call appropriate handler.
     while (dataLength > 0)
     {
-       [self valueForKey:currentState];
+		NSLog(@"%@", NSStringFromSelector(currentState));
+		[self performSelector:currentState];
     }
 	
     return;
@@ -460,11 +460,11 @@ static TBSerialManager *fSerialManager = nil;
           break;
           
        case _OP_VPORT_READ:
-          currentState = @"OP_VPORT_READ";
+          currentState = @selector(OP_VPORT_READ);
           break;
           
 		case _OP_VPORT_WRITE:
-			currentState = @"OP_VPORT_WRITE";
+			currentState = @selector(OP__WRITE);
 			break;
 			
 		case _OP_INIT:
@@ -476,50 +476,59 @@ static TBSerialManager *fSerialManager = nil;
           break;
             
         case _OP_READ:
-          currentState = @"OP_READ";
+          currentState = @selector(OP_READ);
           break;
             
         case _OP_READEX:
-          currentState = @"OP_READEX";
+          currentState = @selector(OP_READEX);
           break;
             
         case _OP_REREAD:
-          currentState = @"OP_REREAD";
+          currentState = @selector(OP_REREAD);
           break;
 			
         case _OP_REREADEX:
-          currentState = @"OP_REREADEX";
+		case '?':
+          currentState = @selector(OP_REREADEX);
           break;
 			
         case _OP_WRITE:
-          currentState = @"OP_WRITE";
+          currentState = @selector(OP_WRITE);
           break;
             
         case _OP_REWRITE:
-          currentState = @"OP_REWRITE";
+          currentState = @selector(OP_REWRITE);
           break;
 			
         case _OP_GETSTAT:
-          currentState = @"OP_GETSTAT";
+          currentState = @selector(OP_GETSTAT);
           break;
 			
         case _OP_SETSTAT:
-          currentState = @"OP_SETSTAT";
+          currentState = @selector(OP_SETSTAT);
           break;
 			
         case _OP_RESET1:
         case _OP_RESET2:
         case _OP_RESET3:
           [self OP_RESET];
+			
+		case _OP_NAMEOBJ_MOUNT:
+		   currentState = @selector(OP_NAMEOBJ_MOUNT);
           break;
 			
-
+		case _OP_DWINIT:
+			currentState = @selector(OP_DWINIT);
+			break;
+			
 // WireBug Section
 		case _OP_WIREBUG_MODE:
-          currentState = @"OP_WIREBUG_MODE";
+          currentState = @selector(OP_WIREBUG_MODE);
           break;
-
+#if 0
+			
         case _OP_RESYNC:
+#endif
         default:
           // Resync in case of bad data transfer
           [self OP_RESYNC];
@@ -534,7 +543,7 @@ static TBSerialManager *fSerialManager = nil;
 	[statistics setObject:@"OP_NOP" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 	
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
 }
 
 - (void)OP_PRINTFLUSH;
@@ -545,7 +554,7 @@ static TBSerialManager *fSerialManager = nil;
    [_delegate updateInfoView:statistics];
    [self flushPrinterBuffer];
    
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
 }
 
 - (void)flushPrinterBuffer;
@@ -556,6 +565,25 @@ static TBSerialManager *fSerialManager = nil;
 }
 
 #define  MAX_SIZE_BEFORE_PRINTING   256
+
+- (void)OP_DWINIT;
+{
+	// Invalidate watchdog timer
+	[self invalidateWatchdog];
+	
+	unsigned char byte = dataBytes[0];
+	[statistics setObject:@"OP_DWINIT" forKey:@"OpCode"];
+	[statistics setObject:[NSString stringWithFormat:@"%d", byte] forKey:@"Byte"];
+	[_delegate updateInfoView:statistics];
+	
+	
+	dataLength--;
+	dataBytes++;
+	currentState = @selector(OP_OPCODE);
+	
+	// send response
+	[portDelegate writeData:[NSData dataWithBytes:"\x00" length:1]];
+}
 
 - (void)OP_PRINT;
 {
@@ -576,7 +604,7 @@ static TBSerialManager *fSerialManager = nil;
 	
    dataLength--;
    dataBytes++;
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
 }
 
 - (void)OP_INIT
@@ -587,7 +615,7 @@ static TBSerialManager *fSerialManager = nil;
 	[statistics setObject:@"OP_INIT" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
 }
 
 - (void)OP_TERM
@@ -598,7 +626,7 @@ static TBSerialManager *fSerialManager = nil;
 	[statistics setObject:@"OP_TERM" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 		
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
 }
 
 - (void)OP_RESET
@@ -619,7 +647,7 @@ static TBSerialManager *fSerialManager = nil;
 	[statistics setObject:@"00000" forKey:@"Checksum"];
    [_delegate updateInfoView:statistics];
 
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
    currentLocation = 0;
 
    // Set WireBug state to FALSE
@@ -634,7 +662,7 @@ static TBSerialManager *fSerialManager = nil;
 	[statistics setObject:@"OP_RESYNC" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 	
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
 }
 
 - (void)OP_TIME
@@ -663,7 +691,7 @@ static TBSerialManager *fSerialManager = nil;
 	[statistics setObject:@"OP_TIME" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 	
-	currentState = @"OP_OPCODE";
+	currentState = @selector(OP_OPCODE);
 }
 
 - (void)OP_REREAD
@@ -683,7 +711,7 @@ static TBSerialManager *fSerialManager = nil;
 #endif
    currentLocation = 0;
    startOfData = inputBuffer;
-   currentState = @"OP_OPCODE";
+   currentState = @selector(OP_OPCODE);
    watchDog = nil;
 }
 
@@ -745,7 +773,7 @@ static TBSerialManager *fSerialManager = nil;
 		[_delegate updateInfoView:statistics];
 		
 		// Reset state
-		currentState = @"OP_OPCODE";
+		currentState = @selector(OP_OPCODE);
 		startOfData = inputBuffer;
 	}
 	
@@ -803,7 +831,7 @@ static TBSerialManager *fSerialManager = nil;
 		[_delegate updateInfoView:statistics];
 		
 		// Reset state
-		currentState = @"OP_OPCODE";
+		currentState = @selector(OP_OPCODE);
 		startOfData = inputBuffer;
 	}
 	
@@ -863,7 +891,7 @@ static TBSerialManager *fSerialManager = nil;
 		vLSN = (startOfData[1] << 16) | (startOfData[2] << 8) | startOfData[3];
 		
 		// Check drive number for veracity
-		if (driveNumber >= DRIVE_COUNT)
+		if (driveNumber >= [driveArray count])
 		{
 			response = 240;
 		}
@@ -927,12 +955,12 @@ static TBSerialManager *fSerialManager = nil;
 			}
             
 			// Send statistical data via notification
-			[statistics setObject:currentState forKey:@"OpCode"];
+			[statistics setObject:NSStringFromSelector(currentState) forKey:@"OpCode"];
 			[statistics setObject:[NSString stringWithFormat:@"%d", vLSN] forKey:@"LSN"];
 			[statistics setObject:[NSString stringWithFormat:@"%d", driveNumber] forKey:@"DriveNumber"];
 			
 			// Kinda hackish -- we should get the "all" stats from the jukebox
-			if ([currentState isEqual:@"OP_REREAD"] == YES)
+			if (currentState == @selector(OP_REREAD))
 			{
 				int32_t sectorsReRead = [[statistics objectForKey:@"ReReadCount"] intValue] + 1;
 				
@@ -956,7 +984,7 @@ static TBSerialManager *fSerialManager = nil;
 		}
 		
 		// Reset state
-		currentState = @"OP_OPCODE";
+		currentState = @selector(OP_OPCODE);
 		startOfData = inputBuffer;
 	}
 	
@@ -1011,7 +1039,7 @@ static TBSerialManager *fSerialManager = nil;
         vLSN = (startOfData[1] << 16) | (startOfData[2] << 8) | startOfData[3];
 		
 		// Check drive number for veracity
-		if (driveNumber >= DRIVE_COUNT)
+		if (driveNumber >= [driveArray count])
 		{
 			readexResponse = 240;
 		}
@@ -1072,12 +1100,12 @@ static TBSerialManager *fSerialManager = nil;
             }
             
             // Send statistical data via notification
-            [statistics setObject:currentState forKey:@"OpCode"];
+            [statistics setObject:NSStringFromSelector(currentState) forKey:@"OpCode"];
             [statistics setObject:[NSString stringWithFormat:@"%d", vLSN] forKey:@"LSN"];
             [statistics setObject:[NSString stringWithFormat:@"%d", driveNumber] forKey:@"DriveNumber"];
 
             // Kinda hackish -- we should get the "all" stats from the jukebox
-            if ([currentState isEqual:@"OP_REREADEX"] == YES)
+            if (currentState == @selector(OP_REREADEX))
             {
                int32_t sectorsReRead = [[statistics objectForKey:@"ReReadCount"] intValue] + 1;
                
@@ -1095,7 +1123,7 @@ static TBSerialManager *fSerialManager = nil;
            [_delegate updateInfoView:statistics];
         }
 
-        currentState = @"OP_READEXP2";
+        currentState = @selector(OP_READEXP2);
         startOfData = inputBuffer;
         currentLocation = 0;
     }
@@ -1153,7 +1181,7 @@ static TBSerialManager *fSerialManager = nil;
       // Send the response code to the CoCo.
       [portDelegate writeData:[NSData dataWithBytes:&readexResponse length:1]];
       
-      currentState = @"OP_OPCODE";
+      currentState = @selector(OP_OPCODE);
       startOfData = inputBuffer;
       currentLocation = 0;
    }
@@ -1216,7 +1244,7 @@ static TBSerialManager *fSerialManager = nil;
        cocoChecksum = startOfData[260] << 8 | startOfData[261];
 		
        // Check drive number for veracity
-       if (driveNumber >= DRIVE_COUNT)
+       if (driveNumber >= [driveArray count])
        {
           response = 240;
        }
@@ -1260,12 +1288,12 @@ static TBSerialManager *fSerialManager = nil;
        // Send statistical data via notification
        if (response == 0)
        {
-          [statistics setObject:currentState forKey:@"OpCode"];
+          [statistics setObject:NSStringFromSelector(currentState) forKey:@"OpCode"];
           [statistics setObject:[NSString stringWithFormat:@"%d", vLSN] forKey:@"LSN"];
           [statistics setObject:[NSString stringWithFormat:@"%d", driveNumber] forKey:@"DriveNumber"];
 		
           // Kinda hackish -- we should get the "all" stats from the jukebox
-          if ([currentState isEqualToString:@"OP_REWRITE"] == NO)
+          if (currentState == @selector(OP_REWRITE))
           {
              int32_t sectorsWritten = [[statistics objectForKey:@"WriteCount"] intValue] + 1;
 			
@@ -1287,7 +1315,7 @@ static TBSerialManager *fSerialManager = nil;
        [portDelegate writeData:[NSData dataWithBytes:&response length:1]];
 	
        // Reset state.
-       currentState = @"OP_OPCODE";
+       currentState = @selector(OP_OPCODE);
        startOfData = inputBuffer;
     }
     
@@ -1348,10 +1376,10 @@ static TBSerialManager *fSerialManager = nil;
         driveNumber = startOfData[0];
 		statCode = startOfData[1];
 		
-		if (driveNumber < DRIVE_COUNT && [[driveArray objectAtIndex:driveNumber] isEmpty] == NO)
+		if (driveNumber < [driveArray count] && [[driveArray objectAtIndex:driveNumber] isEmpty] == NO)
 		{
 			// Send statistical data via notification
-			[statistics setObject:currentState forKey:@"OpCode"];
+			[statistics setObject:NSStringFromSelector(currentState) forKey:@"OpCode"];
          [statistics setObject:[NSString stringWithFormat:@"%d", driveNumber] forKey:@"DriveNumber"];
 			[statistics setObject:[self statCodeToString:statCode] forKey:whichStat];
          [_delegate updateInfoView:statistics];
@@ -1370,7 +1398,7 @@ static TBSerialManager *fSerialManager = nil;
       }
 		
        // Reset state.
-       currentState = @"OP_OPCODE";
+       currentState = @selector(OP_OPCODE);
        startOfData = inputBuffer;
     }
 	
@@ -1495,6 +1523,57 @@ static TBSerialManager *fSerialManager = nil;
     return(statString);
 }
 
+
+- (void)OP_NAMEOBJ_MOUNT;
+{
+	nameobj_size = *dataBytes;
+	dataLength--;
+	dataBytes++;
+	currentState = @selector(OP_NAMEOBJ_MOUNT_NAME);
+}
+
+- (void)OP_NAMEOBJ_MOUNT_NAME;
+{
+	int32_t remaining;
+	
+	// Compute remaining free space in our local buffer.
+	remaining = nameobj_size - currentLocation;
+	
+	if (remaining > dataLength)
+	{
+		remaining = dataLength;
+	}
+	
+	// Copy the maximum available amount to our local buffer
+	// and adjust data pointer and length accordingly.		
+	memcpy(inputBuffer + currentLocation, dataBytes, remaining);
+	dataLength -= remaining;		
+	dataBytes += remaining;		
+	currentLocation += remaining;
+
+	// Check if we have reached our terminal count.
+	if (currentLocation == nameobj_size)
+	{
+		// Invalidate watchdog timer
+		[self invalidateWatchdog];
+		
+		[statistics setObject:@"OP_NAMEOBJ_MOUNT" forKey:@"OpCode"];
+		[_delegate updateInfoView:statistics];
+		
+		char byteToSend = [driveArray count];
+		[portDelegate writeData:[NSData dataWithBytes:&byteToSend length:1]];
+		TBVirtualDriveController *drive = [[[TBVirtualDriveController alloc] init] autorelease];
+		[drive setDriveID:driveCount];
+		NSString *namedObject = [NSString stringWithCString:(char *)inputBuffer length:nameobj_size]; 
+		NSString *fullPath = [NSString stringWithFormat:@"%@/%@", NSHomeDirectory(), namedObject];
+		[drive insertCartridge:fullPath];
+		NSLog(@"Mounting %@ in drive %d", fullPath, driveCount);
+		driveCount++;
+		[driveArray addObject:drive];
+
+		currentState = @selector(OP_OPCODE);
+	}
+}
 
 - (void)OP_WIREBUG_MODE
 {
@@ -1736,7 +1815,7 @@ static TBSerialManager *fSerialManager = nil;
     if (currentLocation == 24)
     {
        [self invalidateWatchdog];
-		currentState = @"OP_OPCODE";
+		currentState = @selector(OP_OPCODE);
     }
 }
 
@@ -1746,7 +1825,7 @@ static TBSerialManager *fSerialManager = nil;
 	u_char requestBuffer[24];
 
    // Set state to capture remaining code
-   currentState = @"OP_WIREBUG_READREGS_RESPONSE";
+   currentState = @selector(OP_WIREBUG_READREGS_RESPONSE);
 
 	requestBuffer[0] = _OP_WIREBUG_READREGS;
 	requestBuffer[23] = [self compute8BitChecksum:&requestBuffer[0] :23];
@@ -1759,7 +1838,7 @@ static TBSerialManager *fSerialManager = nil;
 	u_char requestBuffer[24];
    
    // Set state to capture remaining code
-   currentState = @"OP_WIREBUG_READMEM_RESPONSE";
+   currentState = @selector(OP_WIREBUG_READMEM_RESPONSE);
    
 	requestBuffer[0] = _OP_WIREBUG_READMEM;
    requestBuffer[1] = (start >> 8) & 0xFF;
@@ -1776,14 +1855,14 @@ static TBSerialManager *fSerialManager = nil;
 	u_char requestBuffer[24];
 
     // Set state to capture remaining code
-    currentState = @"OP_WIREBUG_GO_RESPONSE";
+    currentState = @selector(OP_WIREBUG_GO_RESPONSE);
    currentLocation = 0;
 
 	requestBuffer[0] = _OP_WIREBUG_GO;
 	requestBuffer[23] = [self compute8BitChecksum:&requestBuffer[0] :23];
 	[portDelegate writeData:[NSData dataWithBytes:requestBuffer length:24]];
 	[self setWirebugState:false];
-   currentState = @"OP_OPCODE";
+   currentState = @selector(OP_OPCODE);
    currentLocation = 0;
 }
 
@@ -1816,7 +1895,7 @@ static TBSerialManager *fSerialManager = nil;
 		[coder decodeValueOfObjCType:@encode(Boolean) at:&statState];
 		[coder decodeValueOfObjCType:@encode(Boolean) at:&logState];
 		[coder decodeValueOfObjCType:@encode(int) at:&machineType];
-
+		
 		[self initDesignated];		
 
 		fCurrentPort = nil;
@@ -1833,7 +1912,8 @@ static TBSerialManager *fSerialManager = nil;
 
 - (void)encodeWithCoder:(NSCoder *)coder;
 {
-	[coder encodeObject:driveArray];
+	NSArray *encodedDriveArray = [driveArray subarrayWithRange:NSMakeRange(0, 4)];
+	[coder encodeObject:encodedDriveArray];
 	[coder encodeValueOfObjCType:@encode(int) at:&version];
 	[coder encodeObject:fCurrentPort];
 	[coder encodeValueOfObjCType:@encode(Boolean) at:&statState];

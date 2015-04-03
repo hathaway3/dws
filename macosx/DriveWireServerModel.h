@@ -22,10 +22,8 @@
 
 #define DW_DEFAULT_VERSION       3
 
-#define	DRIVE_COUNT             4
-
 #define	_OP_NOP                 '\0'
-#define	_OP_RESYNC              '\1'
+//#define	_OP_RESYNC              '\1'
 #define	_OP_TIME                '#'
 #define	_OP_INIT                'I'
 #define	_OP_TERM                'T'
@@ -57,6 +55,10 @@
 #define	_OP_WIREBUG_WRITEMEM    'm'
 #define	_OP_WIREBUG_GO          'G'
 
+#define _OP_DWINIT				 0x5A
+#define _OP_NAMEOBJ_MOUNT        0x01 /* Named Object Mount */
+#define _OP_NAMEOBJ_CREATE       0x02 /* Named Object Create */
+
 
 #define E_ILLNUM                 16
 #define E_CRC                    243
@@ -77,12 +79,13 @@
 	int						machineType;
 
 	NSMutableArray			*driveArray;
+	NSMutableArray			*namedObjectArray;
 	NSFileHandle			*portDelegate;
 	
 	// Protocol management variables
     const u_char			*dataBytes;
     int						dataLength;
-    NSString				*currentState;
+    SEL						currentState;
 	Boolean					validateWithCRC;
 	NSTimer					*watchDog;
 
@@ -110,6 +113,9 @@
 	// Address of memory to view
 	u_int16_t	memAddress;
 
+	int nameobj_size;
+	int driveCount;
+	
    // Input buffer management variables
    u_char inputBuffer[262];
    const u_char *startOfData;
