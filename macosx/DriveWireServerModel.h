@@ -79,7 +79,6 @@
 	int						machineType;
 
 	NSMutableArray			*driveArray;
-	NSMutableArray			*namedObjectArray;
 	NSFileHandle			*portDelegate;
 	
 	// Protocol management variables

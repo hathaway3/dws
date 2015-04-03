@@ -426,7 +426,6 @@ static TBSerialManager *fSerialManager = nil;
    // Call appropriate handler.
     while (dataLength > 0)
     {
-		NSLog(@"%@", NSStringFromSelector(currentState));
 		[self performSelector:currentState];
     }
 	
@@ -512,6 +511,7 @@ static TBSerialManager *fSerialManager = nil;
         case _OP_RESET2:
         case _OP_RESET3:
           [self OP_RESET];
+			break;
 			
 		case _OP_NAMEOBJ_MOUNT:
 		   currentState = @selector(OP_NAMEOBJ_MOUNT);
@@ -1526,7 +1526,7 @@ static TBSerialManager *fSerialManager = nil;
 
 - (void)OP_NAMEOBJ_MOUNT;
 {
-	nameobj_size = *dataBytes;
+	nameobj_size = dataBytes[0];
 	dataLength--;
 	dataBytes++;
 	currentState = @selector(OP_NAMEOBJ_MOUNT_NAME);
@@ -1560,17 +1560,38 @@ static TBSerialManager *fSerialManager = nil;
 		[statistics setObject:@"OP_NAMEOBJ_MOUNT" forKey:@"OpCode"];
 		[_delegate updateInfoView:statistics];
 		
-		char byteToSend = [driveArray count];
-		[portDelegate writeData:[NSData dataWithBytes:&byteToSend length:1]];
-		TBVirtualDriveController *drive = [[[TBVirtualDriveController alloc] init] autorelease];
-		[drive setDriveID:driveCount];
+		// build the path to the named object
 		NSString *namedObject = [NSString stringWithCString:(char *)inputBuffer length:nameobj_size]; 
 		NSString *fullPath = [NSString stringWithFormat:@"%@/%@", NSHomeDirectory(), namedObject];
-		[drive insertCartridge:fullPath];
-		NSLog(@"Mounting %@ in drive %d", fullPath, driveCount);
-		driveCount++;
-		[driveArray addObject:drive];
 
+		// go through existing drives to see if it already exists
+		int i;
+		for (i = 0; i < [driveArray count]; i++)
+		{
+			TBVirtualDriveController *c = [driveArray objectAtIndex:i];
+			if ([[c cartridgePath] isEqualToString:fullPath])
+			{
+				break;
+			}
+		}
+		
+		if (i == [driveArray count])
+		{
+			TBVirtualDriveController *drive = [[[TBVirtualDriveController alloc] init] autorelease];
+			[drive setDriveID:i];
+			[drive insertCartridge:fullPath];
+			NSLog(@"Mounting %@ in drive %d", fullPath, i);
+			[driveArray addObject:drive];
+		}
+
+		u_char b = (u_char)i;
+		[portDelegate writeData:[NSData dataWithBytes:&b length:1]];
+
+		// Reset the current location now that we've achieved it.
+        currentLocation = 0;
+        
+        startOfData = inputBuffer;
+		
 		currentState = @selector(OP_OPCODE);
 	}
 }
