@@ -120,11 +120,12 @@
 
 - (TBSerialPort *)reservePort:(NSString *)name forOwner:(id)object;
 {
+	NSError *error = nil;
 	TBSerialPort *port = [portList objectForKey:name];
 	
 	if ([port owner] == nil)
 	{
-		if ([port openPort:object] == NO)
+		if ([port openPort:object error:&error] == NO)
 		{
 			return nil;
 		}

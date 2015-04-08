@@ -28,10 +28,11 @@
 
 
 #import <TBVirtualDriveModel.h>
-
+#import <CoreFoundation/CoreFoundation.h>
 
 @implementation TBVirtualDriveModel
 
+static NSRunLoop *mainRunLoop;
 
 static NSSound *insertSound, *ejectSound;
 static int instanceCount = 0;
@@ -43,6 +44,7 @@ static int instanceCount = 0;
 	if ((self = [super init]) != nil)
 	{
 		[self initDesignated];
+		mainRunLoop = [NSRunLoop currentRunLoop];
 	}
 	
 	return self;
@@ -52,7 +54,6 @@ static int instanceCount = 0;
 - (void)initDesignated
 {
 	// Set the initial state of the drive
-
 	led = LED_OFF;			// LED is off
 	driveID = 0;			// Drive ID is 0
 	cartridgePath = nil;	// There is no cartridge yet
@@ -88,7 +89,6 @@ static int instanceCount = 0;
 	instanceCount++;
 }
 
-
 - (void)dealloc
 {
 	instanceCount--;
@@ -102,16 +102,13 @@ static int instanceCount = 0;
 	[super dealloc];
 }
 
-
 - (void)setDelegate:(id)_delegate
 {
 	delegate = _delegate;
 }
 
 
-
 #pragma mark Drive ID Methods
-
 
 - (void)setDriveID:(uint16_t)value;
 {
@@ -128,30 +125,23 @@ static int instanceCount = 0;
 
 #pragma mark Cartridge Methods
 
-
 - (NSString *)cartridgeLabel
 {
     return [cartridgePath lastPathComponent];
 }
-
-
 
 - (NSString *)cartridgePath
 {
     return cartridgePath;
 }
 
-
-
 - (BOOL)insertCartridge:(NSString *)cartridgeName
 {
     if (cartridgeHandle != nil)
     {
         // User didn't close!
-        
         return FALSE;
     }
-    
     
     cartridgeHandle = [[NSFileHandle fileHandleForUpdatingAtPath:cartridgeName] retain];
 	
@@ -160,82 +150,46 @@ static int instanceCount = 0;
         return FALSE;
     }
 
-
 	// Turn on Read LED
-	
-	[self turnOnReadLED:self];
-
-
-	// Reset the LED timer if it was already set -- delegate will clear LED
-
-	if (ledTimer != nil)
-	{
-		[ledTimer invalidate];
-	}
-
-	ledTimer = [NSTimer timerWithTimeInterval:1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
-	
+	[self turnOnReadLED:self time:1.0];
 
 	// Play the "insert" sound
-	
 	[insertSound play];		
-
 	
 	// Thread-safe exchange of cartridgePath
-	
 	id old = cartridgePath;
-
 	cartridgePath = [cartridgeName retain];
-	
 	[old release];
-	
 	
     return TRUE;
 }
 
-
-
 - (void)ejectCartridge
 {
     // Determine if this object's file handle is valid.
-    
     if (cartridgeHandle != nil)
     {
 		// There's a disk in the drive -- eject it
-		
         [cartridgeHandle closeFile];
-        
         [cartridgeHandle release];
-
 		
 		// Reset cartridge specific counts
 		sectorReadCount = 0;
 		sectorWriteCount = 0;
 
-
 		// Play the "eject" sound
-		
 		[ejectSound play];		
 		
-
 		cartridgePath = nil;
-		
 		cartridgeHandle = nil;
 	}
-	
     
-    // Return
-	
     return;
 }
-
-
 
 - (BOOL)isEmpty
 {
     // Determine if the drive is empty
-    
     if (cartridgeHandle != nil)
     {
 		return FALSE;
@@ -245,7 +199,6 @@ static int instanceCount = 0;
 }
 
 
-
 #pragma mark Sector Access Methods
 
 - (NSData *)readSectors:(uint32_t)lsn forCount:(uint32_t)count
@@ -253,29 +206,17 @@ static int instanceCount = 0;
     NSData *sectors;
     unsigned long long offset = lsn * sectorSize;
 	
-	
     // Determine there is a disk in the drive
-    
     if (cartridgeHandle == nil)
     {
         return nil;
     }
 	
 	// Turn on Read LED
-	[self turnOnReadLED:self];
-	
-	
-	// Reset the LED timer if it was already set
-	if (ledTimer != nil)
-	{
-		[ledTimer invalidate];
-	}
-	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
+	[self turnOnReadLED:self time:0.1];
 	
     // Seek to offset based on LSN passed.
     [cartridgeHandle seekToFileOffset:offset];
-	
 	
     // Read sector at current position.
     sectors = [cartridgeHandle readDataOfLength:sectorSize * count];
@@ -283,9 +224,7 @@ static int instanceCount = 0;
 	sectorReadCount += count;
 	totalSectorReadCount += count;
 	
-	
     // Return sectors passed.
-    
     return sectors;
 }
 
@@ -294,78 +233,48 @@ static int instanceCount = 0;
 - (NSData *)writeSectors:(uint32_t)lsn forCount:(uint32_t)count withData:(NSData *)sectors
 {
     unsigned long long offset = lsn * sectorSize;
-	
-	
+		
     // Determine there is a disk in the drive
-    
     if (cartridgeHandle == nil)
     {
         return nil;
     }
 	
-	
 	// Turn on write LED
-	
-	[self turnOnWriteLED:self];
-	
-    
-	// Reset the LED timer if it was already set
-	
-	if (ledTimer != nil)
-	{
-		[ledTimer invalidate];
-	}
-	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
-	
+	[self turnOnWriteLED:self time:0.1];
 	
 	// Seek to offset based on LSN passed
-	
     [cartridgeHandle seekToFileOffset:offset];
 	
-	
     // Write sector at current position.
-	
     [cartridgeHandle writeData:sectors];
 	
 	sectorWriteCount += count;
 	totalSectorWriteCount += count;
 	
-    
     // Return sectors passed.
-    
     return sectors;
 }
-
-
-
 
 - (uint32_t)sectorsRead
 {
 	return sectorReadCount;
 }
 
-
-
 - (uint32_t)sectorsWritten
 {
 	return sectorWriteCount;
 }
-
-
 
 - (uint32_t)totalSectorsRead
 {
 	return totalSectorReadCount;
 }
 
-
-
 - (uint32_t)totalSectorsWritten
 {
 	return totalSectorWriteCount;
 }
-
 
 
 #pragma mark LED Control Methods
@@ -378,16 +287,13 @@ static int instanceCount = 0;
 
     if ([delegate respondsToSelector:@selector(ledOff)])
 	{
-		[delegate ledOff];
+		[delegate performSelectorOnMainThread:@selector(ledOff) withObject:nil waitUntilDone:YES];
 	}
 }
 
-
-
-- (void)turnOnReadLED:(id)sender
+- (void)turnOnReadLED:(id)sender time:(NSTimeInterval)timeValue;
 {
 	// Turn on Read LED if not already on
-	
 	if (led != LED_READ)
 	{
 		led = LED_READ;
@@ -397,27 +303,21 @@ static int instanceCount = 0;
 		}
 	}
 	
-	
 	// Reset the LED timer if it was already set
-	
 	if (ledTimer != nil)
 	{
 		[ledTimer invalidate];
 	}
 	
-	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
-
+	ledTimer = [NSTimer timerWithTimeInterval:timeValue target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
+	[mainRunLoop addTimer:ledTimer forMode:NSDefaultRunLoopMode];
 	
 	return;
 }
 
-
-
-- (void)turnOnWriteLED:(id)sender
+- (void)turnOnWriteLED:(id)sender time:(NSTimeInterval)timeValue;
 {
 	// Turn on Write LED if not already on
-
 	if (led != LED_WRITE)
 	{
 		led = LED_WRITE;
@@ -427,22 +327,17 @@ static int instanceCount = 0;
 		}
 	}
 
-
 	// Reset the LED timer if it was already set
-
 	if (ledTimer != nil)
 	{
 		[ledTimer invalidate];
 	}
 
-	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
-
+	ledTimer = [NSTimer timerWithTimeInterval:timeValue target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
+	[mainRunLoop addTimer:ledTimer forMode:NSDefaultRunLoopMode];
 
 	return;
 }
-
-
 
 - (void)sound:(NSSound *)sound didFinishPlaying:(BOOL)aBool
 {
@@ -451,8 +346,6 @@ static int instanceCount = 0;
 		[self shutOffLED:self];
 	}
 }
-
-
 
 - (id)initWithCoder:(NSCoder *)coder;
 {
@@ -464,12 +357,8 @@ static int instanceCount = 0;
 	return self;
 }
 
-
-
 - (void)encodeWithCoder:(NSCoder *)coder;
 {
 }
-
-
 
 @end

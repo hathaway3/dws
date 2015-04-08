@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.03">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">9G55</string>
+		<string key="IBDocument.SystemVersion">9L31a</string>
 		<string key="IBDocument.InterfaceBuilderVersion">677</string>
-		<string key="IBDocument.AppKitVersion">949.43</string>
+		<string key="IBDocument.AppKitVersion">949.54</string>
 		<string key="IBDocument.HIToolboxVersion">353.00</string>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -4830,7 +4830,7 @@
 					<string>{{42, 347}, {588, 441}}</string>
 					<string>{{42, 347}, {588, 441}}</string>
 					<reference ref="5"/>
-					<reference ref="5"/>
+					<boolean value="NO" id="6"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<reference ref="5"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -4849,10 +4849,10 @@
 					<reference ref="5"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<reference ref="5"/>
-					<string>{{526, 129}, {776, 593}}</string>
-					<string>{{526, 129}, {776, 593}}</string>
+					<string>{{392, 129}, {776, 593}}</string>
+					<string>{{392, 129}, {776, 593}}</string>
 					<reference ref="5"/>
-					<reference ref="5"/>
+					<reference ref="6"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<reference ref="5"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -4948,13 +4948,13 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSMutableArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>disassemblyView</string>
+							<string>disassemblerView</string>
 							<string>memoryView</string>
 							<string>registerView</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>DisassemblyView</string>
+							<string>DisassemblerView</string>
 							<string>MemoryView</string>
 							<string>RegisterView</string>
 						</object>
@@ -5025,62 +5025,6 @@
 					<string key="className">MyDocument</string>
 					<string key="superclassName">NSDocument</string>
 					<object class="NSMutableDictionary" key="actions">
-						<bool key="EncodedWithXMLCoder">YES</bool>
-						<object class="NSMutableArray" key="dict.sortedKeys">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>goCoCo:</string>
-							<string>setCoCoType:</string>
-							<string>setLogSwitch:</string>
-							<string>setSerialPort:</string>
-							<string>setStatsSwitch:</string>
-						</object>
-						<object class="NSMutableArray" key="dict.values">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-						</object>
-					</object>
-					<object class="NSMutableDictionary" key="outlets">
-						<bool key="EncodedWithXMLCoder">YES</bool>
-						<object class="NSMutableArray" key="dict.sortedKeys">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>debugDrawer</string>
-							<string>debuggerWindowController</string>
-							<string>driveView</string>
-							<string>logView</string>
-							<string>loggingSwitch</string>
-							<string>printerWindowController</string>
-							<string>serialPortButton</string>
-							<string>speedSwitch</string>
-							<string>statSwitch</string>
-							<string>statsView</string>
-						</object>
-						<object class="NSMutableArray" key="dict.values">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>NSDrawer</string>
-							<string>DebuggerWindowController</string>
-							<string>VirtualDriveJukeBoxView</string>
-							<string>LogView</string>
-							<string>NSButton</string>
-							<string>PrinterWindowController</string>
-							<string>NSPopUpButton</string>
-							<string>NSButton</string>
-							<string>NSButton</string>
-							<string>StatsView</string>
-						</object>
-					</object>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">MyDocument.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">MyDocument</string>
-					<string key="superclassName">NSDocument</string>
-					<object class="NSMutableDictionary" key="actions">
 						<string key="NS.key.0">setDebugSwitch:</string>
 						<string key="NS.object.0">id</string>
 					</object>
@@ -5106,6 +5050,13 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBUserSource</string>
 						<string key="minorKey"/>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">NSObject</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">TBVirtualDriveModel.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">

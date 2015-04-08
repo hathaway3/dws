@@ -468,7 +468,7 @@ static TBSerialManager *fSerialManager = nil;
 	return (crc & 0xFFFF);
 }
 
-- (void)availableData:(NSData *)serialData;
+- (void)serialPort:(TBSerialPort *)sender didReceiveData:(NSData *)serialData;
 {
     // Update globals with byte pointer and length.    
     dataBytes = [serialData bytes];

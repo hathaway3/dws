@@ -1,12 +1,6 @@
-/*--------------------------------------------------------------------------------------------------
-//
-//   File Name   :   TBSerialPort.m
-//
-//   Description :   Serial port.
-//
 //--------------------------------------------------------------------------------------------------
 //
-//  Copyright (c) 2007 Tee-Boy
+//  Copyright (c) 2010-2013 Tee-Boy
 //
 //  This source code and specific concepts contained herein are Confidential
 //  Information and Property of Tee-Boy.
@@ -19,9 +13,8 @@
 //  Opelousas, LA  70570                   info@tee-boy.com
 //
 //--------------------------------------------------------------------------------------------------
-//  $Id$
-//------------------------------------------------------------------------------------------------*/
 
+#define MODULE_HASHTAG  "TBSerialPort"
 #import "TBSerialPort.h"
 
 //#define DEBUG
@@ -29,33 +22,34 @@
 @implementation TBSerialPort
 
 #pragma mark -
-#pragma mark Init Methods
+#pragma mark Init/Dealloc Methods
+
+enum {PORT_CLOSED, PORT_OPENED, PORT_CLOSING};
 
 - (id)initWithDeviceName:(NSString *)deviceName serviceName:(NSString *)serviceName;
 {
     // Initialize our super.
     if ((self = [super init]))
     {
-        fd = -1;		
-		fOwner = nil;
-		fDeviceName = [deviceName retain];
-		fServiceName = [serviceName retain];
+        _fd = -1;		
+		_owner = nil;
+		_deviceName = [deviceName retain];
+		_serviceName = [serviceName retain];
     }
-
+	
     // Return ourself.    
     return(self);
 }
 
 - (void)dealloc;
 {
-//    allowedToRun = FALSE;
-    delegate = nil;
+    _delegate = nil;
 	
 	[self closePort];
 	
-	// Release retained varaibles
-	[fDeviceName release];
-	[fServiceName release];
+	// Release retained variables
+	[_deviceName release];
+	[_serviceName release];
 	
 	// Call our super's dealloc
     [super dealloc];
@@ -64,59 +58,63 @@
 }
 
 #pragma mark -
-#pragma mark Getter/Setter Methods
+#pragma mark Accessor Methods
 
 - (id)delegate;
 {
-	return delegate;
+	return _delegate;
 }
 
 - (void)setDelegate:(id)_value;
 {
-	delegate = _value;
+	_delegate = _value;
 }
 
 #pragma mark -
 #pragma mark Port Acquisition Methods
 
-- (BOOL)openPort:(id)owner
+- (BOOL)openPort:(id)owner error:(NSError **)error;
 {
     int status = -1;
-
-	// if the port is already opened, return NO
 	
-	if (fd != -1)
+	// if the port is already opened, return NO
+	if (_fd != -1)
 	{
+		if (error != nil)
+		{
+			*error = [NSError errorWithDomain:@"com.tee-boy.DriveWireMacServer" code:-10 userInfo:nil];
+		}
+		
 		return NO;
 	}
 	
     // acquire the path to the device.  If error, return an error.
-    status = open([fDeviceName cStringUsingEncoding:NSASCIIStringEncoding], O_RDWR | O_NOCTTY | O_NDELAY);
+    status = open([_deviceName cStringUsingEncoding:NSASCIIStringEncoding], O_RDWR | O_NOCTTY | O_NDELAY);
+	_fd = status;
+	
     if (status != -1) 
     {
-		fd = status;
-		fOwner = owner;
+		_owner = owner;
 		
         // set blocking I/O, no signal on data ready...
-        if ((status = fcntl(fd, F_SETFL, 0)) != -1) 
+        if ((status = fcntl(_fd, F_SETFL, 0)) != -1) 
         {
             // Get the current options and save them for later reset.
-            if ((status = tcgetattr(fd, &sOriginalTTYAttrs)) != -1) 
+            if ((status = tcgetattr(_fd, &_originalTTYAttrs)) != -1) 
             {
                 // Set raw input, one second timeout.
                 // These options are documented in the man page for termios.
-                
-                sTTYAttrs = sOriginalTTYAttrs;
-                cfmakeraw(&sTTYAttrs);
-                sTTYAttrs.c_cflag |= CS8 | CLOCAL | CREAD;
-                sTTYAttrs.c_lflag = IGNBRK | IGNPAR;
-                sTTYAttrs.c_cc[VMIN] = 1;		// 1 chars to wait for
-                sTTYAttrs.c_cc[VTIME] = 0;
+                _ttyAttrs = _originalTTYAttrs;
+                cfmakeraw(&_ttyAttrs);
+                _ttyAttrs.c_cflag |= CS8 | CLOCAL | CREAD;
+                _ttyAttrs.c_lflag = IGNBRK | IGNPAR;
+                _ttyAttrs.c_cc[VMIN] = 1;		// 1 chars to wait for
+                _ttyAttrs.c_cc[VTIME] = 0;
 				[self setBaudRate:9600];
-
+				
                 // set the options.                
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
-
+                status = tcsetattr(_fd, TCSANOW, &_ttyAttrs);
+				
 				[self setWordSize:8];
 				[self setParity:parityNone];
 				[self setStopBits:1];
@@ -125,15 +123,20 @@
 				[self setReadTimeout:1];
 				
 				// spin off listener thread.				
-				allowedToRun = TRUE;				
-				serialLock = [[NSLock alloc] init];				
-				[NSThread detachNewThreadSelector:@selector(listener:) toTarget:self withObject:nil];
+				_allowedToRun = TRUE;				
+                _threadIsRunning = TRUE;
+				[NSThread detachNewThreadSelector:@selector(listener2:) toTarget:self withObject:nil];
             }
         }
     }
-
+	
 	if (status == -1)
 	{
+		if (error != nil)
+		{
+			*error = [NSError errorWithDomain:@"com.tee-boy.DriveWireMacServer" code:-10 userInfo:nil];
+		}
+		
 		return NO;
 	}
 	else
@@ -142,24 +145,19 @@
 	}
 }
 
-- (BOOL)closePort
+- (BOOL)closePort;
 {
-	if (allowedToRun == true)
+	if (_allowedToRun == TRUE)
 	{
 		// Flag listener thread to quit
-		allowedToRun = false;
+		_allowedToRun = FALSE;
 		
-		// Wait for thread to unlock
-		while ([serialLock tryLock] == NO);
-
-		if (fd != -1)
+		if (_fd != -1)
 		{
-			close(fd);        
-			fd = -1;
-			fOwner = nil;
+			close(_fd);        
+			_fd = -1;
+			_owner = nil;
 		}
-		[serialLock unlock];
-		[serialLock release];
 		
 		return YES;
 	}
@@ -167,159 +165,110 @@
     return NO;
 }
 
+
 #pragma mark -
 #pragma mark Data Acquisition Methods
 
 // This method should run on its own thread.  It listens to any data coming in from the port,
-// then packages that data and sends it to our delegate.
-- (void)listener:(id)anObject;
+// then packages that data and sends it out.
+- (void)listener2:(id)anObject;
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    const int readBufferSize = 300;
-    char readBuffer[readBufferSize];
-    NSData *serialData;
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	
-#ifdef DEBUG
-	NSLog(@"Entering Thread...\n");
-#endif
+	struct timeval timeout;
+	int result = 0;
+	fd_set localReadFDSet;
+	char buf[1024];
 	
-    // 1. Lock access to this thread.
-    [serialLock lock];
-	
-	// 2. Do processing so long as we are allowed to run.
-    while (allowedToRun == TRUE)
+	// Do processing so long as we are allowed to run.
+    while (_allowedToRun == TRUE && _fd != -1)
     {
-        int maxsize = 0;
+		FD_ZERO(&localReadFDSet);
+		FD_SET(_fd, &localReadFDSet);
 		
-        // 1. Read up to 'maxsize' bytes from the port.		
-		maxsize = read(fd, readBuffer, readBufferSize);
-        if (maxsize > 0)
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 100000; // check to see if port closed every 100ms
+		
+		result = select(_fd + 1, &localReadFDSet, NULL, NULL, &timeout);
+		if (TRUE == _allowedToRun && result > 0 && FD_ISSET(_fd, &localReadFDSet)) 
+		{
+			// Data is available
+			long lengthRead = read(_fd, buf, sizeof(buf));
+			if (lengthRead > 0)
+			{
+				NSData *readData = [NSData dataWithBytes:buf length:lengthRead];
+				if (readData != nil && [(id)_delegate respondsToSelector:@selector(serialPort:didReceiveData:)])
+				{
+					[_delegate serialPort:self didReceiveData:readData];
+				}
+			}
+		}
+		
+		[pool drain];    	
+		pool = [[NSAutoreleasePool alloc] init];
+    }
+	
+    _threadIsRunning = FALSE;
+	
+	[pool drain];
+}
+
+- (NSData *)readData;
+{
+	NSData *incoming = nil;
+	
+    // only if we have a valid port open
+    if (_fd != -1)
+    {
+        int ready = [self bytesReady];
+        
+        // only if we have data to ready
+        if (ready > 0)
         {
-            // 1. Package serial data into an NSData object			
-            serialData = [NSData dataWithBytesNoCopy:readBuffer length:maxsize freeWhenDone:NO];
+            void *buffer = (void *)malloc(ready);
 			
-            // 2. If logging is turned on, log all bytes
-            if (logIncomingBytes == true)
+            int count = read(_fd, buffer, ready);
+			
+            // only if we read some bytes
+            if (count > 0)
             {
-#ifdef DEBUG
-				NSLog(@"Incoming bytes: %@", [serialData description]);
-#endif
+                incoming = [NSData dataWithBytes:buffer length:count];
             }
-           
-            // 3. Pass the data to the delegate
-//           [_delegate performSelectorOnMainThread:@selector(availableData:) withObject:serialData waitUntilDone:YES];
-            [delegate availableData:serialData];
+			
+            free(buffer);
         }
     }
 	
-    [pool release];
+    return incoming;
+}
+
+- (BOOL)writeData:(NSData *)data;
+{
+    BOOL result = FALSE;
     
-    // 3. Unlock the lock.    
-#ifdef DEBUG
-	NSLog(@"Exiting Thread...\n");
-#endif
+    if (_fd != -1)
+    {
+		int status = write(_fd, [data bytes], [data length]);
+        
+        if (status != -1)
+        {
+            // write succeeded
+            result = YES;
+            
+            if (_logOutgoingBytes == TRUE)
+            {
+            }            
+        }
+    }
+    
+    return result;
+}
+
+- (BOOL)writeString:(NSString *)data;
+{
+    NSData *packaged = [data dataUsingEncoding:NSUTF8StringEncoding];
 	
-    [serialLock unlock];
-}
-
-#if 0
-- (void)serialPortReadData:(NSDictionary *)dataDictionary
-{
-#if 0
-   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-
-	[nc postNotificationName:fServiceName object:self userInfo:dataDictionary];
-#else
-   [_delegate availableData:dataDictionary];
-#endif
-}
-#endif
-
-- (BOOL)readData :(char *)data :(int)length;
-{
-    int status = -1;
-	    
-    if (fd != -1)
-    {
-		status = read(fd, data, length);
-    }
-    
-	if (status == -1)
-	{		
-		return NO;
-	}
-	else
-	{		
-		return YES;
-	}
-}
-
-- (NSData *)readAvailableData
-{
-    int status = -1, length = [self bytesReady];
-	NSData *incoming;
-	void *buffer = (void *)malloc(length);
-	    
-    if (fd != -1)
-    {
-		status = read(fd, buffer, length);
-    }    
-    
-	if (status == -1)
-	{
-		free(buffer);
-		
-		return nil;
-	}
-	else
-	{
-		incoming = [NSData dataWithBytes:buffer length:status];
-		
-		return incoming;
-	}
-}
-
-- (BOOL)writeData :(NSData *)data
-{
-    int status = -1;
-    
-    if (fd != -1)
-    {
-        status = write(fd, [data bytes], [data length]);
-    }
-    
-	if (logOutgoingBytes == true)
-	{
-		NSLog(@"Outgoing bytes: %@", [data description]);
-	}
-    
-	if (status == -1)
-	{
-		return NO;
-	}
-	else
-	{
-		return YES;
-	}
-}
-
-- (BOOL)writeString :(NSString *)data
-{
-    int status = -1;
-    
-    if (fd != -1)
-    {
-        status = write(fd, [data cStringUsingEncoding:NSASCIIStringEncoding], [data length]);
-    }
-    
-	if (status == -1)
-	{
-		return NO;
-	}
-	else
-	{
-		return YES;
-	}
+    return [self writeData:packaged];
 }
 
 
@@ -328,29 +277,39 @@
 
 - (Boolean)inputLogging;
 {
-   return logIncomingBytes;
+	return _logIncomingBytes;
+}
+
+- (void)setInputLogging:(Boolean)value;
+{
+    _logIncomingBytes = value;
 }
 
 - (Boolean)outputLogging;
 {
-   return logOutgoingBytes;
+	return _logOutgoingBytes;
 }
 
-- (int)bytesReady
+- (void)setOutputLogging:(Boolean)value;
+{
+    _logOutgoingBytes = value;
+}
+
+- (int)bytesReady;
 {
     int	ready = -1;
     
-    if (fd != -1)
+    if (_fd != -1)
     {
-        ioctl(fd, FIONREAD, &ready);
+        ioctl(_fd, FIONREAD, &ready);
     }
     
     return ready;
 }
 
-- (BOOL)isAcquired
+- (BOOL)isAcquired;
 {
-    if (fd == -1)
+    if (_fd == -1)
     {
         return NO;
     }
@@ -358,115 +317,144 @@
     return YES;
 }
 
-- (NSString *)deviceName
+- (NSString *)deviceName;
 {
-    return fDeviceName;
+    return _deviceName;
 }
 
-- (NSString *)serviceName
+- (NSString *)serviceName;
 {
-    return fServiceName;
+    return _serviceName;
 }
 
-- (id)owner
+- (id)owner;
 {
-    return fOwner;
+    return _owner;
 }
 
 
 #pragma mark -
 #pragma mark Port Control Methods
 
-- (BOOL)setBaudRate:(int)baudRate
+- (BOOL)dtrState;
 {
-    int status = -1;    
-    
-    if (fd != -1)
-    {
-        if ((status = cfsetspeed(&sTTYAttrs, baudRate)) != -1)
-        {
-            status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
+	BOOL result = FALSE;
+	
+    if (_fd != -1)
+    {		
+		int portstatus;
+		
+        int status = ioctl(_fd, TIOCMGET, &portstatus);   // get current port status
+		if (status == 0)
+		{
+			result = (portstatus & TIOCM_DTR);
 		}
     }
-    
-	if (status == -1)
-	{
-		return NO;
-	}
-	else
-	{
-		return YES;
-	}
+	
+	return result;
 }
 
-- (int)baudRate
+- (void)setDTRState:(BOOL)onOrOff;
+{
+    if (_fd != -1)
+    {		
+		int portstatus;
+		
+        ioctl(_fd, TIOCMGET, &portstatus);   // get current port status
+        switch (onOrOff)
+        {
+            case TRUE:
+				portstatus |= TIOCM_DTR;
+                break;
+				
+            case FALSE:
+				portstatus &= ~TIOCM_DTR;
+                break;
+        }
+		
+        ioctl(_fd, TIOCMSET, &portstatus);   // set current port status
+    }
+}
+
+- (BOOL)hardwareHandshaking;
+{
+	BOOL result = FALSE;
+	
+    if (_fd != -1)
+    {
+		tcgetattr(_fd, &_ttyAttrs);
+		
+		result = _ttyAttrs.c_cflag & CRTSCTS;
+    }
+	
+	return result;
+}
+
+- (void)setHardwareHandshaking:(BOOL)onOrOff;
+{
+    if (_fd != -1)
+    {
+        switch (onOrOff)
+        {
+            case TRUE:
+                _ttyAttrs.c_cflag |= CRTSCTS;
+                break;
+				
+            case FALSE:
+                _ttyAttrs.c_cflag &= ~CRTSCTS;
+                break;
+        }
+		
+		tcsetattr(_fd, TCSANOW, &_ttyAttrs);
+    }
+}
+
+- (int)baudRate;
 {
     int	status = -1;
-        
-    if (fd != -1)
+	
+    if (_fd != -1)
     {
-        status = cfgetispeed(&sTTYAttrs);
+        status = cfgetispeed(&_ttyAttrs);
     }
     
     return status;
 }
 
-- (BOOL)setWordSize:(int)wordSize;
+- (BOOL)setBaudRate:(int)baudRate;
 {
-    int		status = -1;
-	
-    if (fd != -1)
+    BOOL result = FALSE;
+    
+    if (_fd != -1)
     {
-        switch (wordSize)
+        int status;
+        
+        if ((status = cfsetspeed(&_ttyAttrs, baudRate)) != -1)
         {
-            case 8:
-                sTTYAttrs.c_cflag &= ~CSIZE;
-                sTTYAttrs.c_cflag |= CS8;
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
-                break;
-
-            case 7:
-                sTTYAttrs.c_cflag &= ~CSIZE;
-                sTTYAttrs.c_cflag |= CS7;
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
-                break;
-                
-            case 6:
-                sTTYAttrs.c_cflag &= ~CSIZE;
-                sTTYAttrs.c_cflag |= CS6;
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
-                break;
-
-            case 5:
-                sTTYAttrs.c_cflag &= ~CSIZE;
-                sTTYAttrs.c_cflag |= CS5;
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
-                break;
+            status = tcsetattr(_fd, TCSANOW, &_ttyAttrs);
+		}
+        
+        if (status != -1)
+        {
+            result = YES;
         }
     }
     
-	if (status == -1)
-	{
-		return NO;
-	}
-	else
-	{
-		return YES;
-	}
+    return result;
 }
 
 - (int)wordSize;
 {
     int	status = -1;
-
-    if (fd != -1)
+	
+    if (_fd != -1)
     {
-        switch (sTTYAttrs.c_cflag & CSIZE)
+        switch (_ttyAttrs.c_cflag & CSIZE)
         {
             case CS8:
                 status = 8;
                 break;
-
+				
             case CS7:
                 status = 7;
                 break;
@@ -474,7 +462,7 @@
             case CS6:
                 status = 6;
                 break;
-
+				
             case CS5:
                 status = 5;
                 break;
@@ -484,61 +472,55 @@
     return status;
 }
 
-- (void)setInputLogging:(Boolean)value;
+- (BOOL)setWordSize:(int)wordSize;
 {
-   logIncomingBytes = value;
-}
-
-- (void)setOutputLogging:(Boolean)value;
-{
-   logOutgoingBytes = value;
-}
-
-- (BOOL)setParity:(serialParity)parity
-{
-    int	status = -1;
-
-    if (fd != -1)
+    BOOL result = FALSE;
+    
+    if (_fd != -1)
     {
-        switch (parity)
+        switch (wordSize)
         {
-            case parityNone:
-                sTTYAttrs.c_cflag &= ~(PARENB | PARODD);
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
+            case 8:
+                _ttyAttrs.c_cflag &= ~CSIZE;
+                _ttyAttrs.c_cflag |= CS8;
                 break;
-
-            case parityOdd:
-                sTTYAttrs.c_cflag |= (PARENB | PARODD);
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
+                
+            case 7:
+                _ttyAttrs.c_cflag &= ~CSIZE;
+                _ttyAttrs.c_cflag |= CS7;
                 break;
-
-            case parityEven:
-                sTTYAttrs.c_cflag |= PARENB;
-                sTTYAttrs.c_cflag &= ~PARODD;
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
+                
+            case 6:
+                _ttyAttrs.c_cflag &= ~CSIZE;
+                _ttyAttrs.c_cflag |= CS6;
+                break;
+                
+            case 5:
+                _ttyAttrs.c_cflag &= ~CSIZE;
+                _ttyAttrs.c_cflag |= CS5;
                 break;
         }
-    }
+        
+        int status = tcsetattr(_fd, TCSANOW, &_ttyAttrs);
+        
+        if (status != -1)
+        {
+            result = TRUE;
+        }
+	}
     
-	if (status == -1)
-	{
-		return NO;
-	}
-	else
-	{
-		return YES;
-	}
+    return result;
 }
 
-- (serialParity)parity
+- (serialParity)parity;
 {
     serialParity	parity = parityNone;
-
-    if (fd != -1)
+	
+    if (_fd != -1)
     {
-        if ((sTTYAttrs.c_cflag & PARENB) != 0)
+        if ((_ttyAttrs.c_cflag & PARENB) != 0)
         {
-            if ((sTTYAttrs.c_cflag & PARODD) != 0)
+            if ((_ttyAttrs.c_cflag & PARODD) != 0)
             {
                 parity = parityOdd;
             }
@@ -548,123 +530,147 @@
             }
         }
     }
-
+	
     return parity;
 }
 
-- (BOOL)setStopBits:(int)stopBits;
+- (BOOL)setParity:(serialParity)parity;
 {
-    int	status = -1;
-        
-    if (fd != -1)
+    BOOL result = FALSE;
+    
+    if (_fd != -1)
     {
-        switch (stopBits)
+        switch (parity)
         {
-            case 1:
-                sTTYAttrs.c_cflag &= ~CSTOPB;
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
+            case parityNone:
+                _ttyAttrs.c_cflag &= ~(PARENB | PARODD);
                 break;
-
-            case 2:
-                sTTYAttrs.c_cflag |= CSTOPB;
-                status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
+                
+            case parityOdd:
+                _ttyAttrs.c_cflag |= (PARENB | PARODD);
+                break;
+                
+            case parityEven:
+                _ttyAttrs.c_cflag |= PARENB;
+                _ttyAttrs.c_cflag &= ~PARODD;
                 break;
         }
-    }
+        
+        int status = tcsetattr(_fd, TCSANOW, &_ttyAttrs);
+        
+        if (status != -1)
+        {
+            result = TRUE;
+        }
+	}
     
-	if (status == -1)
-	{
-		return NO;
-	}
-	else
-	{
-		return YES;
-	}
+    return result;
 }
 
 - (int)stopBits;
 {
     int	status = -1;    
     
-    if (fd != -1)
+    if (_fd != -1)
     {
         status = 1;	// assume 1 stop bit.
         
-        if ((sTTYAttrs.c_cflag & CSTOPB) != 0)
+        if ((_ttyAttrs.c_cflag & CSTOPB) != 0)
         {
             status = 2;
         }
     }
-
+    
     return status;
 }
 
-// Sets the read timeout in milliseconds.
-// Returns 0 (success) OR -1 (failure).
-- (BOOL)setReadTimeout:(int)timeout
+- (BOOL)setStopBits:(int)stopBits;
 {
-    int	status = -1;
-
-    if (fd != -1)
+    BOOL result = FALSE;
+    
+    if (_fd != -1)
     {
-        sTTYAttrs.c_cc[VTIME] = timeout;
-
-        status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
-    }
-
-	if (status == -1)
-	{
-		return NO;
+        switch (stopBits)
+        {
+            case 1:
+                _ttyAttrs.c_cflag &= ~CSTOPB;
+                break;
+				
+            case 2:
+                _ttyAttrs.c_cflag |= CSTOPB;
+                break;
+        }
+		
+        int status = tcsetattr(_fd, TCSANOW, &_ttyAttrs);
+        if (status != -1)
+        {
+            result = TRUE;
+        }
 	}
-	else
-	{
-		return YES;
-	}
+    
+    return result;
 }
 
-- (int)readTimeout
+- (int)readTimeout;
 {
     int	status = -1;    
     
-    if (fd != -1)
+    if (_fd != -1)
     {
-        status = sTTYAttrs.c_cc[VTIME];
+        status = _ttyAttrs.c_cc[VTIME];
     }    
-
+	
     return status;
 }
 
-- (BOOL)setMinimumReadBytes:(int)number
+- (BOOL)setReadTimeout:(int)timeout;
 {
-    int	status = -1;
-
-    if (fd != -1)
+    BOOL result = FALSE;
+    
+    if (_fd != -1)
     {
-        sTTYAttrs.c_cc[VMIN] = number;
-
-        status = tcsetattr(fd, TCSANOW, &sTTYAttrs);
+        _ttyAttrs.c_cc[VTIME] = timeout;
+        
+        int status = tcsetattr(_fd, TCSANOW, &_ttyAttrs);
+        
+        if (status != -1)
+        {
+            result = TRUE;
+        }
     }
-
-	if (status == -1)
-	{
-		return NO;
-	}
-	else
-	{
-		return YES;
-	}
+    
+    return result;
 }
 
-- (int)minimumReadBytes
+- (int)minimumReadBytes;
 {
     int	status = -1;
     
-    if (fd != -1)
+    if (_fd != -1)
     {
-        status = sTTYAttrs.c_cc[VMIN];
+        status = _ttyAttrs.c_cc[VMIN];
     }
     
     return status;
+}
+
+- (BOOL)setMinimumReadBytes:(int)number;
+{
+    BOOL result = FALSE;
+    
+    if (_fd != -1)
+    {
+        _ttyAttrs.c_cc[VMIN] = number;
+		
+        int status = tcsetattr(_fd, TCSANOW, &_ttyAttrs);
+		
+        if (status != -1)
+        {
+            result = TRUE;
+        }
+	}
+    
+    return result;
 }
 
 @end

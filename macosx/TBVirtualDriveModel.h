@@ -167,9 +167,9 @@ typedef enum {LED_OFF, LED_READ, LED_WRITE} ledState;
 - (NSData *)writeSectors:(uint32_t)lsn forCount:(uint32_t)count withData:(NSData *)sectors;
 
 
-- (void)turnOnReadLED:(id)sender;
+- (void)turnOnReadLED:(id)sender time:(NSTimeInterval)timeValue;
 
-- (void)turnOnWriteLED:(id)sender;
+- (void)turnOnWriteLED:(id)sender time:(NSTimeInterval)timeValue;
 
 
 @end
