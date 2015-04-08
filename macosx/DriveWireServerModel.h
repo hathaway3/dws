@@ -48,6 +48,10 @@
 #define	_OP_VPORT_READ          'V'
 #define	_OP_VPORT_WRITE         'v'
 
+#define	_OP_SERREAD				0x43
+#define	_OP_SERINIT				0x45
+#define	_OP_SERTERM				0xC5
+
 // WireBug definitions
 #define	_OP_WIREBUG_READREGS    'R'
 #define	_OP_WIREBUG_WRITEREGS	'r'

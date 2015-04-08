@@ -15,6 +15,57 @@
 
 static TBSerialManager *fSerialManager = nil;
 
+#pragma mark -
+#pragma mark Serial Support
+
+- (void)OP_SERINIT
+{
+	u_char port = *dataBytes;
+	dataLength++;
+	
+	if (port > 127)
+	{
+		// virtual window
+	}
+	
+	// Update log
+	[statistics setObject:@"OP_SERINIT" forKey:@"OpCode"];
+	[_delegate updateInfoView:statistics];
+	
+	[self resetState:nil];
+}
+
+- (void)OP_SERTERM
+{
+	u_char port = *dataBytes;
+	dataLength++;
+	
+	if (port > 127)
+	{
+		// virtual window
+	}
+	
+	// Update log
+	[statistics setObject:@"OP_SERTERM" forKey:@"OpCode"];
+	[_delegate updateInfoView:statistics];
+	
+	[self resetState:nil];
+}
+
+- (void)OP_SERREAD
+{
+	char response[2] = {0, 0};
+	
+	[portDelegate writeData:[NSData dataWithBytes:response length:2]];
+	
+	// Update log
+	[statistics setObject:@"OP_SERREAD" forKey:@"OpCode"];
+	[_delegate updateInfoView:statistics];
+	
+	[self resetState:nil];
+}
+
+
 
 - (void)setDelegate:(id)delegate;
 {
@@ -187,9 +238,7 @@ static TBSerialManager *fSerialManager = nil;
 	fSerialPortNames = [[TBSerialManager availablePorts] retain];
    
    // Set up state variables
-	currentState = @selector(OP_OPCODE);
-   startOfData = inputBuffer;
-   currentLocation = 0;
+	[self resetState:nil];
    
    // Setup printer buffer
    printBuffer = [[NSMutableData alloc] init];
@@ -515,7 +564,19 @@ static TBSerialManager *fSerialManager = nil;
 			
 		case _OP_NAMEOBJ_MOUNT:
 		   currentState = @selector(OP_NAMEOBJ_MOUNT);
-          break;
+           break;
+			
+		case _OP_SERINIT:
+			currentState = @selector(OP_SERINIT);
+			break;
+			
+		case _OP_SERTERM:
+			currentState = @selector(OP_SERTERM);
+			break;
+			
+		case _OP_SERREAD:
+			[self OP_SERREAD];
+			break;
 			
 		case _OP_DWINIT:
 			currentState = @selector(OP_DWINIT);
@@ -538,23 +599,19 @@ static TBSerialManager *fSerialManager = nil;
 
 - (void)OP_NOP;
 {
-   [self invalidateWatchdog];
-
 	[statistics setObject:@"OP_NOP" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 	
-	currentState = @selector(OP_OPCODE);
+	[self resetState:nil];
 }
 
 - (void)OP_PRINTFLUSH;
 {
-   [self invalidateWatchdog];
-   
 	[statistics setObject:@"OP_PRINTFLUSH" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
    [self flushPrinterBuffer];
-   
-	currentState = @selector(OP_OPCODE);
+
+	[self resetState:nil];
 }
 
 - (void)flushPrinterBuffer;
@@ -568,18 +625,14 @@ static TBSerialManager *fSerialManager = nil;
 
 - (void)OP_DWINIT;
 {
-	// Invalidate watchdog timer
-	[self invalidateWatchdog];
+	u_char byte = *dataBytes;
+	dataLength++;
 	
-	unsigned char byte = dataBytes[0];
 	[statistics setObject:@"OP_DWINIT" forKey:@"OpCode"];
 	[statistics setObject:[NSString stringWithFormat:@"%d", byte] forKey:@"Byte"];
 	[_delegate updateInfoView:statistics];
-	
-	
-	dataLength--;
-	dataBytes++;
-	currentState = @selector(OP_OPCODE);
+		
+	[self resetState:nil];
 	
 	// send response
 	[portDelegate writeData:[NSData dataWithBytes:"\x00" length:1]];
@@ -587,10 +640,9 @@ static TBSerialManager *fSerialManager = nil;
 
 - (void)OP_PRINT;
 {
-   // Invalidate watchdog timer
-   [self invalidateWatchdog];
-   
-   unsigned char byte = dataBytes[0];
+   u_char byte = *dataBytes;
+	dataLength++;
+	
    [printBuffer appendBytes:&byte length:1];
 	[statistics setObject:@"OP_PRINT" forKey:@"OpCode"];
    [statistics setObject:[NSString stringWithFormat:@"%d", byte] forKey:@"Byte"];
@@ -601,39 +653,28 @@ static TBSerialManager *fSerialManager = nil;
    {
       [self flushPrinterBuffer];
    }
-	
-   dataLength--;
-   dataBytes++;
-	currentState = @selector(OP_OPCODE);
+
+	[self resetState:nil];
 }
 
 - (void)OP_INIT
 {
-   // Invalidate watchdog timer
-   [self invalidateWatchdog];
-   
 	[statistics setObject:@"OP_INIT" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 
-	currentState = @selector(OP_OPCODE);
+	[self resetState:nil];
 }
 
 - (void)OP_TERM
 {
-   // Invalidate watchdog timer
-   [self invalidateWatchdog];
-      
 	[statistics setObject:@"OP_TERM" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 		
-	currentState = @selector(OP_OPCODE);
+	[self resetState:nil];
 }
 
 - (void)OP_RESET
 {
-   // Invalidate watchdog timer
-   [self invalidateWatchdog];
-   
 	// Reset all statistics
 	[statistics setObject:@"OP_RESET" forKey:@"OpCode"];
 	[statistics setObject:@"0" forKey:@"LSN"];
@@ -647,8 +688,7 @@ static TBSerialManager *fSerialManager = nil;
 	[statistics setObject:@"00000" forKey:@"Checksum"];
    [_delegate updateInfoView:statistics];
 
-	currentState = @selector(OP_OPCODE);
-   currentLocation = 0;
+	[self resetState:nil];
 
    // Set WireBug state to FALSE
    [self setWirebugState:false];
@@ -656,24 +696,18 @@ static TBSerialManager *fSerialManager = nil;
 
 - (void)OP_RESYNC
 {
-   // Invalidate watchdog timer
-   [self invalidateWatchdog];
-
 	[statistics setObject:@"OP_RESYNC" forKey:@"OpCode"];
    [_delegate updateInfoView:statistics];
 	
-	currentState = @selector(OP_OPCODE);
+	[self resetState:nil];
 }
 
 - (void)OP_TIME
 {
-   // Invalidate watchdog timer
-   [self invalidateWatchdog];
-   
 	time_t currentClock;
 	struct tm *tpack;
 	char os9tpack[7];
-
+	
 	time(&currentClock);
 	tpack = localtime(&currentClock);
 	os9tpack[0] = tpack->tm_year;
@@ -686,12 +720,12 @@ static TBSerialManager *fSerialManager = nil;
 	
 	// Send time packet to CoCo
 	[portDelegate writeData:[NSData dataWithBytes:os9tpack length:7]];
-
+	
 	// Update log
 	[statistics setObject:@"OP_TIME" forKey:@"OpCode"];
-   [_delegate updateInfoView:statistics];
+	[_delegate updateInfoView:statistics];
 	
-	currentState = @selector(OP_OPCODE);
+	[self resetState:nil];
 }
 
 - (void)OP_REREAD
@@ -704,15 +738,12 @@ static TBSerialManager *fSerialManager = nil;
 	[self OP_READEX];
 }
 
-- (void)resetState:(NSTimer*)theTimer
+- (void)resetState:(NSTimer *)theTimer
 {
-#ifdef DEBUG
-   NSLog(@"Watchdog triggered... resetting state");
-#endif
-   currentLocation = 0;
-   startOfData = inputBuffer;
-   currentState = @selector(OP_OPCODE);
-   watchDog = nil;
+	currentLocation = 0;
+	startOfData = inputBuffer;
+	currentState = @selector(OP_OPCODE);
+	[self invalidateWatchdog];
 }
 
 - (void)OP_VPORT_READ
@@ -751,12 +782,6 @@ static TBSerialManager *fSerialManager = nil;
 		uint32_t portNumber, readCount;
 		char b[256];
 		
-		// Invalidate watchdog timer
-		[self invalidateWatchdog];
-		
-		// Reset the current location now that we've achieved it.
-		currentLocation = 0;
-		
 		// Extract virtual port number and read count from data packet.
 		portNumber = startOfData[0];
 		readCount = startOfData[1];
@@ -773,8 +798,7 @@ static TBSerialManager *fSerialManager = nil;
 		[_delegate updateInfoView:statistics];
 		
 		// Reset state
-		currentState = @selector(OP_OPCODE);
-		startOfData = inputBuffer;
+		[self resetState:nil];
 	}
 	
 	return;
@@ -815,9 +839,6 @@ static TBSerialManager *fSerialManager = nil;
 	{
 		uint32_t portNumber, dataByte;
 		
-		// Invalidate watchdog timer
-		[self invalidateWatchdog];
-		
 		// Reset the current location now that we've achieved it.
 		currentLocation = 0;
 		
@@ -831,8 +852,7 @@ static TBSerialManager *fSerialManager = nil;
 		[_delegate updateInfoView:statistics];
 		
 		// Reset state
-		currentState = @selector(OP_OPCODE);
-		startOfData = inputBuffer;
+		[self resetState:nil];
 	}
 	
 	return;
@@ -876,9 +896,6 @@ static TBSerialManager *fSerialManager = nil;
 		unsigned int vLSN;
 		uint16_t myChecksum;
 		unsigned char b[2], response;
-		
-		// Invalidate watchdog timer
-		[self invalidateWatchdog];
 		
 		// Reset the current location now that we've achieved it.
 		currentLocation = 0;
@@ -984,8 +1001,7 @@ static TBSerialManager *fSerialManager = nil;
 		}
 		
 		// Reset state
-		currentState = @selector(OP_OPCODE);
-		startOfData = inputBuffer;
+		[self resetState:nil];
 	}
 	
 	return;
@@ -1167,9 +1183,6 @@ static TBSerialManager *fSerialManager = nil;
    {
       uint16_t cocoChecksum = 0;
       
-      // Invalidate watchdog timer
-      [self invalidateWatchdog];
-      
       currentLocation = 0;
       
       cocoChecksum = startOfData[0] * 256 + startOfData[1];
@@ -1181,9 +1194,7 @@ static TBSerialManager *fSerialManager = nil;
       // Send the response code to the CoCo.
       [portDelegate writeData:[NSData dataWithBytes:&readexResponse length:1]];
       
-      currentState = @selector(OP_OPCODE);
-      startOfData = inputBuffer;
-      currentLocation = 0;
+	   [self resetState:nil];
    }
    
    return;
@@ -1232,9 +1243,6 @@ static TBSerialManager *fSerialManager = nil;
        uint16_t myChecksum = 0, cocoChecksum = 0;
        unsigned char response;
 		
-       // Invalidate watchdog timer
-       [self invalidateWatchdog];
-              
        // Reset the current location now that we've achieved it.
        currentLocation = 0;
         
@@ -1315,8 +1323,7 @@ static TBSerialManager *fSerialManager = nil;
        [portDelegate writeData:[NSData dataWithBytes:&response length:1]];
 	
        // Reset state.
-       currentState = @selector(OP_OPCODE);
-       startOfData = inputBuffer;
+		[self resetState:nil];
     }
     
     return;
@@ -1368,9 +1375,6 @@ static TBSerialManager *fSerialManager = nil;
     {
 		uint32_t driveNumber, statCode;
 		
-       // Invalidate watchdog timer
-       [self invalidateWatchdog];
-       
        // Reset the current location.
         currentLocation = 0;
         driveNumber = startOfData[0];
@@ -1398,8 +1402,7 @@ static TBSerialManager *fSerialManager = nil;
       }
 		
        // Reset state.
-       currentState = @selector(OP_OPCODE);
-       startOfData = inputBuffer;
+		[self resetState:nil];
     }
 	
 	return;
@@ -1554,9 +1557,6 @@ static TBSerialManager *fSerialManager = nil;
 	// Check if we have reached our terminal count.
 	if (currentLocation == nameobj_size)
 	{
-		// Invalidate watchdog timer
-		[self invalidateWatchdog];
-		
 		[statistics setObject:@"OP_NAMEOBJ_MOUNT" forKey:@"OpCode"];
 		[_delegate updateInfoView:statistics];
 		
@@ -1580,7 +1580,6 @@ static TBSerialManager *fSerialManager = nil;
 			TBVirtualDriveController *drive = [[[TBVirtualDriveController alloc] init] autorelease];
 			[drive setDriveID:i];
 			[drive insertCartridge:fullPath];
-			NSLog(@"Mounting %@ in drive %d", fullPath, i);
 			[driveArray addObject:drive];
 		}
 
@@ -1588,11 +1587,7 @@ static TBSerialManager *fSerialManager = nil;
 		[portDelegate writeData:[NSData dataWithBytes:&b length:1]];
 
 		// Reset the current location now that we've achieved it.
-        currentLocation = 0;
-        
-        startOfData = inputBuffer;
-		
-		currentState = @selector(OP_OPCODE);
+		[self resetState:nil];
 	}
 }
 
@@ -1630,9 +1625,6 @@ static TBSerialManager *fSerialManager = nil;
     // Check if we have reached our terminal count.
     if (currentLocation == 23)
     {
-       // Invalidate watchdog timer
-       [self invalidateWatchdog];
-       
        [statistics setObject:@"OP_WIREBUG" forKey:@"OpCode"];
        [_delegate updateInfoView:statistics];
 
@@ -1687,9 +1679,6 @@ static TBSerialManager *fSerialManager = nil;
     {
 		uint8_t myChecksum = 0, targetChecksum = 0;
 	
-       // Invalidate the watchdog timer
-       [self invalidateWatchdog];
-
        // Reset the current location now that we've achieved it.
         currentLocation = 0;
         
@@ -1835,8 +1824,7 @@ static TBSerialManager *fSerialManager = nil;
     // Check if we have reached our terminal count.
     if (currentLocation == 24)
     {
-       [self invalidateWatchdog];
-		currentState = @selector(OP_OPCODE);
+	   [self resetState:nil];
     }
 }
 
@@ -1883,8 +1871,7 @@ static TBSerialManager *fSerialManager = nil;
 	requestBuffer[23] = [self compute8BitChecksum:&requestBuffer[0] :23];
 	[portDelegate writeData:[NSData dataWithBytes:requestBuffer length:24]];
 	[self setWirebugState:false];
-   currentState = @selector(OP_OPCODE);
-   currentLocation = 0;
+	[self resetState:nil];
 }
 
 
