@@ -21,7 +21,8 @@ static TBSerialManager *fSerialManager = nil;
 - (void)OP_SERINIT
 {
 	u_char port = *dataBytes;
-	dataLength++;
+	dataLength--;
+	dataBytes++;
 	
 	if (port > 127)
 	{
@@ -38,7 +39,8 @@ static TBSerialManager *fSerialManager = nil;
 - (void)OP_SERTERM
 {
 	u_char port = *dataBytes;
-	dataLength++;
+	dataLength--;
+	dataBytes++;
 	
 	if (port > 127)
 	{
@@ -626,7 +628,8 @@ static TBSerialManager *fSerialManager = nil;
 - (void)OP_DWINIT;
 {
 	u_char byte = *dataBytes;
-	dataLength++;
+	dataLength--;
+	dataBytes++;
 	
 	[statistics setObject:@"OP_DWINIT" forKey:@"OpCode"];
 	[statistics setObject:[NSString stringWithFormat:@"%d", byte] forKey:@"Byte"];
@@ -641,7 +644,8 @@ static TBSerialManager *fSerialManager = nil;
 - (void)OP_PRINT;
 {
    u_char byte = *dataBytes;
-	dataLength++;
+	dataLength--;
+	dataBytes++;
 	
    [printBuffer appendBytes:&byte length:1];
 	[statistics setObject:@"OP_PRINT" forKey:@"OpCode"];

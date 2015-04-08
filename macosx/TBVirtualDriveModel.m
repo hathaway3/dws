@@ -174,7 +174,7 @@ static int instanceCount = 0;
 	}
 
 	ledTimer = [NSTimer timerWithTimeInterval:1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop currentRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
+	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
 	
 
 	// Play the "insert" sound
@@ -271,7 +271,7 @@ static int instanceCount = 0;
 		[ledTimer invalidate];
 	}
 	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop currentRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
+	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
 	
     // Seek to offset based on LSN passed.
     [cartridgeHandle seekToFileOffset:offset];
@@ -316,7 +316,7 @@ static int instanceCount = 0;
 		[ledTimer invalidate];
 	}
 	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop currentRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
+	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
 	
 	
 	// Seek to offset based on LSN passed
@@ -406,7 +406,7 @@ static int instanceCount = 0;
 	}
 	
 	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop currentRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
+	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
 
 	
 	return;
@@ -436,7 +436,7 @@ static int instanceCount = 0;
 	}
 
 	ledTimer = [NSTimer timerWithTimeInterval:.1 target:self selector:@selector(shutOffLED:) userInfo:nil repeats:NO];
-	[[NSRunLoop currentRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
+	[[NSRunLoop mainRunLoop] addTimer:ledTimer forMode:NSDefaultRunLoopMode];
 
 
 	return;
