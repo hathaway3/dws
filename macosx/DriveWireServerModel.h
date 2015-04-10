@@ -15,8 +15,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "TBSerialPort.h"
-#import "TBSerialManager.h"
+#import <TeeBoy/TBSerialPort.h>
+#import <TeeBoy/TBSerialManager.h>
 #import "TBVirtualDriveController.h"
 
 

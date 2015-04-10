@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6805D7851AD583E800EA3B5F /* TeeBoy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6805D7841AD583E800EA3B5F /* TeeBoy.framework */; };
+		6805D7891AD583F900EA3B5F /* TeeBoy.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6805D7841AD583E800EA3B5F /* TeeBoy.framework */; };
 		6809AD840F6C08A6000BB954 /* TBVirtualDriveController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6809AD7F0F6C08A6000BB954 /* TBVirtualDriveController.m */; };
 		6809AD850F6C08A6000BB954 /* TBVirtualDriveModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 6809AD810F6C08A6000BB954 /* TBVirtualDriveModel.m */; };
 		6809AD860F6C08A6000BB954 /* TBVirtualDriveView.m in Sources */ = {isa = PBXBuildFile; fileRef = 6809AD830F6C08A6000BB954 /* TBVirtualDriveView.m */; };
-		6809AD900F6C0923000BB954 /* TBSerialManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 6809AD8D0F6C0923000BB954 /* TBSerialManager.m */; };
-		6809AD910F6C0923000BB954 /* TBSerialPort.m in Sources */ = {isa = PBXBuildFile; fileRef = 6809AD8F0F6C0923000BB954 /* TBSerialPort.m */; };
 		6809AD940F6C0974000BB954 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6809AD930F6C0974000BB954 /* IOKit.framework */; };
 		6809AE020F6C0C30000BB954 /* TBVirtualDriveView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6809AE010F6C0C30000BB954 /* TBVirtualDriveView.xib */; };
 		6809AE070F6C0C4C000BB954 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6809AE050F6C0C4C000BB954 /* MainMenu.xib */; };
@@ -54,6 +54,19 @@
 		68CCE686096B802100DD90D9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		6805D7BD1AD5842B00EA3B5F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				6805D7891AD583F900EA3B5F /* TeeBoy.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		089C1660FE840EACC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		2A37F4ACFDCFA73011CA2CEA /* DriveWireDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DriveWireDocument.m; sourceTree = "<group>"; };
@@ -61,16 +74,13 @@
 		2A37F4B0FDCFA73011CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		2A37F4BAFDCFA73011CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = English; path = English.lproj/Credits.rtf; sourceTree = "<group>"; };
 		32DBCF750370BD2300C91783 /* DriveWire_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DriveWire_Prefix.pch; sourceTree = "<group>"; };
+		6805D7841AD583E800EA3B5F /* TeeBoy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = TeeBoy.framework; sourceTree = "<group>"; };
 		6809AD7E0F6C08A6000BB954 /* TBVirtualDriveController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBVirtualDriveController.h; sourceTree = "<group>"; };
 		6809AD7F0F6C08A6000BB954 /* TBVirtualDriveController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TBVirtualDriveController.m; sourceTree = "<group>"; };
 		6809AD800F6C08A6000BB954 /* TBVirtualDriveModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBVirtualDriveModel.h; sourceTree = "<group>"; };
 		6809AD810F6C08A6000BB954 /* TBVirtualDriveModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TBVirtualDriveModel.m; sourceTree = "<group>"; };
 		6809AD820F6C08A6000BB954 /* TBVirtualDriveView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBVirtualDriveView.h; sourceTree = "<group>"; };
 		6809AD830F6C08A6000BB954 /* TBVirtualDriveView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TBVirtualDriveView.m; sourceTree = "<group>"; };
-		6809AD8C0F6C0923000BB954 /* TBSerialManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBSerialManager.h; sourceTree = "<group>"; };
-		6809AD8D0F6C0923000BB954 /* TBSerialManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TBSerialManager.m; sourceTree = "<group>"; };
-		6809AD8E0F6C0923000BB954 /* TBSerialPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBSerialPort.h; sourceTree = "<group>"; };
-		6809AD8F0F6C0923000BB954 /* TBSerialPort.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TBSerialPort.m; sourceTree = "<group>"; };
 		6809AD930F6C0974000BB954 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
 		6809AE010F6C0C30000BB954 /* TBVirtualDriveView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = TBVirtualDriveView.xib; sourceTree = "<group>"; };
 		6809AE060F6C0C4C000BB954 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -132,6 +142,7 @@
 				68742E870F41B9EA0049FEF6 /* AppKit.framework in Frameworks */,
 				68742E880F41B9EA0049FEF6 /* Cocoa.framework in Frameworks */,
 				6809AD940F6C0974000BB954 /* IOKit.framework in Frameworks */,
+				6805D7851AD583E800EA3B5F /* TeeBoy.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,7 +173,6 @@
 		2A37F4ABFDCFA73011CA2CEA /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				6809AD8B0F6C0901000BB954 /* Serial */,
 				6809AD790F6C086D000BB954 /* VirtualDrive */,
 				68C537050F6B509A00F39926 /* Printer */,
 				68E20D4C098D173B00FF0CF2 /* Debugger */,
@@ -199,17 +209,6 @@
 			name = VirtualDrive;
 			sourceTree = "<group>";
 		};
-		6809AD8B0F6C0901000BB954 /* Serial */ = {
-			isa = PBXGroup;
-			children = (
-				6809AD8C0F6C0923000BB954 /* TBSerialManager.h */,
-				6809AD8D0F6C0923000BB954 /* TBSerialManager.m */,
-				6809AD8E0F6C0923000BB954 /* TBSerialPort.h */,
-				6809AD8F0F6C0923000BB954 /* TBSerialPort.m */,
-			);
-			name = Serial;
-			sourceTree = "<group>";
-		};
 		6872657F08A8163700ADD1F0 /* Statistics */ = {
 			isa = PBXGroup;
 			children = (
@@ -224,6 +223,7 @@
 		6882CDB2096B57760065973D /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				6805D7841AD583E800EA3B5F /* TeeBoy.framework */,
 				6882CDB3096B57760065973D /* website */,
 			);
 			name = "Supporting Files";
@@ -342,6 +342,7 @@
 				68ADDE95096B723F002324CE /* Resources */,
 				68ADDE96096B723F002324CE /* Sources */,
 				68ADDE97096B723F002324CE /* Frameworks */,
+				6805D7BD1AD5842B00EA3B5F /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -424,8 +425,6 @@
 				6809AD840F6C08A6000BB954 /* TBVirtualDriveController.m in Sources */,
 				6809AD850F6C08A6000BB954 /* TBVirtualDriveModel.m in Sources */,
 				6809AD860F6C08A6000BB954 /* TBVirtualDriveView.m in Sources */,
-				6809AD900F6C0923000BB954 /* TBSerialManager.m in Sources */,
-				6809AD910F6C0923000BB954 /* TBSerialPort.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -506,6 +505,7 @@
 					"\"$(SRCROOT)/../../../../../teeboy/Products/TBVirtualDrive/build/Debug\"",
 					"\"$(SRCROOT)/../../../../../teeboy/Products/TBSerial/build/Debug\"",
 					"\"$(SRCROOT)/../../../../../Sparkle-1.1\"",
+					"\"$(SRCROOT)\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -524,6 +524,8 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "DriveWire MacServer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -532,6 +534,7 @@
 				);
 				PREBINDING = YES;
 				PRODUCT_NAME = "DriveWire MacServer";
+				SDKROOT = macosx10.5;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wmost",
@@ -549,6 +552,7 @@
 					"\"$(SRCROOT)/../../../../../teeboy/Products/TBVirtualDrive/build/Release\"",
 					"\"$(SRCROOT)/../../../../../teeboy/Products/TBSerial/build/Release\"",
 					"\"$(SRCROOT)/../../../../../Sparkle-1.1\"",
+					"\"$(SRCROOT)\"",
 				);
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -565,6 +569,8 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "DriveWire MacServer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -573,6 +579,7 @@
 				);
 				PREBINDING = YES;
 				PRODUCT_NAME = "DriveWire MacServer";
+				SDKROOT = macosx10.5;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wmost",

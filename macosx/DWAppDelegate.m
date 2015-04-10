@@ -21,7 +21,7 @@
 			filename = [filename stringByAppendingPathExtension:@"dsk"];
 		}
 
-		FILE *fp = fopen([filename cString], "w+");
+		FILE *fp = fopen([filename cStringUsingEncoding:NSUTF8StringEncoding], "w+");
 
 		if (fp != NULL) fclose(fp);
 	}

@@ -8,7 +8,7 @@
 		<string key="IBDocument.HIToolboxVersion">353.00</string>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="2432"/>
+			<integer value="5"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -26,7 +26,7 @@
 		<object class="NSMutableArray" key="IBDocument.RootObjects" id="687584589">
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<object class="NSCustomObject" id="360143016">
-				<string key="NSClassName">MyDocument</string>
+				<string key="NSClassName">DriveWireDocument</string>
 			</object>
 			<object class="NSCustomObject" id="672484806">
 				<string key="NSClassName">FirstResponder</string>
@@ -37,7 +37,7 @@
 			<object class="NSWindowTemplate" id="953348765">
 				<int key="NSWindowStyleMask">7</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{659, -69}, {769, 612}}</string>
+				<string key="NSWindowRect">{{190, 203}, {769, 612}}</string>
 				<int key="NSWTFlags">1886912512</int>
 				<string key="NSWindowTitle">Window</string>
 				<string key="NSWindowClass">NSWindow</string>
@@ -45,7 +45,7 @@
 				<string key="NSWindowContentMaxSize">{3.40282e+38, 3.40282e+38}</string>
 				<string key="NSWindowContentMinSize">{131.131, 86}</string>
 				<object class="NSView" key="NSWindowView" id="12564530">
-					<nil key="NSNextResponder"/>
+					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<object class="NSMutableArray" key="NSSubviews">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -489,6 +489,29 @@
 																<object class="NSTextView" id="470695084">
 																	<reference key="NSNextResponder" ref="269374337"/>
 																	<int key="NSvFlags">2322</int>
+																	<object class="NSMutableSet" key="NSDragTypes">
+																		<bool key="EncodedWithXMLCoder">YES</bool>
+																		<object class="NSMutableArray" key="set.sortedObjects">
+																			<bool key="EncodedWithXMLCoder">YES</bool>
+																			<string>Apple HTML pasteboard type</string>
+																			<string>Apple PDF pasteboard type</string>
+																			<string>Apple PICT pasteboard type</string>
+																			<string>Apple PNG pasteboard type</string>
+																			<string>Apple URL pasteboard type</string>
+																			<string>CorePasteboardFlavorType 0x6D6F6F76</string>
+																			<string>CorePasteboardFlavorType 0x75726C20</string>
+																			<string>NSColor pasteboard type</string>
+																			<string>NSFilenamesPboardType</string>
+																			<string>NSStringPboardType</string>
+																			<string>NeXT Encapsulated PostScript v1.2 pasteboard type</string>
+																			<string>NeXT RTFD pasteboard type</string>
+																			<string>NeXT Rich Text Format v1.0 pasteboard type</string>
+																			<string>NeXT TIFF v4.0 pasteboard type</string>
+																			<string>NeXT font pasteboard type</string>
+																			<string>NeXT ruler pasteboard type</string>
+																			<string>WebURLsWithTitlesPboardType</string>
+																		</object>
+																	</object>
 																	<string key="NSFrameSize">{690, 14}</string>
 																	<reference key="NSSuperview" ref="269374337"/>
 																	<object class="NSTextContainer" key="NSTextContainer" id="203295259">
@@ -913,8 +936,9 @@
 						</object>
 					</object>
 					<string key="NSFrameSize">{769, 612}</string>
+					<reference key="NSSuperview"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1920, 1058}}</string>
 				<string key="NSMinSize">{131.131, 108}</string>
 				<string key="NSMaxSize">{3.40282e+38, 3.40282e+38}</string>
 			</object>
@@ -927,7 +951,7 @@
 			<object class="NSWindowTemplate" id="1053797224">
 				<int key="NSWindowStyleMask">15</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{196, 69}, {588, 441}}</string>
+				<string key="NSWindowRect">{{348, 451}, {588, 441}}</string>
 				<int key="NSWTFlags">603979776</int>
 				<string key="NSWindowTitle">Virtual Printer Window</string>
 				<string key="NSWindowClass">NSWindow</string>
@@ -1114,20 +1138,20 @@
 					</object>
 					<string key="NSFrameSize">{588, 441}</string>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1920, 1058}}</string>
 				<string key="NSMaxSize">{3.40282e+38, 3.40282e+38}</string>
 			</object>
 			<object class="NSWindowTemplate" id="232967730">
 				<int key="NSWindowStyleMask">15</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{196, -83}, {776, 593}}</string>
+				<string key="NSWindowRect">{{250, 263}, {776, 593}}</string>
 				<int key="NSWTFlags">603979776</int>
 				<string key="NSWindowTitle">WIreBug Window</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{3.40282e+38, 3.40282e+38}</string>
 				<object class="NSView" key="NSWindowView" id="325890028">
-					<reference key="NSNextResponder"/>
+					<nil key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<object class="NSMutableArray" key="NSSubviews">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1181,29 +1205,6 @@
 																		<object class="NSTextView" id="398440902">
 																			<reference key="NSNextResponder" ref="1028063784"/>
 																			<int key="NSvFlags">2322</int>
-																			<object class="NSMutableSet" key="NSDragTypes">
-																				<bool key="EncodedWithXMLCoder">YES</bool>
-																				<object class="NSMutableArray" key="set.sortedObjects">
-																					<bool key="EncodedWithXMLCoder">YES</bool>
-																					<string>Apple HTML pasteboard type</string>
-																					<string>Apple PDF pasteboard type</string>
-																					<string>Apple PICT pasteboard type</string>
-																					<string>Apple PNG pasteboard type</string>
-																					<string>Apple URL pasteboard type</string>
-																					<string>CorePasteboardFlavorType 0x6D6F6F76</string>
-																					<string>CorePasteboardFlavorType 0x75726C20</string>
-																					<string>NSColor pasteboard type</string>
-																					<string>NSFilenamesPboardType</string>
-																					<string>NSStringPboardType</string>
-																					<string>NeXT Encapsulated PostScript v1.2 pasteboard type</string>
-																					<string>NeXT RTFD pasteboard type</string>
-																					<string>NeXT Rich Text Format v1.0 pasteboard type</string>
-																					<string>NeXT TIFF v4.0 pasteboard type</string>
-																					<string>NeXT font pasteboard type</string>
-																					<string>NeXT ruler pasteboard type</string>
-																					<string>WebURLsWithTitlesPboardType</string>
-																				</object>
-																			</object>
 																			<string key="NSFrameSize">{350, 108}</string>
 																			<reference key="NSSuperview" ref="1028063784"/>
 																			<object class="NSTextContainer" key="NSTextContainer" id="861433083">
@@ -1551,29 +1552,6 @@
 																		<object class="NSTextView" id="385256105">
 																			<reference key="NSNextResponder" ref="580809529"/>
 																			<int key="NSvFlags">2322</int>
-																			<object class="NSMutableSet" key="NSDragTypes">
-																				<bool key="EncodedWithXMLCoder">YES</bool>
-																				<object class="NSMutableArray" key="set.sortedObjects">
-																					<bool key="EncodedWithXMLCoder">YES</bool>
-																					<string>Apple HTML pasteboard type</string>
-																					<string>Apple PDF pasteboard type</string>
-																					<string>Apple PICT pasteboard type</string>
-																					<string>Apple PNG pasteboard type</string>
-																					<string>Apple URL pasteboard type</string>
-																					<string>CorePasteboardFlavorType 0x6D6F6F76</string>
-																					<string>CorePasteboardFlavorType 0x75726C20</string>
-																					<string>NSColor pasteboard type</string>
-																					<string>NSFilenamesPboardType</string>
-																					<string>NSStringPboardType</string>
-																					<string>NeXT Encapsulated PostScript v1.2 pasteboard type</string>
-																					<string>NeXT RTFD pasteboard type</string>
-																					<string>NeXT Rich Text Format v1.0 pasteboard type</string>
-																					<string>NeXT TIFF v4.0 pasteboard type</string>
-																					<string>NeXT font pasteboard type</string>
-																					<string>NeXT ruler pasteboard type</string>
-																					<string>WebURLsWithTitlesPboardType</string>
-																				</object>
-																			</object>
 																			<string key="NSFrameSize">{284, 144}</string>
 																			<reference key="NSSuperview" ref="580809529"/>
 																			<object class="NSTextContainer" key="NSTextContainer" id="55510107">
@@ -2412,9 +2390,8 @@
 						</object>
 					</object>
 					<string key="NSFrameSize">{776, 593}</string>
-					<reference key="NSSuperview"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1920, 1058}}</string>
 				<string key="NSMaxSize">{3.40282e+38, 3.40282e+38}</string>
 			</object>
 			<object class="NSCustomObject" id="199945575">
@@ -2535,54 +2512,6 @@
 						<reference key="destination" ref="455096617"/>
 					</object>
 					<int key="connectionID">719</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">statsView</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="875456015"/>
-					</object>
-					<int key="connectionID">2149</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">driveView</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="1030323456"/>
-					</object>
-					<int key="connectionID">2164</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">serialPortButton</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="14359868"/>
-					</object>
-					<int key="connectionID">2166</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">speedSwitch</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="272543248"/>
-					</object>
-					<int key="connectionID">2167</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">setSerialPort:</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="14359868"/>
-					</object>
-					<int key="connectionID">2168</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">setCoCoType:</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="272543248"/>
-					</object>
-					<int key="connectionID">2169</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -2729,62 +2658,6 @@
 					<int key="connectionID">2261</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">goCoCo:</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="630391776"/>
-					</object>
-					<int key="connectionID">2300</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">setStatsSwitch:</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="1002910122"/>
-					</object>
-					<int key="connectionID">2306</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">statSwitch</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="1002910122"/>
-					</object>
-					<int key="connectionID">2308</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">logView</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="166082803"/>
-					</object>
-					<int key="connectionID">2310</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">loggingSwitch</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="610538101"/>
-					</object>
-					<int key="connectionID">2317</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">setLogSwitch:</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="610538101"/>
-					</object>
-					<int key="connectionID">2318</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">printerWindowController</string>
-						<reference key="source" ref="360143016"/>
-						<reference key="destination" ref="919073155"/>
-					</object>
-					<int key="connectionID">2320</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">window</string>
 						<reference key="source" ref="919073155"/>
@@ -2839,6 +2712,110 @@
 						<reference key="destination" ref="696584620"/>
 					</object>
 					<int key="connectionID">2443</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">logView</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="166082803"/>
+					</object>
+					<int key="connectionID">2446</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">serialPortButton</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="14359868"/>
+					</object>
+					<int key="connectionID">2447</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">speedSwitch</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="272543248"/>
+					</object>
+					<int key="connectionID">2448</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">statsView</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="875456015"/>
+					</object>
+					<int key="connectionID">2449</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">statSwitch</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="1002910122"/>
+					</object>
+					<int key="connectionID">2450</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">loggingSwitch</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="610538101"/>
+					</object>
+					<int key="connectionID">2451</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">driveView</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="1030323456"/>
+					</object>
+					<int key="connectionID">2452</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">printerWindowController</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="919073155"/>
+					</object>
+					<int key="connectionID">2453</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">debuggerWindowController</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="199945575"/>
+					</object>
+					<int key="connectionID">2454</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">setCoCoType:</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="272543248"/>
+					</object>
+					<int key="connectionID">2455</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">setSerialPort:</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="14359868"/>
+					</object>
+					<int key="connectionID">2456</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">setStatsSwitch:</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="1002910122"/>
+					</object>
+					<int key="connectionID">2457</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">setLogSwitch:</string>
+						<reference key="source" ref="360143016"/>
+						<reference key="destination" ref="610538101"/>
+					</object>
+					<int key="connectionID">2458</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -4827,8 +4804,8 @@
 					<reference ref="5"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<reference ref="5"/>
-					<string>{{42, 347}, {588, 441}}</string>
-					<string>{{42, 347}, {588, 441}}</string>
+					<string>{{348, 451}, {588, 441}}</string>
+					<string>{{348, 451}, {588, 441}}</string>
 					<reference ref="5"/>
 					<boolean value="NO" id="6"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -4849,16 +4826,16 @@
 					<reference ref="5"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<reference ref="5"/>
-					<string>{{392, 129}, {776, 593}}</string>
-					<string>{{392, 129}, {776, 593}}</string>
+					<string>{{250, 263}, {776, 593}}</string>
+					<string>{{250, 263}, {776, 593}}</string>
 					<reference ref="5"/>
 					<reference ref="6"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<reference ref="5"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<reference ref="5"/>
-					<string>{{21, 199}, {769, 612}}</string>
-					<string>{{21, 199}, {769, 612}}</string>
+					<string>{{893, 240}, {769, 612}}</string>
+					<string>{{893, 240}, {769, 612}}</string>
 					<reference ref="5"/>
 					<reference ref="5"/>
 					<string>{131.131, 86}</string>
@@ -4936,7 +4913,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">2443</int>
+			<int key="maxID">2458</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -4970,6 +4947,62 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">DisassemblerView.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">DriveWireDocument</string>
+					<string key="superclassName">NSDocument</string>
+					<object class="NSMutableDictionary" key="actions">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSMutableArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>goCoCo:</string>
+							<string>setCoCoType:</string>
+							<string>setLogSwitch:</string>
+							<string>setSerialPort:</string>
+							<string>setStatsSwitch:</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+						</object>
+					</object>
+					<object class="NSMutableDictionary" key="outlets">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSMutableArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>debugDrawer</string>
+							<string>debuggerWindowController</string>
+							<string>driveView</string>
+							<string>logView</string>
+							<string>loggingSwitch</string>
+							<string>printerWindowController</string>
+							<string>serialPortButton</string>
+							<string>speedSwitch</string>
+							<string>statSwitch</string>
+							<string>statsView</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>NSDrawer</string>
+							<string>DebuggerWindowController</string>
+							<string>VirtualDriveJukeBoxView</string>
+							<string>LogView</string>
+							<string>NSButton</string>
+							<string>PrinterWindowController</string>
+							<string>NSPopUpButton</string>
+							<string>NSButton</string>
+							<string>NSButton</string>
+							<string>StatsView</string>
+						</object>
+					</object>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">DriveWireDocument.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
@@ -5019,37 +5052,6 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">MemoryView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">MyDocument</string>
-					<string key="superclassName">NSDocument</string>
-					<object class="NSMutableDictionary" key="actions">
-						<string key="NS.key.0">setDebugSwitch:</string>
-						<string key="NS.object.0">id</string>
-					</object>
-					<object class="NSMutableDictionary" key="outlets">
-						<bool key="EncodedWithXMLCoder">YES</bool>
-						<object class="NSMutableArray" key="dict.sortedKeys">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>debugSw</string>
-							<string>logDrawer</string>
-							<string>logSw</string>
-							<string>statsDrawer</string>
-							<string>statsSw</string>
-						</object>
-						<object class="NSMutableArray" key="dict.values">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>NSButton</string>
-							<string>NSDrawer</string>
-							<string>NSButton</string>
-							<string>NSDrawer</string>
-							<string>NSButton</string>
-						</object>
-					</object>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBUserSource</string>
-						<string key="minorKey"/>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">

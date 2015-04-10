@@ -307,7 +307,8 @@ static TBSerialManager *fSerialManager = nil;
 	}
 	
 	// Attempt to reserve the port passed.
-	newPort = [fSerialManager reservePort:selectedPort forOwner:self];
+	NSError *error = nil;
+	newPort = [fSerialManager reservePort:selectedPort forOwner:self error:&error];
 
 	if (newPort == nil)
 	{
