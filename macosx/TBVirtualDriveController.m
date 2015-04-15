@@ -28,6 +28,7 @@
 
 #import <TBVirtualDriveController.h>
 
+#define MODULE_HASHTAG "TBVirtualDriveController"
 
 @implementation TBVirtualDriveController
 
@@ -58,7 +59,7 @@
 {
 	if ([NSBundle loadNibNamed:@"TBVirtualDriveView" owner:self] == NO)
 	{
-		NSLog(@"We've got a load Nib problem\n");
+		TBDebug(@"We've got a load Nib problem\n");
 	}
    
    // set ourself as the delegate of the model
@@ -135,9 +136,9 @@
 	
 	if ([filePanel runModalForDirectory:nil file:@"" types:[NSArray arrayWithObjects: @"dsk", @"img", @"os9", nil]] == NSOKButton)
 	{
-		NSArray *filenames = [filePanel filenames];
+		NSArray *filenames = [filePanel URLs];
 		
-		NSString *cartridgeName = [filenames objectAtIndex:0];
+		NSString *cartridgeName = [[filenames objectAtIndex:0] relativePath];
 		
 		if (cartridgeName != nil)
 		{           
@@ -153,9 +154,7 @@
 
 - (BOOL)insertCartridge:(NSString *)cartridge
 {
-#ifdef DEBUG
-	NSLog(@"Inserting Cartridge");
-#endif
+	TBInfo(@"Inserting Cartridge");
 	
 	if (cartridge != nil)
 	{
@@ -174,9 +173,7 @@
 
 - (IBAction)ejectCartridge:(id)object
 {
-#ifdef DEBUG
-	NSLog(@"Ejecting Cartridge");
-#endif
+	TBInfo(@"Ejecting Cartridge");
 	
 	[model ejectCartridge];
 	[driveDoor setHidden:YES];
@@ -196,9 +193,7 @@
 
 - (NSData *)readSectors:(uint32_t)lsn forCount:(uint32_t)count
 {
-#ifdef DEBUG
-	NSLog(@"readSectors LSN[%d] Count[%d]", lsn, count);
-#endif
+	TBDebug(@"readSectors LSN[%d] Count[%d]", lsn, count);
 	
 	return [model readSectors:lsn forCount:count];
 }
@@ -207,9 +202,7 @@
 
 - (NSData *)writeSectors:(uint32_t)lsn forCount:(uint32_t)count sectors:(NSData *)sectors
 {
-#ifdef DEBUG
-	NSLog(@"writeSectors LSN[%d] Count[%d]", lsn, count);
-#endif
+	TBDebug(@"writeSectors LSN[%d] Count[%d]", lsn, count);
 	
 	return [model writeSectors:lsn forCount:count withData:sectors];
 }

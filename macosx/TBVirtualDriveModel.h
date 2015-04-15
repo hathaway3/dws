@@ -38,7 +38,7 @@ typedef enum {LED_OFF, LED_READ, LED_WRITE} ledState;
 	@class TBVirtualDriveModel
 	The behavior of the TBVirtualDriveModel is modeled in the manner of a removable storage medium such as a cartridge-based hard drive.  The basis for storage is the cartridge (which is a file in reality).  Cartridges can be inserted and ejected from the drive, as well as read from and written to.
 */
-@interface TBVirtualDriveModel : NSObject <NSCoding>
+@interface TBVirtualDriveModel : NSObject <NSCoding, NSSoundDelegate>
 {
 	ledState led;			// State of the LED (off, read, write)
 	uint16_t driveID;		// Drive Identification number

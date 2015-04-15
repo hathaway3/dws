@@ -2,6 +2,15 @@
 
 @implementation LogView
 
+- (void)updateLog:(NSString *)logString;
+{
+    [logTextView setEditable:TRUE];
+    NSRange range = {[[logTextView string] length], 0};
+    [logTextView setSelectedRange:range];
+    [logTextView insertText:logString];
+    [logTextView setEditable:FALSE];
+}
+
 - (id)initWithFrame:(NSRect)frameRect;
 {
 	if ((self = [super initWithFrame:frameRect]) != nil)
@@ -88,11 +97,7 @@
 		logString = [NSString stringWithFormat:@"%@ %@\n", rightNow, logString];
 	}
 	
-   [logTextView setEditable:TRUE];
-   NSRange range = {[[logTextView string] length], 0};
-   [logTextView setSelectedRange:range];
-	[logTextView insertText:logString];
-   [logTextView setEditable:FALSE];
+    [self performSelectorOnMainThread:@selector(updateLog:) withObject:logString waitUntilDone:YES];
 }
 
 @end

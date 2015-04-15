@@ -3,12 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		6805D7851AD583E800EA3B5F /* TeeBoy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6805D7841AD583E800EA3B5F /* TeeBoy.framework */; };
-		6805D7891AD583F900EA3B5F /* TeeBoy.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6805D7841AD583E800EA3B5F /* TeeBoy.framework */; };
+		6805D7891AD583F900EA3B5F /* TeeBoy.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6805D7841AD583E800EA3B5F /* TeeBoy.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		6809AD840F6C08A6000BB954 /* TBVirtualDriveController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6809AD7F0F6C08A6000BB954 /* TBVirtualDriveController.m */; };
 		6809AD850F6C08A6000BB954 /* TBVirtualDriveModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 6809AD810F6C08A6000BB954 /* TBVirtualDriveModel.m */; };
 		6809AD860F6C08A6000BB954 /* TBVirtualDriveView.m in Sources */ = {isa = PBXBuildFile; fileRef = 6809AD830F6C08A6000BB954 /* TBVirtualDriveView.m */; };
@@ -358,9 +358,16 @@
 /* Begin PBXProject section */
 		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0620;
+			};
 			buildConfigurationList = 68A78B4008A1452000865FD4 /* Build configuration list for PBXProject "DriveWire MacServer" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 2A37F4AAFDCFA73011CA2CEA /* DriveWire */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -477,10 +484,10 @@
 		68A78B4108A1452000865FD4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
-				MACOSX_DEPLOYMENT_TARGET = 10.4;
-				SDKROOT = macosx10.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
@@ -488,10 +495,9 @@
 		68A78B4208A1452000865FD4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_PREPROCESSOR_DEFINITIONS = DWX;
-				MACOSX_DEPLOYMENT_TARGET = 10.4;
-				SDKROOT = macosx10.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
@@ -499,12 +505,10 @@
 		68ADDE9D096B723F002324CE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../../../../../teeboy/Products/TBVirtualDrive/build/Debug\"",
-					"\"$(SRCROOT)/../../../../../teeboy/Products/TBSerial/build/Debug\"",
-					"\"$(SRCROOT)/../../../../../Sparkle-1.1\"",
 					"\"$(SRCROOT)\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -513,7 +517,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_PREFIX_HEADER = "$(SRCROOT)/DriveWire_Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				GCC_WARN_SHADOW = YES;
@@ -525,7 +529,7 @@
 				INFOPLIST_FILE = "DriveWire MacServer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -534,7 +538,8 @@
 				);
 				PREBINDING = YES;
 				PRODUCT_NAME = "DriveWire MacServer";
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
+				SHARED_PRECOMPS_DIR = "";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wmost",
@@ -546,19 +551,17 @@
 		68ADDE9E096B723F002324CE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../../../../../teeboy/Products/TBVirtualDrive/build/Release\"",
-					"\"$(SRCROOT)/../../../../../teeboy/Products/TBSerial/build/Release\"",
-					"\"$(SRCROOT)/../../../../../Sparkle-1.1\"",
 					"\"$(SRCROOT)\"",
 				);
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_PREFIX_HEADER = "$(SRCROOT)/DriveWire_Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				GCC_WARN_SHADOW = YES;
@@ -570,7 +573,7 @@
 				INFOPLIST_FILE = "DriveWire MacServer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -579,7 +582,8 @@
 				);
 				PREBINDING = YES;
 				PRODUCT_NAME = "DriveWire MacServer";
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
+				SHARED_PRECOMPS_DIR = "";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wmost",

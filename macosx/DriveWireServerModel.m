@@ -9,6 +9,8 @@
 #import "DriveWireServerModel.h"
 
 
+#define MODULE_HASHTAG "DriveWireServer"
+
 @implementation DriveWireServerModel
 
 #define MAX_TIME_BEFORE_RESET 0.5
@@ -91,16 +93,12 @@ static TBSerialManager *fSerialManager = nil;
 	{
 		int32_t i;
 		
-#ifdef DEBUG
-		NSLog(@"DriveWireServerModel initWithVersion:%d", versionNumber);
-#endif
+		TBDebug(@"DriveWireServerModel initWithVersion:%d", versionNumber);
 		
 		// Allocate our array of drives	
 		driveArray = [[NSMutableArray alloc] init];
 
-#ifdef DEBUG
-		NSLog(@"About to allocate drives");
-#endif
+		TBDebug(@"About to allocate drives");
 		for (i = 0; i < 4; i++)
 		{
 			TBVirtualDriveController *drive;
@@ -109,9 +107,7 @@ static TBSerialManager *fSerialManager = nil;
 			[driveArray insertObject:drive atIndex:i];
 		}
 
-#ifdef DEBUG
-		NSLog(@"Drives allocated");
-#endif
+		TBDebug(@"Drives allocated");
 		
 		version = versionNumber;
 		
@@ -122,19 +118,15 @@ static TBSerialManager *fSerialManager = nil;
 		[self setMachineType:3];
 		[self setMemAddress:0];
 
-#ifdef DEBUG
-		NSLog(@"Defaults set");
-#endif
+		TBDebug(@"Defaults set");
 		
 		fCurrentPort = nil;
 
 		// Call the common init routine to do common initializaiton		
 		[self initDesignated];
 
-#ifdef DEBUG
-		NSLog(@"Designated initialier called");
-#endif		
-	}	
+		TBDebug(@"Designated initialier called");
+	}
 	
 	return self;
 }
@@ -254,9 +246,7 @@ static TBSerialManager *fSerialManager = nil;
 {
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	
-#ifdef DEBUG
-	NSLog(@"DriveWireServerModel dealloc");
-#endif
+	TBDebug(@"DriveWireServerModel dealloc");
 	
 	// Remove ourself as observer from any notifications
 	[nc removeObserver:self];
@@ -321,10 +311,8 @@ static TBSerialManager *fSerialManager = nil;
 	fCurrentPort = selectedPort;
 	fPort = newPort;
    [self setMachineType:machineType];  // force the setting of the baud rate
-#ifdef DEBUG
    [fPort setInputLogging:true];
    [fPort setOutputLogging:true];
-#endif
 
    [fPort setDelegate:self];
 	[self setPortDelegate:fPort];
@@ -340,9 +328,7 @@ static TBSerialManager *fSerialManager = nil;
 - (void)setPortDelegate:(id)handler
 {
 	portDelegate = handler;
-#ifdef DEBUG
-	NSLog(@"Now listening for data from device %@\n", [handler serviceName]);
-#endif
+	TBDebug(@"Now listening for data from device %@\n", [handler serviceName]);
 }
 
 - (NSMutableArray *)driveArray
@@ -1093,9 +1079,7 @@ static TBSerialManager *fSerialManager = nil;
             }
             else
             {
-#ifdef DEBUG
-               NSLog(@"Writing zero bytes sector");
-#endif
+               TBDebug(@"Writing zero bytes sector");
                 // If [sectorBuffer bytes] == NULL, then the DSK manager
                 // read past the end of the file.  This is ok because
                 // OS-9's view of the disk may be larger than the physical

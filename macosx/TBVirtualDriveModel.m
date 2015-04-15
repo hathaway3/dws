@@ -30,6 +30,8 @@
 #import <TBVirtualDriveModel.h>
 #import <CoreFoundation/CoreFoundation.h>
 
+#define MODULE_HASHTAG "TBVirtualDriveModel"
+
 @implementation TBVirtualDriveModel
 
 static NSRunLoop *mainRunLoop;
@@ -44,7 +46,6 @@ static int instanceCount = 0;
 	if ((self = [super init]) != nil)
 	{
 		[self initDesignated];
-		mainRunLoop = [NSRunLoop currentRunLoop];
 	}
 	
 	return self;
@@ -53,7 +54,9 @@ static int instanceCount = 0;
 
 - (void)initDesignated
 {
-	// Set the initial state of the drive
+    mainRunLoop = [NSRunLoop currentRunLoop];
+
+    // Set the initial state of the drive
 	led = LED_OFF;			// LED is off
 	driveID = 0;			// Drive ID is 0
 	cartridgePath = nil;	// There is no cartridge yet
@@ -68,22 +71,16 @@ static int instanceCount = 0;
 	{
 //      NSBundle *myFrameworkBundle = [NSBundle bundleWithIdentifier:@"com.tee-boy.TBVirtualDrive"];
       NSBundle *myFrameworkBundle = [NSBundle bundleForClass:[self class]];
-#ifdef DEBUG
-      NSLog(@"myFrameworksBundle = %@", [myFrameworkBundle description]);      
-#endif
+      TBDebug(@"myFrameworksBundle = %@", [myFrameworkBundle description]);
 
       NSString *insertSoundPath = [myFrameworkBundle pathForResource:@"insert" ofType:@"wav"];
       insertSound = [[NSSound alloc] initWithContentsOfFile:insertSoundPath byReference:YES];
-#ifdef DEBUG
-      NSLog(@"insertSoundPath = %@, insertSound = 0x%X", insertSoundPath, insertSound);
-#endif
+      TBDebug(@"insertSoundPath = %@, insertSound = 0x%@", insertSoundPath, insertSound);
 		[insertSound setDelegate:self];
       
       NSString *ejectSoundPath = [myFrameworkBundle pathForResource:@"eject" ofType:@"wav"];
       ejectSound = [[NSSound alloc] initWithContentsOfFile:ejectSoundPath byReference:YES];
-#ifdef DEBUG
-      NSLog(@"ejectSoundPath = %@, ejectSound = 0x%X", ejectSoundPath, ejectSound);
-#endif
+      TBDebug(@"ejectSoundPath = %@, ejectSound = 0x%@", ejectSoundPath, ejectSound);
 	}
 	
 	instanceCount++;

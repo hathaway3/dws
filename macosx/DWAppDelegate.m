@@ -12,7 +12,7 @@
 	if ([panel runModal] == NSFileHandlingPanelOKButton)
 	{
 		// We just use fopen/fclose to create the file
-		NSString *filename = [panel filename];
+		NSString *filename = [[panel URL] relativePath];
 		NSString *extension = [filename pathExtension];
 		
 		if ([extension isEqualToString:@"os9"] == NO &&

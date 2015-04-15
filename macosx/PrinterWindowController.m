@@ -63,7 +63,7 @@
    
    [pv replaceCharactersInRange:printViewRange withRTF:[printView RTFFromRange:textViewRange]];
    op = [NSPrintOperation printOperationWithView:pv printInfo:myPrintInfo];
-   [op setShowPanels:YES];
+   [op setShowsPrintPanel:YES];
    [op runOperationModalForWindow:[self window] delegate:nil didRunSelector:NULL contextInfo:NULL];
    [pv release];
 }

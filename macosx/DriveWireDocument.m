@@ -8,6 +8,8 @@
 
 #import "DriveWireDocument.h"
 
+#define MODULE_HASHTAG "DriveWireDocument"
+
 @implementation DriveWireDocument
 
 // Initializion routine
@@ -97,10 +99,8 @@
 
 		while ((n = [e nextObject]))
 		{
-#ifdef DEBUG
-			NSLog(@"%@ is available\n", n);
-#endif
-			[serialPortButton addItemWithTitle:n];	
+			TBDebug(@"%@ is available\n", n);
+			[serialPortButton addItemWithTitle:n];
 			if (currentPort != nil && [currentPort compare:n] == NSOrderedSame)
 			{
 				portTitle = n;
@@ -134,9 +134,7 @@
 		// Add ourself as an observer of cartridge insert/eject messages for each drive
 		[nc addObserver:self selector:@selector(driveNotification:) name:@"cartridgeWasInserted" object:[driveArray objectAtIndex:i]];
 		[nc addObserver:self selector:@selector(driveNotification:) name:@"cartridgeWasEjected" object:[driveArray objectAtIndex:i]];
-#ifdef DEBUG
-		NSLog(@"Observing for object: 0x%X", [driveArray objectAtIndex:i]);
-#endif
+		TBDebug(@"Observing for object: 0x%@", [driveArray objectAtIndex:i]);
 	}	
 	
 	// Add the statsView as an observer of statistics messages
