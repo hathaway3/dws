@@ -32,8 +32,7 @@
    [printView insertText:s];
    [printView setEditable:FALSE];
    [self showWindow:self];
-   [s release];
-}   
+}
 
 - (IBAction)clear:(id)sender;
 {
@@ -65,7 +64,6 @@
    op = [NSPrintOperation printOperationWithView:pv printInfo:myPrintInfo];
    [op setShowsPrintPanel:YES];
    [op runOperationModalForWindow:[self window] delegate:nil didRunSelector:NULL contextInfo:NULL];
-   [pv release];
 }
 
 @end

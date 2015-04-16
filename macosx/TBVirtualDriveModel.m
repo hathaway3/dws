@@ -92,11 +92,9 @@ static int instanceCount = 0;
 	
 	if (instanceCount == 0)
 	{
-		[insertSound release];
-		[ejectSound release];
+        insertSound = nil;
+        ejectSound = nil;
 	}
-	
-	[super dealloc];
 }
 
 - (void)setDelegate:(id)_delegate
@@ -140,7 +138,7 @@ static int instanceCount = 0;
         return FALSE;
     }
     
-    cartridgeHandle = [[NSFileHandle fileHandleForUpdatingAtPath:cartridgeName] retain];
+    cartridgeHandle = [NSFileHandle fileHandleForUpdatingAtPath:cartridgeName];
 	
     if (cartridgeHandle == nil)
     {
@@ -154,9 +152,7 @@ static int instanceCount = 0;
 	[insertSound play];		
 	
 	// Thread-safe exchange of cartridgePath
-	id old = cartridgePath;
-	cartridgePath = [cartridgeName retain];
-	[old release];
+	cartridgePath = cartridgeName;
 	
     return TRUE;
 }
@@ -168,7 +164,6 @@ static int instanceCount = 0;
     {
 		// There's a disk in the drive -- eject it
         [cartridgeHandle closeFile];
-        [cartridgeHandle release];
 		
 		// Reset cartridge specific counts
 		sectorReadCount = 0;

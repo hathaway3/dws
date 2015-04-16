@@ -28,7 +28,6 @@
 
 - (void)dealloc
 {
-	[super dealloc];
 }
 
 - (void)drawRect:(NSRect)rect;

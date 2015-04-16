@@ -72,14 +72,9 @@
 	[self ejectCartridge:self];
 }
 
-
 - (void)dealloc
 {
-	[model release];
-	[super dealloc];
 }
-
-
 
 - (TBVirtualDriveView *)view
 {
@@ -95,13 +90,10 @@
 	[model setDriveID:driveId];
 }
 
-
-
 - (uint16_t)driveID
 {
 	return [model driveID];
 }
-
 
 
 #pragma mark Cartridge Methods
@@ -110,8 +102,6 @@
 {
     return [model cartridgeLabel];
 }
-
-
 
 - (NSString *)cartridgePath
 {
@@ -133,8 +123,8 @@
 	
 	
 	[filePanel setAllowsMultipleSelection:NO];
-	
-	if ([filePanel runModalForDirectory:nil file:@"" types:[NSArray arrayWithObjects: @"dsk", @"img", @"os9", nil]] == NSOKButton)
+    filePanel.allowedFileTypes = [NSArray arrayWithObjects: @"dsk", @"img", @"os9", nil];
+	if ([filePanel runModal] == NSOKButton)
 	{
 		NSArray *filenames = [filePanel URLs];
 		
@@ -269,11 +259,11 @@
 {
 	if ((self = [super init]))
 	{
-		model = [[coder decodeObject] retain];
+		model = [coder decodeObject];
 
 		[self initDesignated];
 
-      // insert the cartridge
+        // insert the cartridge
 		[self insertCartridge:[coder decodeObject]];
 	}
 	

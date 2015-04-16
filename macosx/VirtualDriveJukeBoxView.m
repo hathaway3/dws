@@ -23,9 +23,7 @@
     return self;
 }
 
-
-
-- (void) addSubview:(NSView *)view
+- (void)addSubview:(NSView *)view
 {
     unsigned driveCount;
     NSRect   viewFrame;
@@ -49,9 +47,6 @@
 	
 	[super addSubview:view];	
 }
-
-
-
 
 #if 0
 - (void) addVirtualDriveView:(VirtualDriveView *)view
@@ -81,8 +76,6 @@
 	[self setNeedsDisplay:YES];
 }
 
-
-
 - (void) didAddSubview:(NSView *) view
 {
     unsigned int driveCount = [[self subviews] count];
@@ -99,9 +92,8 @@
     myFrame.size.height = (viewFrame.size.height * driveCount);
     [self setFrame: myFrame];
 #endif
-#ifdef DEBUG
-    NSLog(@"view: %@, frame: %@, my frame: %@", view, NSStringFromRect([view frame]), NSStringFromRect([self frame]));
-#endif
+
+    TBDebug(@"view: %@, frame: %@, my frame: %@", view, NSStringFromRect([view frame]), NSStringFromRect([self frame]));
 }
 #endif
 

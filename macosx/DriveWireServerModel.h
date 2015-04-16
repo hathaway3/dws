@@ -18,7 +18,7 @@
 #import <TeeBoy/TBSerialPort.h>
 #import <TeeBoy/TBSerialManager.h>
 #import "TBVirtualDriveController.h"
-
+#import "VSerialChannel.h"
 
 #define DW_DEFAULT_VERSION       3
 
@@ -45,12 +45,14 @@
 #define	_OP_PRINT               'P'
 
 // Virtual Port extension definitions
-#define	_OP_VPORT_READ          'V'
-#define	_OP_VPORT_WRITE         'v'
-
-#define	_OP_SERREAD				0x43
 #define	_OP_SERINIT				0x45
 #define	_OP_SERTERM				0xC5
+#define	_OP_SERGETSTAT			0x44
+#define	_OP_SERSETSTAT			0xC4
+#define	_OP_SERTERM				0xC5
+#define	_OP_SERREAD				0x43
+#define	_OP_SERWRITE			0xC3
+#define	_OP_SERWRITEM			0x64
 
 // WireBug definitions
 #define	_OP_WIREBUG_READREGS    'R'
@@ -66,6 +68,15 @@
 
 #define E_ILLNUM                 16
 #define E_CRC                    243
+
+@protocol DriveWireDelegate
+
+- (void)updateInfoView:(NSDictionary *)info;
+- (void)updateMemoryView:(NSDictionary *)info;
+- (void)updateRegisterView:(NSDictionary *)info;
+- (void)updatePrinterView:(NSDictionary *)info;
+
+@end
 
 /*!
 	@class DriveWireServerModel
@@ -119,20 +130,12 @@
 	int nameobj_size;
 	int driveCount;
 	
-   // Input buffer management variables
-   u_char inputBuffer[262];
-   const u_char *startOfData;
-   int32_t currentLocation;
-   
    NSMutableData *printBuffer;
    
-   id _delegate;
 }
 
-
-- (void)setDelegate:(id)delegate;
-
-- (id)delegate;
+@property (assign) id<DriveWireDelegate> delegate;
+@property (strong) NSArray *serialChannels;
 
 /*!
 	@method init
@@ -194,55 +197,7 @@
 - (Boolean)logState;
 - (Boolean)wirebugState;
 
-
-// Private methods
-- (void)initDesignated;
-- (uint16_t)compute16BitChecksum:(const u_char *)data :(int)length;
-- (uint8_t)compute8BitChecksum :(const u_char *)data :(int)length;
-- (uint16_t)computeCRC:(const u_char *)data :(int)length;
-- (void)setupWatchdog;
-- (void)invalidateWatchdog;
-- (void)resetState:(NSTimer*)theTimer;
-
-- (void)OP_OPCODE;
-- (void)OP_NOP;
-- (void)OP_RESET;
-- (void)OP_INIT;
-- (void)OP_TERM;
-- (void)OP_TIME;
-- (void)OP_PRINTFLUSH;
-- (void)OP_PRINT;
-- (void)OP_RESYNC;
-- (void)OP_READ;
-- (void)OP_READEX;
-- (void)OP_REREAD;
-- (void)OP_REREADEX;
-- (void)OP_WRITE;
-- (void)OP_REWRITE;
-- (void)OP_GETSTAT;
-- (void)OP_SETSTAT;
-- (void)statCommon:(NSString *)whichStat;
-- (void)OP_WIREBUG_GO_RESPONSE;
-- (void)OP_WIREBUG_READREGS_RESPONSE;
-- (void)OP_WIREBUG_WRITEREGS_RESPONSE;
-- (void)OP_WIREBUG_READMEM_RESPONSE;
-- (void)OP_WIREBUG_WRITEMEM_RESPONSE;
-- (void)sendRunTarget;
-
-- (void)readRegisters;
-- (void)readMemoryFrom:(int)start to:(int)end;
 - (void)goCoCo;
 
-- (NSString *)statCodeToString:(int)code;
-- (void)flushPrinterBuffer;
-
 @end
 
-@protocol DriveWireProtocol
-
-- (void)updateInfoView:(NSDictionary *)info;
-- (void)updateMemoryView:(NSDictionary *)info;
-- (void)updateRegisterView:(NSDictionary *)info;
-- (void)updatePrinterView:(NSDictionary *)info;
-
-@end

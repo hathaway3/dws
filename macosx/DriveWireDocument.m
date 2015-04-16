@@ -47,14 +47,7 @@
 		[nc removeObserver:self name:@"cartridgeWasInserted" object:[driveArray objectAtIndex:i]];
 		[nc removeObserver:self name:@"cartridgeWasEjected" object:[driveArray objectAtIndex:i]];
 	}	
-	
-   [dwModel release];
-   
-   [myWindowController release];
-   
-	[super dealloc];
 }
-
 
 - (NSString *)windowNibName;
 {
@@ -63,13 +56,12 @@
     return @"DriveWireDocument";
 }
 
-
 - (void)windowControllerDidLoadNib:(NSWindowController *)aController;
 {
 	int i;
 	NSString *currentPort, *portTitle = nil;
 	
-   myWindowController = [aController retain];
+   myWindowController = aController;
    
    if (dwModel == nil)
    {
@@ -82,7 +74,7 @@
    [super windowControllerDidLoadNib:aController];
 	
     // Request the array of ports from the Document Model	
-	NSMutableDictionary *portNames = [[TBSerialManager availablePorts] retain];
+	NSMutableDictionary *portNames = [TBSerialManager availablePorts] ;
 
 	// Remove all items from the port button
 	[serialPortButton removeAllItems];
@@ -108,8 +100,6 @@
 		}
 	}
 
-   [portNames release];
-   
 	// Select the model's port, if not nil, else select the 0th indexed item ("No Device")
 	if (portTitle == nil)
 	{
@@ -222,7 +212,7 @@
 
 - (BOOL)loadDataRepresentation:(NSData *)data ofType:(NSString *)aType;
 {
-	dwModel = [[NSUnarchiver unarchiveObjectWithData:data] retain];
+	dwModel = [NSUnarchiver unarchiveObjectWithData:data];
 	
 	return YES;
 }

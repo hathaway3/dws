@@ -21,7 +21,6 @@
 {
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	[nc removeObserver:self name:@"wirebugRegisters" object:self];
-	[super dealloc];
 }
 
 - (void)drawRect:(NSRect)rect

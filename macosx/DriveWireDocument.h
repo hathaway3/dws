@@ -9,7 +9,7 @@
 #import "StatsView.h"
 
 
-@interface DriveWireDocument : NSDocument <DriveWireProtocol>
+@interface DriveWireDocument : NSDocument <DriveWireDelegate>
 {
    IBOutlet VirtualDriveJukeBoxView *driveView;
 	IBOutlet NSPopUpButton *serialPortButton;

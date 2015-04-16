@@ -11,26 +11,17 @@
 	return self;
 }
 
-
-
 - (void)dealloc
 {
-	[super dealloc];
 }
-
-
 
 - (void)awakeFromNib
 {
 }
 
-
-
 - (void)drawRect:(NSRect)rect
 {
 }
-
-
 
 - (void)update:(NSDictionary *)info;
 {
@@ -73,6 +64,5 @@
 	
 	return;
 }
-
 
 @end
