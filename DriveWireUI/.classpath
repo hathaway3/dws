@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="lib" path="lib/commons-configuration-1.6.jar"/>
 	<classpathentry kind="lib" path="lib/commons-configuration-1.6-sources.jar"/>
 	<classpathentry kind="lib" path="lib/commons-configuration-1.6-javadoc.jar"/>
@@ -14,13 +13,36 @@
 	<classpathentry kind="lib" path="lib/log4j-1.2.15.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt"/>
 	<classpathentry kind="src" path="/DriveWire"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.core.databinding_1.3.100.I20100601-0800.jar" sourcepath="C:/eclipse/plugins/org.eclipse.core.databinding_1.3.100.I20100601-0800.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.core.databinding.beans_1.2.100.I20100601-0800.jar" sourcepath="C:/eclipse/plugins/org.eclipse.core.databinding.beans_1.2.100.I20100601-0800.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.core.databinding.observable_1.3.0.I20100601-0800.jar" sourcepath="C:/eclipse/plugins/org.eclipse.core.databinding.observable_1.3.0.I20100601-0800.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.core.databinding.property_1.3.0.I20100601-0800.jar" sourcepath="C:/eclipse/plugins/org.eclipse.core.databinding.property_1.3.0.I20100601-0800.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.jface.databinding_1.4.0.I20100601-0800.jar" sourcepath="C:/eclipse/plugins/org.eclipse.jface.databinding_1.4.0.I20100601-0800.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.equinox.common_3.6.0.v20100503.jar" sourcepath="C:/eclipse/plugins/org.eclipse.equinox.common_3.6.0.v20100503.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/com.ibm.icu_4.2.1.v20100412.jar" sourcepath="C:/eclipse/plugins/com.ibm.icu_4.2.1.v20100412.jar"/>
 	<classpathentry kind="lib" path="/DriveWire/lib/commons-vfs-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/AppleJavaExtensions.jar"/>
+	<classpathentry kind="lib" path="lib/asm-debug-all.jar"/>
+	<classpathentry kind="lib" path="lib/grail.jar"/>
+	<classpathentry kind="lib" path="lib/jinput.jar"/>
+	<classpathentry kind="lib" path="lib/lwjgl_test.jar"/>
+	<classpathentry kind="lib" path="lib/lwjgl_util_applet.jar"/>
+	<classpathentry kind="lib" path="lib/lwjgl_util.jar"/>
+	<classpathentry kind="lib" path="lib/lwjgl-debug.jar"/>
+	<classpathentry kind="lib" path="lib/lwjgl.jar"/>
+	<classpathentry kind="lib" path="lib/lzma.jar"/>
+	<classpathentry kind="lib" path="lib/miglayout-4.0-ideutil.jar"/>
+	<classpathentry kind="lib" path="lib/miglayout-4.0-javadoc.jar"/>
+	<classpathentry kind="lib" path="lib/miglayout-4.0-swing.jar"/>
+	<classpathentry kind="lib" path="lib/miglayout-4.0-swt.jar"/>
+	<classpathentry kind="lib" path="lib/miglayout-4.0.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.core.runtime_3.6.0.v20100505.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.equinox.common_3.6.0.v20100503.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.jface_3.6.2.M20110210-1200.jar"/>
+	<classpathentry kind="lib" path="lib/org.osgi.core-4.3.0.jar"/>
+	<classpathentry kind="lib" path="lib/swt-linux32-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/swt-linux64-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/swt-linuxarm-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/swt-osx32-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/swt-osx64-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/swt-win32-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/swt-win64-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/swt.jar"/>
+	<classpathentry kind="lib" path="lib/swtjar_old.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

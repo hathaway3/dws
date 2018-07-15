@@ -189,7 +189,7 @@ public class DWSerialDevice implements DWProtocolDevice
 	//	}
 	//	else
 		{
-			RXTXPort commPort = portIdentifier.open("DriveWire",2000);
+			RXTXPort commPort = (RXTXPort) portIdentifier.open("DriveWire",2000);
             
 				if ( commPort instanceof SerialPort )
 				{

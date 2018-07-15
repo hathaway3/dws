@@ -67,6 +67,7 @@ import swing2swt.layout.BorderLayout;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.Version;
 import com.groupunix.drivewireui.exceptions.DWUIOperationFailedException;
+import com.groupunix.drivewireui.library.LibraryItem;
 import com.groupunix.drivewireui.plugin.DWUIPlugin;
 import com.groupunix.drivewireui.plugin.PluginInfo;
 import com.groupunix.drivewireui.plugin.PluginLoader;
@@ -124,7 +125,7 @@ public class MainWin {
 	public static HierarchicalConfiguration dwconfig;
 	public static final String configfile = "drivewireUI.xml";
 
-	//public static LibraryItem[] libraryroot;
+	public static LibraryItem[] libraryroot;
 	
 	private static int currentDisk = 0;
 	
