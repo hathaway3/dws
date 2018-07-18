@@ -3,6 +3,8 @@ Required for build:
 2. Java JDK 1.8 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 3. Import this project into Eclipse
 4. Right click on DriveWireServer project in Eclipse and select Run As -> Maven Install
-5. DriveWireServer file will be available under DriverWireServer/target  Look for DriveWire-x.x.x-jar-with-dependencies.jar
-6. Copy DriveWire-x.x.x-jar-with-dependencies.jar to DriveWireServer folder
+5. DriveWireServer.jar file will be available under DriverWireServer/target  Look for DriveWire-x.x.x-jar-with-dependencies.jar
+6. Copy DriverWireServer/target/DriveWire-x.x.x-jar-with-dependencies.jar to DriveWireServer/ folder
 7. Run in shell/command prompt from the DriveWireServer folder: java -jar DriveWire-x.x.x-jar-with-dependencies.jar
+
+Note: config.xml must be modified to support your configuration
