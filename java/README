@@ -8,4 +8,3 @@ Required for build:
 7. Run in shell/command prompt from the DriveWireServer folder: java -jar DriveWire-x.x.x-jar-with-dependencies.jar
 
 Note: config.xml must be modified to support your configuration
-
