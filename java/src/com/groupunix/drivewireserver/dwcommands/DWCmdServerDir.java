@@ -10,91 +10,72 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 
 public class DWCmdServerDir extends DWCommand {
 
-	
-	public DWCmdServerDir(DWCommand parent)
-	{
+	public DWCmdServerDir(DWCommand parent) {
 		setParentCmd(parent);
 	}
-	
-	
-	public String getCommand() 
-	{
+
+	public String getCommand() {
 		return "dir";
 	}
 
-
-	public String getShortHelp() 
-	{
+	public String getShortHelp() {
 		return "Show directory of URI or local path";
 	}
 
-
-	public String getUsage() 
-	{
+	public String getUsage() {
 		return "dw server dir URI/path";
 	}
 
-	public DWCommandResponse parse(String cmdline) 
-	{
-		if (cmdline.length() == 0)
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SYNTAX_ERROR,"dw server dir requires a URI or path as an argument"));
+	public DWCommandResponse parse(String cmdline) {
+		if (cmdline.length() == 0) {
+			return (new DWCommandResponse(false, DWDefs.RC_SYNTAX_ERROR,
+					"dw server dir requires a URI or path as an argument"));
 		}
-		return(doDir(cmdline));
+		return (doDir(cmdline));
 	}
 
-	private DWCommandResponse doDir(String path)
-	{
+	private DWCommandResponse doDir(String path) {
 		FileSystemManager fsManager;
-		
+
 		String text = new String();
-		
+
 		path = DWUtils.convertStarToBang(path);
-				
-		try
-		{
+
+		try {
 			fsManager = VFS.getManager();
-		
+
 			FileObject dirobj = fsManager.resolveFile(path);
-			
+
 			FileObject[] children = dirobj.getChildren();
 
 			text += "Directory of " + dirobj.getName().getURI() + "\r\n\n";
-		
-			
-			int longest = 0;
-	    	
-	    	for (int i=0; i<children.length; i++) 
-	    	{
-	    		if (children[i].getName().getBaseName().length() > longest)
-	    			longest = children[i].getName().getBaseName().length();
-	    	}
-	    	
-	    	longest++;
-	    	longest++;
-	    	
-	    	int cols = Math.max(1, 80 / longest);
-	    	
-	    	for (int i=0; i<children.length; i++) 
-	        {
-	        	text += String.format("%-" + longest + "s",children[i].getName().getBaseName());
-	        	if (((i+1) % cols) == 0)
-	        		text += "\r\n";
-	        }
-			
-		} 
-		catch (FileSystemException e)
-		{
-			return(new DWCommandResponse(false,DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION,e.getMessage()));
-		}
-		
-	    return(new DWCommandResponse(text));
-	}
 
+			int longest = 0;
+
+			for (int i = 0; i < children.length; i++) {
+				if (children[i].getName().getBaseName().length() > longest)
+					longest = children[i].getName().getBaseName().length();
+			}
+
+			longest++;
+			longest++;
+
+			int cols = Math.max(1, 80 / longest);
+
+			for (int i = 0; i < children.length; i++) {
+				text += String.format("%-" + longest + "s", children[i].getName().getBaseName());
+				if (((i + 1) % cols) == 0)
+					text += "\r\n";
+			}
+		} catch (FileSystemException e) {
+			return (new DWCommandResponse(false, DWDefs.RC_SERVER_FILESYSTEM_EXCEPTION, e.getMessage()));
+		}
+
+		return (new DWCommandResponse(text));
+	}
 
 	public boolean validate(String cmdline) {
 		return true;
 	}
-	
-	
+
 }
