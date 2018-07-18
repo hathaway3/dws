@@ -5,4 +5,4 @@ Required for build:
 4. Right click on DriveWireServer project in Eclipse and select Run As -> Maven Install
 5. DriveWireServer file will be available under DriverWireServer/target  Look for DriveWire-x.x.x-jar-with-dependencies.jar
 6. Copy DriveWire-x.x.x-jar-with-dependencies.jar to DriveWireServer folder
-7. From shell/command prompt in the DriveWireServer folder: java -jar DriveWire-x.x.x-jar-with-dependencies.jar
+7. Run in shell/command prompt from the DriveWireServer folder: java -jar DriveWire-x.x.x-jar-with-dependencies.jar
