@@ -26,7 +26,7 @@ Paul Burgin / v1.0 / April 1999
 The new virtual disk format used by PC-Dragon v2.05 has at least 12 header bytes as follows:
 
 Offset	Size	Item						Notes
-0		2		Signature (“dk”)			MSB first. Note lower case to differentiate 
+0		2		Signature (dk)				MSB first. Note lower case to differentiate 
 											a VDK from a DOS ROM file.
 2		2		Header length				LSB first. Total length of the header (equal 
 											to the offset to the start of disk data). 
@@ -38,9 +38,9 @@ Offset	Size	Item						Notes
 5		1		VDK version - compatibility	For backwards compatibility, this indicates 
 											the minimum version of the VDK format 
 											that can be used to read the file. Effectively 
-											it says to the emulator “If you can 
+											it says to the emulator If you can 
 											understand VDK version X then you can 
-											understand this file…”. Usually this byte 
+											understand this file. Usually this byte 
 											will be the same as the previous one, but if 
 											a minor addition is made to the header then 
 											it becomes useful.
@@ -52,8 +52,8 @@ Offset	Size	Item						Notes
 												   1 = header stub
 												   2 = mkdsk.exe
 												   3 = other tools
-												 ‘P’ = PC-Dragon
-												 ‘T’ = T3
+												 P = PC-Dragon
+												 T = T3
 												>$7F = other emulator
 7		1		Source version				Version information for the source 
 											identified above. E.g. $25=v2.05
@@ -91,19 +91,19 @@ allowed to override the bit2 lock. A well behaved emulator should at
 least obey the locks upon opening the VDK, but for the current v1.0 of
 the file format need not set the locks unless it wishes to. PC-Dragon
 v2.05 does not set either of the locks (I felt a little uncomfortable
-about modifying the disk without the user’s consent) but they may be
+about modifying the disk without the user's consent) but they may be
 used in the future.
 
 The disk-set bit allows more than one virtual disk to be stored in a
 single VDK file. This is intended for software supplied on >1 disk, or
 for a collection of similar disks. Emulators may allow disk-sets to be
 created/modified/loaded at their option. PC-Dragon v2.05 supports
-loading of disk-sets, but the user interface is rather basic and there’s
+loading of disk-sets, but the user interface is rather basic and there's
 no facility for creating disk-sets.
 
 Virtual disk compression has been anticipated by the format, but is left
 TBD for the moment due to the complexity of randomly accessing a
-compressed file. The disk name is optional and isn’t ever displayed by
+compressed file. The disk name is optional and isn't ever displayed by
 PC-Dragon v2.05. Any data associated with compression is assumed to
 follow the disk name.
 	
