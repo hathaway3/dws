@@ -37,6 +37,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.vmodem.VModemProtocolHand
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
+import gnu.io.NRSerialPort;
 import gnu.io.SerialPort;
 
 public class DriveWireServer {
@@ -77,7 +78,7 @@ public class DriveWireServer {
 	private static Thread uiT;
 
 	private static boolean wanttodie = false;
-	private static String configfile = "config.xml";
+	private static String configFileName = "config.xml";
 	private static boolean ready = false;
 	private static boolean useLF5 = false;
 	private static LF5Appender lf5appender;
@@ -116,13 +117,15 @@ public class DriveWireServer {
 
 		init(args);
 
-		// install clean shutdown handler
-		// Runtime.getRuntime().addShutdownHook(new DWShutdownHandler());
-
 		// hang around
 		logger.debug("ready...");
 
 		DriveWireServer.ready = true;
+
+		logger.debug("Serial ports:");
+		for (String s : getAvailableSerialPorts())
+			logger.debug(s);
+
 		while (!wanttodie) {
 
 			try {
@@ -140,7 +143,6 @@ public class DriveWireServer {
 		}
 
 		serverShutdown();
-		// System.exit(0);
 	}
 
 	private static void checkHandlerHealth() {
@@ -182,7 +184,7 @@ public class DriveWireServer {
 
 			// add everything
 
-			evt.setParam(DWDefs.EVENT_ITEM_MAGIC, DriveWireServer.getMagic() + "");
+			evt.setParam(DWDefs.EVENT_ITEM_MAGIC, DriveWireServer.getMagicString());
 			evt.setParam(DWDefs.EVENT_ITEM_INTERVAL, DriveWireServer.serverconfig.getInt("StatusInterval", 1000) + "");
 			evt.setParam(DWDefs.EVENT_ITEM_INSTANCES, DriveWireServer.getNumHandlers() + "");
 			evt.setParam(DWDefs.EVENT_ITEM_INSTANCESALIVE, DriveWireServer.getNumHandlersAlive() + "");
@@ -272,10 +274,10 @@ public class DriveWireServer {
 		try {
 
 			// try to load/parse config
-			serverconfig = new XMLConfiguration(configfile);
+			serverconfig = new XMLConfiguration(configFileName);
 			// only backup if it loads
 			if (useBackup)
-				backupConfig(configfile);
+				backupConfig(configFileName);
 
 		} catch (ConfigurationException e1) {
 			logger.fatal(e1.getMessage());
@@ -479,7 +481,7 @@ public class DriveWireServer {
 			}
 
 			if (line.hasOption("config")) {
-				configfile = line.getOptionValue("config");
+				configFileName = line.getOptionValue("config");
 			}
 
 			if (line.hasOption("backup")) {
@@ -493,7 +495,7 @@ public class DriveWireServer {
 			if (line.hasOption("logviewer")) {
 				useLF5 = true;
 				lf5appender = new LF5Appender();
-				lf5appender.setName("DriveWire 4 Server Log");
+				lf5appender.setName(DWVersion.getVersion() + " log");
 
 			}
 
@@ -736,30 +738,14 @@ public class DriveWireServer {
 		serverconfig.save();
 	}
 
-	@SuppressWarnings("unchecked")
 	public static ArrayList<String> getAvailableSerialPorts() {
+		logger.debug("Searching for serial ports...");
 		ArrayList<String> h = new ArrayList<String>();
 
-		java.util.Enumeration<gnu.io.CommPortIdentifier> thePorts = gnu.io.CommPortIdentifier.getPortIdentifiers();
-		while (thePorts.hasMoreElements()) {
-			try {
-				gnu.io.CommPortIdentifier com = thePorts.nextElement();
-				if (com.getPortType() == gnu.io.CommPortIdentifier.PORT_SERIAL)
-					h.add(com.getName());
-			} catch (Exception e) {
-				logger.error("While detecting serial devices: " + e.getMessage());
-
-				if (useDebug) {
-					System.out.println(
-							"--------------------------------------------------------------------------------");
-					e.printStackTrace();
-					System.out.println(
-							"--------------------------------------------------------------------------------");
-				}
-			}
-
+		for (String s : NRSerialPort.getAvailableSerialPorts()) {
+			logger.debug("Adding serial port " + s + " to list of available ports");
+			h.add(s);
 		}
-
 		return h;
 
 	}
@@ -960,6 +946,10 @@ public class DriveWireServer {
 
 	public static long getMagic() {
 		return (magic);
+	}
+
+	public static String getMagicString() {
+		return String.valueOf(magic);
 	}
 
 	public static boolean getNoMIDI() {
