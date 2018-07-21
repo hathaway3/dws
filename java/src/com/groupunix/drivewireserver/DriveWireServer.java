@@ -1,10 +1,8 @@
 
 package com.groupunix.drivewireserver;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.net.ServerSocket;
 import java.sql.Date;
@@ -61,7 +59,15 @@ public class DriveWireServer {
 
 	public static XMLConfiguration serverconfig;
 
-	public static int configserial = 0;
+	private static int configSerial = 0;
+
+	public static int getConfigserial() {
+		return configSerial;
+	}
+
+	public static void setConfigserial(int configserial) {
+		DriveWireServer.configSerial = configserial;
+	}
 
 	private static Vector<Thread> dwProtoHandlerThreads = new Vector<Thread>();
 	private static Vector<DWProtocol> dwProtoHandlers = new Vector<DWProtocol>();
@@ -98,6 +104,10 @@ public class DriveWireServer {
 	private static boolean restart_logging = false;
 	@SuppressWarnings("unused")
 	private static boolean restart_ui = false;
+
+	public static void incrementConfigSerial() {
+		configSerial++;
+	}
 
 	public static void main(String[] args) throws ConfigurationException {
 
@@ -369,45 +379,6 @@ public class DriveWireServer {
 		dwProtoHandlerThreads.remove(hno);
 		dwProtoHandlerThreads.add(hno, new Thread(dwProtoHandlers.get(hno)));
 
-	}
-
-	private static boolean checkRXTXLoaded() {
-		// try to load RXTX, redirect it's version messages into our logs
-
-		PrintStream ops = System.out;
-		PrintStream eps = System.err;
-
-		ByteArrayOutputStream rxtxbaos = new ByteArrayOutputStream();
-		ByteArrayOutputStream rxtxbaes = new ByteArrayOutputStream();
-
-		PrintStream rxtxout = new PrintStream(rxtxbaos);
-		PrintStream rxtxerr = new PrintStream(rxtxbaes);
-
-		System.setOut(rxtxout);
-		System.setErr(rxtxerr);
-
-		boolean res = DWUtils.testClassPath("gnu.io.RXTXCommDriver");
-
-		for (String l : rxtxbaes.toString().trim().split("\n")) {
-			System.out.println(l);
-
-			if (!l.equals(""))
-				logger.warn(l);
-		}
-
-		for (String l : rxtxbaos.toString().trim().split("\n")) {
-			System.out.println(l);
-			// ignore pesky version warning that doesn't ever seem to matter
-			if (!l.equals("WARNING:  RXTX Version mismatch") && !l.equals("")) {
-
-				logger.debug(l);
-			}
-		}
-
-		System.setOut(ops);
-		System.setErr(eps);
-
-		return (res);
 	}
 
 	@SuppressWarnings("unused")
@@ -1022,6 +993,20 @@ public class DriveWireServer {
 
 	public static DWUIThread getDWUIThread() {
 		return DriveWireServer.uiObj;
+	}
+
+	public static boolean getLogUIConnections() {
+		return serverconfig.getBoolean("LogUIConnections", false);
+	}
+
+	public static Integer getDiskLazyWriteInterval(Integer defaultValue) {
+		return serverconfig.getInteger("DiskLazyWriteInterval", defaultValue);
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public synchronized static List<HierarchicalConfiguration> getConfigurationsAt(String configurations) {
+		return DriveWireServer.serverconfig.configurationsAt(configurations);
 	}
 
 }

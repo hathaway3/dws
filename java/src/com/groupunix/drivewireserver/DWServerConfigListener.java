@@ -19,7 +19,7 @@ public class DWServerConfigListener implements ConfigurationListener
         if (!event.isBeforeUpdate())
         {
         	// indicate changed config for UI poll
-        	DriveWireServer.configserial++;
+        	DriveWireServer.incrementConfigSerial();
         	
         	
             if ((event.getPropertyName() != null) && (event.getPropertyValue() != null))

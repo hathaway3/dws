@@ -77,7 +77,7 @@ public class DWUIThread implements Runnable {
 			{
 				skt = srvr.accept();
 				
-				if (DriveWireServer.serverconfig.getBoolean("LogUIConnections", false))
+				if (DriveWireServer.getLogUIConnections())
 					logger.debug("new UI connection from " + skt.getInetAddress().getHostAddress());
 				
 				Thread uiclientthread = new Thread(new DWUIClientThread(skt, this.clientThreads));

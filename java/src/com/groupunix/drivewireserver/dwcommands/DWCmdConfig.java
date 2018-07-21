@@ -18,6 +18,7 @@ public class DWCmdConfig extends DWCommand
 		commands.addcommand(new DWCmdConfigSet(dwProtocol, this));
 		commands.addcommand(new DWCmdConfigSave(dwProtocol, this));
 		// save/load not implemented here
+		
 	} 
 
 	

@@ -7,38 +7,29 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 public class UICmdServerConfigSerial extends DWCommand {
 
 	static final String command = "serial";
-	
 
-	public String getCommand() 
-	{
+	public String getCommand() {
 		return command;
 	}
 
-
-	public DWCommandResponse parse(String cmdline)
-	{
+	public DWCommandResponse parse(String cmdline) {
 		String res = new String();
 
-		res = DriveWireServer.configserial + "";
-		
-		return(new DWCommandResponse(res));
+		res = String.valueOf(DriveWireServer.getConfigserial());
+
+		return (new DWCommandResponse(res));
 	}
 
-
-	public String getShortHelp() 
-	{
+	public String getShortHelp() {
 		return "Show server config serial#";
 	}
 
-
-	public String getUsage() 
-	{
+	public String getUsage() {
 		return "ui server config serial";
 	}
-	
-	public boolean validate(String cmdline) 
-	{
-		return(true);
+
+	public boolean validate(String cmdline) {
+		return (true);
 	}
-	
+
 }
