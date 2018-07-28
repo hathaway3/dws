@@ -49,9 +49,9 @@
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/com.neuronrobotics/nrjavaserial -->
 		<dependency>
-			<groupId>com.neuronrobotics</groupId>
-			<artifactId>nrjavaserial</artifactId>
-			<version>3.14.0</version>
+			<groupId>com.fazecast</groupId>
+			<artifactId>jSerialComm</artifactId>
+			<version>2.0.2</version>
 		</dependency>
 		<!-- /Users/jimhathaway/git/dws/java/lib/guava-11.0.2.jar -->
 		<!-- SHA1: 35a3c69e19d72743cac83778aecbee68680f63eb -->
