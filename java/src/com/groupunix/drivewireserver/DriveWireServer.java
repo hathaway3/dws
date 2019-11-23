@@ -5,10 +5,19 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.ServerSocket;
-import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Vector;
+
+import com.groupunix.drivewireserver.dwdisk.DWDiskLazyWriter;
+import com.groupunix.drivewireserver.dwexceptions.DWPlatformUnknownException;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
+import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
+import com.groupunix.drivewireserver.dwprotocolhandler.vmodem.VModemProtocolHandler;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -27,14 +36,6 @@ import org.apache.log4j.PatternLayout;
 import org.apache.log4j.lf5.LF5Appender;
 import org.apache.log4j.spi.LoggingEvent;
 
-import com.groupunix.drivewireserver.dwdisk.DWDiskLazyWriter;
-import com.groupunix.drivewireserver.dwexceptions.DWPlatformUnknownException;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
-import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
-import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
-import com.groupunix.drivewireserver.dwprotocolhandler.vmodem.VModemProtocolHandler;
-
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.NRSerialPort;
@@ -46,8 +47,7 @@ public class DriveWireServer {
 	public static final int DWVersionMinor = 3;
 	public static final int DWVersionBuild = 4;
 	public static final String DWVersionRevision = "f";
-	@SuppressWarnings("deprecation")
-	public static final Date DWVersionDate = new Date(2013 - 1900, 10 - 1, 21);
+	public static final Date DWVersionDate =  new GregorianCalendar(2019,11 -1,31).getTime();
 
 	public static final Version DWVersion = new Version(DWVersionMajor, DWVersionMinor, DWVersionBuild,
 			DWVersionRevision, DWVersionDate);

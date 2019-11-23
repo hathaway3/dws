@@ -9,19 +9,19 @@ public class Version {
 	private int minor;
 	private int build;
 	private String revison;
-	private Date date;
+	private java.util.Date date;
 	private String priority;
 	private String target;
 	private String description;
 	private HashMap<String, String> files = new HashMap<String, String>();
 	private boolean restart = true;
 
-	public Version(int ma, int mi, int b, String r, Date d) {
+	public Version(int ma, int mi, int b, String r, java.util.Date dwversiondate) {
 		this.major = ma;
 		this.minor = mi;
 		this.build = b;
 		this.revison = r;
-		this.date = d;
+		this.date = dwversiondate;
 	}
 
 	public Version(int ma, int mi, int b, String r) {
@@ -68,7 +68,7 @@ public class Version {
 		this.revison = revison;
 	}
 
-	public Date getDate() {
+	public java.util.Date getDate() {
 		return date;
 	}
 
