@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>DriveWire</groupId>
 	<artifactId>DriveWire</artifactId>
@@ -51,21 +52,18 @@
 			<artifactId>jSerialComm</artifactId>
 			<version>2.5.3</version>
 		</dependency>
-		<!-- /Users/jimhathaway/git/dws/java/lib/guava-11.0.2.jar -->
 		<!-- SHA1: 35a3c69e19d72743cac83778aecbee68680f63eb -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>11.0.2</version>
 		</dependency>
-		<!-- /Users/jimhathaway/git/dws/java/lib/commons-codec-1.4.jar -->
 		<!-- SHA1: 4216af16d38465bbab0f3dff8efa14204f7a399a -->
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 			<version>1.4</version>
 		</dependency>
-		<!-- /Users/jimhathaway/git/dws/java/lib/jsch-0.1.42.jar -->
 		<!-- SHA1: a86104b0f2e0c0bab5b0df836065823a99b5e334 -->
 		<dependency>
 			<groupId>com.jcraft</groupId>
@@ -85,21 +83,18 @@
 			<artifactId>commons-cli</artifactId>
 			<version>1.2</version>
 		</dependency>
-		<!-- /Users/jimhathaway/git/dws/java/lib/commons-httpclient-3.1.jar -->
 		<!-- SHA1: 964cd74171f427720480efdec40a7c7f6e58426a -->
 		<dependency>
 			<groupId>commons-httpclient</groupId>
 			<artifactId>commons-httpclient</artifactId>
 			<version>3.1</version>
 		</dependency>
-		<!-- /Users/jimhathaway/git/dws/java/lib/httpcore-4.0.1.jar -->
 		<!-- SHA1: e813b8722c387b22e1adccf7914729db09bcb4a9 -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
 			<version>4.0.1</version>
 		</dependency>
-		<!-- /Users/jimhathaway/git/dws/java/lib/apache-mime4j-0.6.jar -->
 		<!-- SHA1: 945007627e8d12275d755081a9e609c018e1210d -->
 		<dependency>
 			<groupId>org.apache.james</groupId>
