@@ -14,3 +14,5 @@ Replace x.x.x with the version of drivewire, example **4.3.4**
 
     java -jar DriveWire-x.x.x-jar-with-dependencies.jar
 
+## See DriveWire Version 4 website for more details
+[https://sites.google.com/site/drivewire4/](https://sites.google.com/site/drivewire4/)
