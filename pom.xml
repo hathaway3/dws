@@ -76,11 +76,10 @@
 			<artifactId>jSerialComm</artifactId>
 			<version>2.5.3</version>
 		</dependency>
-		<!-- SHA1: 35a3c69e19d72743cac83778aecbee68680f63eb -->
 		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>11.0.2</version>
+		  <groupId>com.google.guava</groupId>
+		  <artifactId>guava</artifactId>
+		  <version>[24.1.1,)</version>
 		</dependency>
 		<!-- SHA1: 4216af16d38465bbab0f3dff8efa14204f7a399a -->
 		<dependency>
