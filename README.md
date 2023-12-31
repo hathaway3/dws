@@ -4,13 +4,13 @@
  2. Apache Maven
 
 ##  Building DriveWire Java Server
-Run Maven from root of **dws** folder
+Run Maven from the root of **dws** folder
 
     mvn clean package
 
-**Note:** config.xml must be modified to support your configuration before you run DriveWire Java Server.  See help.xml file for more information on how to configure the server.xml.
+**Note:** config.xml must be modified to support your configuration before you run DriveWire Java Server.  See the help.xml file for more information on how to configure the server.xml.
 ## Running DriveWire Java Server
-The compiled and ziped DriveWire server will be located under dws/target after completing the compile.
+The compiled and zipped DriveWire server will be located under dws/target after completing the compile.
 ```
 dws/
 ├── src/
