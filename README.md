@@ -11,11 +11,14 @@ Run Maven from root of **dws** folder
 **Note:** config.xml must be modified to support your configuration before you run DriveWire Java Server.  See help.xml file for more information on how to configure the server.xml.
 ## Running DriveWire Java Server
 The compiled and ziped DriveWire server will be located under dws/target after the compile is complete
-copy the DriveWire<version>.zip file to location outside of the dws folder, like your home directory.
-unzip the DriveWire<version>.zip file and run the correct file to launch DriveWire
+Copy the DriveWire<version>.zip file to a location outside of the dws folder, like your home directory.
+Unzip the DriveWire<version>.zip file and run the correct file to launch DriveWire
 Windows:
+
     dws.bat
+
 Linux/OSX: 
+
     chmod +x dws.sh
     ./dws.sh
 
