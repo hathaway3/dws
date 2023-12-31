@@ -5,7 +5,7 @@
 	<DiskLazyWriteInterval>15000</DiskLazyWriteInterval>
 	<LogLevel>DEBUG</LogLevel>
 	<LogToFile>false</LogToFile>
-	<LogFile>E:\drivewire.log</LogFile>
+	<LogFile>drivewire.log</LogFile>
 	<LogToConsole>true</LogToConsole> <!-- <LogFormat>%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %26.26C: %m%n</LogFormat> -->
 	<LogFormat>%d{HH:mm:ss}: [%-14t] %m%n</LogFormat> <!-- User interface settings -->
 	<UIEnabled>true</UIEnabled>
@@ -13,12 +13,12 @@
 	<ConfigAutosave>true</ConfigAutosave> <!-- This is the default location for disk images. Only disk files in this 
 		directory are selectable when -->
 	<!-- using the user interface on a computer other than the server -->
-	<LocalDiskDir>E:/cocodisks</LocalDiskDir> <!-- if you would like to drive multiple cocos with one server --> <!-- you may specify as many instance sections as you have serial ports 
+	<LocalDiskDir>cocodisks</LocalDiskDir> <!-- if you would like to drive multiple cocos with one server --> <!-- you may specify as many instance sections as you have serial ports 
 		(and CoCos) -->
 	<instance>
-		<Name>CoCo 3 on COM4</Name> <!-- These settings need to be adjusted for your system --> <!-- device type, serial (default) or tcp -->
+		<Name>CoCo 3 on /dev/ttyS0</Name> <!-- These settings need to be adjusted for your system --> <!-- device type, serial (default) or tcp -->
 		<DeviceType>serial</DeviceType> <!-- device name, like COM1 on windows or /dev/ttyS0 on linux -->
-		<SerialDevice></SerialDevice> <!-- CocoModel is 1, 2 or 3 for Coco 1 2 or 3 -->
+		<SerialDevice>/dev/ttyS0</SerialDevice> <!-- CocoModel is 1, 2 or 3 for Coco 1 2 or 3 -->
 		<CocoModel>3</CocoModel> <!-- End of settings that must be adjusted -->
 		<AutoStart>true</AutoStart> <!-- This is the disk set that is loaded when the server is started. --> <!-- Use dw4boot-6309l2 to boot with DW4 utils, 6309 (or dw4boot-6809 for 
 			6809) -->
@@ -34,7 +34,7 @@
 		<TelnetBanned>24.178.184.40</TelnetBanned>
 		<TelnetBanned>199.248.173.248</TelnetBanned> <!-- <TelnetPreAuthFile>preauth.txt</TelnetPreAuthFile> --> <!-- <TelnetPasswdFile>passwd.txt</TelnetPasswdFile> -->
 		<GeoIPLookup>false</GeoIPLookup>
-		<GeoIPDatabaseFile>E:\GeoLiteCity.dat</GeoIPDatabaseFile> <!-- <GeoIPBannedCountries>China</GeoIPBannedCountries> --> <!-- <GeoIPBannedCities>Birmingham</GeoIPBannedCities> --> <!-- Printing options --> <!-- Where do we put printer output -->
+		<GeoIPDatabaseFile>GeoLiteCity.dat</GeoIPDatabaseFile> <!-- <GeoIPBannedCountries>China</GeoIPBannedCountries> --> <!-- <GeoIPBannedCities>Birmingham</GeoIPBannedCities> --> <!-- Printing options --> <!-- Where do we put printer output -->
 		<PrinterDir>cocoprints</PrinterDir> <!-- PrinterType can be TEXT or FX80 -->
 		<PrinterType>FX80</PrinterType> <!-- for FX80 mode, this is the font definition -->
 		<PrinterCharacterFile>default.chars</PrinterCharacterFile>
@@ -90,7 +90,7 @@
 		<Description>Bootable NitrOS-9 L2 boot disk for Gary Becker's			CoCo3FPGA</Description>
 		<disk>
 			<drive>0</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<relativepath>false</relativepath>
 			<bootable>true</bootable>
@@ -101,7 +101,7 @@
 		</disk>
 		<disk>
 			<drive>1</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>true</bootable>
 			<sync>true</sync>
@@ -115,175 +115,175 @@
 		<Description>Individual Disk Images</Description>
 		<disk>
 			<drive>100</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>101</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>102</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>103</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>104</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>105</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>106</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>107</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>108</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>109</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>110</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>111</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>112</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>113</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>114</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>115</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>116</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>117</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>118</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>119</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>120</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>121</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>122</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>123</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>124</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>125</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>126</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>127</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>128</drive>
-			<path>E:/cocodisks/off.dsk</path>
+			<path>cocodisks/off.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
@@ -293,7 +293,7 @@
 		<Description>Bootable NitrOS-9 L2 boot disk for 6309 with SuperIDE		</Description>
 		<disk>
 			<drive>0</drive>
-			<path>E:/cocodisks/sideboot.dsk</path>
+			<path>cocodisks/sideboot.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>true</bootable>
 		</disk>
@@ -306,13 +306,13 @@
 		</disk>
 		<disk>
 			<drive>2</drive>
-			<path>E:/cocodisks/Music_Stuff.dsk</path>
+			<path>cocodisks/Music_Stuff.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
 		<disk>
 			<drive>3</drive>
-			<path>E:/cocodisks/Music_Stuff2.dsk</path>
+			<path>cocodisks/Music_Stuff2.dsk</path>
 			<writeprotect>false</writeprotect>
 			<bootable>false</bootable>
 		</disk>
