@@ -19,6 +19,7 @@
 		<Name>CoCo 3 on /dev/ttyS0</Name> <!-- These settings need to be adjusted for your system --> <!-- device type, serial (default) or tcp -->
 		<DeviceType>serial</DeviceType> <!-- device name, like COM1 on windows or /dev/ttyS0 on linux -->
 		<SerialDevice>/dev/ttyS0</SerialDevice> <!-- CocoModel is 1, 2 or 3 for Coco 1 2 or 3 -->
+		<SerialRate>115200</SerialRate>
 		<CocoModel>3</CocoModel> <!-- End of settings that must be adjusted -->
 		<AutoStart>true</AutoStart> <!-- This is the disk set that is loaded when the server is started. --> <!-- Use dw4boot-6309l2 to boot with DW4 utils, 6309 (or dw4boot-6809 for 
 			6809) -->
