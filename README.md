@@ -6,13 +6,18 @@
 ##  Building DriveWire Java Server
 Run Maven from root of **dws** folder
 
-    mvn clean install
+    mvn clean package
 
-**Note:** config.xml must be modified to support your configuration before you run DriveWire Java Server.  See help.xml file.
+**Note:** config.xml must be modified to support your configuration before you run DriveWire Java Server.  See help.xml file for more information on how to configure the server.xml.
 ## Running DriveWire Java Server
-Replace x.x.x with the version of drivewire, example **4.3.4**
-
-    java -jar DriveWire-x.x.x-jar-with-dependencies.jar
+The compiled and ziped DriveWire server will be located under dws/target after the compile is complete
+copy the DriveWire<version>.zip file to location outside of the dws folder, like your home directory.
+unzip the DriveWire<version>.zip file and run the correct file to launch DriveWire
+Windows:
+    dws.bat
+Linux/OSX: 
+    chmod +x dws.sh
+    ./dws.sh
 
 ## See DriveWire Version 4 website for more details
 https://www.hat3.net/home/java-drivewire-server
