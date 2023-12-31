@@ -23,7 +23,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
-public class VModemProtocolHandler implements Runnable, DWVSerialProtocol
+public class VModemProtocolHandler implements DWVSerialProtocol
 {
 
 	private final Logger logger = Logger.getLogger("DWServer.VModemProtocolHandler");

@@ -32,7 +32,7 @@ import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
 
 
-public class DWProtocolHandler implements Runnable, DWVSerialProtocol
+public class DWProtocolHandler implements DWVSerialProtocol
 {
 
 	private final Logger logger = Logger.getLogger("DWServer.DWProtocolHandler");

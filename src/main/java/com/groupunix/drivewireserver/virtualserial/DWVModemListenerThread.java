@@ -27,9 +27,9 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 		private DWVSerialProtocol dwProto;
 
 		private DWVSerialPorts dwVSerialPorts;
-		private Boolean clientConnected = false;
-		
-		
+		private boolean clientConnected = false;
+		private final Object clientConnectedLock = new Object();
+				
 		public DWVModemListenerThread(DWVModem m)
 		{
 			this.dwVSerialPorts = m.getVSerialPorts();
@@ -97,7 +97,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 					
 					logger.info("new connection from " + skt.socket().getInetAddress().getHostAddress());
 					
-					synchronized(this.clientConnected)
+					synchronized(clientConnectedLock)
 					{
 						if (this.clientConnected)
 						{
@@ -156,7 +156,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 
 		public void setConnected(boolean b)
 		{
-			synchronized(this.clientConnected)
+			synchronized(clientConnectedLock)
 			{
 				this.clientConnected = b;
 			}
