@@ -8,6 +8,18 @@ Run Maven from the root of **dws** folder
 
     mvn clean package
 
+After the packaging is complete, you should see the message 'BUILD SUCCESS' from Maven.
+```
+[INFO] --- maven-assembly-plugin:2.2-beta-5:single (zip-assembly) @ DriveWire ---
+[INFO] Reading assembly descriptor: src/main/assembly/zip.xml
+[INFO] Building zip: /Users/jimmiehathaway/dws/target/DriveWire-4.3.6.zip
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.183 s
+[INFO] Finished at: 2023-12-31T10:24:40-06:00
+[INFO] ------------------------------------------------------------------------
+```
 **Note:** config.xml must be modified to support your configuration before you run DriveWire Java Server.  See the help.xml file for more information on how to configure the server.xml.
 ## Running DriveWire Java Server
 The compiled and zipped DriveWire server will be located under dws/target after completing the compile.
