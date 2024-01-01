@@ -33,11 +33,12 @@ dws/
 ```
 Copy the DriveWire-x.x.x.zip file to a location outside of the dws folder, like your home directory.
 Unzip the DriveWire-x.x.x.zip file and run the correct file to launch DriveWire
-Windows:
+
+### Windows
 
     dws.bat
 
-Linux/OSX: 
+### Linux/macOS
 
     chmod +x dws.sh
     ./dws.sh
