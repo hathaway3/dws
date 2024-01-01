@@ -62,12 +62,12 @@ public class DriveWireServer {
 
 	private static int configSerial = 0;
 
-	public static int getConfigserial() {
+	public static int getConfigSerial() {
 		return configSerial;
 	}
 
-	public static void setConfigserial(final int configserial) {
-		DriveWireServer.configSerial = configserial;
+	public static void setConfigSerial(final int configSerial) {
+		DriveWireServer.configSerial = configSerial;
 	}
 
 	private static Vector<Thread> dwProtoHandlerThreads = new Vector<Thread>();
@@ -87,7 +87,7 @@ public class DriveWireServer {
 
 	private static DWEvent statusEvent = new DWEvent(DWDefs.EVENT_TYPE_STATUS, -1);
 	private static long lastMemoryUpdate = 0;
-	private static ArrayList<DWEvent> logcache = new ArrayList<DWEvent>();
+	private static ArrayList<DWEvent> logCache = new ArrayList<DWEvent>();
 	private static boolean useDebug = false;
 	private static long magic = System.currentTimeMillis();
 	private static DWEvent evt = new DWEvent(DWDefs.EVENT_TYPE_STATUS, -1);
@@ -236,7 +236,7 @@ public class DriveWireServer {
 		return res;
 	}
 
-	private static long getDiskOps() {
+	static long getDiskOps() {
 		long res = 0;
 
 		for (final DWProtocol p : dwProtoHandlers) {
@@ -743,12 +743,17 @@ public class DriveWireServer {
 		logger.debug("Searching for serial ports...");
 		final ArrayList<String> h = new ArrayList<String>();
 
-		for (final String s : NRSerialPort.getAvailableSerialPorts()) {
-			logger.debug("Adding serial port " + s + " to list of available ports");
-			h.add(s);
+		try {
+			for (final String s : NRSerialPort.getAvailableSerialPorts()) {
+				logger.debug("Adding serial port " + s + " to list of available ports");
+				h.add(s);
+			}
+		} catch (java.lang.ExceptionInInitializerError e) {
+			// Handle NullPointerException here
+			logger.debug("Error occurred while ennumerating available serial ports: " + e.getMessage());
 		}
-		return h;
 
+		return h;
 	}
 
 	public static String getSerialPortStatus(final String port) {
@@ -850,10 +855,10 @@ public class DriveWireServer {
 		evt.setParam(DWDefs.EVENT_ITEM_THREAD, event.getThreadName());
 		evt.setParam(DWDefs.EVENT_ITEM_LOGSRC, event.getLoggerName());
 
-		synchronized (logcache) {
-			logcache.add(evt);
-			if (logcache.size() > DWDefs.LOGGING_MAX_BUFFER_EVENTS)
-				logcache.remove(0);
+		synchronized (logCache) {
+			logCache.add(evt);
+			if (logCache.size() > DWDefs.LOGGING_MAX_BUFFER_EVENTS)
+				logCache.remove(0);
 		}
 
 		if (uiObj != null) {
@@ -935,7 +940,7 @@ public class DriveWireServer {
 	}
 
 	public static ArrayList<DWEvent> getLogCache() {
-		return DriveWireServer.logcache;
+		return DriveWireServer.logCache;
 	}
 
 	public static boolean isConsoleLogging() {
@@ -999,6 +1004,9 @@ public class DriveWireServer {
 	@SuppressWarnings("unchecked")
 	public synchronized static List<HierarchicalConfiguration> getConfigurationsAt(final String configurations) {
 		return DriveWireServer.serverconfig.configurationsAt(configurations);
+	}
+
+	public static void setDwProtoHandlers(List<DWProtocol> dwProtoHandlers2) {
 	}
 
 }
