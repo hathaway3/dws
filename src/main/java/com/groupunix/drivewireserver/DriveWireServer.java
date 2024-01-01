@@ -45,7 +45,7 @@ public class DriveWireServer {
 
 	public static final int DWVersionMajor = 4;
 	public static final int DWVersionMinor = 3;
-	public static final int DWVersionBuild = 4;
+	public static final int DWVersionBuild = 6;
 	public static final String DWVersionRevision = "f";
 	public static final Date DWVersionDate =  new GregorianCalendar(2019,11 -1,31).getTime();
 
