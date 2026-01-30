@@ -1,16 +1,17 @@
-
 package com.groupunix.drivewireserver;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.ServerSocket;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Properties;
 import java.util.Vector;
 
+import com.fazecast.jSerialComm.SerialPort;
 import com.groupunix.drivewireserver.dwdisk.DWDiskLazyWriter;
 import com.groupunix.drivewireserver.dwexceptions.DWPlatformUnknownException;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
@@ -28,34 +29,23 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
-import org.apache.log4j.lf5.LF5Appender;
 import org.apache.log4j.spi.LoggingEvent;
-
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.NRSerialPort;
-import gnu.io.SerialPort;
 
 public class DriveWireServer {
 
-	public static final int DWVersionMajor = 4;
-	public static final int DWVersionMinor = 3;
-	public static final int DWVersionBuild = 6;
-	public static final String DWVersionRevision = "f";
-	public static final Date DWVersionDate =  new GregorianCalendar(2019,11 -1,31).getTime();
+	public static String DWVersionMajor = "0";
+	public static String DWVersionMinor = "0";
+	public static String DWVersionBuild = "0";
+	public static String DWVersionRevision = "";
+	public static Date DWVersionDate = new Date();
 
-	public static final Version DWVersion = new Version(DWVersionMajor, DWVersionMinor, DWVersionBuild,
-			DWVersionRevision, DWVersionDate);
+	public static Version DWVersion = new Version(0, 0, 0, "");
 
 	static Logger logger = Logger.getLogger(com.groupunix.drivewireserver.DriveWireServer.class);
-	private static ConsoleAppender consoleAppender;
 	private static DWLogAppender dwAppender;
-	private static FileAppender fileAppender;
 	private static PatternLayout logLayout = new PatternLayout("%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n");
 
 	public static XMLConfiguration serverconfig;
@@ -80,8 +70,6 @@ public class DriveWireServer {
 	private static boolean wanttodie = false;
 	private static String configFileName = "config.xml";
 	private static boolean ready = false;
-	private static boolean useLF5 = false;
-	private static LF5Appender lf5appender;
 	private static boolean useBackup = false;
 	private static SerialPort testSerialPort;
 
@@ -268,21 +256,36 @@ public class DriveWireServer {
 		// set up initial logging config
 		initLogging();
 
+		loadVersion();
+
 		logger.info("DriveWire Server " + DWVersion + " starting");
 		// logger.info("Heap max: " + Runtime.getRuntime().maxMemory() / 1024 / 1024 +
 		// "MB " + " cur: " + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "MB");
 		// load server settings
 		try {
+			// load config
+			final File testconfig = new File(DriveWireServer.configFileName);
+			if (testconfig.exists()) {
+				DriveWireServer.serverconfig = new XMLConfiguration(DriveWireServer.configFileName);
+			} else if (DriveWireServer.useBackup) {
+				DriveWireServer.serverconfig = new XMLConfiguration("config.xml.backup");
+			} else {
+				throw new ConfigurationException("File " + DriveWireServer.configFileName + " not found!");
+			}
 
-			// try to load/parse config
-			serverconfig = new XMLConfiguration(configFileName);
 			// only backup if it loads
 			if (useBackup)
 				backupConfig(configFileName);
 
 		} catch (final ConfigurationException e1) {
 			logger.fatal(e1.getMessage());
-			System.exit(-1);
+
+			if (useDebug) {
+				System.out.println("--------------------------------------------------------------------------------");
+				e1.printStackTrace();
+				System.out.println("--------------------------------------------------------------------------------");
+			}
+			System.exit(1);
 		}
 
 		// start UI server first, so we can bail if UIorBust
@@ -309,6 +312,49 @@ public class DriveWireServer {
 			startLazyWriter();
 		}
 
+	}
+
+	private static void loadVersion() {
+		Properties props = new Properties();
+		try (InputStream is = DriveWireServer.class.getResourceAsStream("/version.properties")) {
+			if (is != null) {
+				props.load(is);
+				String fullVersion = props.getProperty("version.full", "0.0.0");
+				String build = props.getProperty("version.build", "0");
+				String dateStr = props.getProperty("version.date", "");
+
+				// project.version is usually 4.3.7 or 4.3.7-SNAPSHOT
+				String[] parts = fullVersion.split("[\\.-]");
+				int major = parts.length > 0 ? Integer.parseInt(parts[0].replaceAll("[^0-9]", "0")) : 0;
+				int minor = parts.length > 1 ? Integer.parseInt(parts[1].replaceAll("[^0-9]", "0")) : 0;
+				int buildNum = parts.length > 2 ? Integer.parseInt(parts[2].replaceAll("[^0-9]", "0")) : 0;
+				String revision = parts.length > 3 ? parts[3] : "";
+
+				if (fullVersion.contains("-")) {
+					revision = fullVersion.substring(fullVersion.indexOf("-") + 1);
+				}
+
+				DWVersionMajor = String.valueOf(major);
+				DWVersionMinor = String.valueOf(minor);
+				DWVersionBuild = String.valueOf(buildNum);
+				DWVersionRevision = revision;
+
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+				try {
+					if (!dateStr.isEmpty())
+						DWVersionDate = sdf.parse(dateStr);
+				} catch (Exception e) {
+					logger.warn("Could not parse version date: " + e.getMessage());
+				}
+
+				DWVersion = new Version(major, minor, buildNum, revision, DWVersionDate);
+				DWVersion.setBuildNumber(build);
+			} else {
+				logger.warn("version.properties not found.");
+			}
+		} catch (IOException e) {
+			logger.error("Error loading version properties: " + e.getMessage());
+		}
 	}
 
 	private static void startProtoHandlers() {
@@ -384,75 +430,17 @@ public class DriveWireServer {
 
 	}
 
-	@SuppressWarnings("unused")
-	private static void loadRXTX() {
-
-		try {
-			String rxtxpath;
-
-			if (!serverconfig.getString("LoadRXTXPath", "").equals("")) {
-				rxtxpath = serverconfig.getString("LoadRXTXPath");
-			} else {
-				// look for native/x/x in current dir
-				final File curdir = new File(".");
-				rxtxpath = curdir.getCanonicalPath();
-
-				// + native platform dir
-				final String[] osparts = System.getProperty("os.name").split(" ");
-
-				if (osparts.length < 1) {
-					throw new DWPlatformUnknownException("No native dir for os '" + System.getProperty("os.name")
-							+ "' arch '" + System.getProperty("os.arch") + "'");
-				}
-
-				rxtxpath += File.separator + "native" + File.separator + osparts[0] + File.separator
-						+ System.getProperty("os.arch");
-			}
-
-			final File testrxtxpath = new File(rxtxpath);
-			logger.debug("Using rxtx lib path: " + rxtxpath);
-
-			if (!testrxtxpath.exists()) {
-				throw new DWPlatformUnknownException("No native dir for os '" + System.getProperty("os.name")
-						+ "' arch '" + System.getProperty("os.arch") + "'");
-			}
-
-			// add this dir to path..
-			System.setProperty("java.library.path",
-					System.getProperty("java.library.path") + File.pathSeparator + rxtxpath);
-
-			// set sys_paths to null so they will be reread by jvm
-			Field sysPathsField;
-			sysPathsField = ClassLoader.class.getDeclaredField("sys_paths");
-			sysPathsField.setAccessible(true);
-			sysPathsField.set(null, null);
-
-		} catch (final Exception e) {
-			logger.fatal(e.getClass().getSimpleName() + ": " + e.getLocalizedMessage());
-
-			if (useDebug) {
-				System.out.println("--------------------------------------------------------------------------------");
-				e.printStackTrace();
-				System.out.println("--------------------------------------------------------------------------------");
-			}
-
-		}
-
-	}
+	/**
+	 * @throws DWPlatformUnknownException
+	 * 
+	 */
 
 	private static void initLogging() {
-		Logger.getRootLogger().removeAllAppenders();
-		consoleAppender = new ConsoleAppender(logLayout);
-		Logger.getRootLogger().addAppender(consoleAppender);
-
-		if (useLF5)
-			Logger.getRootLogger().addAppender(lf5appender);
-
+		// Log4j 2.x Bridge handles basic initialization via log4j2.xml
 		if (useDebug)
 			Logger.getRootLogger().setLevel(Level.ALL);
 		else
 			Logger.getRootLogger().setLevel(Level.INFO);
-
 	}
 
 	private static void doCmdLineArgs(final String[] args) {
@@ -494,10 +482,7 @@ public class DriveWireServer {
 			}
 
 			if (line.hasOption("logviewer")) {
-				useLF5 = true;
-				lf5appender = new LF5Appender();
-				lf5appender.setName(DWVersion.getVersion() + " log");
-
+				logger.warn("logviewer (LF5) is no longer supported.");
 			}
 
 			if (line.hasOption("nomidi")) {
@@ -599,13 +584,13 @@ public class DriveWireServer {
 		}
 
 		if (serverconfig.getBoolean("UIEnabled", false)) {
-			ServerSocket srvr = null;
+			java.net.ServerSocket srvr = null;
 
 			// check for port in use (another server providing UI on our port)
 			try {
 				// check for listen address
 
-				srvr = new ServerSocket(serverconfig.getInt("UIPort", 6800));
+				srvr = new java.net.ServerSocket(serverconfig.getInt("UIPort", 6800));
 				logger.info("UI listening on port " + srvr.getLocalPort());
 
 			} catch (final IOException e2) {
@@ -635,35 +620,18 @@ public class DriveWireServer {
 			logLayout = new PatternLayout(serverconfig.getString("LogFormat"));
 		}
 
-		Logger.getRootLogger().removeAllAppenders();
-
-		dwAppender = new DWLogAppender(logLayout);
-		Logger.getRootLogger().addAppender(dwAppender);
-
-		if (useLF5)
-			Logger.getRootLogger().addAppender(lf5appender);
-
-		if (serverconfig.getBoolean("LogToConsole", true) || useDebug) {
-			consoleAppender = new ConsoleAppender(logLayout);
-			Logger.getRootLogger().addAppender(consoleAppender);
-		}
-
-		if ((serverconfig.getBoolean("LogToFile", false)) && (serverconfig.containsKey("LogFile"))) {
-
-			try {
-				fileAppender = new FileAppender(logLayout, serverconfig.getString("LogFile"), true, false, 128);
-				Logger.getRootLogger().addAppender(fileAppender);
-			} catch (final IOException e) {
-				logger.error("Cannot log to file '" + serverconfig.getString("LogFile") + "': " + e.getMessage());
-			}
-
+		// Keep DWLogAppender for web UI
+		if (dwAppender == null) {
+			dwAppender = new DWLogAppender(logLayout);
+			Logger.getRootLogger().addAppender(dwAppender);
+		} else {
+			dwAppender.setLayout(logLayout);
 		}
 
 		if (useDebug)
 			Logger.getRootLogger().setLevel(Level.ALL);
 		else
 			Logger.getRootLogger().setLevel(Level.toLevel(serverconfig.getString("LogLevel", "INFO")));
-
 	}
 
 	public static DWProtocol getHandler(final int handlerno) {
@@ -743,50 +711,23 @@ public class DriveWireServer {
 		logger.debug("Searching for serial ports...");
 		final ArrayList<String> h = new ArrayList<String>();
 
-		try {
-			for (final String s : NRSerialPort.getAvailableSerialPorts()) {
-				logger.debug("Adding serial port " + s + " to list of available ports");
-				h.add(s);
-			}
-		} catch (java.lang.ExceptionInInitializerError e) {
-			// Handle NullPointerException here
-			logger.debug("Error occurred while ennumerating available serial ports: " + e.getMessage());
+		for (com.fazecast.jSerialComm.SerialPort port : com.fazecast.jSerialComm.SerialPort.getCommPorts()) {
+			logger.debug("Adding serial port " + port.getSystemPortName() + " to list of available ports");
+			h.add(port.getSystemPortName());
 		}
 
 		return h;
 	}
 
-	public static String getSerialPortStatus(final String port) {
-		String res = "";
+	public static String getSerialPortStatus(final String portName) {
+		String res = "Unknown";
 
-		try {
-			final CommPortIdentifier pi = CommPortIdentifier.getPortIdentifier(port);
-
-			if (pi.isCurrentlyOwned()) {
-				res = "In use by " + pi.getCurrentOwner();
-			} else {
-				final CommPort commPort = pi.open("DriveWireServer", 2000);
-
-				if (commPort instanceof SerialPort) {
-					res = "Available";
-
-				} else {
-					res = "Not a serial port";
-				}
-
-				commPort.close();
-			}
-
-		} catch (final Exception e) {
-
-			res = e.getClass().getSimpleName() + ": " + e.getLocalizedMessage();
-
-			if (useDebug) {
-				System.out.println("--------------------------------------------------------------------------------");
-				e.printStackTrace();
-				System.out.println("--------------------------------------------------------------------------------");
-			}
-
+		com.fazecast.jSerialComm.SerialPort port = com.fazecast.jSerialComm.SerialPort.getCommPort(portName);
+		if (port.openPort()) {
+			res = "Available";
+			port.closePort();
+		} else {
+			res = "Not available or in use";
 		}
 
 		return res;
@@ -879,27 +820,14 @@ public class DriveWireServer {
 	public static boolean testSerialPort_Open(final String device) throws Exception {
 
 		try {
-			final CommPortIdentifier pi = CommPortIdentifier.getPortIdentifier(device);
+			testSerialPort = SerialPort.getCommPort(device);
 
-			if (pi.isCurrentlyOwned()) {
-				throw (new Exception("In use by " + pi.getCurrentOwner()));
+			if (testSerialPort.openPort()) {
+				testSerialPort.setFlowControl(SerialPort.FLOW_CONTROL_DISABLED);
+				testSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 3000, 0);
+				return true;
 			} else {
-				final CommPort commPort = pi.open("DriveWireTest", 2000);
-
-				if (commPort instanceof SerialPort) {
-
-					testSerialPort = (SerialPort) commPort;
-
-					testSerialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
-					testSerialPort.enableReceiveThreshold(1);
-					testSerialPort.enableReceiveTimeout(3000);
-
-					return true;
-
-				} else {
-					throw (new Exception("Not a serial port"));
-				}
-
+				throw (new Exception("Could not open serial port: " + device));
 			}
 
 		} catch (final Exception e) {
@@ -911,8 +839,7 @@ public class DriveWireServer {
 
 	public static boolean testSerialPort_setParams(final int rate) throws Exception {
 		try {
-			testSerialPort.setSerialPortParams(rate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
-					SerialPort.PARITY_NONE);
+			testSerialPort.setComPortParameters(rate, 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
 			return true;
 		} catch (final Exception e) {
 
@@ -933,7 +860,8 @@ public class DriveWireServer {
 
 	public static void testSerialPort_close() {
 		try {
-			testSerialPort.close();
+			if (testSerialPort != null)
+				testSerialPort.closePort();
 		} catch (final Exception e) {
 
 		}

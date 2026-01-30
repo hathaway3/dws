@@ -10,11 +10,11 @@ import java.util.Map.Entry;
 import java.util.Vector;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.vfs.FileContent;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemManager;
-import org.apache.commons.vfs.FileType;
-import org.apache.commons.vfs.VFS;
+import org.apache.commons.vfs2.FileContent;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemManager;
+import org.apache.commons.vfs2.FileType;
+import org.apache.commons.vfs2.VFS;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;
@@ -332,7 +332,7 @@ public class DWDiskDrives
 				throw new IOException("Unreadable path");
 			}
 		}
-		catch (org.apache.commons.vfs.FileSystemException e)
+		catch (org.apache.commons.vfs2.FileSystemException e)
 		{
 			logger.error("FileSystemException: " + e.getMessage());
 			throw new IOException(e.getMessage());

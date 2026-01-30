@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n"/>
+        </Console>
+        <!-- File appender will be configured via properties if needed, 
+             but for now we'll define a default one if a filename is provided.
+             However, since the original code did it programmatically, 
+             we'll start with a basic console and internal appender. -->
+        <RollingFile name="File" fileName="drivewire.log"
+                     filePattern="drivewire-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout pattern="%d{dd MMM yyyy HH:mm:ss} %-5p [%-14t] %m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="5MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>

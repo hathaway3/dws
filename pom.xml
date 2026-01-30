@@ -3,19 +3,26 @@
 	<groupId>DriveWire</groupId>
 	<artifactId>DriveWire</artifactId>
 	<version>4.3.6</version>
+	<scm>
+		<connection>scm:git:file://${project.basedir}</connection>
+		<developerConnection>scm:git:file://${project.basedir}</developerConnection>
+		<url>file://${project.basedir}</url>
+	</scm>
 	<properties>
 		<!-- Don't let your Mac use a crazy non-standard encoding -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
 	</properties>
 	<build>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
 				<filtering>true</filtering>
-			<includes>
-				<include>scripts/**</include>
-			</includes>
+				<includes>
+					<include>scripts/**</include>
+					<include>version.properties</include>
+				</includes>
 			</resource>
 		</resources>
 		<plugins>
@@ -39,9 +46,27 @@
 							<outputDirectory>${basedir}</outputDirectory>
 							<resources>
 								<resource>
-									<directory>/target</directory>
+									<directory>target</directory>
 									<includes>
 										<include>DriveWire-*-jar-with-dependencies.jar</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-config</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/config</directory>
+									<includes>
+										<include>config.xml</include>
 									</includes>
 								</resource>
 							</resources>
@@ -59,24 +84,48 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.5.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.logging.log4j</groupId>
+						<artifactId>log4j-transform-maven-shade-plugin-extensions</artifactId>
+						<version>0.1.0</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
-						<goals>
-							<goal>attached</goal>
-						</goals>
 						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
 						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<archive>
-								<manifest>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>jar-with-dependencies</shadedClassifierName>
+							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>com.groupunix.drivewireserver.DriveWireServer</mainClass>
-								</manifest>
-							</archive>
+								</transformer>
+								<transformer implementation="org.apache.logging.log4j.maven.plugins.shade.transformer.Log4j2PluginCacheFileTransformer"/>
+							</transformers>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
 						</configuration>
 					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
 					<!-- Assembly Execution for the ZIP -->
 					<execution>
 						<id>zip-assembly</id>
@@ -93,27 +142,36 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<doCheck>false</doCheck>
+					<doUpdate>false</doUpdate>
+					<revisionOnScmFailure>true</revisionOnScmFailure>
+					<buildNumberPropertyName>autoBuildNumber</buildNumberPropertyName>
+					<format>{0,number}</format>
+					<items>
+						<item>buildNumber</item>
+					</items>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
-		<!-- SHA1: 4216af16d38465bbab0f3dff8efa14204f7a399a -->
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<version>1.4</version>
-		</dependency>
 		<!-- SHA1: a86104b0f2e0c0bab5b0df836065823a99b5e334 -->
-		<dependency>
-			<groupId>com.jcraft</groupId>
-			<artifactId>jsch</artifactId>
-			<version>0.1.54</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/net.htmlparser.jericho/jericho-html -->
-		<dependency>
-			<groupId>net.htmlparser.jericho</groupId>
-			<artifactId>jericho-html</artifactId>
-			<version>3.4</version>
-		</dependency>
+		<!-- Retained but outdated - should consider upgrading to Apache MINA SSHD or similar if needed later -->
+		<!-- Removed jsch as it's unused -->
+
 		<!-- /Users/jimhathaway/git/dws/java/lib/commons-cli-1.2.jar -->
 		<!-- SHA1: 2bf96b7aa8b611c177d329452af1dc933e14501c -->
 		<dependency>
@@ -122,51 +180,44 @@
 			<version>1.2</version>
 		</dependency>
 		<!-- SHA1: 964cd74171f427720480efdec40a7c7f6e58426a -->
+		<!-- Removed commons-httpclient as it's unused -->
 		<dependency>
-			<groupId>commons-httpclient</groupId>
-			<artifactId>commons-httpclient</artifactId>
-			<version>3.1</version>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+			<version>3.2.2</version>
 		</dependency>
-		<!-- SHA1: e813b8722c387b22e1adccf7914729db09bcb4a9 -->
 		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcore</artifactId>
-			<version>4.0.1</version>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
 		</dependency>
-		<!-- SHA1: 945007627e8d12275d755081a9e609c018e1210d -->
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-vfs2 -->
 		<dependency>
-			<groupId>org.apache.james</groupId>
-			<artifactId>apache-mime4j</artifactId>
-			<version>0.6</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpmime -->
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpmime</artifactId>
-			<version>4.5.6</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.13</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/commons-vfs/commons-vfs -->
-		<dependency>
-			<groupId>commons-vfs</groupId>
-			<artifactId>commons-vfs</artifactId>
-			<version>1.0</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-vfs2</artifactId>
+			<version>2.9.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/commons-configuration/commons-configuration -->
 		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
-			<version>1.6</version>
+			<version>1.10</version>
+		</dependency>
+		<!-- Log4j 2.x Bridge for Log4j 1.x -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-1.2-api</artifactId>
+			<version>2.22.0</version>
 		</dependency>
 		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.22.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.22.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.ostermiller/utils -->
 		<dependency>
@@ -174,11 +225,11 @@
 			<artifactId>utils</artifactId>
 			<version>1.07.00</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.neuronrobotics/nrjavaserial -->
+		<!-- https://mvnrepository.com/artifact/com.fazecast/jSerialComm -->
 		<dependency>
-			<groupId>com.neuronrobotics</groupId>
-			<artifactId>nrjavaserial</artifactId>
-			<version>5.1.1</version>
+			<groupId>com.fazecast</groupId>
+			<artifactId>jSerialComm</artifactId>
+			<version>2.10.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

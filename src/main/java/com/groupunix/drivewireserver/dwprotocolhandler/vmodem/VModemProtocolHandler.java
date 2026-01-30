@@ -1,12 +1,7 @@
 package com.groupunix.drivewireserver.dwprotocolhandler.vmodem;
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.UnsupportedCommOperationException;
-
 import java.io.IOException;
 import java.util.GregorianCalendar;
-import java.util.TooManyListenersException;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.log4j.Logger;
@@ -23,22 +18,19 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWVSerialProtocol;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
 
-public class VModemProtocolHandler implements DWVSerialProtocol
-{
+public class VModemProtocolHandler implements DWVSerialProtocol {
 
 	private final Logger logger = Logger.getLogger("DWServer.VModemProtocolHandler");
-	
+
 	private DWProtocolDevice protodev = null;
-	
+
 	private boolean started = false;
 	private boolean ready = false;
 	private boolean connected = false;
 	private GregorianCalendar inittime = new GregorianCalendar();
 
-
 	private int handlerno;
 	private HierarchicalConfiguration config;
-
 
 	private boolean wanttodie = false;
 
@@ -49,353 +41,235 @@ public class VModemProtocolHandler implements DWVSerialProtocol
 
 	private boolean logdevbytes = false;
 
-	
-	public VModemProtocolHandler(int handlerno, HierarchicalConfiguration hconf )
-	{
+	public VModemProtocolHandler(int handlerno, HierarchicalConfiguration hconf) {
 		this.handlerno = handlerno;
 		this.config = hconf;
 		this.logdevbytes = config.getBoolean("LogDeviceBytes", false);
 		this.vSerialPorts = new DWVSerialPorts(this);
 		this.vSerialPorts.resetAllPorts();
-		
-		if (config.containsKey("HelpFile"))
-    	{
-    		this.dwhelp = new DWHelp(config.getString("HelpFile"));
-    	}
-    	
-		
-	}
-	
 
-	
-	
-	public void run() 
-	{
-		
-		Thread.currentThread().setName("vmodemproto-" + handlerno + "-" +  Thread.currentThread().getId());
-		
-		
+		if (config.containsKey("HelpFile")) {
+			this.dwhelp = new DWHelp(config.getString("HelpFile"));
+		}
+
+	}
+
+	public void run() {
+
+		Thread.currentThread().setName("vmodemproto-" + handlerno + "-" + Thread.currentThread().getId());
+
 		logger.info("VModemHandler #" + this.handlerno + " starting");
 		this.started = true;
-		
+
 		this.timers.resetTimer(DWDefs.TIMER_START);
-		
+
 		if (this.protodev == null)
 			setupProtocolDevice();
-		
-		try 
-		{
+
+		try {
 			this.vSerialPorts.openPort(0);
 			this.vSerialPorts.getPortVModem(0).setEcho(true);
 			this.vSerialPorts.getPortVModem(0).setVerbose(true);
-		} 
-		catch (DWPortNotValidException e1) 
-		{
+		} catch (DWPortNotValidException e1) {
 			logger.error(e1.getMessage());
 			wanttodie = true;
 		}
-		
-		Thread VModemToSerialT = new Thread(new Runnable()
-		{
+
+		Thread VModemToSerialT = new Thread(new Runnable() {
 			boolean wanttodie = false;
-			
-			
-			public void run() 
-			{
-				while (!wanttodie)
-				{
-					try
-					{
+
+			public void run() {
+				while (!wanttodie) {
+					try {
 						int bread = protodev.comRead1(false);
 						vSerialPorts.serWrite(0, bread);
-						
+
 						if (logdevbytes)
 							logger.debug("read byte from serial device: " + bread);
-					}
-					catch (IOException e) 
-					{
+					} catch (IOException e) {
 						wanttodie = true;
-					} 
-					catch (DWPortNotOpenException e) 
-					{
+					} catch (DWPortNotOpenException e) {
 						wanttodie = true;
-					} 
-					catch (DWPortNotValidException e) 
-					{
+					} catch (DWPortNotValidException e) {
 						wanttodie = true;
-					} 
-					catch (DWCommTimeOutException e) 
-					{
+					} catch (DWCommTimeOutException e) {
 						wanttodie = true;
-						
-					}
-					catch (NullPointerException e)
-					{
+
+					} catch (NullPointerException e) {
 						wanttodie = true;
 					}
 				}
-				
-			}});
-		
-		 VModemToSerialT.start();
-		
-		
-		if (!wanttodie && (this.protodev != null))
-		{
+
+			}
+		});
+
+		VModemToSerialT.start();
+
+		if (!wanttodie && (this.protodev != null)) {
 			this.ready = true;
 			logger.debug("handler #" + handlerno + " is ready");
-		}
-		else
-		{
+		} else {
 			logger.warn("handler #" + handlerno + " failed to get ready");
 		}
-		
-		byte[] buffer = new byte[256];	
-		
-		while (!wanttodie && (this.protodev != null))
-		{
-			
-			try 
-			{
+
+		byte[] buffer = new byte[256];
+
+		while (!wanttodie && (this.protodev != null)) {
+
+			try {
 				int bread = vSerialPorts.getPortOutput(0).read(buffer);
 				this.protodev.comWrite(buffer, bread, false);
 				if (logdevbytes)
-					logger.debug("read " + bread + " bytes from vmodem: " + DWUtils.byteArrayToHexString(buffer, bread));
-			}				
-			catch (IOException e) 
-			{
-				logger.error( e.getMessage());
-			} 
-			catch (DWPortNotValidException e) 
-			{
+					logger.debug(
+							"read " + bread + " bytes from vmodem: " + DWUtils.byteArrayToHexString(buffer, bread));
+			} catch (IOException e) {
 				logger.error(e.getMessage());
-				
-			} 
-					
+			} catch (DWPortNotValidException e) {
+				logger.error(e.getMessage());
+
+			}
+
 		}
-		
+
 		logger.debug("handler #" + handlerno + " is exiting");
 		this.vSerialPorts.shutdown();
 	}
-	
-	
-	
-	
-	private void setupProtocolDevice()
-	{
-		
+
+	private void setupProtocolDevice() {
+
 		if ((protodev != null))
 			protodev.shutdown();
-		
+
 		// create serial device
-		if ((config.containsKey("SerialDevice") && config.containsKey("SerialRate")))		
-		{
-			try 
-			{
+		if ((config.containsKey("SerialDevice") && config.containsKey("SerialRate"))) {
+			try {
 				protodev = new DWSerialDevice(this);
+			} catch (IOException e) {
+				logger.error("handler #" + handlerno + ": IO exception while opening serial port '"
+						+ config.getString("SerialDevice") + "': " + e.getMessage());
 			}
-			catch (NoSuchPortException e1)
-			{
-				logger.error("handler #"+handlerno+": Serial device '" + config.getString("SerialDevice") + "' not found");
-			} 
-			catch (PortInUseException e2)
-			{
-				logger.error("handler #"+handlerno+": Serial device '" + config.getString("SerialDevice") + "' in use");
-			}
-			catch (UnsupportedCommOperationException e3)
-			{
-				logger.error("handler #"+handlerno+": Unsupported comm operation while opening serial port '"+config.getString("SerialDevice")+"'");
-			} 
-			catch (IOException e)
-			{
-				logger.error("handler #"+handlerno+": IO exception while opening serial port '"+config.getString("SerialDevice")+"'");
-			} 
-			catch (TooManyListenersException e)
-			{
-				logger.error("handler #"+handlerno+": Too many listeneres while opening serial port '"+config.getString("SerialDevice")+"'");
-			}
-			
-		}	
-		else
-		{
+
+		} else {
 			logger.error("VModem requires both SerialDevice and SerialRate to be set, please configure this instance.");
 		}
-			
+
 	}
 
-
-
-	
-	public void shutdown() 
-	{
+	public void shutdown() {
 		logger.debug("vmodem handler #" + handlerno + ": shutdown requested");
-		
-		this.wanttodie  = true;
-		
+
+		this.wanttodie = true;
+
 		if (this.protodev != null)
 			this.protodev.shutdown();
 	}
 
-	
-	public boolean isDying() 
-	{
+	public boolean isDying() {
 		return wanttodie;
 	}
 
-	
-	public boolean isStarted() 
-	{
-		return this.started ;
+	public boolean isStarted() {
+		return this.started;
 	}
 
-	
-	public boolean isReady() 
-	{
-		return this.ready ;
+	public boolean isReady() {
+		return this.ready;
 	}
 
-	
-	public HierarchicalConfiguration getConfig() 
-	{
+	public HierarchicalConfiguration getConfig() {
 		return this.config;
 	}
 
-	
-	public DWProtocolDevice getProtoDev() 
-	{
+	public DWProtocolDevice getProtoDev() {
 		return this.protodev;
 	}
 
-	
-	public GregorianCalendar getInitTime() 
-	{
+	public GregorianCalendar getInitTime() {
 		return this.inittime;
 	}
 
-	
-	public String getStatusText() 
-	{
+	public String getStatusText() {
 		return "VModem status TODO";
 	}
 
-	
-	public void resetProtocolDevice() 
-	{
+	public void resetProtocolDevice() {
 		logger.debug("resetting serial port");
-		if (this.protodev != null)
-		{
+		if (this.protodev != null) {
 			this.protodev.shutdown();
 			this.protodev = null;
 		}
-		
+
 		setupProtocolDevice();
-		
-		
+
 	}
 
-	
-	public void syncStorage() 
-	{
+	public void syncStorage() {
 		// noop
-		
+
 	}
 
-	
-	public int getHandlerNo() 
-	{
+	public int getHandlerNo() {
 		return this.handlerno;
 	}
 
-	
-	public Logger getLogger() 
-	{
+	public Logger getLogger() {
 		return this.logger;
 	}
 
-	
-	public int getCMDCols() 
-	{
+	public int getCMDCols() {
 		return 0;
 	}
 
-	
-	public DWHelp getHelp() 
-	{
-		return this.dwhelp ;
+	public DWHelp getHelp() {
+		return this.dwhelp;
 	}
 
-	
-	public void submitConfigEvent(String propertyName, String string) 
-	{
+	public void submitConfigEvent(String propertyName, String string) {
 		// noop
 	}
 
-	
-	public long getNumOps() 
-	{
+	public long getNumOps() {
 		return 0;
 	}
 
-	
-	public long getNumDiskOps() 
-	{
+	public long getNumDiskOps() {
 		return 0;
 	}
 
-	
-	public long getNumVSerialOps() 
-	{
+	public long getNumVSerialOps() {
 		return 0;
 	}
 
-	
-	public DWProtocolTimers getTimers() 
-	{
+	public DWProtocolTimers getTimers() {
 		return this.timers;
 	}
 
-
-
-	
-	public boolean isConnected() 
-	{
-		return this.connected ;
+	public boolean isConnected() {
+		return this.connected;
 	}
 
+	public boolean hasPrinters() {
 
-	
-	public boolean hasPrinters() 
-	{
-		
 		return false;
 	}
-	
-	
+
 	public boolean hasDisks() {
-		
+
 		return false;
 	}
 
-	
 	public boolean hasMIDI() {
-		
+
 		return false;
 	}
 
-	
 	public boolean hasVSerial() {
-		
+
 		return true;
 	}
 
-
-
-	
-	public DWVSerialPorts getVPorts() 
-	{
+	public DWVSerialPorts getVPorts() {
 		return this.vSerialPorts;
 	}
-
-
 
 }

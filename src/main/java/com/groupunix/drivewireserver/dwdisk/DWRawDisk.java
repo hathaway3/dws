@@ -3,11 +3,11 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Vector;
 
-import org.apache.commons.vfs.Capability;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.RandomAccessContent;
-import org.apache.commons.vfs.util.RandomAccessMode;
+import org.apache.commons.vfs2.Capability;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.RandomAccessContent;
+import org.apache.commons.vfs2.util.RandomAccessMode;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;

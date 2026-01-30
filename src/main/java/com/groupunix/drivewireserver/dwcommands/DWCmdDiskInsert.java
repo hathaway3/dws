@@ -3,7 +3,7 @@ package com.groupunix.drivewireserver.dwcommands;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs2.FileSystemException;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWDriveAlreadyLoadedException;

@@ -2,7 +2,7 @@ package com.groupunix.drivewireserver.dwprotocolhandler;
 
 import java.io.IOException;
 
-import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs2.FileSystemException;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.OS9Defs;

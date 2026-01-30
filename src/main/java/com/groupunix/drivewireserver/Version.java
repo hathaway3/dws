@@ -1,6 +1,6 @@
 package com.groupunix.drivewireserver;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.HashMap;
 
 public class Version {
@@ -9,14 +9,15 @@ public class Version {
 	private int minor;
 	private int build;
 	private String revison;
-	private java.util.Date date;
+	private String buildNumber;
+	private Date date;
 	private String priority;
 	private String target;
 	private String description;
 	private HashMap<String, String> files = new HashMap<String, String>();
 	private boolean restart = true;
 
-	public Version(int ma, int mi, int b, String r, java.util.Date dwversiondate) {
+	public Version(int ma, int mi, int b, String r, Date dwversiondate) {
 		this.major = ma;
 		this.minor = mi;
 		this.build = b;
@@ -68,7 +69,7 @@ public class Version {
 		this.revison = revison;
 	}
 
-	public java.util.Date getDate() {
+	public Date getDate() {
 		return date;
 	}
 
@@ -153,6 +154,23 @@ public class Version {
 		return true;
 	}
 
+	public String getBuildNumber() {
+		return buildNumber;
+	}
+
+	public void setBuildNumber(String buildNumber) {
+		this.buildNumber = buildNumber;
+	}
+
+	@Override
+	public String toString() {
+		String res = major + "." + minor + "." + build + revison;
+		if (buildNumber != null && !buildNumber.isEmpty()) {
+			res += " (build " + buildNumber + ")";
+		}
+		return res;
+	}
+
 	@SuppressWarnings("deprecation")
 	public byte getOS9Year() {
 		if (this.date != null)
@@ -170,7 +188,7 @@ public class Version {
 	@SuppressWarnings("deprecation")
 	public byte getOS9Day() {
 		if (this.date != null)
-			return (byte) date.getDay();
+			return (byte) date.getDate();
 		return 0;
 	}
 

@@ -1,8 +1,8 @@
 package com.groupunix.drivewireserver.dwprotocolhandler;
 
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileType;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.FileType;
 
 
 public class DWRFMDirEntry 

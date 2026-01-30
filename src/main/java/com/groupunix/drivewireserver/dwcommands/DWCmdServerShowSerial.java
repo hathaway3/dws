@@ -1,154 +1,115 @@
 package com.groupunix.drivewireserver.dwcommands;
 
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-
+import com.fazecast.jSerialComm.SerialPort;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocol;
 
-
 public class DWCmdServerShowSerial extends DWCommand {
 
-
-
-	DWCmdServerShowSerial(DWProtocol dwProto, DWCommand parent)
-	{
-
+	DWCmdServerShowSerial(DWProtocol dwProto, DWCommand parent) {
 		setParentCmd(parent);
 	}
-	
-	public String getCommand() 
-	{
+
+	public String getCommand() {
 		return "serial";
 	}
 
-
-	
-	public String getShortHelp() 
-	{
+	public String getShortHelp() {
 		return "Show serial device information";
 	}
 
-
-	public String getUsage() 
-	{
+	public String getUsage() {
 		return "dw server show serial";
 	}
 
-	public DWCommandResponse parse(String cmdline) 
-	{
-		String text = new String();
-		
-		text += "Server serial devices:\r\n\r\n";
-		
-		 @SuppressWarnings("unchecked")
-		java.util.Enumeration<gnu.io.CommPortIdentifier> thePorts =  gnu.io.CommPortIdentifier.getPortIdentifiers();
-	        
-		 while (thePorts.hasMoreElements()) 
-	     {
-			 try
-			 {
-		            gnu.io.CommPortIdentifier com = thePorts.nextElement();
-		            if (com.getPortType() == gnu.io.CommPortIdentifier.PORT_SERIAL)
-		            {
-		            	text += com.getName() + "  ";
-		            	
-		            	try
-		            	{
-		            		SerialPort serialPort = (SerialPort) com.open("DWList",2000);
-		            		
-		            		text += serialPort.getBaudRate() + " bps  ";
-		            		text += serialPort.getDataBits();
-		            		
-		            		
-		            		switch(serialPort.getParity())
-		            		{
-		            			case SerialPort.PARITY_NONE:
-		            				text += "N";
-		            				break;
-		            				
-		            			case SerialPort.PARITY_EVEN:
-		            				text += "E";
-		            				break;
-		            			
-		            			case SerialPort.PARITY_MARK:
-		            				text += "M";
-		            				break;
-		            			
-		            			case SerialPort.PARITY_ODD:
-		            				text += "O";
-		            				break;
-		            			
-		            			case SerialPort.PARITY_SPACE:
-		            				text += "S";
-		            				break;
-		            				
-		            		}
-		            		
-		            		
-		            		text += serialPort.getStopBits();
-		            		
-		            		if (serialPort.getFlowControlMode() == SerialPort.FLOWCONTROL_NONE)
-		            			text += "  No flow control  ";
-		            		else
-		            		{
-		            			text += "  ";
-		            			
-		            			if ((serialPort.getFlowControlMode() & SerialPort.FLOWCONTROL_RTSCTS_IN) == SerialPort.FLOWCONTROL_RTSCTS_IN)
-		            				text += "In: RTS/CTS  ";
-		            			
-		            			if ((serialPort.getFlowControlMode() & SerialPort.FLOWCONTROL_RTSCTS_OUT) == SerialPort.FLOWCONTROL_RTSCTS_OUT)
-		            				text += "Out: RTS/CTS  ";
-		            			
-		            			if ((serialPort.getFlowControlMode() & SerialPort.FLOWCONTROL_XONXOFF_IN) == SerialPort.FLOWCONTROL_XONXOFF_IN)
-		            				text += "In: XOn/XOff  ";
-		            			
-		            			if ((serialPort.getFlowControlMode() & SerialPort.FLOWCONTROL_XONXOFF_OUT) == SerialPort.FLOWCONTROL_XONXOFF_OUT)
-		            				text += "Out: XOn/XOff  ";
-		            		}
-		            		
-		            		
-		            		text += " CD:" + yn(serialPort.isCD());
-		            		
-	            			text += " CTS:" + yn(serialPort.isCTS());
-		            		
-		            		text += " DSR:" + yn(serialPort.isDSR());
-		            		
-		            		text += " DTR:" + yn(serialPort.isDTR());
-		            		
-	            			text += " RTS:" + yn(serialPort.isRTS());
-		            		
-		            		
-		            		text += "\r\n";
-		            		
-		            		serialPort.close();
-		            	}
-		            	catch (PortInUseException e1)
-		            	{
-		            		text += "In use by " + e1.getMessage() + "\r\n";
-		            	}
-		            	
-		            }
-			 }
-			 catch (Exception e)
-			 {
-				 return(new DWCommandResponse(false, DWDefs.RC_SERVER_IO_EXCEPTION, "While gathering serial port info: " + e.getMessage() ));
-			 }
-	     }
-		            	
-		
-		return(new DWCommandResponse(text));
+	public DWCommandResponse parse(String cmdline) {
+		StringBuilder text = new StringBuilder();
+
+		text.append("Server serial devices:\r\n\r\n");
+
+		for (SerialPort serialPort : SerialPort.getCommPorts()) {
+			try {
+				text.append(serialPort.getSystemPortName()).append("  ");
+
+				boolean wasOpen = serialPort.isOpen();
+				boolean opened = false;
+				if (!wasOpen) {
+					opened = serialPort.openPort();
+				}
+
+				if (wasOpen || opened) {
+					text.append(serialPort.getBaudRate()).append(" bps  ");
+					text.append(serialPort.getNumDataBits());
+
+					switch (serialPort.getParity()) {
+						case SerialPort.NO_PARITY:
+							text.append("N");
+							break;
+
+						case SerialPort.EVEN_PARITY:
+							text.append("E");
+							break;
+
+						case SerialPort.MARK_PARITY:
+							text.append("M");
+							break;
+
+						case SerialPort.ODD_PARITY:
+							text.append("O");
+							break;
+
+						case SerialPort.SPACE_PARITY:
+							text.append("S");
+							break;
+					}
+
+					text.append(serialPort.getNumStopBits());
+
+					int flow = serialPort.getFlowControlSettings(); // Corrected method name
+					if (flow == SerialPort.FLOW_CONTROL_DISABLED)
+						text.append("  No flow control  ");
+					else {
+						text.append("  ");
+
+						if ((flow & SerialPort.FLOW_CONTROL_RTS_ENABLED) != 0)
+							text.append("RTS ");
+						if ((flow & SerialPort.FLOW_CONTROL_CTS_ENABLED) != 0)
+							text.append("CTS ");
+						if ((flow & SerialPort.FLOW_CONTROL_XONXOFF_IN_ENABLED) != 0)
+							text.append("XOn ");
+						if ((flow & SerialPort.FLOW_CONTROL_XONXOFF_OUT_ENABLED) != 0)
+							text.append("XOff ");
+					}
+
+					text.append(" CD:").append(yn(serialPort.getDCD()));
+					text.append(" CTS:").append(yn(serialPort.getCTS()));
+					text.append(" DSR:").append(yn(serialPort.getDSR()));
+					text.append(" DTR:").append(yn(serialPort.getDTR()));
+					text.append(" RTS:").append(yn(serialPort.getRTS()));
+
+					text.append("\r\n");
+
+					if (opened)
+						serialPort.closePort();
+				} else {
+					text.append("Not available or in use\r\n");
+				}
+			} catch (Exception e) {
+				return (new DWCommandResponse(false, DWDefs.RC_SERVER_IO_EXCEPTION,
+						"While gathering serial port info: " + e.getMessage()));
+			}
+		}
+		return (new DWCommandResponse(text.toString()));
 	}
-	
+
 	private String yn(boolean cd) {
 		if (cd)
 			return "Y";
-		
+
 		return "n";
 	}
 
-	public boolean validate(String cmdline) 
-	{
-		return(true);
+	public boolean validate(String cmdline) {
+		return (true);
 	}
 }

@@ -2,9 +2,9 @@ package com.groupunix.drivewireserver.dwdisk;
 
 import java.io.IOException;
 
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.RandomAccessContent;
-import org.apache.commons.vfs.util.RandomAccessMode;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.RandomAccessContent;
+import org.apache.commons.vfs2.util.RandomAccessMode;
 
 
 public class DWDiskSector 

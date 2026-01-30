@@ -2,15 +2,12 @@ package com.groupunix.drivewireserver.virtualserial.api;
 
 import java.io.IOException;
 
+import com.fazecast.jSerialComm.SerialPort;
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.DriveWireServer;
 import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 import com.groupunix.drivewireserver.dwexceptions.DWPortNotValidException;
 import com.groupunix.drivewireserver.virtualserial.DWVSerialPorts;
-
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
 
 public class DWAPISerial {
 
@@ -65,11 +62,11 @@ public class DWAPISerial {
 			// stop bits
 			else if (item.equalsIgnoreCase("sb") && isInteger(val)) {
 				if (valno == 1)
-					spd.setStopbits(SerialPort.STOPBITS_1);
+					spd.setStopbits(SerialPort.ONE_STOP_BIT);
 				else if (valno == 2)
-					spd.setStopbits(SerialPort.STOPBITS_2);
+					spd.setStopbits(SerialPort.TWO_STOP_BITS);
 				else if (valno == 5)
-					spd.setStopbits(SerialPort.STOPBITS_1_5);
+					spd.setStopbits(SerialPort.ONE_POINT_FIVE_STOP_BITS);
 				else
 					return new DWCommandResponse(false, DWDefs.RC_SYNTAX_ERROR,
 							"Syntax error on arg sb (1,2 or 5 is valid)");
@@ -77,15 +74,15 @@ public class DWAPISerial {
 			// parity
 			else if (item.equalsIgnoreCase("p") && val.length() == 1) {
 				if (val.equalsIgnoreCase("N"))
-					spd.setParity(SerialPort.PARITY_NONE);
+					spd.setParity(SerialPort.NO_PARITY);
 				else if (val.equalsIgnoreCase("E"))
-					spd.setParity(SerialPort.PARITY_EVEN);
+					spd.setParity(SerialPort.EVEN_PARITY);
 				else if (val.equalsIgnoreCase("O"))
-					spd.setParity(SerialPort.PARITY_ODD);
+					spd.setParity(SerialPort.ODD_PARITY);
 				else if (val.equalsIgnoreCase("M"))
-					spd.setParity(SerialPort.PARITY_MARK);
+					spd.setParity(SerialPort.MARK_PARITY);
 				else if (val.equalsIgnoreCase("S"))
-					spd.setParity(SerialPort.PARITY_SPACE);
+					spd.setParity(SerialPort.SPACE_PARITY);
 				else
 					return new DWCommandResponse(false, DWDefs.RC_SYNTAX_ERROR,
 							"Syntax error on arg p (N,E,O,M or S is valid)");
@@ -93,14 +90,8 @@ public class DWAPISerial {
 			}
 			// data bits
 			else if (item.equalsIgnoreCase("db") && isInteger(val)) {
-				if (valno == 5)
-					spd.setDatabits(SerialPort.DATABITS_5);
-				else if (valno == 6)
-					spd.setDatabits(SerialPort.DATABITS_6);
-				else if (valno == 7)
-					spd.setDatabits(SerialPort.DATABITS_7);
-				else if (valno == 8)
-					spd.setDatabits(SerialPort.DATABITS_8);
+				if (valno == 5 || valno == 6 || valno == 7 || valno == 8)
+					spd.setDatabits(valno);
 				else
 					return new DWCommandResponse(false, DWDefs.RC_SYNTAX_ERROR,
 							"Syntax error on arg db (5,6,7 or 8 is valid)");
@@ -110,15 +101,15 @@ public class DWAPISerial {
 
 				for (byte b : val.getBytes()) {
 					if (b == 'r')
-						fc += SerialPort.FLOWCONTROL_RTSCTS_OUT;
+						fc += SerialPort.FLOW_CONTROL_CTS_ENABLED;
 					else if (b == 'R')
-						fc += SerialPort.FLOWCONTROL_RTSCTS_IN;
+						fc += SerialPort.FLOW_CONTROL_RTS_ENABLED;
 					else if (b == 'x')
-						fc += SerialPort.FLOWCONTROL_XONXOFF_OUT;
+						fc += SerialPort.FLOW_CONTROL_XONXOFF_OUT_ENABLED;
 					else if (b == 'X')
-						fc += SerialPort.FLOWCONTROL_XONXOFF_IN;
+						fc += SerialPort.FLOW_CONTROL_XONXOFF_IN_ENABLED;
 					else if (b == 'n')
-						fc += SerialPort.FLOWCONTROL_NONE;
+						fc = SerialPort.FLOW_CONTROL_DISABLED;
 					else
 						return new DWCommandResponse(false, DWDefs.RC_SYNTAX_ERROR,
 								"Syntax error on arg fc (R,r,X,x or n is valid)");
@@ -128,23 +119,15 @@ public class DWAPISerial {
 				spd.setFlowcontrol(fc);
 			}
 		}
-		CommPort commPort = null;
 
 		try {
 
-			CommPortIdentifier pi = CommPortIdentifier.getPortIdentifier(port);
+			final SerialPort sp = SerialPort.getCommPort(port);
 
-			if (pi.isCurrentlyOwned()) {
-				return new DWCommandResponse(false, DWDefs.RC_SERIAL_PORTINUSE, "Port in use");
+			if (!sp.openPort()) {
+				return new DWCommandResponse(false, DWDefs.RC_SERIAL_PORTINUSE,
+						"Could not open port (in use or invalid)");
 			}
-
-			commPort = pi.open("DriveWireServer", 2000);
-
-			if (!(commPort instanceof SerialPort)) {
-				return new DWCommandResponse(false, DWDefs.RC_SERIAL_PORTINVALID, "Invalid port");
-			}
-
-			final SerialPort sp = (SerialPort) commPort;
 
 			spd.setParams(sp);
 
@@ -221,8 +204,6 @@ public class DWAPISerial {
 			return new DWCommandResponse("Connect to " + port);
 
 		} catch (Exception e) {
-			if (commPort != null)
-				commPort.close();
 			return new DWCommandResponse(false, DWDefs.RC_SERIAL_PORTERROR, e.getClass().getSimpleName());
 		}
 
@@ -233,97 +214,83 @@ public class DWAPISerial {
 		boolean ok = true;
 
 		try {
-			CommPortIdentifier pi = CommPortIdentifier.getPortIdentifier(port);
+			SerialPort sp = SerialPort.getCommPort(port);
+			boolean wasOpen = sp.isOpen();
+			boolean opened = false;
 
-			if (pi.isCurrentlyOwned()) {
-				return new DWCommandResponse(false, DWDefs.RC_SERIAL_PORTINUSE, "In use");
-			} else {
-				CommPort commPort = null;
-
-				try {
-
-					commPort = pi.open("DriveWireServer", 2000);
-
-					if (commPort instanceof SerialPort) {
-						SerialPort sp = (SerialPort) commPort;
-
-						res = sp.getBaudRate() + "|" + sp.getDataBits() + "|";
-
-						if (sp.getParity() == SerialPort.PARITY_EVEN)
-							res += "E";
-						else if (sp.getParity() == SerialPort.PARITY_ODD)
-							res += "O";
-						else if (sp.getParity() == SerialPort.PARITY_NONE)
-							res += "N";
-						else if (sp.getParity() == SerialPort.PARITY_MARK)
-							res += "M";
-						else
-							res += "S";
-
-						res += "|";
-
-						if (sp.getStopBits() == SerialPort.STOPBITS_1)
-							res += "1";
-						else if (sp.getStopBits() == SerialPort.STOPBITS_2)
-							res += "2";
-						else
-							res += "5";
-
-						res += "|";
-
-						if ((sp.getFlowControlMode()
-								& SerialPort.FLOWCONTROL_RTSCTS_IN) == SerialPort.FLOWCONTROL_RTSCTS_IN)
-							res += "R";
-
-						if ((sp.getFlowControlMode()
-								& SerialPort.FLOWCONTROL_XONXOFF_IN) == SerialPort.FLOWCONTROL_XONXOFF_IN)
-							res += "X";
-
-						if ((sp.getFlowControlMode()
-								& SerialPort.FLOWCONTROL_RTSCTS_OUT) == SerialPort.FLOWCONTROL_RTSCTS_OUT)
-							res += "r";
-
-						if ((sp.getFlowControlMode()
-								& SerialPort.FLOWCONTROL_XONXOFF_OUT) == SerialPort.FLOWCONTROL_XONXOFF_OUT)
-							res += "x";
-
-						res += "|";
-
-						if (sp.isCD())
-							res += "CD ";
-
-						if (sp.isCTS())
-							res += "CTS ";
-
-						if (sp.isDSR())
-							res += "DSR ";
-
-						if (sp.isDTR())
-							res += "DTR ";
-
-						if (sp.isRI())
-							res += "RI ";
-
-						if (sp.isRTS())
-							res += "RTS ";
-
-						res = res.trim();
-					} else {
-						ok = false;
-						res = "Invalid port";
-					}
-				} catch (Exception e) {
-					ok = false;
-					res = e.toString();
-				} finally {
-					if (commPort != null)
-						commPort.close();
-				}
+			if (!wasOpen) {
+				opened = sp.openPort();
 			}
 
+			if (wasOpen || opened) {
+				res = sp.getBaudRate() + "|" + sp.getNumDataBits() + "|";
+
+				if (sp.getParity() == SerialPort.EVEN_PARITY)
+					res += "E";
+				else if (sp.getParity() == SerialPort.ODD_PARITY)
+					res += "O";
+				else if (sp.getParity() == SerialPort.NO_PARITY)
+					res += "N";
+				else if (sp.getParity() == SerialPort.MARK_PARITY)
+					res += "M";
+				else
+					res += "S";
+
+				res += "|";
+
+				if (sp.getNumStopBits() == SerialPort.ONE_STOP_BIT)
+					res += "1";
+				else if (sp.getNumStopBits() == SerialPort.TWO_STOP_BITS)
+					res += "2";
+				else
+					res += "5";
+
+				res += "|";
+
+				int flow = sp.getFlowControlSettings();
+				if ((flow & SerialPort.FLOW_CONTROL_RTS_ENABLED) != 0)
+					res += "R";
+
+				if ((flow & SerialPort.FLOW_CONTROL_XONXOFF_IN_ENABLED) != 0)
+					res += "X";
+
+				if ((flow & SerialPort.FLOW_CONTROL_CTS_ENABLED) != 0)
+					res += "r";
+
+				if ((flow & SerialPort.FLOW_CONTROL_XONXOFF_OUT_ENABLED) != 0)
+					res += "x";
+
+				res += "|";
+
+				if (sp.getDCD())
+					res += "CD ";
+
+				if (sp.getCTS())
+					res += "CTS ";
+
+				if (sp.getDSR())
+					res += "DSR ";
+
+				if (sp.getDTR())
+					res += "DTR ";
+
+				if (sp.getRI())
+					res += "RI ";
+
+				if (sp.getRTS())
+					res += "RTS ";
+
+				res = res.trim();
+
+				if (opened)
+					sp.closePort();
+			} else {
+				ok = false;
+				res = "Could not open port (in use or invalid)";
+			}
 		} catch (Exception e) {
 			ok = false;
-			res = e.getClass().getSimpleName();
+			res = e.toString();
 		}
 
 		if (ok)

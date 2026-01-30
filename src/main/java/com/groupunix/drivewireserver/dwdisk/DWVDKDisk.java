@@ -3,7 +3,7 @@ package com.groupunix.drivewireserver.dwdisk;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs2.FileObject;
 import org.apache.log4j.Logger;
 
 import com.groupunix.drivewireserver.DWDefs;

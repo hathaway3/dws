@@ -1,9 +1,6 @@
 package com.groupunix.drivewireserver.virtualserial.api;
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-import gnu.io.UnsupportedCommOperationException;
+import com.fazecast.jSerialComm.SerialPort;
 
 public class DWAPISerialPortDef {
 	private int rate = -1;
@@ -52,25 +49,24 @@ public class DWAPISerialPortDef {
 		this.flowcontrol = flowcontrol;
 	}
 
-	public void setParams(SerialPort sp)
-			throws NoSuchPortException, PortInUseException, UnsupportedCommOperationException {
+	public void setParams(SerialPort sp) {
 
 		if (this.rate == -1)
 			this.rate = sp.getBaudRate();
 
 		if (this.databits == -1)
-			this.databits = sp.getDataBits();
+			this.databits = sp.getNumDataBits();
 
 		if (this.stopbits == -1)
-			this.stopbits = sp.getStopBits();
+			this.stopbits = sp.getNumStopBits();
 
 		if (this.parity == -1)
 			this.parity = sp.getParity();
 
-		sp.setSerialPortParams(rate, databits, stopbits, parity);
+		sp.setComPortParameters(rate, databits, stopbits, parity);
 
 		if (this.flowcontrol > -1)
-			sp.setFlowControlMode(this.flowcontrol);
+			sp.setFlowControl(this.flowcontrol);
 
 	}
 }
