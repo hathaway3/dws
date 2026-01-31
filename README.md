@@ -20,9 +20,9 @@ After the packaging is complete, you should see the message 'BUILD SUCCESS' from
 [INFO] Finished at: 2023-12-31T10:24:40-06:00
 [INFO] ------------------------------------------------------------------------
 ```
-**Note:** config.xml must be modified to support your configuration before you run DriveWire Java Server.  See the help.xml file for more information on how to configure the server.xml.
+**Note:** config.xml must be modified to support your configuration before you run DriveWire Java Server.  See the help.xml file for more information on configuring server.xml.
 ## Running DriveWire Java Server
-The compiled and zipped DriveWire server will be located under dws/target after completing the compile.
+The compiled and zipped DriveWire server will be located under dws/target after the compile completes.
 ```
 dws/
 ├── src/
@@ -49,7 +49,7 @@ You can start the server with an interactive Terminal UI by using the `--tui` fl
     java -jar DriveWire.jar --tui
 
 **Controls:**
-- `q` or `Q`: Gracefully shutdown the server.
+- `q` or `Q`: Gracefully shut down the server.
 
 ## Typical DriveWire server output
 If all goes well, you should see a detailed log of DriveWire activities like this.
