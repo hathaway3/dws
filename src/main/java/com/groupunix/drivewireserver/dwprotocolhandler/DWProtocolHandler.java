@@ -461,7 +461,7 @@ public class DWProtocolHandler implements DWVSerialProtocol {
 	}
 
 	private void DoOP_AARON() {
-		logger.warn("DriveWire " + DriveWireServer.DWVersion.getDescription() + ": I am the millipede");
+		logger.warn("DriveWire " + DriveWireServer.getVersion().getDescription() + ": I am the millipede");
 
 	}
 

@@ -12,12 +12,10 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 public class UICmdServerShowSynthProfiles extends DWCommand {
 
 	@Override
-	public String getCommand() 
-	{
+	public String getCommand() {
 		// TODO Auto-generated method stub
 		return "synthprofiles";
 	}
-
 
 	@Override
 	public String getShortHelp() {
@@ -33,28 +31,22 @@ public class UICmdServerShowSynthProfiles extends DWCommand {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public DWCommandResponse parse(String cmdline) 
-	{
+	public DWCommandResponse parse(String cmdline) {
 		String res = new String();
-		
-		List<HierarchicalConfiguration> profiles = DriveWireServer.serverconfig.configurationsAt("midisynthprofile");
-    	
-		for(Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();)
-		{
-			
-		    HierarchicalConfiguration mprof = (HierarchicalConfiguration) it.next();
-		    res += mprof.getString("[@name]") + "|" + mprof.getString("[@desc]") + "\n";
-	    	
-		    
+
+		List<HierarchicalConfiguration> profiles = DriveWireServer.getConfig().configurationsAt("midisynthprofile");
+
+		for (Iterator<HierarchicalConfiguration> it = profiles.iterator(); it.hasNext();) {
+
+			HierarchicalConfiguration mprof = (HierarchicalConfiguration) it.next();
+			res += mprof.getString("[@name]") + "|" + mprof.getString("[@desc]") + "\n";
+
 		}
-	
-	
-			
-		return(new DWCommandResponse(res));
+
+		return (new DWCommandResponse(res));
 	}
 
-	public boolean validate(String cmdline) 
-	{
-		return(true);
+	public boolean validate(String cmdline) {
+		return (true);
 	}
 }

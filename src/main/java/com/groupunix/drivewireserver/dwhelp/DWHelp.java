@@ -61,10 +61,6 @@ public class DWHelp {
 
 	}
 
-	private void clearTopic(String topic) {
-		this.help.clearTree("topics." + this.spaceToDot(topic) + ".text");
-	}
-
 	public boolean hasTopic(String topic) {
 		if (this.help != null)
 			return (this.help.containsKey("topics." + this.spaceToDot(topic) + ".text"));

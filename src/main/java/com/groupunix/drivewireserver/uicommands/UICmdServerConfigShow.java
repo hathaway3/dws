@@ -12,61 +12,46 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 public class UICmdServerConfigShow extends DWCommand {
 
 	static final String command = "show";
-	
 
-	public String getCommand() 
-	{
+	public String getCommand() {
 		return command;
 	}
 
 	@SuppressWarnings("unchecked")
-	public DWCommandResponse parse(String cmdline)
-	{
+	public DWCommandResponse parse(String cmdline) {
 		String res = new String();
-		
-		
-		if (cmdline.length() == 0)
-		{
-			for (Iterator<String> i = DriveWireServer.serverconfig.getKeys(); i.hasNext();)
-			{
+
+		if (cmdline.length() == 0) {
+			for (Iterator<String> i = DriveWireServer.getConfig().getKeys(); i.hasNext();) {
 				String key = i.next();
-				String value = StringUtils.join(DriveWireServer.serverconfig.getStringArray(key), ", ");
-		
+				String value = StringUtils.join(DriveWireServer.getConfig().getStringArray(key), ", ");
+
 				res += key + " = " + value + "\r\n";
-		            
+
+			}
+		} else {
+			if (DriveWireServer.getConfig().containsKey(cmdline)) {
+				String value = StringUtils.join(DriveWireServer.getConfig().getStringArray(cmdline), ", ");
+				return (new DWCommandResponse(value));
+			} else {
+				return (new DWCommandResponse(false, DWDefs.RC_CONFIG_KEY_NOT_SET,
+						"Key '" + cmdline + "' is not set."));
 			}
 		}
-		else
-		{
-			if (DriveWireServer.serverconfig.containsKey(cmdline))
-			{
-				String value = StringUtils.join(DriveWireServer.serverconfig.getStringArray(cmdline), ", ");
-				return(new DWCommandResponse(value));
-			}
-			else
-			{
-				return(new DWCommandResponse(false,DWDefs.RC_CONFIG_KEY_NOT_SET, "Key '" + cmdline + "' is not set."));
-			}
-		}
-		
-		return(new DWCommandResponse(res));
+
+		return (new DWCommandResponse(res));
 	}
 
-
-	public String getShortHelp() 
-	{
+	public String getShortHelp() {
 		return "Show server configuration";
 	}
 
-
-	public String getUsage() 
-	{
+	public String getUsage() {
 		return "ui server config show [item]";
 	}
-	
-	public boolean validate(String cmdline) 
-	{
-		return(true);
+
+	public boolean validate(String cmdline) {
+		return (true);
 	}
-	
+
 }

@@ -15,13 +15,10 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 public class UICmdServerShowLocalDisks extends DWCommand {
 
 	@Override
-	public String getCommand() 
-	{
+	public String getCommand() {
 		// TODO Auto-generated method stub
 		return "localdisks";
 	}
-
-
 
 	@Override
 	public String getShortHelp() {
@@ -35,46 +32,39 @@ public class UICmdServerShowLocalDisks extends DWCommand {
 		return "ui server show localdisks";
 	}
 
-	
 	@Override
-	public DWCommandResponse parse(String cmdline) 
-	{
+	public DWCommandResponse parse(String cmdline) {
 
 		String res = new String();
-		
-		try 
-	    {
-			if (!DriveWireServer.serverconfig.containsKey("LocalDiskDir"))
-				return(new DWCommandResponse(false,DWDefs.RC_CONFIG_KEY_NOT_SET,"LocalDiskDir must be defined in configuration"));
-			
-			String path = DriveWireServer.serverconfig.getString("LocalDiskDir");
-			
+
+		try {
+			if (!DriveWireServer.getConfig().containsKey("LocalDiskDir"))
+				return (new DWCommandResponse(false, DWDefs.RC_CONFIG_KEY_NOT_SET,
+						"LocalDiskDir must be defined in configuration"));
+
+			String path = DriveWireServer.getConfig().getString("LocalDiskDir");
+
 			FileSystemManager fsManager;
-			
+
 			fsManager = VFS.getManager();
-			
+
 			FileObject dirobj = fsManager.resolveFile(path);
-			
+
 			FileObject[] children = dirobj.getChildren();
-	    	
-	    	for (int i=0; i<children.length; i++) 
-	    	{
-	    		if (children[i].getType() == FileType.FILE)
-	    			res += children[i].getName() + "\n";
-	    	}
-		    
-	    }
-		catch (IOException e) 
-	    {
-			return(new DWCommandResponse(false,DWDefs.RC_SERVER_IO_EXCEPTION,e.getMessage()));
+
+			for (int i = 0; i < children.length; i++) {
+				if (children[i].getType() == FileType.FILE)
+					res += children[i].getName() + "\n";
+			}
+
+		} catch (IOException e) {
+			return (new DWCommandResponse(false, DWDefs.RC_SERVER_IO_EXCEPTION, e.getMessage()));
 		}
-			
-		return(new DWCommandResponse(res));
+
+		return (new DWCommandResponse(res));
 	}
 
-	
-	public boolean validate(String cmdline) 
-	{
-		return(true);
+	public boolean validate(String cmdline) {
+		return (true);
 	}
 }

@@ -12,8 +12,11 @@ import java.util.Scanner;
 
 import com.groupunix.drivewireserver.DWDefs;
 import com.groupunix.drivewireserver.dwexceptions.DWFileSystemInvalidFilenameException;
+import org.apache.log4j.Logger;
 
 public class DWUtils {
+
+	private static final Logger logger = Logger.getLogger(DWUtils.class);
 
 	public static int int4(byte[] data) {
 		return ((data[0] & 0xFF) << 24) | ((data[1] & 0xFF) << 16) | ((data[2] & 0xFF) << 8) | (data[3] & 0xFF);
@@ -728,10 +731,6 @@ public class DWUtils {
 		for (int i = 0; i < f.getName().length(); i++)
 			res[pos++] = f.getName().getBytes()[i];
 
-		System.out.println(f.getName() + "\t" + f.getName().length() + "\t" + f.length());
-
-		System.out.println(byteArrayToHexString(res, res.length));
-
 		return (new String(res));
 	}
 
@@ -853,21 +852,29 @@ public class DWUtils {
 		System.out.println("C: Cancel and exit");
 
 		Scanner scanner = new Scanner(System.in);
-		while (true) {
-			System.out.print("Select a port (0-" + (ports.length - 1) + ") or 'C' to cancel: ");
-			String input = scanner.nextLine().trim();
-			if (input.equalsIgnoreCase("C")) {
-				return null;
-			}
-			try {
-				int choice = Integer.parseInt(input);
-				if (choice >= 0 && choice < ports.length) {
-					return ports[choice].getSystemPortName();
+		try {
+			while (true) {
+				System.out.print("Select a port (0-" + (ports.length - 1) + ") or 'C' to cancel: ");
+				String input = scanner.nextLine().trim();
+				if (input.equalsIgnoreCase("C")) {
+					return null;
 				}
-			} catch (NumberFormatException e) {
-				// ignore
+				try {
+					int choice = Integer.parseInt(input);
+					if (choice >= 0 && choice < ports.length) {
+						return ports[choice].getSystemPortName();
+					}
+				} catch (NumberFormatException e) {
+					// ignore
+				}
+				System.out.println("Invalid selection. Please try again.");
 			}
-			System.out.println("Invalid selection. Please try again.");
+		} finally {
+			// Note: closing this scanner will close System.in, which is generally not ideal
+			// for a library utility, but since this is an interactive CLI helper, we close
+			// it
+			// to satisfy resource leak checks.
+			scanner.close();
 		}
 	}
 }

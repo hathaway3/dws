@@ -15,15 +15,15 @@ public class XCmdServerVersion extends XCommand {
 		byte[] res = new byte[12];
 
 		res[0] = (byte) 4; // version
-		res[1] = (byte) DriveWireServer.DWVersion.getMajor();
-		res[2] = (byte) DriveWireServer.DWVersion.getMinor();
-		res[3] = (byte) DriveWireServer.DWVersion.getBuild();
-		res[4] = (byte) DriveWireServer.DWVersion.getRevison().charAt(0);
+		res[1] = (byte) DriveWireServer.getVersion().getMajor();
+		res[2] = (byte) DriveWireServer.getVersion().getMinor();
+		res[3] = (byte) DriveWireServer.getVersion().getBuild();
+		res[4] = (byte) DriveWireServer.getVersion().getRevison().charAt(0);
 
 		res[5] = (byte) 5; // date
-		res[6] = DriveWireServer.DWVersion.getOS9Year();
-		res[7] = DriveWireServer.DWVersion.getOS9Month();
-		res[8] = DriveWireServer.DWVersion.getOS9Day();
+		res[6] = DriveWireServer.getVersion().getOS9Year();
+		res[7] = DriveWireServer.getVersion().getOS9Month();
+		res[8] = DriveWireServer.getVersion().getOS9Day();
 		res[9] = 0;
 		res[10] = 0;
 

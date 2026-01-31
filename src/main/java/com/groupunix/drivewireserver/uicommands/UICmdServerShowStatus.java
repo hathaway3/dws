@@ -7,12 +7,10 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 public class UICmdServerShowStatus extends DWCommand {
 
 	@Override
-	public String getCommand() 
-	{
+	public String getCommand() {
 		// TODO Auto-generated method stub
 		return "status";
 	}
-
 
 	@Override
 	public String getShortHelp() {
@@ -27,24 +25,22 @@ public class UICmdServerShowStatus extends DWCommand {
 	}
 
 	@Override
-	public DWCommandResponse parse(String cmdline) 
-	{
+	public DWCommandResponse parse(String cmdline) {
 		String text = new String();
-	
-		text += "version|" + DriveWireServer.DWVersion + "\n"; 
-		text += "versiondate|" + DriveWireServer.DWVersion.getDate() + "\n";
-		
+
+		text += "version|" + DriveWireServer.getVersion() + "\n";
+		text += "versiondate|" + DriveWireServer.getVersion().getDate() + "\n";
+
 		text += "totmem|" + Runtime.getRuntime().totalMemory() / 1024 + "\n";
-	    text += "freemem|" + Runtime.getRuntime().freeMemory() / 1024 + "\n";
-	    
-	    text += "instances|" + DriveWireServer.getNumHandlers() + "\n";
-	    text += "configpath|" + DriveWireServer.serverconfig.getBasePath() + "\n";
-		
-		return(new DWCommandResponse(text));
+		text += "freemem|" + Runtime.getRuntime().freeMemory() / 1024 + "\n";
+
+		text += "instances|" + DriveWireServer.getNumHandlers() + "\n";
+		text += "configpath|" + DriveWireServer.getConfig().getBasePath() + "\n";
+
+		return (new DWCommandResponse(text));
 	}
 
-	public boolean validate(String cmdline) 
-	{
-		return(true);
+	public boolean validate(String cmdline) {
+		return (true);
 	}
 }

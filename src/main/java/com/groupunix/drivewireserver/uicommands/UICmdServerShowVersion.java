@@ -7,8 +7,7 @@ import com.groupunix.drivewireserver.dwcommands.DWCommandResponse;
 public class UICmdServerShowVersion extends DWCommand {
 
 	@Override
-	public String getCommand() 
-	{
+	public String getCommand() {
 		// TODO Auto-generated method stub
 		return "version";
 	}
@@ -26,17 +25,15 @@ public class UICmdServerShowVersion extends DWCommand {
 	}
 
 	@Override
-	public DWCommandResponse parse(String cmdline) 
-	{
+	public DWCommandResponse parse(String cmdline) {
 		String txt = new String();
-		
-		txt = "DriveWire version " + DriveWireServer.DWVersion + " (" + DriveWireServer.DWVersion.getDate() + ")";
-		
-		return(new DWCommandResponse(txt));
+
+		txt = "DriveWire version " + DriveWireServer.getVersion() + " (" + DriveWireServer.getVersion().getDate() + ")";
+
+		return (new DWCommandResponse(txt));
 	}
 
-	public boolean validate(String cmdline) 
-	{
-		return(true);
+	public boolean validate(String cmdline) {
+		return (true);
 	}
 }

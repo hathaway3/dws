@@ -11,35 +11,26 @@ public class UICmdServerFileDefaultDir extends DWCommand {
 
 	static final String command = "defaultdir";
 
-		
-	
-	
-	public String getCommand() 
-	{
+	public String getCommand() {
 		return command;
 	}
 
-	public DWCommandResponse parse(String cmdline)
-	{
-		return(new DWCommandResponse( DWUtils.getFileDescriptor(new File(DriveWireServer.serverconfig.getString("LocalDiskDir","."))) + "|false" ));
+	public DWCommandResponse parse(String cmdline) {
+		return (new DWCommandResponse(
+				DWUtils.getFileDescriptor(new File(DriveWireServer.getConfig().getString("LocalDiskDir", ".")))
+						+ "|false"));
 	}
 
-
-
-	public String getShortHelp() 
-	{
+	public String getShortHelp() {
 		return "Show default dir dir";
 	}
 
-
-	public String getUsage() 
-	{
+	public String getUsage() {
 		return "ui server file defaultdir";
 	}
-	
-	public boolean validate(String cmdline) 
-	{
-		return(true);
+
+	public boolean validate(String cmdline) {
+		return (true);
 	}
-	
+
 }
