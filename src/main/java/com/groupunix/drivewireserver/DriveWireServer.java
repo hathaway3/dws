@@ -18,6 +18,7 @@ import com.groupunix.drivewireserver.dwprotocolhandler.DWProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.DWUtils;
 import com.groupunix.drivewireserver.dwprotocolhandler.MCXProtocolHandler;
 import com.groupunix.drivewireserver.dwprotocolhandler.vmodem.VModemProtocolHandler;
+import com.groupunix.drivewireserver.tui.DWTerminalUI;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -73,6 +74,8 @@ public class DriveWireServer {
 	private static boolean useDebug = false;
 	private static boolean noMIDI = false;
 	private static boolean noMount = false;
+	private static boolean useTUI = false;
+	private static DWTerminalUI dwTerminalUI;
 
 	public static int getConfigSerial() {
 		return configSerial;
@@ -96,6 +99,18 @@ public class DriveWireServer {
 
 	public static void incrementConfigSerial() {
 		configSerial++;
+	}
+
+	public static int getDiskDriveSerial() {
+		return 0; // Stub or real as needed
+	}
+
+	private static void updateLoggers(org.apache.logging.log4j.core.config.Configuration config,
+			org.apache.logging.log4j.core.Appender appender) {
+		config.getRootLogger().addAppender(appender, null, null);
+		for (org.apache.logging.log4j.core.config.LoggerConfig loggerConfig : config.getLoggers().values()) {
+			loggerConfig.addAppender(appender, null, null);
+		}
 	}
 
 	public static void main(final String[] args) {
@@ -123,9 +138,16 @@ public class DriveWireServer {
 
 				submitServerStatus();
 
+				if (useTUI && dwTerminalUI != null) {
+					updateTUIStatus();
+				}
+
 			} catch (final InterruptedException e) {
 				logger.debug("I've been interrupted, now I want to die");
 				wantToDie = true;
+			} catch (final Exception e) {
+				System.err.println("Main loop error: " + e.getMessage());
+				e.printStackTrace();
 			}
 
 		}
@@ -206,7 +228,28 @@ public class DriveWireServer {
 			if (fEvent.getParamKeys().size() > 0)
 				uiObj.submitEvent(fEvent);
 		}
+	}
 
+	private static void updateTUIStatus() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Instances: ").append(getNumHandlersAlive()).append("/").append(getNumHandlers());
+		sb.append(" | Threads: ").append(DWUtils.getRootThreadGroup().activeCount());
+		sb.append(" | Ops: ").append(getTotalOps());
+		sb.append(" | Disk: ").append(getDiskOps());
+		sb.append(" | VSerial: ").append(getVSerialOps());
+
+		// More details for handler 0 if it exists
+		if (getNumHandlers() > 0) {
+			DWProtocol p = dwProtoHandlers.get(0);
+			if (p instanceof DWProtocolHandler) {
+				DWProtocolHandler dwh = (DWProtocolHandler) p;
+				sb.append("\nInstance #0: S-Read: ").append(dwh.getSectorsRead())
+						.append(" S-Write: ").append(dwh.getSectorsWritten());
+			}
+		}
+
+		dwTerminalUI.updateStatus(sb.toString());
+		dwTerminalUI.updateLogLines(getLogEvents(100));
 	}
 
 	public static DWEvent getServerStatusEvent() {
@@ -255,6 +298,34 @@ public class DriveWireServer {
 
 		// set up initial logging config
 		initLogging();
+
+		if (useTUI) {
+			try {
+				dwTerminalUI = new DWTerminalUI();
+				dwTerminalUI.start();
+			} catch (Exception e) {
+				System.err.println("Failed to start TUI: " + e.getMessage());
+				e.printStackTrace();
+			}
+
+			// Remove Console appender to prevent interference with TUI
+			org.apache.logging.log4j.core.LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) org.apache.logging.log4j.LogManager
+					.getContext(false);
+			org.apache.logging.log4j.core.config.Configuration config = context.getConfiguration();
+
+			config.getRootLogger().removeAppender("Console");
+			for (org.apache.logging.log4j.core.config.LoggerConfig loggerConfig : config.getLoggers().values()) {
+				loggerConfig.removeAppender("Console");
+			}
+
+			// Initialize DWLogAppender early to capture startup logs
+			if (dwAppender == null) {
+				dwAppender = new DWLogAppender(new org.apache.log4j.PatternLayout("%d{HH:mm:ss} %-5p %m%n"));
+				org.apache.log4j.Logger.getRootLogger().addAppender(dwAppender);
+			}
+
+			context.updateLoggers();
+		}
 
 		loadVersion();
 
@@ -352,7 +423,7 @@ public class DriveWireServer {
 		}
 	}
 
-	private static void startProtoHandlers() {
+	public static void startProtoHandlers() {
 		@SuppressWarnings("unchecked")
 		final List<HierarchicalConfiguration> handlerconfs = serverConfig.configurationsAt("instance");
 
@@ -449,16 +520,17 @@ public class DriveWireServer {
 		// set options from cmdline args
 		final Options cmdoptions = new Options();
 
-		cmdoptions.addOption("config", true, "configuration file (defaults to config.xml)");
-		cmdoptions.addOption("backup", false, "make a backup of config at server start");
-		cmdoptions.addOption("help", false, "display command line argument help");
-		cmdoptions.addOption("logviewer", false, "open GUI log viewer at server start");
-		cmdoptions.addOption("debug", false, "log extra info to console");
-		cmdoptions.addOption("nomidi", false, "disable MIDI");
-		cmdoptions.addOption("nomount", false, "do not remount disks from last run");
-		cmdoptions.addOption("noui", false, "do not start user interface");
-		cmdoptions.addOption("noserver", false, "do not start server");
-		cmdoptions.addOption("liteui", false, "use lite user interface");
+		cmdoptions.addOption("c", "config", true, "configuration file (defaults to config.xml)");
+		cmdoptions.addOption("b", "backup", false, "make a backup of config at server start");
+		cmdoptions.addOption("h", "help", false, "display command line argument help");
+		cmdoptions.addOption("l", "logviewer", false, "open GUI log viewer at server start");
+		cmdoptions.addOption("d", "debug", false, "log extra info to console");
+		cmdoptions.addOption("m", "nomidi", false, "disable MIDI");
+		cmdoptions.addOption("n", "nomount", false, "do not remount disks from last run");
+		cmdoptions.addOption("u", "noui", false, "do not start user interface");
+		cmdoptions.addOption("s", "noserver", false, "do not start server");
+		cmdoptions.addOption("i", "liteui", false, "use lite user interface");
+		cmdoptions.addOption("t", "tui", false, "start Terminal UI (split screen)");
 
 		final CommandLineParser parser = new DefaultParser();
 		try {
@@ -469,6 +541,10 @@ public class DriveWireServer {
 				final HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp("java -jar DriveWire.jar [OPTIONS]", cmdoptions);
 				System.exit(0);
+			}
+
+			if (line.hasOption("tui")) {
+				useTUI = true;
 			}
 
 			if (line.hasOption("config")) {
@@ -639,6 +715,9 @@ public class DriveWireServer {
 	}
 
 	public static ArrayList<String> getLogEvents(final int num) {
+		if (dwAppender == null) {
+			return new ArrayList<>();
+		}
 		return (dwAppender.getLastEvents(num));
 	}
 

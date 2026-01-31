@@ -43,6 +43,14 @@ Unzip the DriveWire-x.x.x.zip file and run the correct file to launch DriveWire
     chmod +x dws.sh
     ./dws.sh
 
+## Terminal UI (TUI)
+You can start the server with an interactive Terminal UI by using the `--tui` flag. This interface provides live status updates and a scrolling log view.
+
+    java -jar DriveWire.jar --tui
+
+**Controls:**
+- `q` or `Q`: Gracefully shutdown the server.
+
 ## Typical DriveWire server output
 If all goes well, you should see a detailed log of DriveWire activities like this.
 ```
